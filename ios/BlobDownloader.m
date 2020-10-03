@@ -2,7 +2,7 @@
 
 @interface RCT_EXTERN_MODULE(BlobDownloader, NSObject)
 
-RCT_EXTERN_METHOD(fetch_blob:(float)a withB:(float)b
+RCT_EXTERN_METHOD(fetch_blob:(NSString)url
                  withResolver:(RCTPromiseResolveBlock)resolve
                  withRejecter:(RCTPromiseRejectBlock)reject)
 
