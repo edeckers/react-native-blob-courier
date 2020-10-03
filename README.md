@@ -15,7 +15,7 @@ import BlobDownloader from "react-native-blob-downloader";
 
 // ...
 
-const result = await BlobDownloader.multiply(3, 7);
+const result = await BlobDownloader.fetch_blob(3, 7);
 ```
 
 ## iOS

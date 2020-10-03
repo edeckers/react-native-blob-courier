@@ -21,7 +21,7 @@ class BlobDownloaderModule(reactContext: ReactApplicationContext) : ReactContext
     // Example method
     // See https://facebook.github.io/react-native/docs/native-modules-android
     @ReactMethod
-    fun multiply(a: Int, b: Int, promise: Promise) {
+    fun fetch_blob(a: Int, b: Int, promise: Promise) {
         val uri = Uri.parse("https://file-examples-com.github.io/uploads/2018/04/file_example_AVI_480_750kB.avi");
 
         val downloadManager = sureSure.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager;

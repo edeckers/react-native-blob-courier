@@ -1,7 +1,7 @@
 import { NativeModules } from 'react-native';
 
 type BlobDownloaderType = {
-  multiply(a: number, b: number): Promise<number>;
+  fetch_blob(a: number, b: number): Promise<number>;
 };
 
 const { BlobDownloader } = NativeModules;

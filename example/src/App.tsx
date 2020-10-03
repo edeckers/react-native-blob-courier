@@ -6,7 +6,7 @@ export default function App() {
   const [result, setResult] = React.useState<number | undefined>();
 
   React.useEffect(() => {
-    BlobDownloader.multiply(3, 7).then(setResult);
+    BlobDownloader.fetch_blob(3, 7).then(setResult);
   }, []);
 
   return (
