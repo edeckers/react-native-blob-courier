@@ -2,5 +2,5 @@ rootProject.name = 'BlobDownloaderExample'
 apply from: file("../node_modules/@react-native-community/cli-platform-android/native_modules.gradle"); applyNativeModulesSettingsGradle(settings)
 include ':app'
 
-include ':reactnativeblobdownloader'
-project(':reactnativeblobdownloader').projectDir = new File(rootProject.projectDir, '../../android')
+include ':blob_downloader'
+project(':blob_downloader').projectDir = new File(rootProject.projectDir, '../../android')

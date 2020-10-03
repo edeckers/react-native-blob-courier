@@ -1,4 +1,4 @@
-package com.reactnativeblobdownloader
+package io.deckers.blob_downloader
 
 import android.app.DownloadManager;
 import android.content.Context;

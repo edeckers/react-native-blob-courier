@@ -127,7 +127,7 @@ android {
     }
 
     defaultConfig {
-        applicationId "com.example.reactnativeblobdownloader"
+        applicationId "io.deckers.blob_downloader_example"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
@@ -209,7 +209,7 @@ dependencies {
         implementation jscFlavor
     }
 
-    implementation project(':reactnativeblobdownloader')
+    implementation project(':blob_downloader')
 }
 
 // Run this once to be able to run the application with BUCK

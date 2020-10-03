@@ -1,4 +1,4 @@
-package com.example.reactnativeblobdownloader;
+package io.deckers.blob_downloader_example;
 
 import com.facebook.react.ReactActivity;
 

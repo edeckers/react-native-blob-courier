@@ -1,4 +1,4 @@
-package com.reactnativeblobdownloader
+package io.deckers.blob_downloader
 
 import java.util.Arrays
 import java.util.Collections

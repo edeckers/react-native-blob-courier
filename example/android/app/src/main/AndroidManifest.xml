@@ -1,5 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-  package="com.example.reactnativeblobdownloader">
+  package="io.deckers.blob_downloader_example">
 
     <uses-permission android:name="android.permission.INTERNET" />
 
