@@ -22,7 +22,7 @@ class BlobDownloaderModule(reactContext: ReactApplicationContext) : ReactContext
     // See https://facebook.github.io/react-native/docs/native-modules-android
     @ReactMethod
     fun fetch_blob(url: String, promise: Promise) {
-        val uri = Uri.parse("https://file-examples-com.github.io/uploads/2018/04/file_example_AVI_480_750kB.avi");
+        val uri = Uri.parse(url);
 
         val downloadManager = sureSure.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager;
 
@@ -36,26 +36,13 @@ class BlobDownloaderModule(reactContext: ReactApplicationContext) : ReactContext
                     .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
                     .setDescription("")
                     .setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS,
-                            "test.mp4");
+                            "test.bin");
                     //.setDestinationInExternalPublicDir(
                     //        directory.toString()
                     //)
         }
 
         downloadManager.enqueue(request);
-
-        // ...
-
-        // Uri uri = Uri.parse("https://file-examples-com.github.io/uploads/2018/04/file_example_AVI_480_750kB.avi");
-
-        // DownloadManager.Request request = new DownloadManager.Request(uri);
-        // request.setTitle("My File");
-        // request.setDescription("Downloading");
-        // request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
-        // request.setVisibleInDownloadsUi(false);
-        // request.setDestinationUri(Uri.parse("file://" + folderName + "/myfile.mp3"));
-
-        // downloadmanager.enqueue(request);
 
         promise.resolve(true)
     }

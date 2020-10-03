@@ -4,8 +4,8 @@ import Foundation
 class BlobDownloader: NSObject {
 
     @objc(fetch_blob:withResolver:withRejecter:)
-    func fetch_blob(url: NSString, resolve:RCTPromiseResolveBlock,reject:RCTPromiseRejectBlock) -> Void {
-        let urlObject = URL(string: urlString)
+    func fetch_blob(url: String, resolve:RCTPromiseResolveBlock,reject:RCTPromiseRejectBlock) -> Void {
+        let urlObject = URL(string: url)
 
         let fileName = String((urlObject!.lastPathComponent)) as NSString
         // Create destination URL
@@ -47,6 +47,6 @@ class BlobDownloader: NSObject {
         }
         task.resume()
 
-        resolve(a*b)
+        resolve(true)
     }
 }
