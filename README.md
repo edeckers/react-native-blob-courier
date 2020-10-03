@@ -18,6 +18,17 @@ import BlobDownloader from "react-native-blob-downloader";
 const result = await BlobDownloader.multiply(3, 7);
 ```
 
+## iOS
+Add to `Info.plist` of your app:
+```xml
+<key>NSAllowsArbitraryLoads</key>
+<true/>
+<key>LSSupportsOpeningDocumentsInPlace</key>
+<true/>
+<key>UIFileSharingEnabled</key>
+<true/>
+```
+
 ## Contributing
 
 See the [contributing guide](CONTRIBUTING.md) to learn how to contribute to the repository and the development workflow.
