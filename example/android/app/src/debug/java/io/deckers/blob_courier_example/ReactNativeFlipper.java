@@ -4,7 +4,7 @@
  * <p>This source code is licensed under the MPL-2.0 license found in the LICENSE file in the root
  * directory of this source tree.
  */
-package io.deckers.blob_downloader_example;
+package io.deckers.blob_courier_example;
 
 import android.content.Context;
 import com.facebook.flipper.android.AndroidFlipperClient;

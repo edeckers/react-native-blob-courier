@@ -7,12 +7,12 @@
 import { NativeModules } from 'react-native';
 import type { AndroidBlobRequest, BlobRequest } from './Requests';
 
-type BlobDownloaderType = {
+type BlobCourierType = {
   fetchBlob(input: AndroidBlobRequest | BlobRequest): Promise<Response>;
 };
 
-const { BlobDownloader } = NativeModules;
+const { BlobCourier } = NativeModules;
 
-export default BlobDownloader as BlobDownloaderType;
+export default BlobCourier as BlobCourierType;
 export * from './Paths';
 export * from './Requests';

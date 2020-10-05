@@ -6,13 +6,13 @@
  */
  import Foundation
 
-@objc(BlobDownloader)
-class BlobDownloader: NSObject {
+@objc(BlobCourier)
+class BlobCourier: NSObject {
   static let ERROR_MISSING_REQUIRED_PARAM = "ERROR_MISSING_REQUIRED_PARAM"
   static let ERROR_INVALID_TARGET_PARAM_ENUM = "ERROR_INVALID_TARGET_PARAM_ENUM"
   static let ERROR_UNEXPECTED_EXCEPTION = "ERROR_UNEXPECTED_EXCEPTION"
 
-  enum BlobDownloaderError: Error {
+  enum BlobCourierError: Error {
     case withMessage(code: String, message: String)
   }
 
@@ -38,21 +38,21 @@ class BlobDownloader: NSObject {
   ]
 
   func stripEnumPrefix(path: String) -> String {
-    return path.replacingOccurrences(of: BlobDownloader.TARGET_PARAM_ENUM_PREFIX, with: "")
+    return path.replacingOccurrences(of: BlobCourier.TARGET_PARAM_ENUM_PREFIX, with: "")
   }
 
   func assertPathEnum(pathEnum: String) throws {
     let cleanedPathEnum = stripEnumPrefix(path: pathEnum)
 
-    if BlobDownloader.predefinedPaths[cleanedPathEnum.uppercased()] == nil {
-      throw BlobDownloaderError.withMessage(
-        code: BlobDownloader.ERROR_INVALID_TARGET_PARAM_ENUM,
+    if BlobCourier.predefinedPaths[cleanedPathEnum.uppercased()] == nil {
+      throw BlobCourierError.withMessage(
+        code: BlobCourier.ERROR_INVALID_TARGET_PARAM_ENUM,
         message: "Unknown enum `\(cleanedPathEnum)`")
     }
   }
 
   func isEnum(pathEnum: String) -> Bool {
-    return pathEnum.hasPrefix(BlobDownloader.TARGET_PARAM_ENUM_PREFIX)
+    return pathEnum.hasPrefix(BlobCourier.TARGET_PARAM_ENUM_PREFIX)
   }
 
   func parsePathEnum(pathEnum: String) throws -> String {
@@ -60,7 +60,7 @@ class BlobDownloader: NSObject {
 
     try assertPathEnum(pathEnum: cleanedPathEnum)
 
-    return BlobDownloader.predefinedPaths[cleanedPathEnum.uppercased()] as! String
+    return BlobCourier.predefinedPaths[cleanedPathEnum.uppercased()] as! String
   }
 
   func assertTargetParam(value: String) throws {
@@ -71,17 +71,17 @@ class BlobDownloader: NSObject {
 
   func assertRequiredParameter(input: NSDictionary, type: String, parameterName: String) throws {
     let maybeValue = try
-      (BlobDownloader.REQUIRED_PARAMETER_PROCESSOR[type] ?? { (_, _) in
-        throw BlobDownloaderError.withMessage(
-          code: BlobDownloader.ERROR_MISSING_REQUIRED_PARAM,
+      (BlobCourier.REQUIRED_PARAMETER_PROCESSOR[type] ?? { (_, _) in
+        throw BlobCourierError.withMessage(
+          code: BlobCourier.ERROR_MISSING_REQUIRED_PARAM,
           message:
-            "No processor defined for type `\(type)`, valid options: \(BlobDownloader.REQUIRED_PARAMETER_PROCESSOR.keys as! [String])"
+            "No processor defined for type `\(type)`, valid options: \(BlobCourier.REQUIRED_PARAMETER_PROCESSOR.keys as! [String])"
         )
       })(input, parameterName)
 
     if maybeValue == nil {
-      throw BlobDownloaderError.withMessage(
-        code: BlobDownloader.ERROR_MISSING_REQUIRED_PARAM,
+      throw BlobCourierError.withMessage(
+        code: BlobCourier.ERROR_MISSING_REQUIRED_PARAM,
         message: "`\(parameterName)` is a required parameter of type `\(type)`")
     }
   }
@@ -89,11 +89,11 @@ class BlobDownloader: NSObject {
   func fetchBlobFromValidatedParameters(
     input: NSDictionary, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock
   ) throws {
-    let url = (input[BlobDownloader.PARAM_URL] as? String) ?? ""
+    let url = (input[BlobCourier.PARAM_URL] as? String) ?? ""
 
     let urlObject = URL(string: url)
 
-    let filename = (input[BlobDownloader.PARAM_FILENAME] as? String) ?? ""
+    let filename = (input[BlobCourier.PARAM_FILENAME] as? String) ?? ""
 
     let documentsUrl: URL = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask)
       .first!
@@ -147,12 +147,12 @@ class BlobDownloader: NSObject {
   ) {
     do {
       try assertRequiredParameter(
-        input: input, type: "String", parameterName: BlobDownloader.PARAM_FILENAME)
+        input: input, type: "String", parameterName: BlobCourier.PARAM_FILENAME)
       try assertRequiredParameter(
-        input: input, type: "String", parameterName: BlobDownloader.PARAM_TARGET)
+        input: input, type: "String", parameterName: BlobCourier.PARAM_TARGET)
       try assertRequiredParameter(
-        input: input, type: "String", parameterName: BlobDownloader.PARAM_URL)
-      let target = (input[BlobDownloader.PARAM_TARGET] as? String) ?? ""
+        input: input, type: "String", parameterName: BlobCourier.PARAM_URL)
+      let target = (input[BlobCourier.PARAM_TARGET] as? String) ?? ""
       try assertTargetParam(value: target)
 
       try fetchBlobFromValidatedParameters(input: input, resolve: resolve, reject: reject)

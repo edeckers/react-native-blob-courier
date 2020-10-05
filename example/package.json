@@ -1,6 +1,6 @@
 {
-  "name": "react-native-blob-downloader-example",
-  "description": "Example app for react-native-blob-downloader",
+  "name": "react-native-blob-courier-example",
+  "description": "Example app for react-native-blob-courier",
   "version": "0.0.1",
   "private": true,
   "scripts": {

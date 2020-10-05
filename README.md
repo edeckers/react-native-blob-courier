@@ -1,4 +1,4 @@
-# react-native-blob-downloader
+# react-native-blob-courier
 
 [![License: MPL 2.0](https://img.shields.io/badge/License-MPL%202.0-brightgreen.svg)](https://opensource.org/licenses/MPL-2.0)
 
@@ -7,17 +7,17 @@ Download blobs
 ## Installation
 
 ```sh
-npm install react-native-blob-downloader
+npm install react-native-blob-courier
 ```
 
 ## Usage
 
 ```js
-import BlobDownloader from "react-native-blob-downloader";
+import BlobCourier from "react-native-blob-courier";
 
 // ...
 
-const result = await BlobDownloader.fetchBlob("https://url.to/binary.bin");
+const result = await BlobCourier.fetchBlob("https://url.to/binary.bin");
 ```
 
 ## iOS

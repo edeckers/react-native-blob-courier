@@ -2,7 +2,7 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "react-native-blob-downloader": ["./src/index"]
+      "react-native-blob-courier": ["./src/index"]
     },
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,

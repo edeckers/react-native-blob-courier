@@ -1,9 +1,9 @@
 import * as React from 'react';
 import { StyleSheet, View, Text, PermissionsAndroid } from 'react-native';
-import BlobDownloader, {
+import BlobCourier, {
   AndroidBlobRequest,
   AndroidPath,
-} from 'react-native-blob-downloader';
+} from 'react-native-blob-courier';
 
 export default function App() {
   const [result, setResult] = React.useState<Response>();
@@ -19,11 +19,11 @@ export default function App() {
         console.warn(err);
       }
 
-      BlobDownloader.fetchBlob({
+      BlobCourier.fetchBlob({
         filename: 'drop2.avi',
         method: 'GET',
         target: AndroidPath.Download,
-        useDownloadManager: false,
+        useDownloadManager: true,
         url: 'https://www.engr.colostate.edu/me/facil/dynamics/files/drop.avi',
       } as AndroidBlobRequest).then(setResult);
     };

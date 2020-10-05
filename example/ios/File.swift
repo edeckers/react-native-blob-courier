@@ -1,6 +1,6 @@
 //
 //  File.swift
-//  BlobDownloaderExample
+//  BlobCourierExample
 //
 
 import Foundation
