@@ -15,7 +15,7 @@ import BlobDownloader from "react-native-blob-downloader";
 
 // ...
 
-const result = await BlobDownloader.fetch_blob("https://url.to/binary.bin");
+const result = await BlobDownloader.fetchBlob("https://url.to/binary.bin");
 ```
 
 ## iOS
