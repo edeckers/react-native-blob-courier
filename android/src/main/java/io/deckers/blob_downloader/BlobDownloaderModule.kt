@@ -142,7 +142,7 @@ class BlobDownloaderModule(reactContext: ReactApplicationContext) : ReactContext
     }
 
     @ReactMethod
-    fun fetch_blob(input: ReadableMap, promise: Promise) {
+    fun fetchBlob(input: ReadableMap, promise: Promise) {
         try {
             assertRequiredParameter(input, String::class.java, PARAM_FILENAME)
             assertRequiredParameter(input, String::class.java, PARAM_TARGET)

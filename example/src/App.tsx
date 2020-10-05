@@ -19,7 +19,7 @@ export default function App() {
         console.warn(err);
       }
 
-      BlobDownloader.fetch_blob({
+      BlobDownloader.fetchBlob({
         filename: 'drop.avi',
         method: 'GET',
         target: AndroidPath.Download,

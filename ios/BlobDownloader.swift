@@ -3,8 +3,8 @@ import Foundation
 @objc(BlobDownloader)
 class BlobDownloader: NSObject {
 
-    @objc(fetch_blob:withResolver:withRejecter:)
-    func fetch_blob(url: String, resolve:RCTPromiseResolveBlock,reject:RCTPromiseRejectBlock) -> Void {
+    @objc(fetchBlob:withResolver:withRejecter:)
+    func fetchBlob(url: String, resolve:RCTPromiseResolveBlock,reject:RCTPromiseRejectBlock) -> Void {
         let urlObject = URL(string: url)
 
         let fileName = String((urlObject!.lastPathComponent)) as NSString

@@ -2,7 +2,7 @@ import { NativeModules } from 'react-native';
 import type { AndroidBlobRequest, BlobRequest } from './Requests';
 
 type BlobDownloaderType = {
-  fetch_blob(input: AndroidBlobRequest | BlobRequest): Promise<Response>;
+  fetchBlob(input: AndroidBlobRequest | BlobRequest): Promise<Response>;
 };
 
 const { BlobDownloader } = NativeModules;
