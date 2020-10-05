@@ -20,12 +20,39 @@ npm install react-native-blob-courier
 
 ## Usage
 
-```js
+```tsx
 import BlobCourier from "react-native-blob-courier";
 
 // ...
 
-const result = await BlobCourier.fetchBlob("https://url.to/binary.bin");
+const request: Readonly<BlobRequest> = {
+  filename: 'my_downloaded_file.pdf',
+  method: 'GET'
+  target: CommonPath.Document,
+  url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf'
+};
+
+try {
+  const result = await BlobCourier.fetchBlob(request);
+
+  // ...
+} catch (e) {
+  console.error(e);
+}
+```
+
+## Examples
+You can find an example of how to use the library in the [example](example) directory.
+
+## Android
+Add to `Info.plist` of your app:
+```xml
+<key>NSAllowsArbitraryLoads</key>
+<true/>
+<key>LSSupportsOpeningDocumentsInPlace</key>
+<true/>
+<key>UIFileSharingEnabled</key>
+<true/>
 ```
 
 ## iOS
