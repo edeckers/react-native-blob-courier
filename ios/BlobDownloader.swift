@@ -4,18 +4,22 @@ import Foundation
 class BlobDownloader: NSObject {
 
     @objc(fetchBlob:withResolver:withRejecter:)
-    func fetchBlob(url: String, resolve:RCTPromiseResolveBlock,reject:RCTPromiseRejectBlock) -> Void {
+    func fetchBlob(input: NSDictionary, resolve:RCTPromiseResolveBlock,reject:RCTPromiseRejectBlock) -> Void {
+        
+        let url = (input["url"] as? String) ?? ""
+        
         let urlObject = URL(string: url)
 
-        let fileName = String((urlObject!.lastPathComponent)) as NSString
-        // Create destination URL
+        let filename = (input["filename"] as? String) ?? ""
+
         let documentsUrl:URL =  FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask).first!
-        let destinationFileUrl = documentsUrl.appendingPathComponent("\(fileName)")
-        //Create URL to the source file you want to download
+        let destinationFileUrl = documentsUrl.appendingPathComponent("\(filename)")
+
         let fileURL = URL(string: url)
         let sessionConfig = URLSessionConfiguration.default
         let session = URLSession(configuration: sessionConfig)
         let request = URLRequest(url:fileURL!)
+
         let task = session.downloadTask(with: request) { (tempLocalUrl, response, error) in
             if let tempLocalUrl = tempLocalUrl, error == nil {
                 // Success

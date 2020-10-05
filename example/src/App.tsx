@@ -20,7 +20,7 @@ export default function App() {
       }
 
       BlobDownloader.fetchBlob({
-        filename: 'drop.avi',
+        filename: 'drop2.avi',
         method: 'GET',
         target: AndroidPath.Download,
         useDownloadManager: false,
