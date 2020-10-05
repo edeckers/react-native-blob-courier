@@ -4,7 +4,7 @@
  * This source code is licensed under the MPL-2.0 license found in the
  * LICENSE file in the root directory of this source tree.
  */
-package io.deckers.blob_downloader
+package io.deckers.blob_courier
 
 import android.app.DownloadManager
 import android.content.Context
@@ -23,7 +23,7 @@ import java.lang.reflect.Type
 import okhttp3.Request
 import okio.Okio
 
-class BlobDownloaderModule(val reactContext: ReactApplicationContext) :
+class BlobCourierModule(val reactContext: ReactApplicationContext) :
   ReactContextBaseJavaModule(reactContext) {
   val ERROR_MISSING_REQUIRED_PARAM = "ERROR_MISSING_REQUIRED_PARAM"
   val ERROR_INVALID_TARGET_PARAM_ENUM = "ERROR_INVALID_TARGET_PARAM_ENUM"
@@ -40,7 +40,7 @@ class BlobDownloaderModule(val reactContext: ReactApplicationContext) :
   val DEFAULT_METHOD = "GET"
 
   override fun getName(): String {
-    return "BlobDownloader"
+    return "BlobCourier"
   }
 
   val predefinedPaths = mapOf(
@@ -49,7 +49,7 @@ class BlobDownloaderModule(val reactContext: ReactApplicationContext) :
     "DOWNLOAD" to getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
   )
 
-  class BlobDownloaderError(open val code: String, message: String) : Throwable(message)
+  class BlobCourierError(open val code: String, message: String) : Throwable(message)
 
   fun stripEnumPrefix(path: String): String = path.replaceFirst(TARGET_PARAM_ENUM_PREFIX, "")
 
@@ -57,7 +57,7 @@ class BlobDownloaderModule(val reactContext: ReactApplicationContext) :
     val cleanedPathEnum = stripEnumPrefix(pathEnum)
 
     if (!predefinedPaths.containsKey(cleanedPathEnum.toUpperCase())) {
-      throw BlobDownloaderError(ERROR_INVALID_TARGET_PARAM_ENUM, "Unknown enum `$cleanedPathEnum`")
+      throw BlobCourierError(ERROR_INVALID_TARGET_PARAM_ENUM, "Unknown enum `$cleanedPathEnum`")
     }
   }
 
@@ -98,7 +98,7 @@ class BlobDownloaderModule(val reactContext: ReactApplicationContext) :
       )(input, parameterName)
 
     if (maybeValue == null) {
-      throw BlobDownloaderError(
+      throw BlobCourierError(
         ERROR_MISSING_REQUIRED_PARAM,
         "`$parameterName` is a required parameter of type `$type`"
       )
@@ -171,7 +171,7 @@ class BlobDownloaderModule(val reactContext: ReactApplicationContext) :
       assertTargetParam(input.getString(PARAM_TARGET) ?: "")
 
       fetchBlobFromValidatedParameters(input, promise)
-    } catch (e: BlobDownloaderError) {
+    } catch (e: BlobCourierError) {
       promise.reject(e.code, e.message)
       return
     } catch (e: Exception) {

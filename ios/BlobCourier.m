@@ -6,7 +6,7 @@
  */
 #import <React/RCTBridgeModule.h>
 
-@interface RCT_EXTERN_MODULE(BlobDownloader, NSObject)
+@interface RCT_EXTERN_MODULE(BlobCourier, NSObject)
 
 RCT_EXTERN_METHOD(fetchBlob:(NSDictionary *)input
                  withResolver:(RCTPromiseResolveBlock)resolve

@@ -1,6 +1,6 @@
 {
-  "name": "react-native-blob-downloader",
-  "version": "0.1.0",
+  "name": "react-native-blob-courier",
+  "version": "0.0.1",
   "description": "Download blobs",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
@@ -13,7 +13,7 @@
     "android",
     "ios",
     "cpp",
-    "react-native-blob-downloader.podspec",
+    "react-native-blob-courier.podspec",
     "!lib/typescript/example",
     "!**/__tests__",
     "!**/__fixtures__",
@@ -34,13 +34,13 @@
     "ios",
     "android"
   ],
-  "repository": "https://github.com/edeckers/react-native-blob-downloader",
+  "repository": "https://github.com/edeckers/react-native-blob-courier",
   "author": "Ely Deckers <e.deckers@gmail.com> (https://github.com/edeckers)",
   "license": "MPL-2.0",
   "bugs": {
-    "url": "https://github.com/edeckers/react-native-blob-downloader/issues"
+    "url": "https://github.com/edeckers/react-native-blob-courier/issues"
   },
-  "homepage": "https://github.com/edeckers/react-native-blob-downloader#readme",
+  "homepage": "https://github.com/edeckers/react-native-blob-courier#readme",
   "devDependencies": {
     "@commitlint/config-conventional": "^8.3.4",
     "@react-native-community/bob": "^0.16.2",

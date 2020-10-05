@@ -20,8 +20,8 @@ def flipper_post_install(installer)
   end
 end
 
-target 'BlobDownloaderExample' do
-  # Pods for BlobDownloaderExample
+target 'BlobCourierExample' do
+  # Pods for BlobCourierExample
   pod 'FBLazyVector', :path => "../node_modules/react-native/Libraries/FBLazyVector"
   pod 'FBReactNativeSpec', :path => "../node_modules/react-native/Libraries/FBReactNativeSpec"
   pod 'RCTRequired', :path => "../node_modules/react-native/Libraries/RCTRequired"
@@ -53,7 +53,7 @@ target 'BlobDownloaderExample' do
   pod 'glog', :podspec => '../node_modules/react-native/third-party-podspecs/glog.podspec'
   pod 'Folly', :podspec => '../node_modules/react-native/third-party-podspecs/Folly.podspec'
 
-  pod 'react-native-blob-downloader', :path => '../..'
+  pod 'react-native-blob-courier', :path => '../..'
 
   use_native_modules!
 

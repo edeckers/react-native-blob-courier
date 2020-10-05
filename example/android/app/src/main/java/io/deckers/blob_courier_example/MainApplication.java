@@ -1,4 +1,4 @@
-package io.deckers.blob_downloader_example;
+package io.deckers.blob_courier_example;
 
 import android.app.Application;
 import android.content.Context;
@@ -11,7 +11,7 @@ import com.facebook.soloader.SoLoader;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 
-import io.deckers.blob_downloader.BlobDownloaderPackage;
+import io.deckers.blob_courier.BlobCourierPackage;
 
 public class MainApplication extends Application implements ReactApplication {
 
@@ -26,9 +26,9 @@ public class MainApplication extends Application implements ReactApplication {
         protected List<ReactPackage> getPackages() {
           @SuppressWarnings("UnnecessaryLocalVariable")
           List<ReactPackage> packages = new PackageList(this).getPackages();
-          // Packages that cannot be autolinked yet can be added manually here, for BlobDownloaderExample:
+          // Packages that cannot be autolinked yet can be added manually here, for BlobCourierExample:
           // packages.add(new MyReactNativePackage());
-          packages.add(new BlobDownloaderPackage());
+          packages.add(new BlobCourierPackage());
 
           return packages;
         }
@@ -63,7 +63,7 @@ public class MainApplication extends Application implements ReactApplication {
          We use reflection here to pick up the class that initializes Flipper,
         since Flipper library is not available in release mode
         */
-        Class<?> aClass = Class.forName("io.deckers.blob_downloaderExample.ReactNativeFlipper");
+        Class<?> aClass = Class.forName("io.deckers.blob_courierExample.ReactNativeFlipper");
         aClass
             .getMethod("initializeFlipper", Context.class, ReactInstanceManager.class)
             .invoke(null, context, reactInstanceManager);

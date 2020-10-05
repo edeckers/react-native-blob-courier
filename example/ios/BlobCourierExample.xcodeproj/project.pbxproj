@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		0D1336C0461A88D01186E375 /* libPods-BlobDownloaderExample.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BCEA90A70F4BEAD7E9FA28B2 /* libPods-BlobDownloaderExample.a */; };
+		0D1336C0461A88D01186E375 /* libPods-BlobCourierExample.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BCEA90A70F4BEAD7E9FA28B2 /* libPods-BlobCourierExample.a */; };
 		13B07FBC1A68108700A75B9A /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB01A68108700A75B9A /* AppDelegate.m */; };
 		13B07FBD1A68108700A75B9A /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB11A68108700A75B9A /* LaunchScreen.xib */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
@@ -17,19 +17,19 @@
 
 /* Begin PBXFileReference section */
 		008F07F21AC5B25A0029DE68 /* main.jsbundle */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = main.jsbundle; sourceTree = "<group>"; };
-		13B07F961A680F5B00A75B9A /* BlobDownloaderExample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BlobDownloaderExample.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		13B07FAF1A68108700A75B9A /* AppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AppDelegate.h; path = BlobDownloaderExample/AppDelegate.h; sourceTree = "<group>"; };
-		13B07FB01A68108700A75B9A /* AppDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = AppDelegate.m; path = BlobDownloaderExample/AppDelegate.m; sourceTree = "<group>"; };
+		13B07F961A680F5B00A75B9A /* BlobCourierExample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BlobCourierExample.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		13B07FAF1A68108700A75B9A /* AppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AppDelegate.h; path = BlobCourierExample/AppDelegate.h; sourceTree = "<group>"; };
+		13B07FB01A68108700A75B9A /* AppDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = AppDelegate.m; path = BlobCourierExample/AppDelegate.m; sourceTree = "<group>"; };
 		13B07FB21A68108700A75B9A /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/LaunchScreen.xib; sourceTree = "<group>"; };
-		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = BlobDownloaderExample/Images.xcassets; sourceTree = "<group>"; };
-		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = BlobDownloaderExample/Info.plist; sourceTree = "<group>"; };
-		13B07FB71A68108700A75B9A /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = main.m; path = BlobDownloaderExample/main.m; sourceTree = "<group>"; };
-		20F357AD24636CDE00C146DC /* BlobDownloaderExample-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "BlobDownloaderExample-Bridging-Header.h"; sourceTree = "<group>"; };
-		20F357AE24636CDF00C146DC /* BlobDownloaderExample-Bridging-Header.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "BlobDownloaderExample-Bridging-Header.h"; sourceTree = "<group>"; };
+		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = BlobCourierExample/Images.xcassets; sourceTree = "<group>"; };
+		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = BlobCourierExample/Info.plist; sourceTree = "<group>"; };
+		13B07FB71A68108700A75B9A /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = main.m; path = BlobCourierExample/main.m; sourceTree = "<group>"; };
+		20F357AD24636CDE00C146DC /* BlobCourierExample-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "BlobCourierExample-Bridging-Header.h"; sourceTree = "<group>"; };
+		20F357AE24636CDF00C146DC /* BlobCourierExample-Bridging-Header.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "BlobCourierExample-Bridging-Header.h"; sourceTree = "<group>"; };
 		20F357AF24636CDF00C146DC /* File.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = File.swift; sourceTree = "<group>"; };
-		4D7192F03A36A017E887435B /* Pods-BlobDownloaderExample.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BlobDownloaderExample.release.xcconfig"; path = "Target Support Files/Pods-BlobDownloaderExample/Pods-BlobDownloaderExample.release.xcconfig"; sourceTree = "<group>"; };
-		871719007ECC5EAD276C345C /* Pods-BlobDownloaderExample.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BlobDownloaderExample.debug.xcconfig"; path = "Target Support Files/Pods-BlobDownloaderExample/Pods-BlobDownloaderExample.debug.xcconfig"; sourceTree = "<group>"; };
-		BCEA90A70F4BEAD7E9FA28B2 /* libPods-BlobDownloaderExample.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-BlobDownloaderExample.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		4D7192F03A36A017E887435B /* Pods-BlobCourierExample.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BlobCourierExample.release.xcconfig"; path = "Target Support Files/Pods-BlobCourierExample/Pods-BlobCourierExample.release.xcconfig"; sourceTree = "<group>"; };
+		871719007ECC5EAD276C345C /* Pods-BlobCourierExample.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BlobCourierExample.debug.xcconfig"; path = "Target Support Files/Pods-BlobCourierExample/Pods-BlobCourierExample.debug.xcconfig"; sourceTree = "<group>"; };
+		BCEA90A70F4BEAD7E9FA28B2 /* libPods-BlobCourierExample.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-BlobCourierExample.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
@@ -38,14 +38,14 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0D1336C0461A88D01186E375 /* libPods-BlobDownloaderExample.a in Frameworks */,
+				0D1336C0461A88D01186E375 /* libPods-BlobCourierExample.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		13B07FAE1A68108700A75B9A /* BlobDownloaderExample */ = {
+		13B07FAE1A68108700A75B9A /* BlobCourierExample */ = {
 			isa = PBXGroup;
 			children = (
 				008F07F21AC5B25A0029DE68 /* main.jsbundle */,
@@ -56,14 +56,14 @@
 				13B07FB11A68108700A75B9A /* LaunchScreen.xib */,
 				13B07FB71A68108700A75B9A /* main.m */,
 			);
-			name = BlobDownloaderExample;
+			name = BlobCourierExample;
 			sourceTree = "<group>";
 		};
 		1CFFDEF7170271C97B8B7E5A /* Pods */ = {
 			isa = PBXGroup;
 			children = (
-				871719007ECC5EAD276C345C /* Pods-BlobDownloaderExample.debug.xcconfig */,
-				4D7192F03A36A017E887435B /* Pods-BlobDownloaderExample.release.xcconfig */,
+				871719007ECC5EAD276C345C /* Pods-BlobCourierExample.debug.xcconfig */,
+				4D7192F03A36A017E887435B /* Pods-BlobCourierExample.release.xcconfig */,
 			);
 			path = Pods;
 			sourceTree = "<group>";
@@ -72,7 +72,7 @@
 			isa = PBXGroup;
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
-				BCEA90A70F4BEAD7E9FA28B2 /* libPods-BlobDownloaderExample.a */,
+				BCEA90A70F4BEAD7E9FA28B2 /* libPods-BlobCourierExample.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -88,13 +88,13 @@
 			isa = PBXGroup;
 			children = (
 				20F357AF24636CDF00C146DC /* File.swift */,
-				20F357AE24636CDF00C146DC /* BlobDownloaderExample-Bridging-Header.h */,
-				13B07FAE1A68108700A75B9A /* BlobDownloaderExample */,
+				20F357AE24636CDF00C146DC /* BlobCourierExample-Bridging-Header.h */,
+				13B07FAE1A68108700A75B9A /* BlobCourierExample */,
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
 				1CFFDEF7170271C97B8B7E5A /* Pods */,
-				20F357AD24636CDE00C146DC /* BlobDownloaderExample-Bridging-Header.h */,
+				20F357AD24636CDE00C146DC /* BlobCourierExample-Bridging-Header.h */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -104,7 +104,7 @@
 		83CBBA001A601CBA00E9B192 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				13B07F961A680F5B00A75B9A /* BlobDownloaderExample.app */,
+				13B07F961A680F5B00A75B9A /* BlobCourierExample.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -112,9 +112,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		13B07F861A680F5B00A75B9A /* BlobDownloaderExample */ = {
+		13B07F861A680F5B00A75B9A /* BlobCourierExample */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "BlobDownloaderExample" */;
+			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "BlobCourierExample" */;
 			buildPhases = (
 				CCCC07BCAFDEF1FCADC0D0C9 /* [CP] Check Pods Manifest.lock */,
 				FD10A7F022414F080027D42C /* Start Packager */,
@@ -127,9 +127,9 @@
 			);
 			dependencies = (
 			);
-			name = BlobDownloaderExample;
-			productName = BlobDownloaderExample;
-			productReference = 13B07F961A680F5B00A75B9A /* BlobDownloaderExample.app */;
+			name = BlobCourierExample;
+			productName = BlobCourierExample;
+			productReference = 13B07F961A680F5B00A75B9A /* BlobCourierExample.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -146,7 +146,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 83CBB9FA1A601CBA00E9B192 /* Build configuration list for PBXProject "BlobDownloaderExample" */;
+			buildConfigurationList = 83CBB9FA1A601CBA00E9B192 /* Build configuration list for PBXProject "BlobCourierExample" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
@@ -160,7 +160,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				13B07F861A680F5B00A75B9A /* BlobDownloaderExample */,
+				13B07F861A680F5B00A75B9A /* BlobCourierExample */,
 			);
 		};
 /* End PBXProject section */
@@ -207,7 +207,7 @@
 			outputFileListPaths = (
 			);
 			outputPaths = (
-				"$(DERIVED_FILE_DIR)/Pods-BlobDownloaderExample-checkManifestLockResult.txt",
+				"$(DERIVED_FILE_DIR)/Pods-BlobCourierExample-checkManifestLockResult.txt",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -255,7 +255,7 @@
 				13B07FB21A68108700A75B9A /* Base */,
 			);
 			name = LaunchScreen.xib;
-			path = BlobDownloaderExample;
+			path = BlobCourierExample;
 			sourceTree = "<group>";
 		};
 /* End PBXVariantGroup section */
@@ -263,13 +263,13 @@
 /* Begin XCBuildConfiguration section */
 		13B07F941A680F5B00A75B9A /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 871719007ECC5EAD276C345C /* Pods-BlobDownloaderExample.debug.xcconfig */;
+			baseConfigurationReference = 871719007ECC5EAD276C345C /* Pods-BlobCourierExample.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CURRENT_PROJECT_VERSION = 1;
 				DEAD_CODE_STRIPPING = NO;
-				INFOPLIST_FILE = BlobDownloaderExample/Info.plist;
+				INFOPLIST_FILE = BlobCourierExample/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				OTHER_CFLAGS = (
 					"$(inherited)",
@@ -280,9 +280,9 @@
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "org.reactjs.native.BlobDownloaderExample.$(PRODUCT_NAME:rfc1034identifier)";
-				PRODUCT_NAME = BlobDownloaderExample;
-				SWIFT_OBJC_BRIDGING_HEADER = "BlobDownloaderExample-Bridging-Header.h";
+				PRODUCT_BUNDLE_IDENTIFIER = "org.reactjs.native.BlobCourierExample.$(PRODUCT_NAME:rfc1034identifier)";
+				PRODUCT_NAME = BlobCourierExample;
+				SWIFT_OBJC_BRIDGING_HEADER = "BlobCourierExample-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
@@ -291,12 +291,12 @@
 		};
 		13B07F951A680F5B00A75B9A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 4D7192F03A36A017E887435B /* Pods-BlobDownloaderExample.release.xcconfig */;
+			baseConfigurationReference = 4D7192F03A36A017E887435B /* Pods-BlobCourierExample.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CURRENT_PROJECT_VERSION = 1;
-				INFOPLIST_FILE = BlobDownloaderExample/Info.plist;
+				INFOPLIST_FILE = BlobCourierExample/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				OTHER_CFLAGS = (
 					"$(inherited)",
@@ -307,9 +307,9 @@
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "org.reactjs.native.BlobDownloaderExample.$(PRODUCT_NAME:rfc1034identifier)";
-				PRODUCT_NAME = BlobDownloaderExample;
-				SWIFT_OBJC_BRIDGING_HEADER = "BlobDownloaderExample-Bridging-Header.h";
+				PRODUCT_BUNDLE_IDENTIFIER = "org.reactjs.native.BlobCourierExample.$(PRODUCT_NAME:rfc1034identifier)";
+				PRODUCT_NAME = BlobCourierExample;
+				SWIFT_OBJC_BRIDGING_HEADER = "BlobCourierExample-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
 			};
@@ -417,7 +417,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "BlobDownloaderExample" */ = {
+		13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "BlobCourierExample" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				13B07F941A680F5B00A75B9A /* Debug */,
@@ -426,7 +426,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		83CBB9FA1A601CBA00E9B192 /* Build configuration list for PBXProject "BlobDownloaderExample" */ = {
+		83CBB9FA1A601CBA00E9B192 /* Build configuration list for PBXProject "BlobCourierExample" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				83CBBA201A601CBA00E9B192 /* Debug */,

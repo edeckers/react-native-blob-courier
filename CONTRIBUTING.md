@@ -49,9 +49,9 @@ Remember to add tests for your change if possible. Run the unit tests by:
 yarn test
 ```
 
-To edit the Objective-C files, open `example/ios/BlobDownloaderExample.xcworkspace` in XCode and find the source files at `Pods > Development Pods > react-native-blob-downloader`.
+To edit the Objective-C files, open `example/ios/BlobCourierExample.xcworkspace` in XCode and find the source files at `Pods > Development Pods > react-native-blob-courier`.
 
-To edit the Kotlin files, open `example/android` in Android studio and find the source files at `blob_downloader` under `Android`.
+To edit the Kotlin files, open `example/android` in Android studio and find the source files at `blob_courier` under `Android`.
 
 ### Commit message convention
 
