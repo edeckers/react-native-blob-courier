@@ -28,7 +28,7 @@ const AndroidPathType = {
 
 const CommonPathType = {
   Cache: '',
-  Documents: '',
+  Document: '',
 };
 
 const IOSPathType = {

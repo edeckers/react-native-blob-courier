@@ -7,6 +7,7 @@ import android.os.Environment
 import android.os.Environment.getExternalStoragePublicDirectory
 import com.facebook.common.internal.ImmutableMap
 import com.facebook.react.bridge.*
+import com.facebook.react.modules.network.OkHttpClientProvider
 
 import java.io.File
 import java.lang.reflect.Type
@@ -15,7 +16,7 @@ import okhttp3.Request
 import okio.Okio
 
 
-class BlobDownloaderModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(reactContext) {
+class BlobDownloaderModule(val reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(reactContext) {
     val ERROR_MISSING_REQUIRED_PARAM = "ERROR_MISSING_REQUIRED_PARAM"
     val ERROR_INVALID_TARGET_PARAM_ENUM = "ERROR_INVALID_TARGET_PARAM_ENUM"
     val ERROR_UNEXPECTED_EXCEPTION = "ERROR_UNEXPECTED_EXCEPTION"
@@ -29,8 +30,6 @@ class BlobDownloaderModule(reactContext: ReactApplicationContext) : ReactContext
     val TARGET_PARAM_ENUM_PREFIX = "enum://"
 
     val DEFAULT_METHOD = "GET"
-
-    val sureSure = reactContext
 
     override fun getName(): String {
         return "BlobDownloader"
@@ -90,7 +89,7 @@ class BlobDownloaderModule(reactContext: ReactApplicationContext) : ReactContext
     }
 
     fun fetchBlobUsingDownloadManager(uri: Uri, targetPath: String, filename: String?) {
-        val downloadManager = sureSure.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
+        val downloadManager = reactContext.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
 
         val request = DownloadManager.Request(uri).apply {
             setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI or DownloadManager.Request.NETWORK_MOBILE)
@@ -106,7 +105,7 @@ class BlobDownloaderModule(reactContext: ReactApplicationContext) : ReactContext
     fun fetchBlobWithoutDownloadManager(uri: Uri, targetPath: String, filename: String, method: String) {
         val fullTargetPath = File(targetPath, filename)
 
-        val okHttpClient = OkHttpClient();
+        val okHttpClient = OkHttpClientProvider.getOkHttpClient()
 
         val request = Request.Builder().method(method, null).url(uri.toString()).build()
 
