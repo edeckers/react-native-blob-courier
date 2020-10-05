@@ -1,5 +1,7 @@
 # react-native-blob-downloader
 
+[![License: MPL 2.0](https://img.shields.io/badge/License-MPL%202.0-brightgreen.svg)](https://opensource.org/licenses/MPL-2.0)
+
 Download blobs
 
 ## Installation
@@ -35,4 +37,4 @@ See the [contributing guide](CONTRIBUTING.md) to learn how to contribute to the 
 
 ## License
 
-MIT
+MPL-2.0
