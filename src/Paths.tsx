@@ -1,3 +1,9 @@
+/**
+ * Copyright (c) Ely Deckers.
+ *
+ * This source code is licensed under the MPL-2.0 license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
 const buildPathEnum = (items: string[], initial = {}) => {
   console.debug(
     `Build PathEnum type from ${items}, merged with ${JSON.stringify(initial)}`
