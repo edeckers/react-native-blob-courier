@@ -13,10 +13,6 @@ import java.lang.reflect.Type
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okio.Okio
-import java.io.IOException
-import android.R.string
-import android.provider.Telephony.Mms.Part.FILENAME
-import java.io.FileOutputStream
 
 
 class BlobDownloaderModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(reactContext) {
@@ -114,23 +110,11 @@ class BlobDownloaderModule(reactContext: ReactApplicationContext) : ReactContext
 
         val request = Request.Builder().method(method, null).url(uri.toString()).build()
 
-
-
         okHttpClient.newCall(request).execute().use { response ->
             response.body()?.source().use { source ->
-                try {
-                    //sureSure.openFileOutput(fullTargetPath.toString(), Context.MODE_PRIVATE).use { output ->
-                    //    output.write(data?.readBytes())
-                    //}
-
-                    Okio.buffer(Okio.sink(fullTargetPath)).use { sink ->
-                        sink.writeAll(source)
-                    }
-
-                } catch (e: IOException) {
-                    e.printStackTrace()
+                Okio.buffer(Okio.sink(fullTargetPath)).use { sink ->
+                    sink.writeAll(source)
                 }
-
             }
         }
     }
@@ -155,7 +139,6 @@ class BlobDownloaderModule(reactContext: ReactApplicationContext) : ReactContext
 
         fetchBlobWithoutDownloadManager(uri, target, filename, method)
         promise.resolve(true)
-
     }
 
     @ReactMethod
@@ -176,5 +159,4 @@ class BlobDownloaderModule(reactContext: ReactApplicationContext) : ReactContext
             return
         }
     }
-
 }
