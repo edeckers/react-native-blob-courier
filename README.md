@@ -134,35 +134,13 @@ try {
 }
 ```
 
-## Predefined directories
+## Shared directories
+As this library is focussed on transferring files, it only supports storage to the app's data directory. To move files from the data directory to the Downloads, or Documents directory, use another library like [@react-native-community/cameraroll](https://github.com/react-native-community/react-native-cameraroll)
 
-There are a couple predefined directories where you can store your files, they are available through constants:
-
-**Every OS**
-```tsx
- CommonPath.Cache,
- CommonPath.Document
-```
-
-**Android**
-```tsx
- AndroidPath.DCIM,
- AndroidPath.Download,
- AndroidPath.Movie,
- AndroidPath.Music,
- AndroidPath.Picture,
- AndroidPath.Ringtone,
- AndroidPath.SDCard
-```
-
-**iOS**
-```tsx
- IOSPath.MainBundle,
-```
 
 ## Contributing
 
-See the [contributing guide](CONTRIBUTING.md) to learn how to contribute to the repository and the development workflow.
+See the [contributing guide](CONTRIBUTING.md) to learn how to contribute to the  repository and the development workflow.
 
 ## License
 
