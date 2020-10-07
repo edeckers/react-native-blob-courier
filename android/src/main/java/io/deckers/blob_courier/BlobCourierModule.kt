@@ -9,14 +9,8 @@ package io.deckers.blob_courier
 import android.app.DownloadManager
 import android.content.Context
 import android.net.Uri
-import android.os.Environment
-import android.os.Environment.getExternalStoragePublicDirectory
 import com.facebook.common.internal.ImmutableMap
-import com.facebook.react.bridge.Promise
-import com.facebook.react.bridge.ReactApplicationContext
-import com.facebook.react.bridge.ReactContextBaseJavaModule
-import com.facebook.react.bridge.ReactMethod
-import com.facebook.react.bridge.ReadableMap
+import com.facebook.react.bridge.*
 import com.facebook.react.modules.network.OkHttpClientProvider
 import java.io.File
 import java.lang.reflect.Type
@@ -25,54 +19,20 @@ import okio.Okio
 
 class BlobCourierModule(val reactContext: ReactApplicationContext) :
   ReactContextBaseJavaModule(reactContext) {
+
   val ERROR_MISSING_REQUIRED_PARAM = "ERROR_MISSING_REQUIRED_PARAM"
-  val ERROR_INVALID_TARGET_PARAM_ENUM = "ERROR_INVALID_TARGET_PARAM_ENUM"
   val ERROR_UNEXPECTED_EXCEPTION = "ERROR_UNEXPECTED_EXCEPTION"
 
   val PARAM_FILENAME = "filename"
   val PARAM_METHOD = "method"
-  val PARAM_TARGET = "target"
   val PARAM_URL = "url"
   val PARAM_USE_DOWNLOAD_MANAGER = "useDownloadManager"
 
-  val TARGET_PARAM_ENUM_PREFIX = "enum://"
-
   val DEFAULT_METHOD = "GET"
 
-  override fun getName(): String {
-    return "BlobCourier"
-  }
-
-  val predefinedPaths = mapOf(
-    "DCIM" to getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM),
-    "DOCUMENT" to getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS),
-    "DOWNLOAD" to getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-  )
+  override fun getName(): String = "BlobCourier"
 
   class BlobCourierError(open val code: String, message: String) : Throwable(message)
-
-  fun stripEnumPrefix(path: String): String = path.replaceFirst(TARGET_PARAM_ENUM_PREFIX, "")
-
-  fun assertPathEnum(pathEnum: String) {
-    val cleanedPathEnum = stripEnumPrefix(pathEnum)
-
-    if (!predefinedPaths.containsKey(cleanedPathEnum.toUpperCase())) {
-      throw BlobCourierError(ERROR_INVALID_TARGET_PARAM_ENUM, "Unknown enum `$cleanedPathEnum`")
-    }
-  }
-
-  fun isEnum(pathEnum: String) = pathEnum.startsWith(TARGET_PARAM_ENUM_PREFIX, ignoreCase = true)
-
-  fun parsePathEnum(pathEnum: String): File? {
-    val cleanedPathEnum = stripEnumPrefix(pathEnum)
-
-    assertPathEnum(cleanedPathEnum)
-
-    return predefinedPaths.get(cleanedPathEnum.toUpperCase())
-  }
-
-  fun buildTargetFromPathOrEnum(pathOrEnum: String): String =
-    if (isEnum(pathOrEnum)) parsePathEnum(pathOrEnum).toString() else pathOrEnum
 
   val REQUIRED_PARAMETER_PROCESSOR = ImmutableMap.of(
     Boolean::class.java.toString(),
@@ -80,12 +40,6 @@ class BlobCourierModule(val reactContext: ReactApplicationContext) :
     String::class.java.toString(),
     { input: ReadableMap, parameterName: String -> input.getString(parameterName) }
   )
-
-  fun assertTargetParam(target: String) {
-    if (isEnum(target)) {
-      assertPathEnum(target)
-    }
-  }
 
   fun assertRequiredParameter(input: ReadableMap, type: Type, parameterName: String) {
     val availableOptions = REQUIRED_PARAMETER_PROCESSOR.keys.joinToString(", ")
@@ -105,14 +59,12 @@ class BlobCourierModule(val reactContext: ReactApplicationContext) :
     }
   }
 
-  fun fetchBlobUsingDownloadManager(uri: Uri, targetPath: String, filename: String?) {
+  fun fetchBlobUsingDownloadManager(uri: Uri, filename: String?) {
     val downloadManager = reactContext.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
 
     val request = DownloadManager.Request(uri).apply {
       setAllowedOverRoaming(true)
-        .setVisibleInDownloadsUi(true)
         .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-        .setDestinationInExternalPublicDir(targetPath, filename)
     }
 
     downloadManager.enqueue(request)
@@ -120,11 +72,10 @@ class BlobCourierModule(val reactContext: ReactApplicationContext) :
 
   fun fetchBlobWithoutDownloadManager(
     uri: Uri,
-    targetPath: String,
     filename: String,
     method: String
   ) {
-    val fullTargetPath = File(targetPath, filename)
+    val fullFilePath = File(reactContext.cacheDir, filename)
 
     val okHttpClient = OkHttpClientProvider.getOkHttpClient()
 
@@ -132,7 +83,7 @@ class BlobCourierModule(val reactContext: ReactApplicationContext) :
 
     okHttpClient.newCall(request).execute().use { response ->
       response.body()?.source().use { source ->
-        Okio.buffer(Okio.sink(fullTargetPath)).use { sink ->
+        Okio.buffer(Okio.sink(fullFilePath)).use { sink ->
           sink.writeAll(source)
         }
       }
@@ -142,22 +93,20 @@ class BlobCourierModule(val reactContext: ReactApplicationContext) :
   fun fetchBlobFromValidatedParameters(input: ReadableMap, promise: Promise) {
     val filename = input.getString(PARAM_FILENAME) ?: ""
     val uri = Uri.parse(input.getString(PARAM_URL))
-    val targetPathOrEnum = input.getString(PARAM_TARGET) ?: ""
-    val target = buildTargetFromPathOrEnum(targetPathOrEnum)
 
     val useDownloadManager =
       input.hasKey(PARAM_USE_DOWNLOAD_MANAGER) &&
         input.getBoolean(PARAM_USE_DOWNLOAD_MANAGER)
 
     if (useDownloadManager) {
-      fetchBlobUsingDownloadManager(uri, target, filename)
+      fetchBlobUsingDownloadManager(uri, filename)
       promise.resolve(true)
       return
     }
 
     val method = input.getString(PARAM_METHOD) ?: DEFAULT_METHOD
 
-    fetchBlobWithoutDownloadManager(uri, target, filename, method)
+    fetchBlobWithoutDownloadManager(uri, filename, method)
     promise.resolve(true)
   }
 
@@ -165,10 +114,7 @@ class BlobCourierModule(val reactContext: ReactApplicationContext) :
   fun fetchBlob(input: ReadableMap, promise: Promise) {
     try {
       assertRequiredParameter(input, String::class.java, PARAM_FILENAME)
-      assertRequiredParameter(input, String::class.java, PARAM_TARGET)
       assertRequiredParameter(input, String::class.java, PARAM_URL)
-
-      assertTargetParam(input.getString(PARAM_TARGET) ?: "")
 
       fetchBlobFromValidatedParameters(input, promise)
     } catch (e: BlobCourierError) {
