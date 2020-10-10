@@ -20,6 +20,6 @@ jobs:
       - uses: borales/actions-yarn@v2.0.0
         with:
           cmd: install
-       - name: Build Android Release
+      - name: Build Android Release
         run: |
           cd android && ./gradlew build'
