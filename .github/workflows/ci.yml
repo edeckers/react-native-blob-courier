@@ -6,20 +6,18 @@ jobs:
     runs-on: ubuntu-latest
     steps: 
       - uses: actions/checkout@v2
-      - uses: borales/actions-yarn@v2.0.0
+      - uses: actions/setup-node@v2-beta
         with:
-          cmd: install
-      - uses: borales/actions-yarn@v2.0.0
-        with:
-          cmd: lint
+          node-version: '12'
+      - run: yarn install
+      - run: yarn lint
   build-android:
     needs: install-and-test
     runs-on: ubuntu-latest
     steps: 
       - uses: actions/checkout@v2
-      - uses: borales/actions-yarn@v2.0.0
+      - uses: actions/setup-node@v2-beta
         with:
-          cmd: install
-      - name: Build Android Release
-        run: |
-          cd android && ./gradlew build'
+          node-version: '12'
+      - run: yarn install
+      - run: cd android && ./gradlew build'
