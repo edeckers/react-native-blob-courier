@@ -29,3 +29,20 @@ jobs:
           build-root-directory: android
           wrapper-directory: android
           arguments: build
+  build-ios:
+    needs: install-and-test
+    runs-on: macOS-latest
+    steps: 
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2-beta
+        with:
+          node-version: '12'
+      - run: yarn
+      - run: cd example && yarn
+      - run: cd example/ios && pod install
+      - uses: sersoft-gmbh/xcodebuild-action@v1
+        with:
+          workspace: example/ios/BlobCourierExample.xcworkspace
+          scheme: BlobCourierExample
+          destination: 'platform=iOS Simulator,name=iPhone 11'
+          action: build
