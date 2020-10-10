@@ -1,14 +1,11 @@
 import * as React from 'react';
 import { StyleSheet, View, Text, PermissionsAndroid } from 'react-native';
-import BlobCourier, {
-  AndroidBlobRequest,
-  AndroidPath,
-} from 'react-native-blob-courier';
+import BlobCourier from 'react-native-blob-courier';
+import type { AndroidBlobRequest } from 'src/Requests';
 
 export default function App() {
   const [result, setResult] = React.useState<Response>();
 
-  console.log(AndroidPath.Download);
   React.useEffect(() => {
     const requestPermissionAndDownloadBlobAsync = async () => {
       try {
@@ -22,7 +19,6 @@ export default function App() {
       BlobCourier.fetchBlob({
         filename: 'drop2.avi',
         method: 'GET',
-        target: AndroidPath.Download,
         useDownloadManager: true,
         url: 'https://www.engr.colostate.edu/me/facil/dynamics/files/drop.avi',
       } as AndroidBlobRequest).then(setResult);

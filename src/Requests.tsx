@@ -9,9 +9,8 @@ export declare interface BlobRequest {
   readonly headers?: Headers;
   readonly method?: string;
   readonly url: string;
-  readonly target: string;
 }
 
-export declare interface AndroidBlobRequest extends BlobRequest {
+export declare interface AndroidBlobRequest {
   readonly useDownloadManager: boolean;
 }
