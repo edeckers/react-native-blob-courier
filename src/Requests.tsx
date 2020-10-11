@@ -14,3 +14,10 @@ export declare interface BlobRequest {
 export declare interface AndroidBlobRequest {
   readonly useDownloadManager: boolean;
 }
+
+export declare interface BlobUploadRequest {
+  readonly filename: string;
+  readonly headers?: Headers;
+  readonly method?: string;
+  readonly url: string;
+}

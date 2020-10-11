@@ -83,6 +83,46 @@ class BlobCourier: NSObject {
     resolve(true)
   }
 
+  func uploadBlobFromValidatedParameters(
+    input: NSDictionary, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock
+  ) throws {
+    let url = (input[BlobCourier.PARAM_URL] as? String) ?? ""
+
+    let urlObject = URL(string: url)
+
+    let filename = (input[BlobCourier.PARAM_FILENAME] as? String) ?? ""
+
+    let documentsUrl: URL = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask)
+      .first!
+    let destinationFileUrl = documentsUrl.appendingPathComponent("\(filename)")
+
+    let fileURL = URL(string: url)
+    let sessionConfig = URLSessionConfiguration.default
+    let session = URLSession(configuration: sessionConfig)
+    let request = URLRequest(url: fileURL!)
+
+    let task = session.downloadTask(with: request) { (tempLocalUrl, response, error) in
+      if let tempLocalUrl = tempLocalUrl, error == nil {
+        if let statusCode = (response as? HTTPURLResponse)?.statusCode {
+          print("Successfully downloaded. Status code: \(statusCode)")
+        }
+
+        do {
+          try FileManager.default.copyItem(at: tempLocalUrl, to: destinationFileUrl)
+       } catch (let writeError) {
+          print("Error creating a file \(destinationFileUrl) : \(writeError)")
+        }
+      } else {
+        print(
+          "Error took place while downloading a file. Error description: \(error?.localizedDescription ?? "")"
+        )
+      }
+    }
+    task.resume()
+
+    resolve(true)
+  }
+
   @objc(fetchBlob:withResolver:withRejecter:)
   func fetchBlob(
     input: NSDictionary, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock
@@ -98,4 +138,20 @@ class BlobCourier: NSObject {
       print("\(error)")
     }
   }
-}
+
+  @objc(uploadBlob:withResolver:withRejecter:)
+  func uploadBlob(
+    input: NSDictionary, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock
+  ) {
+    do {
+      try assertRequiredParameter(
+        input: input, type: "String", parameterName: BlobCourier.PARAM_FILENAME)
+      try assertRequiredParameter(
+        input: input, type: "String", parameterName: BlobCourier.PARAM_URL)
+
+      try fetchBlobFromValidatedParameters(input: input, resolve: resolve, reject: reject)
+    } catch {
+      print("\(error)")
+    }
+  }
+}}

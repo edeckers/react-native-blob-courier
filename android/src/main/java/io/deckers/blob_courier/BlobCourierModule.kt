@@ -12,10 +12,15 @@ import android.net.Uri
 import com.facebook.common.internal.ImmutableMap
 import com.facebook.react.bridge.*
 import com.facebook.react.modules.network.OkHttpClientProvider
+import okhttp3.MultipartBody
 import java.io.File
 import java.lang.reflect.Type
 import okhttp3.Request
 import okio.Okio
+import okhttp3.MediaType
+import okhttp3.RequestBody
+import java.net.URL
+
 
 class BlobCourierModule(val reactContext: ReactApplicationContext) :
   ReactContextBaseJavaModule(reactContext) {
@@ -24,7 +29,9 @@ class BlobCourierModule(val reactContext: ReactApplicationContext) :
   val ERROR_UNEXPECTED_EXCEPTION = "ERROR_UNEXPECTED_EXCEPTION"
 
   val PARAM_FILENAME = "filename"
+  val PARAM_FILE_PATH = "filePath"
   val PARAM_METHOD = "method"
+  val PARAM_MIME_TYPE = "mimeType"
   val PARAM_URL = "url"
   val PARAM_USE_DOWNLOAD_MANAGER = "useDownloadManager"
 
@@ -70,6 +77,8 @@ class BlobCourierModule(val reactContext: ReactApplicationContext) :
     downloadManager.enqueue(request)
   }
 
+  fun client() = OkHttpClientProvider.getOkHttpClient()
+
   fun fetchBlobWithoutDownloadManager(
     uri: Uri,
     filename: String,
@@ -77,7 +86,7 @@ class BlobCourierModule(val reactContext: ReactApplicationContext) :
   ) {
     val fullFilePath = File(reactContext.cacheDir, filename)
 
-    val okHttpClient = OkHttpClientProvider.getOkHttpClient()
+    val okHttpClient = client()
 
     val request = Request.Builder().method(method, null).url(uri.toString()).build()
 
@@ -117,6 +126,49 @@ class BlobCourierModule(val reactContext: ReactApplicationContext) :
       assertRequiredParameter(input, String::class.java, PARAM_URL)
 
       fetchBlobFromValidatedParameters(input, promise)
+    } catch (e: BlobCourierError) {
+      promise.reject(e.code, e.message)
+      return
+    } catch (e: Exception) {
+      promise.reject(ERROR_UNEXPECTED_EXCEPTION, "An unexpected exception occurred: ${e.message}")
+      return
+    }
+  }
+
+  fun uploadBlobFromValidatedParameters(input: ReadableMap, promise: Promise) {
+    val filePath = input.getString(PARAM_FILE_PATH)
+
+    val file = File(filePath)
+
+    val uri = URL(input.getString(PARAM_URL))
+
+    val method = input.getString(PARAM_METHOD) ?: DEFAULT_METHOD
+
+    val mimeType = input.getString(PARAM_MIME_TYPE)!!
+
+    val requestBody = MultipartBody.Builder().setType(MultipartBody.FORM)
+            .addFormDataPart("file", file.getName(),
+                    RequestBody.create(MediaType.parse(mimeType), file))
+            .build()
+
+    val request = Request.Builder()
+            .url(uri)
+            .method(method, requestBody)
+            .build()
+
+    client().newCall(request).execute()
+
+    promise.resolve(true)
+  }
+
+  @ReactMethod
+  fun uploadBlob(input: ReadableMap, promise: Promise) {
+    try {
+      assertRequiredParameter(input, String::class.java, PARAM_FILE_PATH)
+      assertRequiredParameter(input, String::class.java, PARAM_MIME_TYPE)
+      assertRequiredParameter(input, String::class.java, PARAM_URL)
+
+      uploadBlobFromValidatedParameters(input, promise)
     } catch (e: BlobCourierError) {
       promise.reject(e.code, e.message)
       return

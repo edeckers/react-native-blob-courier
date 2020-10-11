@@ -5,10 +5,15 @@
  * LICENSE file in the root directory of this source tree.
  */
 import { NativeModules } from 'react-native';
-import type { AndroidBlobRequest, BlobRequest } from './Requests';
+import type {
+  AndroidBlobRequest,
+  BlobRequest,
+  BlobUploadRequest,
+} from './Requests';
 
 type BlobCourierType = {
   fetchBlob(input: AndroidBlobRequest | BlobRequest): Promise<Response>;
+  uploadBlob(input: BlobUploadRequest): Promise<Response>;
 };
 
 const { BlobCourier } = NativeModules;

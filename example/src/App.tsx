@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { StyleSheet, View, Text, PermissionsAndroid } from 'react-native';
 import BlobCourier from 'react-native-blob-courier';
-import type { AndroidBlobRequest } from 'src/Requests';
+import type { AndroidBlobRequest, BlobUploadRequest } from 'src/Requests';
 
 export default function App() {
   const [result, setResult] = React.useState<Response>();
@@ -22,6 +22,12 @@ export default function App() {
         useDownloadManager: true,
         url: 'https://www.engr.colostate.edu/me/facil/dynamics/files/drop.avi',
       } as AndroidBlobRequest).then(setResult);
+
+      BlobCourier.uploadBlob({
+        filename: 'drop2.avi',
+        method: 'POST',
+        url: 'https://www.engr.colostate.edu/me/facil/dynamics/files/drop.avi',
+      } as BlobUploadRequest).then(setResult);
     };
 
     requestPermissionAndDownloadBlobAsync();
