@@ -28,7 +28,7 @@ jobs:
         with:
           build-root-directory: android
           wrapper-directory: android
-          arguments: build
+          arguments: test
   build-ios:
     needs: install-and-test
     runs-on: macOS-latest
