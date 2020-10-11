@@ -51,6 +51,16 @@
          </BuildableReference>
       </MacroExpansion>
       <Testables>
+         <TestableReference
+            skipped = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "B97A80F12532F35F0046026E"
+               BuildableName = "BlobCourierExampleTests.xctest"
+               BlueprintName = "BlobCourierExampleTests"
+               ReferencedContainer = "container:BlobCourierExample.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
       </Testables>
    </TestAction>
    <LaunchAction

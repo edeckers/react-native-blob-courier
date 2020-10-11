@@ -28,7 +28,7 @@ jobs:
         with:
           build-root-directory: android
           wrapper-directory: android
-          arguments: build
+          arguments: test
   build-ios:
     needs: install-and-test
     runs-on: macOS-latest
@@ -45,4 +45,4 @@ jobs:
           workspace: example/ios/BlobCourierExample.xcworkspace
           scheme: BlobCourierExample
           destination: 'platform=iOS Simulator,name=iPhone 11'
-          action: build
+          action: test
