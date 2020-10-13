@@ -8,12 +8,13 @@ import { NativeModules } from 'react-native';
 import type {
   AndroidBlobRequest,
   BlobRequest,
+  BlobResponse,
   BlobUploadRequest,
 } from './Requests';
 
 type BlobCourierType = {
-  fetchBlob(input: AndroidBlobRequest | BlobRequest): Promise<Response>;
-  uploadBlob(input: BlobUploadRequest): Promise<Response>;
+  fetchBlob(input: AndroidBlobRequest | BlobRequest): Promise<BlobResponse>;
+  uploadBlob(input: BlobUploadRequest): Promise<BlobResponse>;
 };
 
 const { BlobCourier } = NativeModules;

@@ -8,19 +8,20 @@ package io.deckers.blob_courier
 
 import android.app.DownloadManager
 import android.content.Context
+import android.content.IntentFilter
 import android.net.Uri
 import com.facebook.common.internal.ImmutableMap
 import com.facebook.react.bridge.*
 import com.facebook.react.modules.network.OkHttpClientProvider
-import okhttp3.MultipartBody
 import java.io.File
 import java.lang.reflect.Type
-import okhttp3.Request
-import okio.Okio
-import okhttp3.MediaType
-import okhttp3.RequestBody
 import java.net.URL
-
+import okhttp3.MediaType
+import okhttp3.MultipartBody
+import okhttp3.Request
+import okhttp3.RequestBody
+import okio.Okio
+import org.json.JSONObject
 
 class BlobCourierModule(val reactContext: ReactApplicationContext) :
   ReactContextBaseJavaModule(reactContext) {
@@ -66,7 +67,7 @@ class BlobCourierModule(val reactContext: ReactApplicationContext) :
     }
   }
 
-  fun fetchBlobUsingDownloadManager(uri: Uri, filename: String?) {
+  fun fetchBlobUsingDownloadManager(uri: Uri, filename: String?, promise: Promise) {
     val downloadManager = reactContext.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
 
     val request = DownloadManager.Request(uri).apply {
@@ -74,7 +75,14 @@ class BlobCourierModule(val reactContext: ReactApplicationContext) :
         .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
     }
 
-    downloadManager.enqueue(request)
+    val downloadId = downloadManager.enqueue(request)
+
+    reactContext.registerReceiver(
+      DownloadReceiver(downloadId, promise),
+      IntentFilter(
+        DownloadManager.ACTION_DOWNLOAD_COMPLETE
+      )
+    )
   }
 
   fun client() = OkHttpClientProvider.getOkHttpClient()
@@ -82,7 +90,8 @@ class BlobCourierModule(val reactContext: ReactApplicationContext) :
   fun fetchBlobWithoutDownloadManager(
     uri: Uri,
     filename: String,
-    method: String
+    method: String,
+    promise: Promise
   ) {
     val fullFilePath = File(reactContext.cacheDir, filename)
 
@@ -97,6 +106,24 @@ class BlobCourierModule(val reactContext: ReactApplicationContext) :
         }
       }
     }
+
+    promise.resolve(
+      convertJsonToMap(
+        JSONObject(
+          ImmutableMap.of<String, Any>(
+            "type", "Http",
+            "response",
+            ImmutableMap.of<String, Any>(
+              "filePath", fullFilePath,
+              "response",
+              ImmutableMap.of<String, Any>(
+                "code", 200
+              )
+            )
+          )
+        )
+      )
+    )
   }
 
   fun fetchBlobFromValidatedParameters(input: ReadableMap, promise: Promise) {
@@ -108,15 +135,13 @@ class BlobCourierModule(val reactContext: ReactApplicationContext) :
         input.getBoolean(PARAM_USE_DOWNLOAD_MANAGER)
 
     if (useDownloadManager) {
-      fetchBlobUsingDownloadManager(uri, filename)
-      promise.resolve(true)
+      fetchBlobUsingDownloadManager(uri, filename, promise)
       return
     }
 
     val method = input.getString(PARAM_METHOD) ?: DEFAULT_METHOD
 
-    fetchBlobWithoutDownloadManager(uri, filename, method)
-    promise.resolve(true)
+    fetchBlobWithoutDownloadManager(uri, filename, method, promise)
   }
 
   @ReactMethod
@@ -147,14 +172,16 @@ class BlobCourierModule(val reactContext: ReactApplicationContext) :
     val mimeType = input.getString(PARAM_MIME_TYPE)!!
 
     val requestBody = MultipartBody.Builder().setType(MultipartBody.FORM)
-            .addFormDataPart("file", file.getName(),
-                    RequestBody.create(MediaType.parse(mimeType), file))
-            .build()
+      .addFormDataPart(
+        "file", file.getName(),
+        RequestBody.create(MediaType.parse(mimeType), file)
+      )
+      .build()
 
     val request = Request.Builder()
-            .url(uri)
-            .method(method, requestBody)
-            .build()
+      .url(uri)
+      .method(method, requestBody)
+      .build()
 
     client().newCall(request).execute()
 

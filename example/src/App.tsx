@@ -1,10 +1,17 @@
 import * as React from 'react';
 import { StyleSheet, View, Text, PermissionsAndroid } from 'react-native';
 import BlobCourier from 'react-native-blob-courier';
-import type { AndroidBlobRequest, BlobUploadRequest } from 'src/Requests';
+import {
+  AndroidBlobRequest,
+  BlobHttpResponse,
+  BlobManagedResponse,
+  BlobResponse,
+  BlobResponseType,
+  BlobUploadRequest,
+} from 'src/Requests';
 
-export default function App() {
-  const [result, setResult] = React.useState<Response>();
+export const App = () => {
+  const [result, setResult] = React.useState<BlobResponse>();
 
   React.useEffect(() => {
     const requestPermissionAndDownloadBlobAsync = async () => {
@@ -16,18 +23,28 @@ export default function App() {
         console.warn(err);
       }
 
-      BlobCourier.fetchBlob({
+      const fetchedBlob = await BlobCourier.fetchBlob({
         filename: 'drop2.avi',
         method: 'GET',
         useDownloadManager: true,
         url: 'https://www.engr.colostate.edu/me/facil/dynamics/files/drop.avi',
-      } as AndroidBlobRequest).then(setResult);
+      } as AndroidBlobRequest);
 
-      BlobCourier.uploadBlob({
-        filename: 'drop2.avi',
+      const filePath =
+        fetchedBlob.type === BlobResponseType.Managed
+          ? (fetchedBlob.response as BlobManagedResponse).fullFilePath
+          : (fetchedBlob.response as BlobHttpResponse).filePath;
+
+      console.log(fetchedBlob, filePath);
+      setResult(fetchedBlob);
+
+      const x = await BlobCourier.uploadBlob({
+        filePath,
         method: 'POST',
-        url: 'https://www.engr.colostate.edu/me/facil/dynamics/files/drop.avi',
-      } as BlobUploadRequest).then(setResult);
+        url: 'https://file.io',
+      } as BlobUploadRequest);
+
+      console.warn('OEH LAH L', x);
     };
 
     requestPermissionAndDownloadBlobAsync();
@@ -38,7 +55,7 @@ export default function App() {
       <Text>Result: {JSON.stringify(result)}</Text>
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {

@@ -16,8 +16,27 @@ export declare interface AndroidBlobRequest {
 }
 
 export declare interface BlobUploadRequest {
-  readonly filename: string;
+  readonly filePath: string;
   readonly headers?: Headers;
   readonly method?: string;
   readonly url: string;
+}
+
+export declare interface BlobManagedResponse {
+  readonly result: number;
+  readonly fullFilePath: string;
+}
+
+export declare interface BlobHttpResponse {
+  readonly filePath: string;
+  readonly code: number;
+}
+
+export enum BlobResponseType {
+  Http,
+  Managed,
+}
+export declare interface BlobResponse {
+  readonly type: BlobResponseType;
+  readonly response: BlobHttpResponse | BlobManagedResponse;
 }
