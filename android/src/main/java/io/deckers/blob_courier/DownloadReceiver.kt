@@ -31,7 +31,14 @@ class DownloadReceiver(val downloadId: Long, val promise: Promise) : BroadcastRe
             onDownloadDone(uri)
           }
           else ->
-            promise.reject("TEH_CODE", convertJsonToMap(JSONObject(ImmutableMap.of<String, Any>("result", "FAILURE"))))
+            promise.reject(
+              "TEH_CODE",
+              convertJsonToMap(
+                JSONObject(
+                  ImmutableMap.of<String, Any>("result", "FAILURE")
+                )
+              )
+            )
         }
 
         context.unregisterReceiver(this)
@@ -40,6 +47,19 @@ class DownloadReceiver(val downloadId: Long, val promise: Promise) : BroadcastRe
   }
 
   fun onDownloadDone(uri: Uri) {
-    promise.resolve(convertJsonToMap(JSONObject(ImmutableMap.of("type", "Managed", "response", ImmutableMap.of<String, Any>("result", "SUCCESS", "fullFilePath", uri.toString())))))
+    promise.resolve(
+      convertJsonToMap(
+        JSONObject(
+          ImmutableMap.of(
+            "type", "Managed",
+            "response",
+            ImmutableMap.of<String, Any>(
+              "result", "SUCCESS",
+              "fullFilePath", uri.toString()
+            )
+          )
+        )
+      )
+    )
   }
 }

@@ -20,3 +20,5 @@ type BlobCourierType = {
 const { BlobCourier } = NativeModules;
 
 export default BlobCourier as BlobCourierType;
+
+export * from './Requests';

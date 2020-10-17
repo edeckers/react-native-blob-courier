@@ -8,7 +8,7 @@ import {
   BlobResponse,
   BlobResponseType,
   BlobUploadRequest,
-} from 'src/Requests';
+} from 'react-native-blob-courier';
 
 export const App = () => {
   const [result, setResult] = React.useState<BlobResponse>();
@@ -26,7 +26,7 @@ export const App = () => {
       const fetchedBlob = await BlobCourier.fetchBlob({
         filename: 'drop2.avi',
         method: 'GET',
-        useDownloadManager: true,
+        useDownloadManager: false,
         url: 'https://www.engr.colostate.edu/me/facil/dynamics/files/drop.avi',
       } as AndroidBlobRequest);
 
@@ -41,6 +41,7 @@ export const App = () => {
       const x = await BlobCourier.uploadBlob({
         filePath,
         method: 'POST',
+        mimeType: 'text/plain',
         url: 'https://file.io',
       } as BlobUploadRequest);
 

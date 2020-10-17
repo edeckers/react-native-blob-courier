@@ -11,7 +11,11 @@ import android.content.Context
 import android.content.IntentFilter
 import android.net.Uri
 import com.facebook.common.internal.ImmutableMap
-import com.facebook.react.bridge.*
+import com.facebook.react.bridge.Promise
+import com.facebook.react.bridge.ReactApplicationContext
+import com.facebook.react.bridge.ReactContextBaseJavaModule
+import com.facebook.react.bridge.ReactMethod
+import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.modules.network.OkHttpClientProvider
 import java.io.File
 import java.lang.reflect.Type
@@ -37,6 +41,7 @@ class BlobCourierModule(val reactContext: ReactApplicationContext) :
   val PARAM_USE_DOWNLOAD_MANAGER = "useDownloadManager"
 
   val DEFAULT_METHOD = "GET"
+  val DEFAULT_MIME_TYPE = "text/plain"
 
   override fun getName(): String = "BlobCourier"
 
@@ -169,7 +174,7 @@ class BlobCourierModule(val reactContext: ReactApplicationContext) :
 
     val method = input.getString(PARAM_METHOD) ?: DEFAULT_METHOD
 
-    val mimeType = input.getString(PARAM_MIME_TYPE)!!
+    val mimeType = input.getString(PARAM_MIME_TYPE) ?: DEFAULT_MIME_TYPE
 
     val requestBody = MultipartBody.Builder().setType(MultipartBody.FORM)
       .addFormDataPart(
@@ -183,16 +188,26 @@ class BlobCourierModule(val reactContext: ReactApplicationContext) :
       .method(method, requestBody)
       .build()
 
-    client().newCall(request).execute()
+    val response = client().newCall(request).execute()
 
-    promise.resolve(true)
+    val data = response.body()?.string() ?: "OH_HELLO"
+
+    promise.resolve(
+      convertJsonToMap(
+        JSONObject(
+          ImmutableMap.of<String, Any>(
+            "response",
+            ImmutableMap.of<String, Any>("data", data)
+          )
+        )
+      )
+    )
   }
 
   @ReactMethod
   fun uploadBlob(input: ReadableMap, promise: Promise) {
     try {
       assertRequiredParameter(input, String::class.java, PARAM_FILE_PATH)
-      assertRequiredParameter(input, String::class.java, PARAM_MIME_TYPE)
       assertRequiredParameter(input, String::class.java, PARAM_URL)
 
       uploadBlobFromValidatedParameters(input, promise)
