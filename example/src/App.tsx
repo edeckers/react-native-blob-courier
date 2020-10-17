@@ -26,14 +26,14 @@ export const App = () => {
       const fetchedBlob = await BlobCourier.fetchBlob({
         filename: 'drop.avi',
         method: 'GET',
-        useDownloadManager: false,
+        useDownloadManager: true,
         url: 'https://www.engr.colostate.edu/me/facil/dynamics/files/drop.avi',
       } as AndroidBlobRequest);
 
       const filePath =
         fetchedBlob.type === BlobResponseType.Managed
           ? (fetchedBlob.response as BlobManagedResponse).fullFilePath
-          : (fetchedBlob.response as BlobHttpResponse).filePath;
+          : (fetchedBlob.response as BlobHttpResponse).fullFilePath;
 
       console.log(JSON.stringify(fetchedBlob), filePath);
       setDownloadResult(fetchedBlob);

@@ -23,12 +23,12 @@ export declare interface BlobUploadRequest {
 }
 
 export declare interface BlobManagedResponse {
-  readonly result: number;
+  readonly result: string;
   readonly fullFilePath: string;
 }
 
 export declare interface BlobHttpResponse {
-  readonly filePath: string;
+  readonly fullFilePath: string;
   readonly code: number;
 }
 

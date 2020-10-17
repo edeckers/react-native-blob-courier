@@ -68,10 +68,12 @@ private fun assertRequiredParameter(input: ReadableMap, type: Type, parameterNam
       type.toString(), unknownProcessor
     )(input, parameterName)
 
-  maybeValue ?: throw BlobCourierError(
-    ERROR_MISSING_REQUIRED_PARAMETER,
-    "`$parameterName` is a required parameter of type `$type`"
-  )
+  if (maybeValue == null) {
+    throw BlobCourierError(
+      ERROR_MISSING_REQUIRED_PARAMETER,
+      "`$parameterName` is a required parameter of type `$type`"
+    )
+  }
 }
 
 private fun startBlobUpload(
@@ -144,17 +146,16 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
   override fun getName(): String = LIBRARY_NAME
 
   private fun fetchBlobUsingDownloadManager(uri: Uri, filename: String, promise: Promise) {
-    val destinationUri = Uri.parse(File(reactContext.externalCacheDir, filename).toString())
+    val destinationUri = File(reactContext.filesDir, filename)
 
     val downloadId =
       DownloadManager.Request(uri)
         .setAllowedOverRoaming(true)
         .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-        .setDestinationUri(destinationUri)
         .let { request -> defaultDownloadManager.enqueue(request) }
 
     reactContext.registerReceiver(
-      DownloadReceiver(downloadId, promise),
+      DownloadReceiver(downloadId, destinationUri, promise),
       IntentFilter(
         DownloadManager.ACTION_DOWNLOAD_COMPLETE
       )

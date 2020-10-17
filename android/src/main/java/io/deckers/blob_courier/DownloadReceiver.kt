@@ -7,9 +7,16 @@ import android.content.Intent
 import android.database.Cursor
 import android.net.Uri
 import com.facebook.react.bridge.Promise
+import java.io.File
+import java.io.FileOutputStream
+import java.io.InputStream
 import org.json.JSONObject
 
-class DownloadReceiver(private val downloadId: Long, private val promise: Promise) :
+class DownloadReceiver(
+  private val downloadId: Long,
+  private val destinationFile: File,
+  private val promise: Promise
+) :
   BroadcastReceiver() {
   override fun onReceive(context: Context, intent: Intent) {
     val downloadManager = context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
@@ -29,23 +36,22 @@ class DownloadReceiver(private val downloadId: Long, private val promise: Promis
         return
       }
 
-      processCompletedDownloadStatus(cursor)
+      processCompletedDownloadStatus(context, cursor)
 
       context.unregisterReceiver(this)
     }
   }
 
-  private fun processCompletedDownloadStatus(cursor: Cursor) {
+  private fun processCompletedDownloadStatus(context: Context, cursor: Cursor) {
     val columnIndex = cursor.getColumnIndex(DownloadManager.COLUMN_STATUS)
 
     val isStatusSuccessful = cursor.getInt(columnIndex) == DownloadManager.STATUS_SUCCESSFUL
 
     if (isStatusSuccessful) {
-      onDownloadDone(
-        Uri.parse(
-          cursor.getString(cursor.getColumnIndex(DownloadManager.COLUMN_LOCAL_URI))
-        )
-      )
+      val localFileUri =
+        Uri.parse(cursor.getString(cursor.getColumnIndex(DownloadManager.COLUMN_LOCAL_URI)))
+
+      onDownloadDone(context, localFileUri)
 
       return
     }
@@ -60,17 +66,47 @@ class DownloadReceiver(private val downloadId: Long, private val promise: Promis
     )
   }
 
-  private fun onDownloadDone(uri: Uri) = promise.resolve(
-    convertJsonToMap(
-      JSONObject(
-        mapOf(
-          "type" to DOWNLOAD_TYPE_MANAGED,
-          "response" to mapOf<String, Any>(
+  private fun getFileData(context: Context, uriToUpload: Uri): InputStream? {
+    context.contentResolver.query(uriToUpload, null, null, null, null).use { cursor ->
+      cursor?.moveToFirst()
+
+      return context.contentResolver.openInputStream(uriToUpload)
+    }
+  }
+
+  private fun writeFileOnInternalStorage(inputStream: InputStream) {
+    if (destinationFile.parentFile?.exists() != true) {
+      destinationFile.parentFile?.mkdir()
+    }
+
+    try {
+      FileOutputStream(destinationFile).use { fos -> inputStream.copyTo(fos) }
+    } catch (e: Exception) {
+      e.printStackTrace()
+    }
+  }
+
+  private fun onDownloadDone(context: Context, localFileUri: Uri) {
+    moveFileToInternalStorage(context, localFileUri)
+
+    promise.resolve(
+      convertJsonToMap(
+        JSONObject(
+          mapOf(
+            "type" to DOWNLOAD_TYPE_MANAGED,
             "result" to MANAGED_DOWNLOAD_SUCCESS,
-            "fullFilePath" to uri.toString()
+            "response" to mapOf<String, Any>(
+              "fullFilePath" to destinationFile
+            )
           )
         )
       )
     )
-  )
+  }
+
+  private fun moveFileToInternalStorage(context: Context, localFileUri: Uri) {
+    getFileData(context, localFileUri)?.use { fis ->
+      writeFileOnInternalStorage(fis)
+    }
+  }
 }
