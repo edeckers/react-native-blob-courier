@@ -11,7 +11,7 @@ import {
 } from 'react-native-blob-courier';
 
 export const App = () => {
-  const [result, setResult] = React.useState<BlobResponse>();
+  const [downloadResult, setDownloadResult] = React.useState<BlobResponse>();
 
   React.useEffect(() => {
     const requestPermissionAndDownloadBlobAsync = async () => {
@@ -24,7 +24,7 @@ export const App = () => {
       }
 
       const fetchedBlob = await BlobCourier.fetchBlob({
-        filename: 'drop2.avi',
+        filename: 'drop.avi',
         method: 'GET',
         useDownloadManager: false,
         url: 'https://www.engr.colostate.edu/me/facil/dynamics/files/drop.avi',
@@ -35,17 +35,17 @@ export const App = () => {
           ? (fetchedBlob.response as BlobManagedResponse).fullFilePath
           : (fetchedBlob.response as BlobHttpResponse).filePath;
 
-      console.log(fetchedBlob, filePath);
-      setResult(fetchedBlob);
+      console.log(JSON.stringify(fetchedBlob), filePath);
+      setDownloadResult(fetchedBlob);
 
-      const x = await BlobCourier.uploadBlob({
+      const uploadResult = await BlobCourier.uploadBlob({
         filePath,
         method: 'POST',
         mimeType: 'text/plain',
         url: 'https://file.io',
       } as BlobUploadRequest);
 
-      console.warn('OEH LAH L', x);
+      console.warn(JSON.stringify(uploadResult));
     };
 
     requestPermissionAndDownloadBlobAsync();
@@ -53,7 +53,7 @@ export const App = () => {
 
   return (
     <View style={styles.container}>
-      <Text>Result: {JSON.stringify(result)}</Text>
+      <Text>Result: {JSON.stringify(downloadResult)}</Text>
     </View>
   );
 };
