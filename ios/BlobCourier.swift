@@ -16,6 +16,7 @@ class BlobCourier: NSObject {
   }
 
   static let PARAM_FILENAME = "filename"
+  static let PARAM_FILE_PATH = "filePath"
   static let PARAM_METHOD = "method"
   static let PARAM_URL = "url"
 
@@ -44,7 +45,7 @@ class BlobCourier: NSObject {
   }
 
   func fetchBlobFromValidatedParameters(
-    input: NSDictionary, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock
+    input: NSDictionary, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock
   ) throws {
     let url = (input[BlobCourier.PARAM_URL] as? String) ?? ""
 
@@ -52,80 +53,122 @@ class BlobCourier: NSObject {
 
     let filename = (input[BlobCourier.PARAM_FILENAME] as? String) ?? ""
 
-    let documentsUrl: URL = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask)
-      .first!
-    let destinationFileUrl = documentsUrl.appendingPathComponent("\(filename)")
+    let documentsUrl: URL = try FileManager.default.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: false)
+    let destinationFileUrl = documentsUrl.appendingPathComponent(filename)
 
     let fileURL = URL(string: url)
     let sessionConfig = URLSessionConfiguration.default
     let session = URLSession(configuration: sessionConfig)
     let request = URLRequest(url: fileURL!)
 
-    let task = session.downloadTask(with: request) { (tempLocalUrl, response, error) in
-      if let tempLocalUrl = tempLocalUrl, error == nil {
+    let task = session.downloadTask(with: request) { (location, response, error) in
+      if error == nil {
+       let result : NSDictionary = [
+         "type": "Http",
+         "response": [
+           "filePath": "\(destinationFileUrl)",
+           "response": [
+             "code": 200
+           ]
+         ],
+       ]
+
         if let statusCode = (response as? HTTPURLResponse)?.statusCode {
           print("Successfully downloaded. Status code: \(statusCode)")
-        }
-
-        do {
-          try FileManager.default.copyItem(at: tempLocalUrl, to: destinationFileUrl)
-       } catch (let writeError) {
-          print("Error creating a file \(destinationFileUrl) : \(writeError)")
-        }
-      } else {
+          do {
+            try? FileManager.default.removeItem(at: destinationFileUrl)
+            try FileManager.default.copyItem(at: location!, to: destinationFileUrl)
+            print("Successfully moved file to \(destinationFileUrl)")
+            resolve(result)
+          } catch (let writeError) {
+            let error = NSError(domain: "io.deckers.blob_courier", code: 0, userInfo: [NSLocalizedDescriptionKey: "teh error."])
+            print("Error creating a file \(destinationFileUrl) : \(writeError)")
+            reject("nonono", "bbbb", error)
+          }
+         }
+     } else {
         print(
           "Error took place while downloading a file. Error description: \(error?.localizedDescription ?? "")"
         )
+
+        let error = NSError(domain: "io.deckers.blob_courier", code: 0, userInfo: [NSLocalizedDescriptionKey: "teh error."])
+
+        reject("nonono", "bbbb", error)
       }
     }
     task.resume()
+  }
 
-    resolve(true)
+  func buildRequestDataForFileUpload(url:URL, fileUrl:URL) -> (URLRequest, Data) {
+    // https://igomobile.de/2020/06/16/swift-upload-a-file-with-multipart-form-data-in-ios-using-uploadtask-and-urlsession/
+
+    let boundary = UUID().uuidString
+             
+    var request = URLRequest(url: url)
+    request.httpMethod = "POST"
+
+    request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+
+    let fileName = fileUrl.lastPathComponent
+    let mimetype = "application/octet-stream"
+    let paramName = "file"
+    let fileData = try? Data(contentsOf: fileUrl)
+
+    var data = Data()
+
+    data.append("\r\n--\(boundary)\r\n".data(using: .utf8)!)
+    data.append("Content-Disposition: form-data; name=\"\(paramName)\"; filename=\"\(fileName)\"\r\n".data(using: .utf8)!)
+    data.append("Content-Type: \(mimetype)\r\n\r\n".data(using: .utf8)!)
+    data.append(fileData!)
+    data.append("\r\n--\(boundary)--\r\n".data(using: .utf8)!)
+
+    request.setValue(String(data.count), forHTTPHeaderField: "Content-Length")
+
+    return (request, data)
   }
 
   func uploadBlobFromValidatedParameters(
-    input: NSDictionary, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock
+    input: NSDictionary, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock
   ) throws {
+    print("Start uploadBlobFromValidatedParameters")
     let url = (input[BlobCourier.PARAM_URL] as? String) ?? ""
 
-    let urlObject = URL(string: url)
+    let urlObject = URL(string: url)!
 
-    let filename = (input[BlobCourier.PARAM_FILENAME] as? String) ?? ""
+    let filePath = (input[BlobCourier.PARAM_FILE_PATH] as? String) ?? ""
 
-    let documentsUrl: URL = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask)
-      .first!
-    let destinationFileUrl = documentsUrl.appendingPathComponent("\(filename)")
+    let filePathObject = URL(string: filePath)!
 
-    let fileURL = URL(string: url)
     let sessionConfig = URLSessionConfiguration.default
     let session = URLSession(configuration: sessionConfig)
-    let request = URLRequest(url: fileURL!)
 
-    let task = session.downloadTask(with: request) { (tempLocalUrl, response, error) in
-      if let tempLocalUrl = tempLocalUrl, error == nil {
+    let (request, fileData) = buildRequestDataForFileUpload(url: urlObject, fileUrl: filePathObject)
+
+    let task = session.uploadTask(with: request, from: fileData) { (data, response, error) in
+        let error0 = NSError(domain: "io.deckers.blob_courier", code: 0, userInfo: [NSLocalizedDescriptionKey: "teh error."])
+
+      if error == nil {
         if let statusCode = (response as? HTTPURLResponse)?.statusCode {
-          print("Successfully downloaded. Status code: \(statusCode)")
+          print("Successfully uploaded Status code: \(statusCode)")
+          let rawResponse = String(data: data!, encoding: String.Encoding.utf8)
+          resolve(rawResponse)
+          return
         }
 
-        do {
-          try FileManager.default.copyItem(at: tempLocalUrl, to: destinationFileUrl)
-       } catch (let writeError) {
-          print("Error creating a file \(destinationFileUrl) : \(writeError)")
-        }
-      } else {
+        reject("nonono", "aaaa", error0)
+     } else {
         print(
-          "Error took place while downloading a file. Error description: \(error?.localizedDescription ?? "")"
+          "Error took place while uploading a file. Error description: \(error?.localizedDescription ?? "")"
         )
+        reject("nonono", error?.localizedDescription, error)
       }
     }
     task.resume()
-
-    resolve(true)
   }
 
   @objc(fetchBlob:withResolver:withRejecter:)
   func fetchBlob(
-    input: NSDictionary, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock
+    input: NSDictionary, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock
   ) {
     do {
       try assertRequiredParameter(
@@ -141,17 +184,18 @@ class BlobCourier: NSObject {
 
   @objc(uploadBlob:withResolver:withRejecter:)
   func uploadBlob(
-    input: NSDictionary, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock
+    input: NSDictionary, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock
   ) {
+    print("Start uploadBlob")
     do {
       try assertRequiredParameter(
-        input: input, type: "String", parameterName: BlobCourier.PARAM_FILENAME)
+        input: input, type: "String", parameterName: BlobCourier.PARAM_FILE_PATH)
       try assertRequiredParameter(
         input: input, type: "String", parameterName: BlobCourier.PARAM_URL)
 
-      try fetchBlobFromValidatedParameters(input: input, resolve: resolve, reject: reject)
+      try uploadBlobFromValidatedParameters(input: input, resolve: resolve, reject: reject)
     } catch {
       print("\(error)")
     }
   }
-}}
+}
