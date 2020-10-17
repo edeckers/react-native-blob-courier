@@ -1,0 +1,17 @@
+package io.deckers.blob_courier
+
+const val ERROR_UNEXPECTED_EXCEPTION = "ERROR_UNEXPECTED_EXCEPTION"
+const val ERROR_UNEXPECTED_EMPTY_VALUE = "ERROR_UNEXPECTED_EMPTY_VALUE"
+
+const val DEFAULT_FETCH_METHOD = "GET"
+const val DEFAULT_UPLOAD_METHOD = "POST"
+
+const val DEFAULT_MIME_TYPE = "text/plain"
+
+const val LIBRARY_NAME = "BlobCourier"
+
+const val DOWNLOAD_TYPE_MANAGED = "Managed"
+const val DOWNLOAD_TYPE_UNMANAGED = "Unmanaged"
+
+const val MANAGED_DOWNLOAD_SUCCESS = "SUCCESS"
+const val MANAGED_DOWNLOAD_FAILURE = "FAILURE"

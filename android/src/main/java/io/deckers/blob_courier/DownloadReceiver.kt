@@ -4,62 +4,73 @@ import android.app.DownloadManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.database.Cursor
 import android.net.Uri
-import com.facebook.common.internal.ImmutableMap
 import com.facebook.react.bridge.Promise
 import org.json.JSONObject
 
-class DownloadReceiver(val downloadId: Long, val promise: Promise) : BroadcastReceiver() {
+class DownloadReceiver(private val downloadId: Long, private val promise: Promise) :
+  BroadcastReceiver() {
   override fun onReceive(context: Context, intent: Intent) {
     val downloadManager = context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
-    val action = intent.action
 
-    if (DownloadManager.ACTION_DOWNLOAD_COMPLETE == action) {
-      val query = DownloadManager.Query()
-      query.setFilterById(downloadId)
+    if (intent.action != DownloadManager.ACTION_DOWNLOAD_COMPLETE) {
+      return
+    }
 
-      downloadManager.query(query).use { c ->
-        if (!c.moveToFirst()) {
-          return
-        }
+    processDownloadCompleteAction(downloadManager, context)
+  }
 
-        val columnIndex = c.getColumnIndex(DownloadManager.COLUMN_STATUS)
-        when (c.getInt(columnIndex)) {
-          DownloadManager.STATUS_SUCCESSFUL -> {
-            val uri = Uri.parse(c.getString(c.getColumnIndex(DownloadManager.COLUMN_LOCAL_URI)))
+  private fun processDownloadCompleteAction(downloadManager: DownloadManager, context: Context) {
+    val query = DownloadManager.Query().apply { setFilterById(downloadId) }
 
-            onDownloadDone(uri)
-          }
-          else ->
-            promise.reject(
-              "TEH_CODE",
-              convertJsonToMap(
-                JSONObject(
-                  ImmutableMap.of<String, Any>("result", "FAILURE")
-                )
-              )
-            )
-        }
-
-        context.unregisterReceiver(this)
+    downloadManager.query(query).use { cursor ->
+      if (!cursor.moveToFirst()) {
+        return
       }
+
+      processCompletedDownloadStatus(cursor)
+
+      context.unregisterReceiver(this)
     }
   }
 
-  fun onDownloadDone(uri: Uri) {
-    promise.resolve(
+  private fun processCompletedDownloadStatus(cursor: Cursor) {
+    val columnIndex = cursor.getColumnIndex(DownloadManager.COLUMN_STATUS)
+
+    val isStatusSuccessful = cursor.getInt(columnIndex) == DownloadManager.STATUS_SUCCESSFUL
+
+    if (isStatusSuccessful) {
+      onDownloadDone(
+        Uri.parse(
+          cursor.getString(cursor.getColumnIndex(DownloadManager.COLUMN_LOCAL_URI))
+        )
+      )
+
+      return
+    }
+
+    promise.reject(
+      ERROR_UNEXPECTED_EXCEPTION,
       convertJsonToMap(
         JSONObject(
-          ImmutableMap.of(
-            "type", "Managed",
-            "response",
-            ImmutableMap.of<String, Any>(
-              "result", "SUCCESS",
-              "fullFilePath", uri.toString()
-            )
-          )
+          mapOf<String, Any>("result" to MANAGED_DOWNLOAD_FAILURE)
         )
       )
     )
   }
+
+  private fun onDownloadDone(uri: Uri) = promise.resolve(
+    convertJsonToMap(
+      JSONObject(
+        mapOf(
+          "type" to DOWNLOAD_TYPE_MANAGED,
+          "response" to mapOf<String, Any>(
+            "result" to MANAGED_DOWNLOAD_SUCCESS,
+            "fullFilePath" to uri.toString()
+          )
+        )
+      )
+    )
+  )
 }

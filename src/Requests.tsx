@@ -33,8 +33,8 @@ export declare interface BlobHttpResponse {
 }
 
 export enum BlobResponseType {
-  Http,
   Managed,
+  Unmanaged,
 }
 export declare interface BlobResponse {
   readonly type: BlobResponseType;
