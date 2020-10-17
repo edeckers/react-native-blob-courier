@@ -1,10 +1,17 @@
 import * as React from 'react';
 import { StyleSheet, View, Text, PermissionsAndroid } from 'react-native';
 import BlobCourier from 'react-native-blob-courier';
-import type { AndroidBlobRequest } from 'src/Requests';
+import {
+  AndroidBlobRequest,
+  BlobUnmanagedData,
+  BlobManagedData,
+  BlobResponse,
+  BlobResponseType,
+  BlobUploadRequest,
+} from 'react-native-blob-courier';
 
-export default function App() {
-  const [result, setResult] = React.useState<Response>();
+export const App = () => {
+  const [downloadResult, setDownloadResult] = React.useState<BlobResponse>();
 
   React.useEffect(() => {
     const requestPermissionAndDownloadBlobAsync = async () => {
@@ -16,12 +23,29 @@ export default function App() {
         console.warn(err);
       }
 
-      BlobCourier.fetchBlob({
-        filename: 'drop2.avi',
+      const fetchedBlob = await BlobCourier.fetchBlob({
+        filename: 'drop.avi',
         method: 'GET',
-        useDownloadManager: true,
+        useDownloadManager: false,
         url: 'https://www.engr.colostate.edu/me/facil/dynamics/files/drop.avi',
-      } as AndroidBlobRequest).then(setResult);
+      } as AndroidBlobRequest);
+
+      const filePath =
+        fetchedBlob.type === BlobResponseType.Managed
+          ? (fetchedBlob.data as BlobManagedData).fullFilePath
+          : (fetchedBlob.data as BlobUnmanagedData).fullFilePath;
+
+      console.log(JSON.stringify(fetchedBlob), filePath);
+      setDownloadResult(fetchedBlob);
+
+      const uploadResult = await BlobCourier.uploadBlob({
+        filePath,
+        method: 'POST',
+        mimeType: 'text/plain',
+        url: 'https://file.io',
+      } as BlobUploadRequest);
+
+      console.warn(JSON.stringify(uploadResult));
     };
 
     requestPermissionAndDownloadBlobAsync();
@@ -29,10 +53,10 @@ export default function App() {
 
   return (
     <View style={styles.container}>
-      <Text>Result: {JSON.stringify(result)}</Text>
+      <Text>Result: {JSON.stringify(downloadResult)}</Text>
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
