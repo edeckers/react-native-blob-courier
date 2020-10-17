@@ -1,12 +1,15 @@
 {
   "name": "react-native-blob-courier",
   "version": "0.0.1",
-  "description": "Download blobs",
+  "description": "Use this library to efficiently download and upload blobs in React Native",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
   "types": "lib/typescript/src/index.d.ts",
   "react-native": "src/index",
   "source": "src/index",
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/"
+  },
   "files": [
     "src",
     "lib",
