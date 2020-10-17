@@ -3,8 +3,8 @@ import { StyleSheet, View, Text, PermissionsAndroid } from 'react-native';
 import BlobCourier from 'react-native-blob-courier';
 import {
   AndroidBlobRequest,
-  BlobHttpResponse,
-  BlobManagedResponse,
+  BlobUnmanagedData,
+  BlobManagedData,
   BlobResponse,
   BlobResponseType,
   BlobUploadRequest,
@@ -26,14 +26,14 @@ export const App = () => {
       const fetchedBlob = await BlobCourier.fetchBlob({
         filename: 'drop.avi',
         method: 'GET',
-        useDownloadManager: true,
+        useDownloadManager: false,
         url: 'https://www.engr.colostate.edu/me/facil/dynamics/files/drop.avi',
       } as AndroidBlobRequest);
 
       const filePath =
         fetchedBlob.type === BlobResponseType.Managed
-          ? (fetchedBlob.response as BlobManagedResponse).fullFilePath
-          : (fetchedBlob.response as BlobHttpResponse).fullFilePath;
+          ? (fetchedBlob.data as BlobManagedData).fullFilePath
+          : (fetchedBlob.data as BlobUnmanagedData).fullFilePath;
 
       console.log(JSON.stringify(fetchedBlob), filePath);
       setDownloadResult(fetchedBlob);

@@ -145,8 +145,10 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
 
   override fun getName(): String = LIBRARY_NAME
 
+  private fun createFullFilePath(filename: String) = File(reactContext.cacheDir, filename)
+
   private fun fetchBlobUsingDownloadManager(uri: Uri, filename: String, promise: Promise) {
-    val destinationUri = File(reactContext.filesDir, filename)
+    val fullFilePath = createFullFilePath(filename)
 
     val downloadId =
       DownloadManager.Request(uri)
@@ -155,7 +157,7 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
         .let { request -> defaultDownloadManager.enqueue(request) }
 
     reactContext.registerReceiver(
-      DownloadReceiver(downloadId, destinationUri, promise),
+      DownloadReceiver(downloadId, fullFilePath, promise),
       IntentFilter(
         DownloadManager.ACTION_DOWNLOAD_COMPLETE
       )
@@ -168,7 +170,7 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
     method: String,
     promise: Promise
   ) {
-    val fullFilePath = File(reactContext.cacheDir, filename)
+    val fullFilePath = createFullFilePath(filename)
 
     val request = Request.Builder().method(method, null).url(uri.toString()).build()
 
@@ -185,7 +187,7 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
             JSONObject(
               mapOf(
                 "type" to DOWNLOAD_TYPE_UNMANAGED,
-                "response" to mapOf(
+                "data" to mapOf(
                   "fullFilePath" to fullFilePath,
                   "response" to mapOf<String, Any>(
                     "code" to response.code(),

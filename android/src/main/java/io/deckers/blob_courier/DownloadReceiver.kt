@@ -94,9 +94,9 @@ class DownloadReceiver(
         JSONObject(
           mapOf(
             "type" to DOWNLOAD_TYPE_MANAGED,
-            "result" to MANAGED_DOWNLOAD_SUCCESS,
-            "response" to mapOf<String, Any>(
-              "fullFilePath" to destinationFile
+            "data" to mapOf(
+              "fullFilePath" to destinationFile,
+              "result" to MANAGED_DOWNLOAD_SUCCESS
             )
           )
         )

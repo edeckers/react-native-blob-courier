@@ -22,21 +22,27 @@ export declare interface BlobUploadRequest {
   readonly url: string;
 }
 
-export declare interface BlobManagedResponse {
+export declare interface BlobUnmanagedHttpResponse {
+  readonly headers: { [key: string]: string };
+  readonly code: number;
+}
+
+export declare interface BlobManagedData {
   readonly result: string;
   readonly fullFilePath: string;
 }
 
-export declare interface BlobHttpResponse {
+export declare interface BlobUnmanagedData {
   readonly fullFilePath: string;
-  readonly code: number;
+  readonly response: BlobUnmanagedHttpResponse;
 }
 
 export enum BlobResponseType {
   Managed,
   Unmanaged,
 }
+
 export declare interface BlobResponse {
   readonly type: BlobResponseType;
-  readonly response: BlobHttpResponse | BlobManagedResponse;
+  readonly data: BlobUnmanagedData | BlobManagedData;
 }
