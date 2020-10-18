@@ -24,12 +24,13 @@ export const App = () => {
       }
 
       const fetchedBlob = await BlobCourier.fetchBlob({
-        filename: 'drop.avi',
+        filename: '5MB.zip',
         method: 'GET',
         useDownloadManager: false,
-        url: 'https://www.engr.colostate.edu/me/facil/dynamics/files/drop.avi',
-      } as AndroidBlobRequest);
-
+        url: 'http://ipv4.download.thinkbroadband.com/5MB.zip',
+      } as AndroidBlobRequest).onProgress((e: any) => {
+        console.debug('Recv download progress:', JSON.stringify(e));
+      });
       const filePath =
         fetchedBlob.type === BlobResponseType.Managed
           ? (fetchedBlob.data as BlobManagedData).fullFilePath
@@ -43,7 +44,9 @@ export const App = () => {
         method: 'POST',
         mimeType: 'text/plain',
         url: 'https://file.io',
-      } as BlobUploadRequest);
+      } as BlobUploadRequest).onProgress((e: any) => {
+        console.debug('Recv upload progress:', JSON.stringify(e));
+      });
 
       console.warn(JSON.stringify(uploadResult));
     };

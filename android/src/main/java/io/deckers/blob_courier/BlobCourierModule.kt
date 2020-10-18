@@ -20,10 +20,12 @@ import com.facebook.react.modules.network.OkHttpClientProvider
 import java.io.File
 import java.lang.reflect.Type
 import java.net.URL
+import okhttp3.Interceptor
 import okhttp3.MediaType
 import okhttp3.MultipartBody
 import okhttp3.Request
 import okhttp3.RequestBody
+import okhttp3.Response
 import okio.Okio
 import okio.Source
 import org.json.JSONObject
@@ -34,6 +36,7 @@ private const val PARAMETER_FILENAME = "filename"
 private const val PARAMETER_FILE_PATH = "filePath"
 private const val PARAMETER_METHOD = "method"
 private const val PARAMETER_MIME_TYPE = "mimeType"
+private const val PARAMETER_TASK_ID = "taskId"
 private const val PARAMETER_URL = "url"
 private const val PARAMETER_USE_DOWNLOAD_MANAGER = "useDownloadManager"
 
@@ -68,27 +71,52 @@ private fun assertRequiredParameter(input: ReadableMap, type: Type, parameterNam
       type.toString(), unknownProcessor
     )(input, parameterName)
 
-  if (maybeValue == null) {
-    throw BlobCourierError(
-      ERROR_MISSING_REQUIRED_PARAMETER,
-      "`$parameterName` is a required parameter of type `$type`"
-    )
-  }
+  maybeValue ?: throw BlobCourierError(
+    ERROR_MISSING_REQUIRED_PARAMETER,
+    "`$parameterName` is a required parameter of type `$type`"
+  )
+}
+
+private fun createDownloadProgressInterceptor(
+  reactContext: ReactApplicationContext,
+  taskId: String
+): (
+  Interceptor.Chain
+) -> Response = fun(
+  chain: Interceptor.Chain
+): Response {
+  val originalResponse = chain.proceed(chain.request())
+
+  return originalResponse.body()?.let {
+    originalResponse.newBuilder().body(
+      BlobCourierProgressResponse(
+        reactContext,
+        taskId,
+        it
+      )
+    ).build()
+  } ?: originalResponse
 }
 
 private fun startBlobUpload(
+  reactContext: ReactApplicationContext,
+  taskId: String,
   file: File,
   mimeType: String,
   uri: URL,
   method: String,
   promise: Promise
 ) {
-  val requestBody = MultipartBody.Builder().setType(MultipartBody.FORM)
-    .addFormDataPart(
-      "file", file.name,
-      RequestBody.create(MediaType.parse(mimeType), file)
-    )
-    .build()
+  val requestBody = BlobCourierProgressRequest(
+    reactContext,
+    taskId,
+    MultipartBody.Builder().setType(MultipartBody.FORM)
+      .addFormDataPart(
+        "file", file.name,
+        RequestBody.create(MediaType.parse(mimeType), file)
+      )
+      .build()
+  )
 
   val request = Request.Builder()
     .url(uri)
@@ -112,31 +140,6 @@ private fun startBlobUpload(
   )
 }
 
-private fun uploadBlobFromValidatedParameters(input: ReadableMap, promise: Promise) {
-  val maybeFilePath = input.getString(PARAMETER_FILE_PATH)
-  val maybeUrl = input.getString(PARAMETER_URL)
-  val method = input.getString(PARAMETER_METHOD) ?: DEFAULT_UPLOAD_METHOD
-  val mimeType = input.getString(PARAMETER_MIME_TYPE) ?: DEFAULT_MIME_TYPE
-
-  if (maybeFilePath.isNullOrEmpty()) {
-    processUnexpectedEmptyValue(promise, PARAMETER_FILE_PATH)
-
-    return
-  }
-
-  if (maybeUrl.isNullOrEmpty()) {
-    processUnexpectedEmptyValue(promise, PARAMETER_URL)
-
-    return
-  }
-
-  val file = File(maybeFilePath)
-
-  val uri = URL(maybeUrl)
-
-  startBlobUpload(file, mimeType, uri, method, promise)
-}
-
 class BlobCourierModule(private val reactContext: ReactApplicationContext) :
   ReactContextBaseJavaModule(reactContext) {
 
@@ -147,7 +150,43 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
 
   private fun createFullFilePath(filename: String) = File(reactContext.cacheDir, filename)
 
-  private fun fetchBlobUsingDownloadManager(uri: Uri, filename: String, promise: Promise) {
+  private fun uploadBlobFromValidatedParameters(input: ReadableMap, promise: Promise) {
+    val maybeTaskId = input.getString(PARAMETER_TASK_ID)
+    val maybeFilePath = input.getString(PARAMETER_FILE_PATH)
+    val maybeUrl = input.getString(PARAMETER_URL)
+    val method = input.getString(PARAMETER_METHOD) ?: DEFAULT_UPLOAD_METHOD
+    val mimeType = input.getString(PARAMETER_MIME_TYPE) ?: DEFAULT_MIME_TYPE
+
+    if (maybeTaskId.isNullOrEmpty()) {
+      processUnexpectedEmptyValue(promise, PARAMETER_TASK_ID)
+      return
+    }
+
+    if (maybeFilePath.isNullOrEmpty()) {
+      processUnexpectedEmptyValue(promise, PARAMETER_FILE_PATH)
+
+      return
+    }
+
+    if (maybeUrl.isNullOrEmpty()) {
+      processUnexpectedEmptyValue(promise, PARAMETER_URL)
+
+      return
+    }
+
+    val file = File(maybeFilePath)
+
+    val uri = URL(maybeUrl)
+
+    startBlobUpload(reactContext, maybeTaskId, file, mimeType, uri, method, promise)
+  }
+
+  private fun fetchBlobUsingDownloadManager(
+    taskId: String,
+    uri: Uri,
+    filename: String,
+    promise: Promise
+  ) {
     val fullFilePath = createFullFilePath(filename)
 
     val downloadId =
@@ -156,8 +195,10 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
         .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
         .let { request -> defaultDownloadManager.enqueue(request) }
 
+    ManagedProgressUpdater.start(reactContext, downloadId, taskId)
+
     reactContext.registerReceiver(
-      DownloadReceiver(downloadId, fullFilePath, promise),
+      ManagedDownloadReceiver(downloadId, fullFilePath, promise),
       IntentFilter(
         DownloadManager.ACTION_DOWNLOAD_COMPLETE
       )
@@ -165,6 +206,7 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
   }
 
   private fun fetchBlobWithoutDownloadManager(
+    taskId: String,
     uri: Uri,
     filename: String,
     method: String,
@@ -174,8 +216,14 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
 
     val request = Request.Builder().method(method, null).url(uri.toString()).build()
 
+    val httpCient =
+      DEFAULT_OK_HTTP_CLIENT.newBuilder()
+        .addInterceptor(createDownloadProgressInterceptor(reactContext, taskId))
+        .build()
+
     try {
-      DEFAULT_OK_HTTP_CLIENT.newCall(request).execute().use { response ->
+
+      httpCient.newCall(request).execute().use { response ->
         response.body()?.source().use { source ->
           Okio.buffer(Okio.sink(fullFilePath)).use { sink ->
             sink.writeAll(source as Source)
@@ -205,14 +253,20 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
   }
 
   private fun fetchBlobFromValidatedParameters(input: ReadableMap, promise: Promise) {
-    val maybeFilename = input.getString(PARAMETER_FILENAME).orEmpty()
+    val maybeTaskId = input.getString(PARAMETER_TASK_ID)
+    val maybeFilename = input.getString(PARAMETER_FILENAME)
     val maybeUrl = input.getString(PARAMETER_URL)
     val useDownloadManager =
       input.hasKey(PARAMETER_USE_DOWNLOAD_MANAGER) &&
         input.getBoolean(PARAMETER_USE_DOWNLOAD_MANAGER)
     val method = input.getString(PARAMETER_METHOD) ?: DEFAULT_FETCH_METHOD
 
-    if (maybeFilename.isEmpty()) {
+    if (maybeTaskId.isNullOrEmpty()) {
+      processUnexpectedEmptyValue(promise, PARAMETER_TASK_ID)
+      return
+    }
+
+    if (maybeFilename.isNullOrEmpty()) {
       processUnexpectedEmptyValue(promise, PARAMETER_FILENAME)
       return
     }
@@ -223,10 +277,18 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
       return
     }
 
-    startBlobFetch(Uri.parse(maybeUrl), useDownloadManager, maybeFilename, promise, method)
+    startBlobFetch(
+      maybeTaskId,
+      Uri.parse(maybeUrl),
+      useDownloadManager,
+      maybeFilename,
+      promise,
+      method
+    )
   }
 
   private fun startBlobFetch(
+    taskId: String,
     uri: Uri,
     useDownloadManager: Boolean,
     filename: String,
@@ -234,12 +296,13 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
     method: String
   ) =
     if (useDownloadManager)
-      fetchBlobUsingDownloadManager(uri, filename, promise)
-    else fetchBlobWithoutDownloadManager(uri, filename, method, promise)
+      fetchBlobUsingDownloadManager(taskId, uri, filename, promise)
+    else fetchBlobWithoutDownloadManager(taskId, uri, filename, method, promise)
 
   @ReactMethod
   fun fetchBlob(input: ReadableMap, promise: Promise) {
     try {
+      assertRequiredParameter(input, String::class.java, PARAMETER_TASK_ID)
       assertRequiredParameter(input, String::class.java, PARAMETER_FILENAME)
       assertRequiredParameter(input, String::class.java, PARAMETER_URL)
 
@@ -254,6 +317,7 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
   @ReactMethod
   fun uploadBlob(input: ReadableMap, promise: Promise) {
     try {
+      assertRequiredParameter(input, String::class.java, PARAMETER_TASK_ID)
       assertRequiredParameter(input, String::class.java, PARAMETER_FILE_PATH)
       assertRequiredParameter(input, String::class.java, PARAMETER_URL)
 

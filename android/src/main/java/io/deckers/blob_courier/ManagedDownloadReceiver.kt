@@ -1,3 +1,9 @@
+/**
+ * Copyright (c) Ely Deckers.
+ *
+ * This source code is licensed under the MPL-2.0 license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
 package io.deckers.blob_courier
 
 import android.app.DownloadManager
@@ -12,18 +18,14 @@ import java.io.FileOutputStream
 import java.io.InputStream
 import org.json.JSONObject
 
-class DownloadReceiver(
+class ManagedDownloadReceiver(
   private val downloadId: Long,
   private val destinationFile: File,
   private val promise: Promise
 ) :
   BroadcastReceiver() {
   override fun onReceive(context: Context, intent: Intent) {
-    val downloadManager = context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
-
-    if (intent.action != DownloadManager.ACTION_DOWNLOAD_COMPLETE) {
-      return
-    }
+    val downloadManager = createDownloadManager(context)
 
     processDownloadCompleteAction(downloadManager, context)
   }

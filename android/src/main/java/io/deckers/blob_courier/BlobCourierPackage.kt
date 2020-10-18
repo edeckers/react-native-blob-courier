@@ -18,6 +18,6 @@ class BlobCourierPackage : ReactPackage {
   }
 
   override fun createViewManagers(reactContext: ReactApplicationContext): List<ViewManager<*, *>> {
-    return emptyList<ViewManager<*, *>>()
+    return emptyList()
   }
 }
