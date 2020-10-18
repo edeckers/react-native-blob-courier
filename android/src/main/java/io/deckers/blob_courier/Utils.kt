@@ -1,7 +1,10 @@
 package io.deckers.blob_courier
 
+import com.facebook.react.bridge.Arguments
+import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.WritableMap
 import com.facebook.react.bridge.WritableNativeMap
+import com.facebook.react.modules.core.DeviceEventManagerModule
 import org.json.JSONException
 import org.json.JSONObject
 
@@ -20,3 +23,20 @@ fun convertJsonToMap(jsonObject: JSONObject): WritableMap {
 
   return map
 }
+
+// FIXME Code duplication
+fun notifyBridge(
+  context: ReactApplicationContext,
+  taskId: String,
+  totalNumberOfBytesRead: Long,
+  totalLength: Long
+) =
+  context.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
+    .emit(
+      DEVICE_EVENT_PROGRESS,
+      Arguments.createMap().apply {
+        putString("taskId", taskId)
+        putString("written", totalNumberOfBytesRead.toString())
+        putString("total", totalLength.toString())
+      }
+    )

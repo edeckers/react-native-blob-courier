@@ -6,9 +6,7 @@
  */
 package io.deckers.blob_courier
 
-import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.ReactApplicationContext
-import com.facebook.react.modules.core.DeviceEventManagerModule
 import java.io.IOException
 import okhttp3.MediaType
 import okhttp3.ResponseBody
@@ -29,35 +27,22 @@ class BlobCourierResponse(
   override fun contentLength(): Long = originalResponseBody.contentLength()
 
   override fun source(): BufferedSource =
-    Okio.buffer(ProgressReportingSource(originalResponseBody.source()))
+    Okio.buffer(ProgressReportingSource())
 
-  private inner class ProgressReportingSource internal constructor(
-    val originalSource: BufferedSource
-  ) : Source {
+  private inner class ProgressReportingSource : Source {
     val totalLength = contentLength()
 
     var totalNumberOfBytesRead: Long = 0
 
-    private fun notifyBridge() =
-      context.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
-        .emit(
-          DEVICE_EVENT_PROGRESS,
-          Arguments.createMap().apply {
-            putString("taskId", taskId)
-            putString("written", totalNumberOfBytesRead.toString())
-            putString("total", totalLength.toString())
-          }
-        )
-
     private fun processNumberOfBytesRead(numberOfBytesRead: Long) {
       totalNumberOfBytesRead += if (numberOfBytesRead > 0) numberOfBytesRead else 0
 
-      notifyBridge()
+      notifyBridge(context, taskId, totalNumberOfBytesRead, totalLength)
     }
 
     @Throws(IOException::class)
     override fun read(sink: Buffer, byteCount: Long): Long {
-      val numberOfBytesRead = originalSource.read(sink, byteCount)
+      val numberOfBytesRead = originalResponseBody.source().read(sink, byteCount)
 
       processNumberOfBytesRead(numberOfBytesRead)
 

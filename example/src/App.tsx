@@ -24,10 +24,10 @@ export const App = () => {
       }
 
       const fetchedBlob = await BlobCourier.fetchBlob({
-        filename: '20MB.zip',
+        filename: '5MB.zip',
         method: 'GET',
         useDownloadManager: false,
-        url: 'http://ipv4.download.thinkbroadband.com/20MB.zip',
+        url: 'http://ipv4.download.thinkbroadband.com/5MB.zip',
       } as AndroidBlobRequest).onProgress((e: any) => {
         console.debug('Received progress update:', JSON.stringify(e));
       });
