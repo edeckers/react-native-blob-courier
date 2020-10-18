@@ -30,11 +30,16 @@ export interface BlobCourierProgress<T> extends Promise<T> {
 }
 
 const extendWithProgress = <T extends unknown>(
-  p: Promise<T>
+  p: Promise<T>,
+  taskId: String
 ): BlobCourierProgress<T> => ({
   ...p,
   onProgress: (fn: (e: any) => void) => {
-    DeviceEventEmitter.addListener(DEVICE_EVENT_PROGRESS, fn);
+    DeviceEventEmitter.addListener(DEVICE_EVENT_PROGRESS, (e: any) => {
+      if (e.taskId === taskId) {
+        fn(e);
+      }
+    });
 
     return p;
   },
@@ -54,22 +59,30 @@ const extendInputWithTaskId = (
 class BlobCourierWrapper {
   public static fetchBlob = (
     input: AndroidBlobRequest | BlobRequest
-  ): BlobCourierProgress<BlobResponse> =>
-    extendWithProgress(
-      (BlobCourier as BlobCourierType).fetchBlob(
-        extendInputWithTaskId(input) as (AndroidBlobRequest | BlobRequest) &
-          BlobRequestTask
-      )
+  ): BlobCourierProgress<BlobResponse> => {
+    const inputWithTaskId = extendInputWithTaskId(input) as (
+      | AndroidBlobRequest
+      | BlobRequest
+    ) &
+      BlobRequestTask;
+
+    return extendWithProgress(
+      (BlobCourier as BlobCourierType).fetchBlob(inputWithTaskId),
+      inputWithTaskId.taskId
     );
+  };
 
   public static uploadBlob = (
     input: BlobUploadRequest
-  ): BlobCourierProgress<BlobResponse> =>
-    extendWithProgress(
-      (BlobCourier as BlobCourierType).uploadBlob(
-        extendInputWithTaskId(input) as BlobUploadRequest & BlobRequestTask
-      )
+  ): BlobCourierProgress<BlobResponse> => {
+    const inputWithTaskId = extendInputWithTaskId(input) as BlobUploadRequest &
+      BlobRequestTask;
+
+    return extendWithProgress(
+      (BlobCourier as BlobCourierType).uploadBlob(inputWithTaskId),
+      inputWithTaskId.taskId
     );
+  };
 }
 
 export default BlobCourierWrapper;

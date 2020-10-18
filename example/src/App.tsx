@@ -29,7 +29,7 @@ export const App = () => {
         useDownloadManager: false,
         url: 'http://ipv4.download.thinkbroadband.com/5MB.zip',
       } as AndroidBlobRequest).onProgress((e: any) => {
-        console.debug('Received progress update:', JSON.stringify(e));
+        console.debug('Recv download progress:', JSON.stringify(e));
       });
       const filePath =
         fetchedBlob.type === BlobResponseType.Managed
@@ -45,7 +45,7 @@ export const App = () => {
         mimeType: 'text/plain',
         url: 'https://file.io',
       } as BlobUploadRequest).onProgress((e: any) => {
-        console.debug('Received progress update:', JSON.stringify(e));
+        console.debug('Recv upload progress:', JSON.stringify(e));
       });
 
       console.warn(JSON.stringify(uploadResult));
