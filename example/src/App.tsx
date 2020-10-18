@@ -28,8 +28,9 @@ export const App = () => {
         method: 'GET',
         useDownloadManager: false,
         url: 'https://www.engr.colostate.edu/me/facil/dynamics/files/drop.avi',
-      } as AndroidBlobRequest);
-
+      } as AndroidBlobRequest).onProgress((e) => {
+        console.debug('Received progress update:', JSON.stringify(e));
+      });
       const filePath =
         fetchedBlob.type === BlobResponseType.Managed
           ? (fetchedBlob.data as BlobManagedData).fullFilePath
@@ -43,7 +44,9 @@ export const App = () => {
         method: 'POST',
         mimeType: 'text/plain',
         url: 'https://file.io',
-      } as BlobUploadRequest);
+      } as BlobUploadRequest).onProgress((e) => {
+        console.debug('Received progress update:', JSON.stringify(e));
+      });
 
       console.warn(JSON.stringify(uploadResult));
     };
