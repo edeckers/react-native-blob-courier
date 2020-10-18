@@ -24,11 +24,11 @@ export const App = () => {
       }
 
       const fetchedBlob = await BlobCourier.fetchBlob({
-        filename: 'drop.avi',
+        filename: '20MB.zip',
         method: 'GET',
         useDownloadManager: false,
-        url: 'https://www.engr.colostate.edu/me/facil/dynamics/files/drop.avi',
-      } as AndroidBlobRequest).onProgress((e) => {
+        url: 'http://ipv4.download.thinkbroadband.com/20MB.zip',
+      } as AndroidBlobRequest).onProgress((e: any) => {
         console.debug('Received progress update:', JSON.stringify(e));
       });
       const filePath =
@@ -44,7 +44,7 @@ export const App = () => {
         method: 'POST',
         mimeType: 'text/plain',
         url: 'https://file.io',
-      } as BlobUploadRequest).onProgress((e) => {
+      } as BlobUploadRequest).onProgress((e: any) => {
         console.debug('Received progress update:', JSON.stringify(e));
       });
 

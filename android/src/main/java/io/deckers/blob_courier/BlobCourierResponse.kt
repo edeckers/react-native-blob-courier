@@ -10,7 +10,6 @@ import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.modules.core.DeviceEventManagerModule
 import java.io.IOException
-import java.nio.charset.Charset
 import okhttp3.MediaType
 import okhttp3.ResponseBody
 import okio.Buffer
@@ -33,32 +32,36 @@ class BlobCourierResponse(
     Okio.buffer(ProgressReportingSource(originalResponseBody.source()))
 
   private inner class ProgressReportingSource internal constructor(
-    internal var mOriginalSource: BufferedSource
+    val originalSource: BufferedSource
   ) : Source {
-    internal var bytesRead: Long = 0
+    val totalLength = contentLength()
+
+    var totalNumberOfBytesRead: Long = 0
+
+    private fun notifyBridge() =
+      context.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
+        .emit(
+          DEVICE_EVENT_PROGRESS,
+          Arguments.createMap().apply {
+            putString("taskId", taskId)
+            putString("written", totalNumberOfBytesRead.toString())
+            putString("total", totalLength.toString())
+          }
+        )
+
+    private fun processNumberOfBytesRead(numberOfBytesRead: Long) {
+      totalNumberOfBytesRead += if (numberOfBytesRead > 0) numberOfBytesRead else 0
+
+      notifyBridge()
+    }
 
     @Throws(IOException::class)
     override fun read(sink: Buffer, byteCount: Long): Long {
+      val numberOfBytesRead = originalSource.read(sink, byteCount)
 
-      val read = mOriginalSource.read(sink, byteCount)
-      bytesRead += if (read > 0) read else 0
+      processNumberOfBytesRead(numberOfBytesRead)
 
-      val cLen = contentLength()
-      if (cLen == 0L) {
-        return read
-      }
-
-      val args = Arguments.createMap().apply {
-        putString("taskId", taskId)
-        putString("written", bytesRead.toString())
-        putString("total", cLen.toString())
-        putString("chunk", sink.readString(Charset.defaultCharset()))
-      }
-
-      context.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
-        .emit(DEVICE_EVENT_PROGRESS, args)
-
-      return read
+      return numberOfBytesRead
     }
 
     override fun timeout(): Timeout? {
