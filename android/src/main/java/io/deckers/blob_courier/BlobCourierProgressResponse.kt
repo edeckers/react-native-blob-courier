@@ -16,45 +16,41 @@ import okio.Okio
 import okio.Source
 import okio.Timeout
 
-class BlobCourierResponse(
-  private var context: ReactApplicationContext,
-  private var taskId: String,
-  private var originalResponseBody: ResponseBody
+class BlobCourierProgressResponse(
+  private val context: ReactApplicationContext,
+  private val taskId: String,
+  private val responseBody: ResponseBody
 ) : ResponseBody() {
+  private val totalNumberOfBytes = contentLength()
 
-  override fun contentType(): MediaType? = originalResponseBody.contentType()
+  override fun contentType(): MediaType? = responseBody.contentType()
 
-  override fun contentLength(): Long = originalResponseBody.contentLength()
+  override fun contentLength(): Long = totalNumberOfBytes
 
   override fun source(): BufferedSource =
     Okio.buffer(ProgressReportingSource())
 
   private inner class ProgressReportingSource : Source {
-    val totalLength = contentLength()
-
     var totalNumberOfBytesRead: Long = 0
 
     private fun processNumberOfBytesRead(numberOfBytesRead: Long) {
       totalNumberOfBytesRead += if (numberOfBytesRead > 0) numberOfBytesRead else 0
 
-      notifyBridge(context, taskId, totalNumberOfBytesRead, totalLength)
+      notifyBridgeOfProgress(context, taskId, totalNumberOfBytesRead, totalNumberOfBytes)
     }
 
     @Throws(IOException::class)
     override fun read(sink: Buffer, byteCount: Long): Long {
-      val numberOfBytesRead = originalResponseBody.source().read(sink, byteCount)
+      val numberOfBytesRead = responseBody.source().read(sink, byteCount)
 
       processNumberOfBytesRead(numberOfBytesRead)
 
       return numberOfBytesRead
     }
 
-    override fun timeout(): Timeout? {
-      return null
-    }
+    override fun timeout(): Timeout? = Timeout.NONE
 
     @Throws(IOException::class)
-    override fun close() {
-    }
+    override fun close() = Unit
   }
 }

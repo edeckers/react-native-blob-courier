@@ -89,7 +89,7 @@ private fun createDownloadProgressInterceptor(
 
   return originalResponse.body()?.let {
     originalResponse.newBuilder().body(
-      BlobCourierResponse(
+      BlobCourierProgressResponse(
         reactContext,
         taskId,
         it
@@ -107,18 +107,15 @@ private fun startBlobUpload(
   method: String,
   promise: Promise
 ) {
-  val requestBody = CountingRequestBody(
+  val requestBody = BlobCourierProgressRequest(
+    reactContext,
+    taskId,
     MultipartBody.Builder().setType(MultipartBody.FORM)
       .addFormDataPart(
         "file", file.name,
         RequestBody.create(MediaType.parse(mimeType), file)
       )
-      .build(),
-    object : CountingRequestBody.ProgressListener {
-      override fun onRequestProgress(totalNumberOfBytesWritten: Long, totalNumberOfBytes: Long) {
-        notifyBridge(reactContext, taskId, totalNumberOfBytesWritten, totalNumberOfBytes)
-      }
-    }
+      .build()
   )
 
   val request = Request.Builder()
@@ -184,7 +181,12 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
     startBlobUpload(reactContext, maybeTaskId, file, mimeType, uri, method, promise)
   }
 
-  private fun fetchBlobUsingDownloadManager(uri: Uri, filename: String, promise: Promise) {
+  private fun fetchBlobUsingDownloadManager(
+    taskId: String,
+    uri: Uri,
+    filename: String,
+    promise: Promise
+  ) {
     val fullFilePath = createFullFilePath(filename)
 
     val downloadId =
@@ -193,8 +195,10 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
         .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
         .let { request -> defaultDownloadManager.enqueue(request) }
 
+    ManagedProgressUpdater.start(reactContext, downloadId, taskId)
+
     reactContext.registerReceiver(
-      DownloadReceiver(downloadId, fullFilePath, promise),
+      ManagedDownloadReceiver(downloadId, fullFilePath, promise),
       IntentFilter(
         DownloadManager.ACTION_DOWNLOAD_COMPLETE
       )
@@ -292,7 +296,7 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
     method: String
   ) =
     if (useDownloadManager)
-      fetchBlobUsingDownloadManager(uri, filename, promise)
+      fetchBlobUsingDownloadManager(taskId, uri, filename, promise)
     else fetchBlobWithoutDownloadManager(taskId, uri, filename, method, promise)
 
   @ReactMethod

@@ -1,5 +1,13 @@
+/**
+ * Copyright (c) Ely Deckers.
+ *
+ * This source code is licensed under the MPL-2.0 license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
 package io.deckers.blob_courier
 
+import android.app.DownloadManager
+import android.content.Context
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.WritableMap
@@ -24,8 +32,7 @@ fun convertJsonToMap(jsonObject: JSONObject): WritableMap {
   return map
 }
 
-// FIXME Code duplication
-fun notifyBridge(
+fun notifyBridgeOfProgress(
   context: ReactApplicationContext,
   taskId: String,
   totalNumberOfBytesRead: Long,
@@ -40,3 +47,6 @@ fun notifyBridge(
         putString("total", totalLength.toString())
       }
     )
+
+fun createDownloadManager(context: Context) =
+  context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
