@@ -22,6 +22,10 @@ export declare interface BlobUploadRequest {
   readonly url: string;
 }
 
+export declare interface BlobRequestTask {
+  readonly taskId: string;
+}
+
 export declare interface BlobUnmanagedHttpResponse {
   readonly headers: { [key: string]: string };
   readonly code: number;

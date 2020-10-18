@@ -15,3 +15,5 @@ const val DOWNLOAD_TYPE_UNMANAGED = "Unmanaged"
 
 const val MANAGED_DOWNLOAD_SUCCESS = "SUCCESS"
 const val MANAGED_DOWNLOAD_FAILURE = "FAILURE"
+
+const val DEVICE_EVENT_PROGRESS = "BlobCourierProgress"
