@@ -7,11 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-
-
-		F4FF95D7245B92E800C19C63 /*  BlobCourier.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4FF95D6245B92E800C19C63 /*  BlobCourier.swift */; };
-
-		5E555C0D2413F4C50049A1A2 /* BlobCourier.mm in Sources */ = {isa = PBXBuildFile; fileRef = B3E7B5891CC2AC0600A0062D /* BlobCourier.mm */; };
+		F4FF95D7245B92E800C19C63 /* BlobCourier.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4FF95D6245B92E800C19C63 /* BlobCourier.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -28,12 +24,17 @@
 
 /* Begin PBXFileReference section */
 		134814201AA4EA6300B7C361 /* libBlobCourier.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libBlobCourier.a; sourceTree = BUILT_PRODUCTS_DIR; };
-
-
 		B3E7B5891CC2AC0600A0062D /* BlobCourier.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BlobCourier.m; sourceTree = "<group>"; };
+		B940948F253DFC0800A58583 /* DownloaderDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloaderDelegate.swift; sourceTree = "<group>"; };
+		B94094E2253E0C2900A58583 /* DownloaderDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DownloaderDelegate.m; sourceTree = "<group>"; };
+		B94094E3253E107400A58583 /* BlobCourierEventEmitter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlobCourierEventEmitter.swift; sourceTree = "<group>"; };
+		B94094E4253E107400A58583 /* BlobCourierEventEmitter.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BlobCourierEventEmitter.m; sourceTree = "<group>"; };
+		B940950E253E1BEF00A58583 /* BlobCourierErrors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlobCourierErrors.swift; sourceTree = "<group>"; };
+		B940950F253E1BEF00A58583 /* BlobCourierErrors.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BlobCourierErrors.m; sourceTree = "<group>"; };
+		B9409539253E1F5800A58583 /* UploaderDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UploaderDelegate.swift; sourceTree = "<group>"; };
+		B940953A253E1F5800A58583 /* UploaderDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = UploaderDelegate.m; sourceTree = "<group>"; };
 		F4FF95D5245B92E700C19C63 /* BlobCourier-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "BlobCourier-Bridging-Header.h"; sourceTree = "<group>"; };
 		F4FF95D6245B92E800C19C63 /* BlobCourier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlobCourier.swift; sourceTree = "<group>"; };
-
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -58,12 +59,17 @@
 		58B511D21A9E6C8500147676 = {
 			isa = PBXGroup;
 			children = (
-
-
+				B940953A253E1F5800A58583 /* UploaderDelegate.m */,
+				B9409539253E1F5800A58583 /* UploaderDelegate.swift */,
+				B94094E4253E107400A58583 /* BlobCourierEventEmitter.m */,
+				B940950F253E1BEF00A58583 /* BlobCourierErrors.m */,
+				B940950E253E1BEF00A58583 /* BlobCourierErrors.swift */,
+				B94094E3253E107400A58583 /* BlobCourierEventEmitter.swift */,
+				B94094E2253E0C2900A58583 /* DownloaderDelegate.m */,
+				B940948F253DFC0800A58583 /* DownloaderDelegate.swift */,
 				F4FF95D6245B92E800C19C63 /* BlobCourier.swift */,
 				B3E7B5891CC2AC0600A0062D /* BlobCourier.m */,
 				F4FF95D5245B92E700C19C63 /* BlobCourier-Bridging-Header.h */,
-
 				134814211AA4EA7D00B7C361 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -125,11 +131,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-
-
 				F4FF95D7245B92E800C19C63 /* BlobCourier.swift in Sources */,
-				B3E7B58A1CC2AC0600A0062D /* BlobCourier.m in Sources */,
-
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -242,11 +244,9 @@
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = BlobCourier;
 				SKIP_INSTALL = YES;
-
 				SWIFT_OBJC_BRIDGING_HEADER = "BlobCourier-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
-
 			};
 			name = Debug;
 		};
@@ -263,10 +263,8 @@
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = BlobCourier;
 				SKIP_INSTALL = YES;
-
 				SWIFT_OBJC_BRIDGING_HEADER = "BlobCourier-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
-
 			};
 			name = Release;
 		};
