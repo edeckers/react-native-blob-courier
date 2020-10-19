@@ -110,6 +110,8 @@ open class BlobCourier: NSObject {
     input: NSDictionary, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock
   ) throws {
     print("Start uploadBlobFromValidatedParameters")
+    let taskId = (input[BlobCourier.PARAMETER_TASK_ID] as? String) ?? ""
+
     let url = (input[BlobCourier.PARAMETER_URL] as? String) ?? ""
 
     let urlObject = URL(string: url)!
@@ -118,42 +120,13 @@ open class BlobCourier: NSObject {
 
     let filePathObject = URL(string: filePath)!
 
-    let taskId = (input[BlobCourier.PARAMETER_TASK_ID] as? String) ?? ""
-
     let sessionConfig = URLSessionConfiguration.default
-    let session = URLSession(configuration: sessionConfig)
+    let uploaderDelegate = UploaderDelegate(taskId: taskId, resolve: resolve, reject: reject)
+    let session = URLSession(configuration: sessionConfig, delegate: uploaderDelegate, delegateQueue: nil)
 
     let (request, fileData) = buildRequestDataForFileUpload(url: urlObject, fileUrl: filePathObject)
 
-    let task = session.uploadTask(with: request, from: fileData) { (data, response, error) in
-      if error == nil {
-        if let statusCode = (response as? HTTPURLResponse)?.statusCode {
-          let rawResponse = String(data: data!, encoding: String.Encoding.utf8)
-
-          let result : NSDictionary = [
-            "type": BlobCourier.DOWNLOAD_TYPE_UNMANAGED,
-            "data": [
-              "code": statusCode,
-              "data": rawResponse,
-              "headers": []
-            ]
-          ]
-
-          resolve(result)
-          return
-        }
-
-        let noStatusCodeError = NSError(domain: BlobCourier.LIBRARY_DOMAIN, code: -1, userInfo: [NSLocalizedDescriptionKey: "Received no status code"])
-
-        self.processUnexpectedException(reject: reject, e: noStatusCodeError)
-     } else {
-        print(
-          "Error took place while uploading a file. Error description: \(error?.localizedDescription ?? "")"
-        )
-        self.processUnexpectedException(reject: reject, e: error as NSError?)
-      }
-    }
-    task.resume()
+    session.uploadTask(with: request, from: fileData).resume()
   }
 
   @objc(fetchBlob:withResolver:withRejecter:)
