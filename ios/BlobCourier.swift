@@ -4,10 +4,11 @@
  * This source code is licensed under the MPL-2.0 license found in the
  * LICENSE file in the root directory of this source tree.
  */
- import Foundation
+import Foundation
 
 @objc(BlobCourier)
-class BlobCourier: NSObject {
+open class BlobCourier: NSObject {
+
   static let ERROR_MISSING_REQUIRED_PARAMETER = "ERROR_MISSING_REQUIRED_PARAMETER"
   static let ERROR_UNEXPECTED_EXCEPTION = "ERROR_UNEXPECTED_EXCEPTION"
   static let ERROR_UNEXPECTED_EMPTY_VALUE = "ERROR_UNEXPECTED_EMPTY_VALUE"
@@ -75,43 +76,11 @@ class BlobCourier: NSObject {
 
     let fileURL = URL(string: url)
     let sessionConfig = URLSessionConfiguration.default
-    let session = URLSession(configuration: sessionConfig)
+    let downloaderDelegate = DownloaderDelegate(destinationFileUrl: destinationFileUrl, resolve: resolve, reject: reject)
+    let session = URLSession(configuration: sessionConfig, delegate: downloaderDelegate, delegateQueue: nil)
     let request = URLRequest(url: fileURL!)
 
-    let task = session.downloadTask(with: request) { (location, response, error) in
-      if error == nil {
-       let statusCode = (response as! HTTPURLResponse).statusCode
-
-       let result : NSDictionary = [
-         "type": BlobCourier.DOWNLOAD_TYPE_UNMANAGED,
-         "data": [
-           "fullFilePath": "\(destinationFileUrl)",
-           "response": [
-             "code": statusCode
-           ]
-         ],
-       ]
-
-        if let statusCode = (response as? HTTPURLResponse)?.statusCode {
-          print("Successfully downloaded. Status code: \(statusCode)")
-          do {
-            try? FileManager.default.removeItem(at: destinationFileUrl)
-            try FileManager.default.copyItem(at: location!, to: destinationFileUrl)
-            print("Successfully moved file to \(destinationFileUrl)")
-            resolve(result)
-          } catch (let writeError) {
-            self.processUnexpectedException(reject: reject, e: writeError as NSError?)
-          }
-         }
-     } else {
-        print(
-          "Error took place while downloading a file. Error description: \(error?.localizedDescription ?? "")"
-        )
-
-        self.processUnexpectedException(reject: reject, e: error as NSError?)
-      }
-    }
-    task.resume()
+    session.downloadTask(with: request).resume()
   }
 
   func buildRequestDataForFileUpload(url:URL, fileUrl:URL) -> (URLRequest, Data) {
