@@ -14,13 +14,15 @@ open class DownloaderDelegate: NSObject, URLSessionDownloadDelegate {
   let destinationFileUrl: URL
   let resolve: RCTPromiseResolveBlock
   let reject: RCTPromiseRejectBlock
+  let taskId: String
 
   let eventEmitter : BlobCourierEventEmitter? = BlobCourierEventEmitter.shared
 
-  init(destinationFileUrl: URL, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+  init(taskId: String, destinationFileUrl: URL, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
     self.destinationFileUrl = destinationFileUrl
     self.resolve = resolve
     self.reject = reject
+    self.taskId = taskId
   }
 
   public func urlSessionDidFinishEvents(forBackgroundURLSession session: URLSession) {
@@ -31,7 +33,7 @@ open class DownloaderDelegate: NSObject, URLSessionDownloadDelegate {
   }
 
   public func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didWriteData bytesWritten: Int64, totalBytesWritten: Int64, totalBytesExpectedToWrite: Int64) {
-    self.eventEmitter?.sendEvent(withName: BlobCourierEventEmitter.EVENT_PROGRESS, body: ["total": totalBytesExpectedToWrite, "written": totalBytesWritten])
+    self.eventEmitter?.sendEvent(withName: BlobCourierEventEmitter.EVENT_PROGRESS, body: ["taskId": self.taskId, "total": totalBytesExpectedToWrite, "written": totalBytesWritten])
   }
 
   func processCompletedDownload(location: URL, response: URLResponse?, error: Error?) {
@@ -40,7 +42,7 @@ open class DownloaderDelegate: NSObject, URLSessionDownloadDelegate {
         "Error took place while downloading a file. Error description: \(error?.localizedDescription ?? "")"
       )
 
-      // self.processUnexpectedException(reject: self.reject, e: error as NSError?)
+      BlobCourierErrors.processUnexpectedException(reject: self.reject, e: error as NSError?)
       return
     }
 
@@ -65,7 +67,7 @@ open class DownloaderDelegate: NSObject, URLSessionDownloadDelegate {
         print("Successfully moved file to \(self.destinationFileUrl)")
         self.resolve(result)
       } catch (let writeError) {
-        // self.processUnexpectedException(reject: reject, e: writeError as NSError?)
+        BlobCourierErrors.processUnexpectedException(reject: reject, e: writeError as NSError?)
       }
     }
   }

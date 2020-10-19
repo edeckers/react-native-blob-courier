@@ -9,43 +9,36 @@ import Foundation
 @objc(BlobCourier)
 open class BlobCourier: NSObject {
 
-  static let ERROR_MISSING_REQUIRED_PARAMETER = "ERROR_MISSING_REQUIRED_PARAMETER"
-  static let ERROR_UNEXPECTED_EXCEPTION = "ERROR_UNEXPECTED_EXCEPTION"
-  static let ERROR_UNEXPECTED_EMPTY_VALUE = "ERROR_UNEXPECTED_EMPTY_VALUE"
-
-  enum BlobCourierError: Error {
-    case withMessage(code: String, message: String)
-  }
-
-  static let DOWNLOAD_TYPE_UNMANAGED  = "Unmanaged"
+ static let DOWNLOAD_TYPE_UNMANAGED  = "Unmanaged"
 
   static let LIBRARY_DOMAIN  = "io.deckers.blob_courier"
 
   static let PARAMETER_FILENAME = "filename"
   static let PARAMETER_FILE_PATH = "filePath"
   static let PARAMETER_METHOD = "method"
+  static let PARAMETER_TASK_ID = "taskId"
   static let PARAMETER_URL = "url"
 
   static let DEFAULT_METHOD = "GET"
 
-  static let REQUIRED_PARAMETERETER_PROCESSOR = [
+  static let REQUIRED_PARAMETER_PROCESSOR = [
     "Boolean": { (input: NSDictionary, parameterName: String) in return input[parameterName]! },
     "String": { (input: NSDictionary, parameterName: String) in return input[parameterName]! },
   ]
 
   func assertRequiredParameter(input: NSDictionary, type: String, parameterName: String) throws {
     let maybeValue = try
-      (BlobCourier.REQUIRED_PARAMETERETER_PROCESSOR[type] ?? { (_, _) in
-        throw BlobCourierError.withMessage(
-          code: BlobCourier.ERROR_MISSING_REQUIRED_PARAMETER,
+      (BlobCourier.REQUIRED_PARAMETER_PROCESSOR[type] ?? { (_, _) in
+        throw BlobCourierErrors.BlobCourierError.withMessage(
+          code: BlobCourierErrors.ERROR_MISSING_REQUIRED_PARAMETER,
           message:
-            "No processor defined for type `\(type)`, valid options: \(BlobCourier.REQUIRED_PARAMETERETER_PROCESSOR.keys as! [String])"
+            "No processor defined for type `\(type)`, valid options: \(BlobCourier.REQUIRED_PARAMETER_PROCESSOR.keys as! [String])"
         )
       })(input, parameterName)
 
     if maybeValue == nil {
-      throw BlobCourierError.withMessage(
-        code: BlobCourier.ERROR_MISSING_REQUIRED_PARAMETER,
+      throw BlobCourierErrors.BlobCourierError.withMessage(
+        code: BlobCourierErrors.ERROR_MISSING_REQUIRED_PARAMETER,
         message: "`\(parameterName)` is a required parameter of type `\(type)`")
     }
   }
@@ -53,18 +46,20 @@ open class BlobCourier: NSObject {
   func processUnexpectedException(
     reject: @escaping RCTPromiseRejectBlock, e: NSError?
   ) {
-    reject(BlobCourier.ERROR_UNEXPECTED_EXCEPTION, "An unexpected exception occurred: \(e?.localizedDescription ?? "")", e)
+    reject(BlobCourierErrors.ERROR_UNEXPECTED_EXCEPTION, "An unexpected exception occurred: \(e?.localizedDescription ?? "")", e)
   }
 
   func processUnexpectedEmptyValue(
     reject: @escaping RCTPromiseRejectBlock, parameterName: String
   ) {
-    reject(BlobCourier.ERROR_UNEXPECTED_EMPTY_VALUE, "Parameter `\(parameterName)` cannot be empty.", nil)
+    reject(BlobCourierErrors.ERROR_UNEXPECTED_EMPTY_VALUE, "Parameter `\(parameterName)` cannot be empty.", nil)
   }
 
   func fetchBlobFromValidatedParameters(
     input: NSDictionary, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock
   ) throws {
+    let taskId = (input[BlobCourier.PARAMETER_TASK_ID] as? String) ?? ""
+
     let url = (input[BlobCourier.PARAMETER_URL] as? String) ?? ""
 
     let urlObject = URL(string: url)
@@ -76,7 +71,7 @@ open class BlobCourier: NSObject {
 
     let fileURL = URL(string: url)
     let sessionConfig = URLSessionConfiguration.default
-    let downloaderDelegate = DownloaderDelegate(destinationFileUrl: destinationFileUrl, resolve: resolve, reject: reject)
+    let downloaderDelegate = DownloaderDelegate(taskId: taskId, destinationFileUrl: destinationFileUrl, resolve: resolve, reject: reject)
     let session = URLSession(configuration: sessionConfig, delegate: downloaderDelegate, delegateQueue: nil)
     let request = URLRequest(url: fileURL!)
 
@@ -123,6 +118,8 @@ open class BlobCourier: NSObject {
 
     let filePathObject = URL(string: filePath)!
 
+    let taskId = (input[BlobCourier.PARAMETER_TASK_ID] as? String) ?? ""
+
     let sessionConfig = URLSessionConfiguration.default
     let session = URLSession(configuration: sessionConfig)
 
@@ -167,6 +164,8 @@ open class BlobCourier: NSObject {
       try assertRequiredParameter(
         input: input, type: "String", parameterName: BlobCourier.PARAMETER_FILENAME)
       try assertRequiredParameter(
+        input: input, type: "String", parameterName: BlobCourier.PARAMETER_TASK_ID)
+      try assertRequiredParameter(
         input: input, type: "String", parameterName: BlobCourier.PARAMETER_URL)
 
       try fetchBlobFromValidatedParameters(input: input, resolve: resolve, reject: reject)
@@ -184,7 +183,10 @@ open class BlobCourier: NSObject {
       try assertRequiredParameter(
         input: input, type: "String", parameterName: BlobCourier.PARAMETER_FILE_PATH)
       try assertRequiredParameter(
+        input: input, type: "String", parameterName: BlobCourier.PARAMETER_TASK_ID)
+      try assertRequiredParameter(
         input: input, type: "String", parameterName: BlobCourier.PARAMETER_URL)
+
 
       try uploadBlobFromValidatedParameters(input: input, resolve: resolve, reject: reject)
     } catch {

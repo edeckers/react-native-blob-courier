@@ -29,6 +29,8 @@
 		B94094E2253E0C2900A58583 /* DownloaderDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DownloaderDelegate.m; sourceTree = "<group>"; };
 		B94094E3253E107400A58583 /* BlobCourierEventEmitter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlobCourierEventEmitter.swift; sourceTree = "<group>"; };
 		B94094E4253E107400A58583 /* BlobCourierEventEmitter.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BlobCourierEventEmitter.m; sourceTree = "<group>"; };
+		B940950E253E1BEF00A58583 /* BlobCourierErrors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlobCourierErrors.swift; sourceTree = "<group>"; };
+		B940950F253E1BEF00A58583 /* BlobCourierErrors.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BlobCourierErrors.m; sourceTree = "<group>"; };
 		F4FF95D5245B92E700C19C63 /* BlobCourier-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "BlobCourier-Bridging-Header.h"; sourceTree = "<group>"; };
 		F4FF95D6245B92E800C19C63 /* BlobCourier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlobCourier.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -56,6 +58,8 @@
 			isa = PBXGroup;
 			children = (
 				B94094E4253E107400A58583 /* BlobCourierEventEmitter.m */,
+				B940950F253E1BEF00A58583 /* BlobCourierErrors.m */,
+				B940950E253E1BEF00A58583 /* BlobCourierErrors.swift */,
 				B94094E3253E107400A58583 /* BlobCourierEventEmitter.swift */,
 				B94094E2253E0C2900A58583 /* DownloaderDelegate.m */,
 				B940948F253DFC0800A58583 /* DownloaderDelegate.swift */,
