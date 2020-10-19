@@ -1,6 +1,6 @@
 {
   "name": "react-native-blob-courier",
-  "version": "0.0.1",
+  "version": "0.9.1",
   "description": "Use this library to efficiently download and upload blobs in React Native",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
@@ -122,7 +122,10 @@
       ]
     }
   },
-  "eslintIgnore": ["node_modules/", "lib/"],
+  "eslintIgnore": [
+    "node_modules/",
+    "lib/"
+  ],
   "prettier": {
     "quoteProps": "consistent",
     "singleQuote": true,
@@ -133,6 +136,10 @@
   "@react-native-community/bob": {
     "source": "src",
     "output": "lib",
-    "targets": ["commonjs", "module", "typescript"]
+    "targets": [
+      "commonjs",
+      "module",
+      "typescript"
+    ]
   }
 }
