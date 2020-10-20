@@ -1,14 +1,12 @@
-/**
- * Copyright (c) Ely Deckers.
- *
- * This source code is licensed under the MPL-2.0 license found in the
- * LICENSE file in the root directory of this source tree.
- */
+// Copyright (c) Ely Deckers.
+//
+// This source code is licensed under the MPL-2.0 license found in the
+// LICENSE file in the root directory of this source tree.
 import Foundation
 
 @objc(BlobCourierEventEmitter)
 open class BlobCourierEventEmitter: RCTEventEmitter {
-  public static let EVENT_PROGRESS = "BlobCourierProgress"
+  public static let eventProgress = "BlobCourierProgress"
 
   public static var shared: BlobCourierEventEmitter?
 
@@ -19,6 +17,6 @@ open class BlobCourierEventEmitter: RCTEventEmitter {
   }
 
   open override func supportedEvents() -> [String]! {
-    return [BlobCourierEventEmitter.EVENT_PROGRESS]
+    return [BlobCourierEventEmitter.eventProgress]
   }
 }

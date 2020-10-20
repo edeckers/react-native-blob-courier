@@ -1,20 +1,18 @@
-/**
- * Copyright (c) Ely Deckers.
- *
- * This source code is licensed under the MPL-2.0 license found in the
- * LICENSE file in the root directory of this source tree.
- */
+// Copyright (c) Ely Deckers.
+//
+// This source code is licensed under the MPL-2.0 license found in the
+// LICENSE file in the root directory of this source tree.
 import Foundation
 
 @objc(UploaderDelegate)
 open class UploaderDelegate: NSObject, URLSessionDataDelegate, URLSessionTaskDelegate {
-  private static let UPLOAD_TYPE_UNMANAGED  = "Unmanaged"
+  private static let uploadTypeUnmanaged  = "Unmanaged"
 
   private let resolve: RCTPromiseResolveBlock
   private let reject: RCTPromiseRejectBlock
   private let taskId: String
 
-  private let eventEmitter : BlobCourierEventEmitter? = BlobCourierEventEmitter.shared
+  private let eventEmitter: BlobCourierEventEmitter? = BlobCourierEventEmitter.shared
 
   private var receivedData: Data = Data()
 
@@ -35,9 +33,15 @@ open class UploaderDelegate: NSObject, URLSessionDataDelegate, URLSessionTaskDel
     self.processCompletedUpload(data: self.receivedData, response: task.response, error: error)
   }
 
-  public func urlSession(_ session: URLSession, task: URLSessionTask, didSendBodyData bytesSent: Int64, totalBytesSent: Int64, totalBytesExpectedToSend: Int64)
-  {
-      self.eventEmitter?.sendEvent(withName: BlobCourierEventEmitter.EVENT_PROGRESS, body: ["taskId": self.taskId, "total": totalBytesExpectedToSend, "written": totalBytesSent])
+  public func urlSession(
+    _ session: URLSession,
+    task: URLSessionTask,
+    didSendBodyData bytesSent: Int64,
+    totalBytesSent: Int64,
+    totalBytesExpectedToSend: Int64) {
+      self.eventEmitter?.sendEvent(
+        withName: BlobCourierEventEmitter.eventProgress,
+        body: ["taskId": self.taskId, "total": totalBytesExpectedToSend, "written": totalBytesSent])
   }
 
   func processCompletedUpload(data: Data, response: URLResponse?, error: Error?) {
@@ -45,15 +49,15 @@ open class UploaderDelegate: NSObject, URLSessionDataDelegate, URLSessionTaskDel
         print(
           "Error took place while uploading a file. Error description: \(error?.localizedDescription ?? "")"
         )
-        BlobCourierErrors.processUnexpectedException(reject: reject, e: error as NSError?)
+        BlobCourierErrors.processUnexpectedException(reject: reject, error: error as NSError?)
         return
       }
 
       if let statusCode = (response as? HTTPURLResponse)?.statusCode {
         let rawResponse = String(data: data, encoding: String.Encoding.utf8)
 
-        let result : NSDictionary = [
-          "type": UploaderDelegate.UPLOAD_TYPE_UNMANAGED,
+        let result: NSDictionary = [
+          "type": UploaderDelegate.uploadTypeUnmanaged,
           "data": [
             "code": statusCode,
             "data": rawResponse,
@@ -65,8 +69,12 @@ open class UploaderDelegate: NSObject, URLSessionDataDelegate, URLSessionTaskDel
         return
       }
 
-      let noStatusCodeError = NSError(domain: BlobCourier.LIBRARY_DOMAIN, code: -1, userInfo: [NSLocalizedDescriptionKey: "Received no status code"])
+      let noStatusCodeError =
+        NSError(
+          domain: BlobCourier.libraryDomain,
+          code: -1,
+          userInfo: [NSLocalizedDescriptionKey: "Received no status code"])
 
-      BlobCourierErrors.processUnexpectedException(reject: reject, e: noStatusCodeError)
+      BlobCourierErrors.processUnexpectedException(reject: reject, error: noStatusCodeError)
   }
 }
