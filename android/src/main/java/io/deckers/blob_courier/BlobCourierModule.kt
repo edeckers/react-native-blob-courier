@@ -20,6 +20,7 @@ import com.facebook.react.modules.network.OkHttpClientProvider
 import java.io.File
 import java.lang.reflect.Type
 import java.net.URL
+import kotlin.concurrent.thread
 import okhttp3.Interceptor
 import okhttp3.MediaType
 import okhttp3.MultipartBody
@@ -123,21 +124,23 @@ private fun startBlobUpload(
     .method(method, requestBody)
     .build()
 
-  val response = DEFAULT_OK_HTTP_CLIENT.newCall(request).execute()
+  thread {
+    val response = DEFAULT_OK_HTTP_CLIENT.newCall(request).execute()
 
-  promise.resolve(
-    convertJsonToMap(
-      JSONObject(
-        mapOf<String, Any>(
-          "response" to mapOf(
-            "code" to response.code(),
-            "data" to response.body()?.string().orEmpty(),
-            "headers" to response.headers().toMultimap()
+    promise.resolve(
+      convertJsonToMap(
+        JSONObject(
+          mapOf<String, Any>(
+            "response" to mapOf(
+              "code" to response.code(),
+              "data" to response.body()?.string().orEmpty(),
+              "headers" to response.headers().toMultimap()
+            )
           )
         )
       )
     )
-  )
+  }
 }
 
 class BlobCourierModule(private val reactContext: ReactApplicationContext) :
@@ -224,28 +227,30 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
     try {
 
       httpCient.newCall(request).execute().use { response ->
-        response.body()?.source().use { source ->
-          Okio.buffer(Okio.sink(fullFilePath)).use { sink ->
-            sink.writeAll(source as Source)
-          }
-        }
-
-        promise.resolve(
-          convertJsonToMap(
-            JSONObject(
-              mapOf(
-                "type" to DOWNLOAD_TYPE_UNMANAGED,
-                "data" to mapOf(
-                  "fullFilePath" to fullFilePath,
-                  "response" to mapOf<String, Any>(
-                    "code" to response.code(),
-                    "headers" to response.headers().toMultimap()
+        thread {
+          response.body()?.source().use { source ->
+            Okio.buffer(Okio.sink(fullFilePath)).use { sink ->
+              promise.resolve(
+                convertJsonToMap(
+                  JSONObject(
+                    mapOf(
+                      "type" to DOWNLOAD_TYPE_UNMANAGED,
+                      "data" to mapOf(
+                        "fullFilePath" to fullFilePath,
+                        "response" to mapOf<String, Any>(
+                          "code" to response.code(),
+                          "headers" to response.headers().toMultimap()
+                        )
+                      )
+                    )
                   )
                 )
               )
-            )
-          )
-        )
+
+              sink.writeAll(source as Source)
+            }
+          }
+        }
       }
     } catch (e: Exception) {
       promise.reject(ERROR_UNEXPECTED_EXCEPTION, e.message)
