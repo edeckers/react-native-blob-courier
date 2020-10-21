@@ -32,12 +32,15 @@ class BlobCourierProgressRequest(
     Okio.buffer(CountingSink(sink)).use(requestBody::writeTo)
 
   private inner class CountingSink(delegate: Sink) : ForwardingSink(delegate) {
+    private val progressNotifier =
+      CongestionAvoidingProgressNotifier(context, taskId, totalNumberOfBytes)
+
     private var totalNumberOfBytesWritten = 0L
 
     private fun processNumberOfBytesWritten(numberOfBytesRead: Long) {
       totalNumberOfBytesWritten += if (numberOfBytesRead > 0) numberOfBytesRead else 0
 
-      notifyBridgeOfProgress(context, taskId, totalNumberOfBytesWritten, totalNumberOfBytes)
+      progressNotifier.notify(totalNumberOfBytesWritten)
     }
 
     @Throws(IOException::class)
