@@ -3,10 +3,10 @@ import * as Progress from 'react-native-progress';
 
 import {
   StyleSheet,
+  Button,
   View,
   Text,
   PermissionsAndroid,
-  Button,
 } from 'react-native';
 import BlobCourier from 'react-native-blob-courier';
 import {
@@ -39,14 +39,19 @@ export const App = () => {
   }, []);
 
   const startDownload = async () => {
+    console.debug('startDownload');
+    setProgress(0);
+    setReceived(0);
+    setExpected(0);
     const fetchedBlob = await BlobCourier.fetchBlob({
-      filename: '5MB.zip',
+      filename: '100MB.zip',
       method: 'GET',
-      useDownloadManager: true,
-      url: 'http://ipv4.download.thinkbroadband.com/5MB.zip',
+      useDownloadManager: false,
+      url: 'http://ipv4.download.thinkbroadband.com/100MB.zip',
     } as AndroidBlobRequest).onProgress((e: any) => {
-      setProgress(parseInt(e.written, 10) / 5242880);
+      setProgress(parseInt(e.written, 10) / e.total);
       setReceived(parseInt(e.written, 10));
+      setReceived(e.written);
       setExpected(parseInt(e.total, 10));
     });
 
@@ -57,6 +62,9 @@ export const App = () => {
     if (!downloadResult) {
       return;
     }
+    setProgress(0);
+    setReceived(0);
+    setExpected(0);
 
     const filePath =
       downloadResult.type === BlobResponseType.Managed
@@ -69,7 +77,10 @@ export const App = () => {
       mimeType: 'text/plain',
       url: 'https://file.io',
     } as BlobUploadRequest).onProgress((e: any) => {
-      console.log(JSON.stringify(e));
+      setProgress(parseInt(e.written, 10) / e.total);
+      setReceived(parseInt(e.written, 10));
+      setReceived(e.written);
+      setExpected(parseInt(e.total, 10));
     });
 
     console.warn(JSON.stringify(uploadResult));
