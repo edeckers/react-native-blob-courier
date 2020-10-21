@@ -12,7 +12,7 @@ open class UploaderDelegate: NSObject, URLSessionDataDelegate, URLSessionTaskDel
   private let reject: RCTPromiseRejectBlock
   private let taskId: String
 
-  private let eventEmitter: BlobCourierEventEmitter? = BlobCourierEventEmitter.shared
+  private let eventEmitter: BlobCourierDelayedEventEmitter
 
   private var receivedData: Data = Data()
 
@@ -20,6 +20,8 @@ open class UploaderDelegate: NSObject, URLSessionDataDelegate, URLSessionTaskDel
     self.resolve = resolve
     self.reject = reject
     self.taskId = taskId
+
+    self.eventEmitter = BlobCourierDelayedEventEmitter(taskId: taskId)
   }
 
   public func urlSessionDidFinishEvents(forBackgroundURLSession session: URLSession) {
@@ -39,9 +41,9 @@ open class UploaderDelegate: NSObject, URLSessionDataDelegate, URLSessionTaskDel
     didSendBodyData bytesSent: Int64,
     totalBytesSent: Int64,
     totalBytesExpectedToSend: Int64) {
-      self.eventEmitter?.sendEvent(
-        withName: BlobCourierEventEmitter.eventProgress,
-        body: ["taskId": self.taskId, "total": totalBytesExpectedToSend, "written": totalBytesSent])
+    self.eventEmitter.notifyBridgeOfProgress(
+      totalBytesWritten: totalBytesSent,
+      totalBytesExpectedToWrite: totalBytesExpectedToSend)
   }
 
   func processCompletedUpload(data: Data, response: URLResponse?, error: Error?) {
