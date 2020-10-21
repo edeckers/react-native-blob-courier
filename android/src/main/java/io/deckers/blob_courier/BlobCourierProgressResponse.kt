@@ -25,18 +25,21 @@ class BlobCourierProgressResponse(
 
   override fun contentType(): MediaType? = responseBody.contentType()
 
-  override fun contentLength(): Long = totalNumberOfBytes
+  override fun contentLength(): Long = responseBody.contentLength()
 
   override fun source(): BufferedSource =
     Okio.buffer(ProgressReportingSource())
 
   private inner class ProgressReportingSource : Source {
-    var totalNumberOfBytesRead: Long = 0
+    private var totalNumberOfBytesRead: Long = 0
+
+    private val progressNotifier =
+      CongestionAvoidingProgressNotifier(context, taskId, totalNumberOfBytes)
 
     private fun processNumberOfBytesRead(numberOfBytesRead: Long) {
       totalNumberOfBytesRead += if (numberOfBytesRead > 0) numberOfBytesRead else 0
 
-      notifyBridgeOfProgress(context, taskId, totalNumberOfBytesRead, totalNumberOfBytes)
+      progressNotifier.notify(totalNumberOfBytesRead)
     }
 
     @Throws(IOException::class)
