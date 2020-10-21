@@ -6,15 +6,14 @@ import Foundation
 
 @objc(DownloaderDelegate)
 open class DownloaderDelegate: NSObject, URLSessionDownloadDelegate {
-
-  static let downloadTypeUnmanaged  = "Unmanaged"
+  private static let downloadTypeUnmanaged  = "Unmanaged"
 
   let destinationFileUrl: URL
   let resolve: RCTPromiseResolveBlock
   let reject: RCTPromiseRejectBlock
   let taskId: String
 
-  let eventEmitter: BlobCourierEventEmitter? = BlobCourierEventEmitter.shared
+  let eventEmitter: BlobCourierDelayedEventEmitter
 
   init(
     taskId: String,
@@ -25,6 +24,8 @@ open class DownloaderDelegate: NSObject, URLSessionDownloadDelegate {
     self.resolve = resolve
     self.reject = reject
     self.taskId = taskId
+
+    self.eventEmitter = BlobCourierDelayedEventEmitter(taskId: taskId)
   }
 
   public func urlSessionDidFinishEvents(forBackgroundURLSession session: URLSession) {
@@ -46,9 +47,9 @@ open class DownloaderDelegate: NSObject, URLSessionDownloadDelegate {
     didWriteData bytesWritten: Int64,
     totalBytesWritten: Int64,
     totalBytesExpectedToWrite: Int64) {
-      self.eventEmitter?.sendEvent(
-        withName: BlobCourierEventEmitter.eventProgress,
-        body: ["taskId": self.taskId, "total": totalBytesExpectedToWrite, "written": totalBytesWritten])
+    self.eventEmitter.notifyBridgeOfProgress(
+      totalBytesWritten: totalBytesWritten,
+      totalBytesExpectedToWrite: totalBytesExpectedToWrite)
   }
 
   func processCompletedDownload(location: URL, response: URLResponse?, error: Error?) {
@@ -74,7 +75,6 @@ open class DownloaderDelegate: NSObject, URLSessionDownloadDelegate {
 
       print("Successfully downloaded. Status code: \(statusCode)")
       do {
-        self.eventEmitter?.sendEvent(withName: BlobCourierEventEmitter.eventProgress, body: result)
         try? FileManager.default.removeItem(at: self.destinationFileUrl)
         try FileManager.default.copyItem(at: location, to: self.destinationFileUrl)
         print("Successfully moved file to \(self.destinationFileUrl)")
