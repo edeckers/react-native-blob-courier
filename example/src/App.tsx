@@ -7,6 +7,7 @@ import {
   View,
   Text,
   PermissionsAndroid,
+  Platform,
 } from 'react-native';
 import BlobCourier from 'react-native-blob-courier';
 import {
@@ -18,6 +19,20 @@ import {
   BlobUploadRequest,
 } from 'react-native-blob-courier';
 
+const requestRequiredPermissionsOnAndroidAsync = async () => {
+  if (Platform.OS !== 'android') {
+    return;
+  }
+
+  try {
+    await PermissionsAndroid.request(
+      PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE
+    );
+  } catch (err) {
+    console.warn(err);
+  }
+};
+
 export const App = () => {
   const [downloadResult, setDownloadResult] = React.useState<BlobResponse>();
   const [progress, setProgress] = React.useState<number>();
@@ -25,17 +40,7 @@ export const App = () => {
   const [expected, setExpected] = React.useState<number>();
 
   React.useEffect(() => {
-    const requestPermissionAndDownloadBlobAsync = async () => {
-      try {
-        await PermissionsAndroid.request(
-          PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE
-        );
-      } catch (err) {
-        console.warn(err);
-      }
-    };
-
-    requestPermissionAndDownloadBlobAsync();
+    requestRequiredPermissionsOnAndroidAsync();
   }, []);
 
   const startDownload = async () => {
