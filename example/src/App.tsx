@@ -8,23 +8,67 @@ import {
   Text,
   PermissionsAndroid,
   Platform,
+  StyleProp,
+  ViewStyle,
 } from 'react-native';
-import BlobCourier from 'react-native-blob-courier';
-import {
+import BlobCourier, {
   AndroidBlobRequest,
-  BlobUnmanagedData,
-  BlobManagedData,
+  BlobFilePathData,
   BlobResponse,
-  BlobResponseType,
   BlobUploadRequest,
 } from 'react-native-blob-courier';
 
+const DEFAULT_MARGIN = 10;
+
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    marginVertical: DEFAULT_MARGIN,
+  },
+  mainContainer: {
     alignItems: 'center',
+    flex: 1,
+    justifyContent: 'center',
+    padding: DEFAULT_MARGIN,
+  },
+  header: {
+    fontSize: 35,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  headerContainer: {
+    alignItems: 'center',
+    flex: 1,
+    justifyContent: 'center',
+    padding: DEFAULT_MARGIN,
+  },
+  mainContent: { flex: 0.75 },
+  mainHeader: {
+    flex: 0.25,
+    justifyContent: 'center',
+    flexDirection: 'column',
+  },
+  metaBox: {
+    flex: 0.25,
+    width: '80%',
+  },
+  metaText: {
+    fontSize: 12.5,
+    fontWeight: 'normal',
+  },
+  metaLabel: {
+    fontSize: 12.5,
+    fontWeight: 'bold',
+  },
+  progress: {
+    fontSize: 12.5,
+  },
+  progressContainer: {
+    alignItems: 'center',
+    flex: 1,
     justifyContent: 'center',
   },
+  uploadDownloadContentBox: { flex: 0.2, alignItems: 'center' },
+  uploadDownloadMetaBox: { flex: 0.25, width: '80%' },
 });
 
 const requestRequiredPermissionsOnAndroidAsync = async () => {
@@ -41,6 +85,34 @@ const requestRequiredPermissionsOnAndroidAsync = async () => {
   }
 };
 
+const formatBytes = (bytes: number) => bytes.toLocaleString('en-US');
+
+interface HVProps {
+  style?: StyleProp<ViewStyle>;
+  title: string;
+}
+
+const HeaderView = (props: HVProps) => (
+  <Text style={styles.header}>{props.title}</Text>
+);
+
+interface MVProps {
+  from: string;
+  style?: StyleProp<ViewStyle>;
+  to: string;
+}
+
+const MetaView = (props: MVProps) => (
+  <>
+    <Text style={styles.metaLabel}>
+      From: <Text style={styles.metaText}>{props.from}</Text>
+    </Text>
+    <Text style={styles.metaLabel}>
+      To: <Text style={styles.metaText}>{props.to}</Text>
+    </Text>
+  </>
+);
+
 interface PIProps {
   value: number;
   width?: number;
@@ -52,13 +124,48 @@ const ProgressIndicator = (props: PIProps) => {
 
   return (
     <>
-      <Progress.Bar progress={progress} width={props.width} />
-      <Text>
-        {props.value}/{props.total ?? '?'}
+      <Progress.Bar
+        animationType={'timing'}
+        indeterminate={props.total === undefined}
+        progress={progress}
+        useNativeDriver={true}
+        width={props.width}
+      />
+      <Text style={styles.progress}>
+        {formatBytes(props.value)}B /{' '}
+        {props.total !== undefined ? formatBytes(props.total) : '?'}B
       </Text>
     </>
   );
 };
+
+interface UDVProps {
+  buttonText: string;
+  from: string;
+  isButtonEnabled: boolean;
+  onPress: () => void;
+  progress: number;
+  progressTotal?: number;
+  to: string;
+}
+
+const UploadDownloadView = (props: UDVProps) => (
+  <>
+    <View style={styles.uploadDownloadMetaBox}>
+      <MetaView from={props.from} to={props.to} />
+    </View>
+    <View style={[styles.uploadDownloadContentBox]}>
+      <ProgressIndicator value={props.progress} total={props.progressTotal} />
+      <View style={styles.container}>
+        <Button
+          disabled={!props.isButtonEnabled}
+          onPress={props.onPress}
+          title={props.buttonText}
+        />
+      </View>
+    </View>
+  </>
+);
 
 interface UVProps {
   fromLocalPath: string;
@@ -67,28 +174,42 @@ interface UVProps {
 }
 
 const UploaderView = (props: UVProps) => {
+  const [isUploading, setIsUploading] = useState(false);
   const [received, setReceived] = useState<number>(0);
-  const [expected, setExpected] = useState<number>(0);
+  const [expected, setExpected] = useState<number | undefined>(0);
+
+  const buttonText = isUploading ? 'Uploading...' : 'Start upload';
 
   const startUpload = async () => {
-    const uploadResult = await BlobCourier.uploadBlob({
-      filePath: props.fromLocalPath,
-      method: 'POST',
-      mimeType: 'text/plain',
-      url: props.toUrl,
-    } as BlobUploadRequest).onProgress((e: any) => {
-      setReceived(parseInt(e.written, 10));
-      setExpected(parseInt(e.total, 10));
-    });
+    setIsUploading(true);
 
-    props.onFinished(uploadResult);
+    try {
+      const uploadResult = await BlobCourier.uploadBlob({
+        filePath: props.fromLocalPath,
+        method: 'POST',
+        mimeType: 'text/plain',
+        url: props.toUrl,
+      } as BlobUploadRequest).onProgress((e: any) => {
+        setReceived(parseInt(e.written, 10));
+        setExpected(parseInt(e.total, 10));
+      });
+
+      props.onFinished(uploadResult);
+    } catch (e) {
+      console.warn(e);
+    }
   };
 
   return (
-    <>
-      <ProgressIndicator value={received} total={expected} />
-      <Button title="Start upload" onPress={() => startUpload()} />
-    </>
+    <UploadDownloadView
+      buttonText={buttonText}
+      from={props.fromLocalPath}
+      isButtonEnabled={!isUploading}
+      onPress={startUpload}
+      progress={received}
+      progressTotal={expected}
+      to={props.toUrl}
+    />
   );
 };
 
@@ -99,62 +220,120 @@ interface DVProps {
 }
 
 const DownloaderView = (props: DVProps) => {
+  const [isDownloading, setIsDownloading] = useState(false);
   const [received, setReceived] = useState<number>(0);
-  const [expected, setExpected] = useState<number>(0);
+  const [expected, setExpected] = useState<number | undefined>(0);
+
+  const buttonText = isDownloading ? 'Downloading...' : 'Start download';
 
   const startDownload = async () => {
-    const fetchedResult = await BlobCourier.fetchBlob({
-      filename: props.filename,
-      method: 'GET',
-      url: props.fromUrl,
-      useDownloadManager: false,
-    } as AndroidBlobRequest).onProgress((e: any) => {
-      setReceived(parseInt(e.written, 10));
-      setExpected(parseInt(e.total, 10));
-    });
+    setIsDownloading(true);
 
-    props.onFinished(fetchedResult);
+    try {
+      const fetchedResult = await BlobCourier.fetchBlob({
+        filename: props.filename,
+        method: 'GET',
+        url: props.fromUrl,
+        useDownloadManager: false,
+      } as AndroidBlobRequest).onProgress((e: any) => {
+        const serializedMaybeTotal = parseInt(e.total, 10);
+        const maybeTotal =
+          serializedMaybeTotal > 0 ? serializedMaybeTotal : undefined;
+
+        setReceived(parseInt(e.written, 10));
+        setExpected(maybeTotal);
+      });
+
+      props.onFinished(fetchedResult);
+    } catch (e) {
+      console.warn(e);
+    }
   };
 
   return (
-    <>
-      <ProgressIndicator value={received} total={expected} />
-      <Button title="Start download" onPress={() => startDownload()} />
-    </>
+    <UploadDownloadView
+      buttonText={buttonText}
+      from={props.fromUrl}
+      isButtonEnabled={!isDownloading}
+      onPress={startDownload}
+      progress={received}
+      progressTotal={expected}
+      to={props.filename}
+    />
   );
 };
 
+interface FVProps {
+  onRetry: () => void;
+}
+
+const FinishedView = (props: FVProps) => (
+  <View style={styles.container}>
+    <Text>Finished!</Text>
+    <Button title="Retry" onPress={props.onRetry} />
+  </View>
+);
+
+type Route = 'download' | 'upload' | 'finished';
+
 export const App = () => {
   const [downloadedFilePath, setDownloadedFilePath] = React.useState<string>();
+  const [route, setRoute] = React.useState<Route>('download');
 
   React.useEffect(() => {
     requestRequiredPermissionsOnAndroidAsync();
   }, []);
 
   const onDownloadCompleted = (downloadResult: BlobResponse) => {
-    const theFilePath =
-      downloadResult.type === BlobResponseType.Managed
-        ? (downloadResult.data as BlobManagedData).fullFilePath
-        : (downloadResult.data as BlobUnmanagedData).fullFilePath;
+    setDownloadedFilePath(
+      (downloadResult.data as BlobFilePathData).fullFilePath ?? ''
+    );
 
-    setDownloadedFilePath(theFilePath);
+    setRoute('upload');
   };
 
+  const onUploadCompleted = () => {
+    setRoute('finished');
+  };
+
+  const onRetry = () => {
+    setDownloadedFilePath(undefined);
+
+    setRoute('download');
+  };
+
+  const routeToViewMapping = {
+    download: (
+      <DownloaderView
+        fromUrl="http://ipv4.download.thinkbroadband.com/5MB.zip"
+        filename="5MB.zip"
+        onFinished={onDownloadCompleted}
+      />
+    ),
+    upload: (
+      <UploaderView
+        fromLocalPath={downloadedFilePath ?? ''}
+        onFinished={onUploadCompleted}
+        toUrl="https://file.io"
+      />
+    ),
+    finished: <FinishedView onRetry={onRetry} />,
+  };
+
+  const ContentView = (cvProps: { route: Route }) =>
+    routeToViewMapping[cvProps.route];
+
   return (
-    <View style={styles.container}>
-      {!downloadedFilePath ? (
-        <DownloaderView
-          fromUrl="http://ipv4.download.thinkbroadband.com/100MB.zip"
-          filename="100MB.zip"
-          onFinished={onDownloadCompleted}
+    <View style={styles.mainContainer}>
+      <View style={styles.mainHeader}>
+        <HeaderView
+          style={styles.headerContainer}
+          title="React Native Blob Courier"
         />
-      ) : (
-        <UploaderView
-          fromLocalPath={downloadedFilePath}
-          onFinished={() => {}}
-          toUrl="https://file.io"
-        />
-      )}
+      </View>
+      <View style={styles.mainContent}>
+        <ContentView route={route} />
+      </View>
     </View>
   );
 };
