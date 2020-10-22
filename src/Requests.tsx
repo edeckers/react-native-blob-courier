@@ -31,13 +31,15 @@ export declare interface BlobUnmanagedHttpResponse {
   readonly code: number;
 }
 
-export declare interface BlobManagedData {
-  readonly result: string;
+export declare interface BlobFilePathData {
   readonly fullFilePath: string;
 }
 
-export declare interface BlobUnmanagedData {
-  readonly fullFilePath: string;
+export declare interface BlobManagedData extends BlobFilePathData {
+  readonly result: string;
+}
+
+export declare interface BlobUnmanagedData extends BlobFilePathData {
   readonly response: BlobUnmanagedHttpResponse;
 }
 

@@ -9,8 +9,8 @@ jobs:
       - uses: actions/setup-node@v2-beta
         with:
           node-version: '12'
-      - run: yarn install
-      - run: yarn lint
+      - run: cd example && yarn
+      - run: yarn
   build-android:
     needs: install-and-test
     runs-on: ubuntu-latest
@@ -23,7 +23,8 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: 1.8
-      - run: yarn install
+      - run: cd example && yarn
+      - run: yarn
       - uses: eskatos/gradle-command-action@v1
         with:
           build-root-directory: android
@@ -37,8 +38,8 @@ jobs:
       - uses: actions/setup-node@v2-beta
         with:
           node-version: '12'
-      - run: yarn
       - run: cd example && yarn
+      - run: yarn
       - run: cd example/ios && pod install
       - uses: sersoft-gmbh/xcodebuild-action@v1
         with:
