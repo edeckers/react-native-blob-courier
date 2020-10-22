@@ -10,6 +10,7 @@ import {
   Platform,
   StyleProp,
   ViewStyle,
+  Switch,
 } from 'react-native';
 import BlobCourier, {
   AndroidBlobRequest,
@@ -24,6 +25,7 @@ const styles = StyleSheet.create({
   container: {
     marginVertical: DEFAULT_MARGIN,
   },
+  downloadToggle: { alignItems: 'center' },
   mainContainer: {
     alignItems: 'center',
     flex: 1,
@@ -213,6 +215,17 @@ const UploaderView = (props: UVProps) => {
   );
 };
 
+interface MDTProps {
+  onValueChange: () => void;
+  value?: boolean;
+}
+const ManagedDownloadToggle = (props: MDTProps) => (
+  <View style={styles.downloadToggle}>
+    <Text>Enable managed</Text>
+    <Switch onValueChange={props.onValueChange} value={props.value} />
+  </View>
+);
+
 interface DVProps {
   filename: string;
   fromUrl: string;
@@ -221,6 +234,7 @@ interface DVProps {
 
 const DownloaderView = (props: DVProps) => {
   const [isDownloading, setIsDownloading] = useState(false);
+  const [useDownloadManager, setUseDownloadManager] = useState(false);
   const [received, setReceived] = useState<number>(0);
   const [expected, setExpected] = useState<number | undefined>(0);
 
@@ -234,7 +248,7 @@ const DownloaderView = (props: DVProps) => {
         filename: props.filename,
         method: 'GET',
         url: props.fromUrl,
-        useDownloadManager: false,
+        useDownloadManager: useDownloadManager,
       } as AndroidBlobRequest).onProgress((e: any) => {
         const serializedMaybeTotal = parseInt(e.total, 10);
         const maybeTotal =
@@ -251,15 +265,21 @@ const DownloaderView = (props: DVProps) => {
   };
 
   return (
-    <UploadDownloadView
-      buttonText={buttonText}
-      from={props.fromUrl}
-      isButtonEnabled={!isDownloading}
-      onPress={startDownload}
-      progress={received}
-      progressTotal={expected}
-      to={props.filename}
-    />
+    <>
+      <UploadDownloadView
+        buttonText={buttonText}
+        from={props.fromUrl}
+        isButtonEnabled={!isDownloading}
+        onPress={startDownload}
+        progress={received}
+        progressTotal={expected}
+        to={props.filename}
+      />
+      <ManagedDownloadToggle
+        onValueChange={() => setUseDownloadManager(!useDownloadManager)}
+        value={useDownloadManager}
+      />
+    </>
   );
 };
 
