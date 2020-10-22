@@ -230,26 +230,27 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
         thread {
           response.body()?.source().use { source ->
             Okio.buffer(Okio.sink(fullFilePath)).use { sink ->
-              promise.resolve(
-                convertJsonToMap(
-                  JSONObject(
-                    mapOf(
-                      "type" to DOWNLOAD_TYPE_UNMANAGED,
-                      "data" to mapOf(
-                        "fullFilePath" to fullFilePath,
-                        "response" to mapOf<String, Any>(
-                          "code" to response.code(),
-                          "headers" to response.headers().toMultimap()
-                        )
-                      )
-                    )
-                  )
-                )
-              )
 
               sink.writeAll(source as Source)
             }
           }
+
+          promise.resolve(
+            convertJsonToMap(
+              JSONObject(
+                mapOf(
+                  "type" to DOWNLOAD_TYPE_UNMANAGED,
+                  "data" to mapOf(
+                    "fullFilePath" to fullFilePath,
+                    "response" to mapOf<String, Any>(
+                      "code" to response.code(),
+                      "headers" to response.headers().toMultimap()
+                    )
+                  )
+                )
+              )
+            )
+          )
         }
       }
     } catch (e: Exception) {
