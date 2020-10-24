@@ -89,7 +89,7 @@ open class BlobCourier: NSObject {
 
     var request = URLRequest(url: fileURL!)
     for (key, value) in headers {
-      if let headerKey key as? String, let headerValue = value as? String {
+      if let headerKey = key as? String, let headerValue = value as? String {
         request.setValue(
           headerValue,
           forHTTPHeaderField: headerKey)
@@ -109,7 +109,7 @@ open class BlobCourier: NSObject {
 
     request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
     for (key, value) in headers {
-      if let headerKey key as? String, let headerValue = value as? String {
+      if let headerKey = key as? String, let headerValue = value as? String {
         request.setValue(
           headerValue,
           forHTTPHeaderField: headerKey)
