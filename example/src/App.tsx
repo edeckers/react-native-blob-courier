@@ -328,7 +328,7 @@ export const App = () => {
   const routeToViewMapping = {
     download: (
       <DownloaderView
-        fromUrl="http://requestbin.net/r/15wy1ob1" // http://ipv4.download.thinkbroadband.com/5MB.zip"
+        fromUrl="http://ipv4.download.thinkbroadband.com/5MB.zip"
         filename="5MB.zip"
         onFinished={onDownloadCompleted}
       />
