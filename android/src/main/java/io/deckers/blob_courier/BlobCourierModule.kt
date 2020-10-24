@@ -35,6 +35,7 @@ private const val ERROR_MISSING_REQUIRED_PARAMETER = "ERROR_MISSING_REQUIRED_PAR
 
 private const val PARAMETER_FILENAME = "filename"
 private const val PARAMETER_FILE_PATH = "filePath"
+private const val PARAMETER_HEADERS = "headers"
 private const val PARAMETER_METHOD = "method"
 private const val PARAMETER_MIME_TYPE = "mimeType"
 private const val PARAMETER_TASK_ID = "taskId"
@@ -119,13 +120,15 @@ private fun startBlobUpload(
       .build()
   )
 
-  val request = Request.Builder()
+  val requestBuilder = Request.Builder()
     .url(uri)
     .method(method, requestBody)
     .build()
 
   thread {
-    val response = DEFAULT_OK_HTTP_CLIENT.newCall(request).execute()
+    val response = DEFAULT_OK_HTTP_CLIENT.newCall(
+      requestBuilder
+    ).execute()
 
     promise.resolve(
       convertJsonToMap(
@@ -196,7 +199,12 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
       DownloadManager.Request(uri)
         .setAllowedOverRoaming(true)
         .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-        .let { request -> defaultDownloadManager.enqueue(request) }
+        .let { requestBuilder
+          ->
+          defaultDownloadManager.enqueue(
+            requestBuilder
+          )
+        }
 
     ManagedProgressUpdater.start(reactContext, downloadId, taskId)
 
@@ -212,12 +220,21 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
     taskId: String,
     uri: Uri,
     filename: String,
+    headers: Map<String, String>,
     method: String,
     promise: Promise
   ) {
     val fullFilePath = createFullFilePath(filename)
 
-    val request = Request.Builder().method(method, null).url(uri.toString()).build()
+    val request = Request.Builder()
+      .method(method, null)
+      .url(uri.toString())
+      .apply {
+        headers.forEach { e: Map.Entry<String, String> ->
+          addHeader(e.key, e.value)
+        }
+      }
+      .build()
 
     val httpCient =
       DEFAULT_OK_HTTP_CLIENT.newBuilder()
@@ -266,6 +283,9 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
       input.hasKey(PARAMETER_USE_DOWNLOAD_MANAGER) &&
         input.getBoolean(PARAMETER_USE_DOWNLOAD_MANAGER)
     val method = input.getString(PARAMETER_METHOD) ?: DEFAULT_FETCH_METHOD
+    val unfilteredHeaders = input.getMap(PARAMETER_HEADERS)?.toHashMap() ?: emptyMap<String, Any>()
+
+    val headers = filterHeaders(unfilteredHeaders)
 
     if (maybeTaskId.isNullOrEmpty()) {
       processUnexpectedEmptyValue(promise, PARAMETER_TASK_ID)
@@ -289,9 +309,26 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
       useDownloadManager,
       maybeFilename,
       promise,
-      method
+      method,
+      headers
     )
   }
+
+  private fun filterHeaders(unfilteredHeaders: Map<String, Any>): MutableMap<String, String> =
+    unfilteredHeaders.entries
+      .filter { e -> e.value is String }
+      .fold(
+        mutableMapOf(),
+        { p, n ->
+          p.apply {
+            put(n.key, n.value as String)
+          }
+        }
+      )
+
+  // unfilteredHeaders.entries
+  // .filterIsInstance<Map.Entry<String,String>>()
+  // .associate { e -> e.toPair() }
 
   private fun startBlobFetch(
     taskId: String,
@@ -299,11 +336,12 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
     useDownloadManager: Boolean,
     filename: String,
     promise: Promise,
-    method: String
+    method: String,
+    headers: Map<String, String>
   ) =
     if (useDownloadManager)
       fetchBlobUsingDownloadManager(taskId, uri, filename, promise)
-    else fetchBlobWithoutDownloadManager(taskId, uri, filename, method, promise)
+    else fetchBlobWithoutDownloadManager(taskId, uri, filename, headers, method, promise)
 
   @ReactMethod
   fun fetchBlob(input: ReadableMap, promise: Promise) {
