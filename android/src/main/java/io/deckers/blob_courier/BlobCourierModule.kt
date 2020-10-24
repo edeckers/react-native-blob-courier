@@ -176,8 +176,10 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
     val method = input.getString(PARAMETER_METHOD) ?: DEFAULT_UPLOAD_METHOD
     val mimeType = input.getString(PARAMETER_MIME_TYPE) ?: DEFAULT_MIME_TYPE
 
-    val unfilteredHeaders = input.getMap(PARAMETER_HEADERS)?.toHashMap()
-      ?: emptyMap<String, Any>()
+    val unfilteredHeaders =
+      if (input.hasKey(PARAMETER_HEADERS))
+        input.getMap(PARAMETER_HEADERS)?.toHashMap() ?: emptyMap<String, Any>()
+      else emptyMap<String, Any>()
 
     val headers = filterHeaders(unfilteredHeaders)
 
@@ -308,8 +310,11 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
       input.hasKey(PARAMETER_USE_DOWNLOAD_MANAGER) &&
         input.getBoolean(PARAMETER_USE_DOWNLOAD_MANAGER)
     val method = input.getString(PARAMETER_METHOD) ?: DEFAULT_FETCH_METHOD
-    val unfilteredHeaders = input.getMap(PARAMETER_HEADERS)?.toHashMap()
-      ?: emptyMap<String, Any>()
+
+    val unfilteredHeaders =
+      if (input.hasKey(PARAMETER_HEADERS))
+        input.getMap(PARAMETER_HEADERS)?.toHashMap() ?: emptyMap<String, Any>()
+      else emptyMap<String, Any>()
 
     val headers = filterHeaders(unfilteredHeaders)
 

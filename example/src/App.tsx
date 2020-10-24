@@ -246,9 +246,6 @@ const DownloaderView = (props: DVProps) => {
     try {
       const fetchedResult = await BlobCourier.fetchBlob({
         filename: props.filename,
-        headers: {
-          A: 'B',
-        },
         method: 'GET',
         url: props.fromUrl,
         useDownloadManager: useDownloadManager,
