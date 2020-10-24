@@ -7,20 +7,28 @@
 export declare interface BlobRequestHeaders {
   readonly headers?: { [key: string]: string };
 }
-export declare interface BlobRequest extends BlobRequestHeaders {
-  readonly filename: string;
+export declare interface BlobRequestMethod {
   readonly method?: string;
+}
+export declare interface BlobRequestUrl {
   readonly url: string;
 }
 
-export declare interface AndroidBlobRequest extends BlobRequestHeaders {
+export declare interface BlobBaseRequest
+  extends BlobRequestHeaders,
+    BlobRequestMethod,
+    BlobRequestUrl {}
+
+export declare interface BlobFetchRequest extends BlobBaseRequest {
+  readonly filename: string;
+}
+
+export declare interface AndroidBlobFetchRequest extends BlobFetchRequest {
   readonly useDownloadManager: boolean;
 }
 
-export declare interface BlobUploadRequest extends BlobRequestHeaders {
+export declare interface BlobUploadRequest extends BlobBaseRequest {
   readonly filePath: string;
-  readonly method?: string;
-  readonly url: string;
 }
 
 export declare interface BlobRequestTask {

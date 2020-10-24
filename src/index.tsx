@@ -6,8 +6,8 @@
  */
 import { NativeEventEmitter, NativeModules } from 'react-native';
 import type {
-  AndroidBlobRequest,
-  BlobRequest,
+  AndroidBlobFetchRequest,
+  BlobFetchRequest,
   BlobRequestTask,
   BlobResponse,
   BlobUploadRequest,
@@ -16,7 +16,7 @@ import { uuid } from './Utils';
 
 type BlobCourierType = {
   fetchBlob(
-    input: (AndroidBlobRequest | BlobRequest) & BlobRequestTask
+    input: (AndroidBlobFetchRequest | BlobFetchRequest) & BlobRequestTask
   ): Promise<BlobResponse>;
   uploadBlob(input: BlobUploadRequest & BlobRequestTask): Promise<BlobResponse>;
 };
@@ -50,21 +50,21 @@ const extendWithProgress = <T extends unknown>(
 const createTaskId = () => `task-${uuid()}`;
 
 const extendInputWithTaskId = (
-  input: AndroidBlobRequest | BlobRequest | BlobUploadRequest
+  input: AndroidBlobFetchRequest | BlobFetchRequest | BlobUploadRequest
 ) =>
   ({
     ...input,
     taskId: createTaskId(),
-  } as (AndroidBlobRequest | BlobRequest | BlobUploadRequest) &
+  } as (AndroidBlobFetchRequest | BlobFetchRequest | BlobUploadRequest) &
     BlobRequestTask);
 
 class BlobCourierWrapper {
   public static fetchBlob = (
-    input: AndroidBlobRequest | BlobRequest
+    input: AndroidBlobFetchRequest | BlobFetchRequest
   ): BlobCourierProgress<BlobResponse> => {
     const inputWithTaskId = extendInputWithTaskId(input) as (
-      | AndroidBlobRequest
-      | BlobRequest
+      | AndroidBlobFetchRequest
+      | BlobFetchRequest
     ) &
       BlobRequestTask;
 
