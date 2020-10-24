@@ -107,6 +107,7 @@ private fun startBlobUpload(
   mimeType: String,
   uri: URL,
   method: String,
+  headers: Map<String, String>,
   promise: Promise
 ) {
   val requestBody = BlobCourierProgressRequest(
@@ -123,6 +124,11 @@ private fun startBlobUpload(
   val requestBuilder = Request.Builder()
     .url(uri)
     .method(method, requestBody)
+    .apply {
+      headers.forEach { e: Map.Entry<String, String> ->
+        addHeader(e.key, e.value)
+      }
+    }
     .build()
 
   thread {
@@ -146,6 +152,13 @@ private fun startBlobUpload(
   }
 }
 
+private fun filterHeaders(unfilteredHeaders: Map<String, Any>): Map<String, String> =
+  unfilteredHeaders
+    .mapValues { (_, v) -> v as? String }
+    .filter { true }
+    .mapNotNull { (k, v) -> v?.let { k to it } }
+    .toMap()
+
 class BlobCourierModule(private val reactContext: ReactApplicationContext) :
   ReactContextBaseJavaModule(reactContext) {
 
@@ -162,6 +175,11 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
     val maybeUrl = input.getString(PARAMETER_URL)
     val method = input.getString(PARAMETER_METHOD) ?: DEFAULT_UPLOAD_METHOD
     val mimeType = input.getString(PARAMETER_MIME_TYPE) ?: DEFAULT_MIME_TYPE
+
+    val unfilteredHeaders = input.getMap(PARAMETER_HEADERS)?.toHashMap()
+      ?: emptyMap<String, Any>()
+
+    val headers = filterHeaders(unfilteredHeaders)
 
     if (maybeTaskId.isNullOrEmpty()) {
       processUnexpectedEmptyValue(promise, PARAMETER_TASK_ID)
@@ -184,13 +202,14 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
 
     val uri = URL(maybeUrl)
 
-    startBlobUpload(reactContext, maybeTaskId, file, mimeType, uri, method, promise)
+    startBlobUpload(reactContext, maybeTaskId, file, mimeType, uri, method, headers, promise)
   }
 
   private fun fetchBlobUsingDownloadManager(
     taskId: String,
     uri: Uri,
     filename: String,
+    headers: Map<String, String>,
     promise: Promise
   ) {
     val fullFilePath = createFullFilePath(filename)
@@ -201,6 +220,12 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
         .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
         .let { requestBuilder
           ->
+          requestBuilder.apply {
+            headers.forEach { e: Map.Entry<String, String> ->
+              addRequestHeader(e.key, e.value)
+            }
+          }
+
           defaultDownloadManager.enqueue(
             requestBuilder
           )
@@ -283,7 +308,8 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
       input.hasKey(PARAMETER_USE_DOWNLOAD_MANAGER) &&
         input.getBoolean(PARAMETER_USE_DOWNLOAD_MANAGER)
     val method = input.getString(PARAMETER_METHOD) ?: DEFAULT_FETCH_METHOD
-    val unfilteredHeaders = input.getMap(PARAMETER_HEADERS)?.toHashMap() ?: emptyMap<String, Any>()
+    val unfilteredHeaders = input.getMap(PARAMETER_HEADERS)?.toHashMap()
+      ?: emptyMap<String, Any>()
 
     val headers = filterHeaders(unfilteredHeaders)
 
@@ -314,22 +340,6 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
     )
   }
 
-  private fun filterHeaders(unfilteredHeaders: Map<String, Any>): MutableMap<String, String> =
-    unfilteredHeaders.entries
-      .filter { e -> e.value is String }
-      .fold(
-        mutableMapOf(),
-        { p, n ->
-          p.apply {
-            put(n.key, n.value as String)
-          }
-        }
-      )
-
-  // unfilteredHeaders.entries
-  // .filterIsInstance<Map.Entry<String,String>>()
-  // .associate { e -> e.toPair() }
-
   private fun startBlobFetch(
     taskId: String,
     uri: Uri,
@@ -340,7 +350,7 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
     headers: Map<String, String>
   ) =
     if (useDownloadManager)
-      fetchBlobUsingDownloadManager(taskId, uri, filename, promise)
+      fetchBlobUsingDownloadManager(taskId, uri, filename, headers, promise)
     else fetchBlobWithoutDownloadManager(taskId, uri, filename, headers, method, promise)
 
   @ReactMethod
