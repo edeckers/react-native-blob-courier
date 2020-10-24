@@ -13,7 +13,7 @@ import {
   Switch,
 } from 'react-native';
 import BlobCourier, {
-  AndroidBlobRequest,
+  AndroidBlobFetchRequest,
   BlobFilePathData,
   BlobResponse,
   BlobUploadRequest,
@@ -249,7 +249,7 @@ const DownloaderView = (props: DVProps) => {
         method: 'GET',
         url: props.fromUrl,
         useDownloadManager: useDownloadManager,
-      } as AndroidBlobRequest).onProgress((e: any) => {
+      } as AndroidBlobFetchRequest).onProgress((e: any) => {
         const serializedMaybeTotal = parseInt(e.total, 10);
         const maybeTotal =
           serializedMaybeTotal > 0 ? serializedMaybeTotal : undefined;

@@ -4,22 +4,31 @@
  * This source code is licensed under the MPL-2.0 license found in the
  * LICENSE file in the root directory of this source tree.
  */
-export declare interface BlobRequest {
-  readonly filename: string;
-  readonly headers?: Headers;
+export declare interface BlobRequestHeaders {
+  readonly headers?: { [key: string]: string };
+}
+export declare interface BlobRequestMethod {
   readonly method?: string;
+}
+export declare interface BlobRequestUrl {
   readonly url: string;
 }
 
-export declare interface AndroidBlobRequest {
+export declare interface BlobBaseRequest
+  extends BlobRequestHeaders,
+    BlobRequestMethod,
+    BlobRequestUrl {}
+
+export declare interface BlobFetchRequest extends BlobBaseRequest {
+  readonly filename: string;
+}
+
+export declare interface AndroidBlobFetchRequest extends BlobFetchRequest {
   readonly useDownloadManager: boolean;
 }
 
-export declare interface BlobUploadRequest {
+export declare interface BlobUploadRequest extends BlobBaseRequest {
   readonly filePath: string;
-  readonly headers?: Headers;
-  readonly method?: string;
-  readonly url: string;
 }
 
 export declare interface BlobRequestTask {

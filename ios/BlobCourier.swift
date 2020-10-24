@@ -13,6 +13,7 @@ open class BlobCourier: NSObject {
 
   static let parameterFilename = "filename"
   static let parameterFilePath = "filePath"
+  static let parameterHeaders = "headers"
   static let parameterMethod = "method"
   static let parameterTaskId = "taskId"
   static let parameterUrl = "url"
@@ -41,6 +42,13 @@ open class BlobCourier: NSObject {
     }
   }
 
+  func filterHeaders(unfilteredHeaders: NSDictionary) -> NSDictionary {
+    Dictionary(uniqueKeysWithValues: unfilteredHeaders
+      .map { key, value in (key as? String, value as? String) }
+      .filter({ $0.1 != nil }))
+      .mapValues { $0! } as NSDictionary
+  }
+
   func fetchBlobFromValidatedParameters(
     input: NSDictionary,
     resolve: @escaping RCTPromiseResolveBlock,
@@ -53,6 +61,11 @@ open class BlobCourier: NSObject {
     let urlObject = URL(string: url)
 
     let filename = (input[BlobCourier.parameterFilename] as? String) ?? ""
+
+    let headers =
+      filterHeaders(unfilteredHeaders:
+        (input[BlobCourier.parameterHeaders] as? NSDictionary) ??
+        NSDictionary())
 
     let documentsUrl: URL =
       try FileManager.default.url(
@@ -70,13 +83,23 @@ open class BlobCourier: NSObject {
         destinationFileUrl: destinationFileUrl,
         resolve: resolve,
         reject: reject)
-    let session = URLSession(configuration: sessionConfig, delegate: downloaderDelegate, delegateQueue: nil)
-    let request = URLRequest(url: fileURL!)
+
+    let session =
+     URLSession(configuration: sessionConfig, delegate: downloaderDelegate, delegateQueue: nil)
+
+    var request = URLRequest(url: fileURL!)
+    for (key, value) in headers {
+      if let headerKey = key as? String, let headerValue = value as? String {
+        request.setValue(
+          headerValue,
+          forHTTPHeaderField: headerKey)
+      }
+    }
 
     session.downloadTask(with: request).resume()
   }
 
-  func buildRequestDataForFileUpload(url: URL, fileUrl: URL) -> (URLRequest, Data) {
+  func buildRequestDataForFileUpload(url: URL, fileUrl: URL, headers: NSDictionary) -> (URLRequest, Data) {
     // https://igomobile.de/2020/06/16/swift-upload-a-file-with-multipart-form-data-in-ios-using-uploadtask-and-urlsession/
 
     let boundary = UUID().uuidString
@@ -85,6 +108,13 @@ open class BlobCourier: NSObject {
     request.httpMethod = "POST"
 
     request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+    for (key, value) in headers {
+      if let headerKey = key as? String, let headerValue = value as? String {
+        request.setValue(
+          headerValue,
+          forHTTPHeaderField: headerKey)
+      }
+    }
 
     let fileName = fileUrl.lastPathComponent
     let mimetype = "application/octet-stream"
@@ -124,7 +154,12 @@ open class BlobCourier: NSObject {
     let uploaderDelegate = UploaderDelegate(taskId: taskId, resolve: resolve, reject: reject)
     let session = URLSession(configuration: sessionConfig, delegate: uploaderDelegate, delegateQueue: nil)
 
-    let (request, fileData) = buildRequestDataForFileUpload(url: urlObject, fileUrl: filePathObject)
+    let headers =
+      filterHeaders(unfilteredHeaders:
+        (input[BlobCourier.parameterHeaders] as? NSDictionary) ??
+        NSDictionary())
+
+    let (request, fileData) = buildRequestDataForFileUpload(url: urlObject, fileUrl: filePathObject, headers: headers)
 
     session.uploadTask(with: request, from: fileData).resume()
   }
