@@ -15,8 +15,9 @@ import {
 import BlobCourier, {
   AndroidBlobFetchRequest,
   BlobFilePathData,
-  BlobResponse,
+  BlobFetchResponse,
   BlobUploadRequest,
+  BlobUploadResponse,
 } from 'react-native-blob-courier';
 
 const DEFAULT_MARGIN = 10;
@@ -172,7 +173,7 @@ const UploadDownloadView = (props: UDVProps) => (
 
 interface UVProps {
   fromLocalPath: string;
-  onFinished: (response: BlobResponse) => void;
+  onFinished: (response: BlobUploadResponse) => void;
   toUrl: string;
 }
 
@@ -194,6 +195,7 @@ const UploaderView = (props: UVProps) => {
           filePath: props.fromLocalPath,
           method: 'POST',
           mimeType: 'text/plain',
+          returnResponse: true,
           url: props.toUrl,
         } as BlobUploadRequest)
         .onProgress((e: any) => {
@@ -234,7 +236,7 @@ const ManagedDownloadToggle = (props: MDTProps) => (
 interface DVProps {
   filename: string;
   fromUrl: string;
-  onFinished: (response: BlobResponse) => void;
+  onFinished: (response: BlobFetchResponse) => void;
 }
 
 const DownloaderView = (props: DVProps) => {
@@ -313,7 +315,7 @@ export const App = () => {
     requestRequiredPermissionsOnAndroidAsync();
   }, []);
 
-  const onDownloadCompleted = (downloadResult: BlobResponse) => {
+  const onDownloadCompleted = (downloadResult: BlobFetchResponse) => {
     setDownloadedFilePath(
       (downloadResult.data as BlobFilePathData).fullFilePath ?? ''
     );

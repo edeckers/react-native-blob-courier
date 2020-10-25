@@ -10,16 +10,19 @@ import type {
   BlobFetchRequest,
   BlobRequestSettings,
   BlobRequestTask,
-  BlobResponse,
+  BlobFetchResponse,
   BlobUploadRequest,
+  BlobUploadResponse,
 } from './Requests';
 import { uuid } from './Utils';
 
 type BlobCourierType = {
   fetchBlob(
     input: (AndroidBlobFetchRequest | BlobFetchRequest) & BlobRequestTask
-  ): Promise<BlobResponse>;
-  uploadBlob(input: BlobUploadRequest & BlobRequestTask): Promise<BlobResponse>;
+  ): Promise<BlobFetchResponse>;
+  uploadBlob(
+    input: BlobUploadRequest & BlobRequestTask
+  ): Promise<BlobUploadResponse>;
 };
 
 const { BlobCourier, BlobCourierEventEmitter } = NativeModules;
@@ -73,12 +76,14 @@ class BlobCourierWrapper {
   public static settings = (settings: BlobRequestSettings) => ({
     fetchBlob: (
       input: AndroidBlobFetchRequest | BlobFetchRequest
-    ): BlobCourierProgress<BlobResponse> =>
+    ): BlobCourierProgress<BlobFetchResponse> =>
       BlobCourierWrapper.fetchBlob({
         ...BlobCourierWrapper.prefixSettings(settings),
         ...input,
       }),
-    uploadBlob: (input: BlobUploadRequest): BlobCourierProgress<BlobResponse> =>
+    uploadBlob: (
+      input: BlobUploadRequest
+    ): BlobCourierProgress<BlobUploadResponse> =>
       BlobCourierWrapper.uploadBlob({
         ...BlobCourierWrapper.prefixSettings(settings),
         ...input,
@@ -87,7 +92,7 @@ class BlobCourierWrapper {
 
   public static fetchBlob = (
     input: AndroidBlobFetchRequest | BlobFetchRequest
-  ): BlobCourierProgress<BlobResponse> => {
+  ): BlobCourierProgress<BlobFetchResponse> => {
     const inputWithTaskId = extendInputWithTaskId(input) as (
       | AndroidBlobFetchRequest
       | BlobFetchRequest
@@ -102,7 +107,7 @@ class BlobCourierWrapper {
 
   public static uploadBlob = (
     input: BlobUploadRequest
-  ): BlobCourierProgress<BlobResponse> => {
+  ): BlobCourierProgress<BlobUploadResponse> => {
     const inputWithTaskId = extendInputWithTaskId(input) as BlobUploadRequest &
       BlobRequestTask;
 

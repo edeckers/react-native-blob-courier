@@ -38,6 +38,7 @@ private const val PARAMETER_FILE_PATH = "filePath"
 private const val PARAMETER_HEADERS = "headers"
 private const val PARAMETER_METHOD = "method"
 private const val PARAMETER_MIME_TYPE = "mimeType"
+private const val PARAMETER_RETURN_RESPONSE = "returnResponse"
 private const val PARAMETER_SETTINGS_PROGRESS_INTERVAL = "settings.progressIntervalMilliseconds"
 private const val PARAMETER_TASK_ID = "taskId"
 private const val PARAMETER_URL = "url"
@@ -111,6 +112,7 @@ private fun startBlobUpload(
   uri: URL,
   method: String,
   headers: Map<String, String>,
+  returnResponse: Boolean,
   progressInterval: Int,
   promise: Promise
 ) {
@@ -147,7 +149,7 @@ private fun startBlobUpload(
           mapOf<String, Any>(
             "response" to mapOf(
               "code" to response.code(),
-              "data" to response.body()?.string().orEmpty(),
+              "data" to if (returnResponse) response.body()?.string().orEmpty() else "",
               "headers" to response.headers().toMultimap()
             )
           )
@@ -188,6 +190,9 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
 
     val headers = filterHeaders(unfilteredHeaders)
 
+    val returnResponse =
+      input.hasKey(PARAMETER_RETURN_RESPONSE) && input.getBoolean(PARAMETER_RETURN_RESPONSE)
+
     val progressInterval =
       if (input.hasKey(PARAMETER_SETTINGS_PROGRESS_INTERVAL))
         input.getInt(PARAMETER_SETTINGS_PROGRESS_INTERVAL)
@@ -222,6 +227,7 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
       uri,
       method,
       headers,
+      returnResponse,
       progressInterval,
       promise
     )

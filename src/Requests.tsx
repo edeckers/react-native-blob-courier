@@ -29,7 +29,7 @@ export declare interface AndroidBlobFetchRequest extends BlobFetchRequest {
 
 export declare interface BlobUploadRequest extends BlobBaseRequest {
   readonly filePath: string;
-  readonly retrieveResponse?: boolean;
+  readonly returnResponse?: boolean;
 }
 
 export declare interface BlobRequestTask {
@@ -62,7 +62,9 @@ export enum BlobResponseType {
   Unmanaged,
 }
 
-export declare interface BlobResponse {
+export declare interface BlobFetchResponse {
   readonly type: BlobResponseType;
   readonly data: BlobUnmanagedData | BlobManagedData;
 }
+
+export declare interface BlobUploadResponse extends BlobUnmanagedData {}
