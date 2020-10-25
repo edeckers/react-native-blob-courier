@@ -10,22 +10,22 @@ import Foundation
 open class BlobCourierDelayedEventEmitter: NSObject {
   let taskId: String
   let eventEmitter: BlobCourierEventEmitter?
-  let updateTimeoutMilliseconds: Int
+  let progressIntervalMilliseconds: Int
 
   var lastProgressUpdate: Date = Date()
 
-  init(taskId: String, updateTimeoutMilliseconds: Int = 200) {
+  init(taskId: String, progressIntervalMilliseconds: Int) {
     self.taskId = taskId
 
     self.eventEmitter = BlobCourierEventEmitter.shared
 
-    self.updateTimeoutMilliseconds = updateTimeoutMilliseconds
+    self.progressIntervalMilliseconds = progressIntervalMilliseconds
   }
 
   public func notifyBridgeOfProgress(totalBytesWritten: Int64, totalBytesExpectedToWrite: Int64) {
     let isDownloadFinished = totalBytesWritten == totalBytesExpectedToWrite
     let hasTimeoutPassed =
-      Int(Date().timeIntervalSince(self.lastProgressUpdate) * 1000) > self.updateTimeoutMilliseconds
+      Int(Date().timeIntervalSince(self.lastProgressUpdate) * 1000) > self.progressIntervalMilliseconds
     let shouldUpdate = isDownloadFinished || hasTimeoutPassed
 
     if !shouldUpdate {

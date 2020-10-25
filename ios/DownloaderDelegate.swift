@@ -18,6 +18,7 @@ open class DownloaderDelegate: NSObject, URLSessionDownloadDelegate {
   init(
     taskId: String,
     destinationFileUrl: URL,
+    progressIntervalMilliseconds: Int,
     resolve: @escaping RCTPromiseResolveBlock,
     reject: @escaping RCTPromiseRejectBlock) {
     self.destinationFileUrl = destinationFileUrl
@@ -25,7 +26,10 @@ open class DownloaderDelegate: NSObject, URLSessionDownloadDelegate {
     self.reject = reject
     self.taskId = taskId
 
-    self.eventEmitter = BlobCourierDelayedEventEmitter(taskId: taskId)
+    self.eventEmitter =
+      BlobCourierDelayedEventEmitter(
+        taskId: taskId,
+        progressIntervalMilliseconds: progressIntervalMilliseconds)
   }
 
   public func urlSessionDidFinishEvents(forBackgroundURLSession session: URLSession) {

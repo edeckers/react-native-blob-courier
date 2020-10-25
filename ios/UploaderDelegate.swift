@@ -16,12 +16,20 @@ open class UploaderDelegate: NSObject, URLSessionDataDelegate, URLSessionTaskDel
 
   private var receivedData: Data = Data()
 
-  init(taskId: String, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
-    self.resolve = resolve
-    self.reject = reject
+  init(
+    taskId: String,
+    progressIntervalMilliseconds: Int,
+    resolve: @escaping RCTPromiseResolveBlock,
+    reject: @escaping RCTPromiseRejectBlock) {
     self.taskId = taskId
 
-    self.eventEmitter = BlobCourierDelayedEventEmitter(taskId: taskId)
+    self.resolve = resolve
+    self.reject = reject
+
+    self.eventEmitter =
+      BlobCourierDelayedEventEmitter(
+        taskId: taskId,
+        progressIntervalMilliseconds: progressIntervalMilliseconds)
   }
 
   public func urlSessionDidFinishEvents(forBackgroundURLSession session: URLSession) {
