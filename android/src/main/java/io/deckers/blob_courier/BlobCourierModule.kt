@@ -38,6 +38,8 @@ private const val PARAMETER_FILE_PATH = "filePath"
 private const val PARAMETER_HEADERS = "headers"
 private const val PARAMETER_METHOD = "method"
 private const val PARAMETER_MIME_TYPE = "mimeType"
+private const val PARAMETER_RETURN_RESPONSE = "returnResponse"
+private const val PARAMETER_SETTINGS_PROGRESS_INTERVAL = "settings.progressIntervalMilliseconds"
 private const val PARAMETER_TASK_ID = "taskId"
 private const val PARAMETER_URL = "url"
 private const val PARAMETER_USE_DOWNLOAD_MANAGER = "useDownloadManager"
@@ -81,7 +83,8 @@ private fun assertRequiredParameter(input: ReadableMap, type: Type, parameterNam
 
 private fun createDownloadProgressInterceptor(
   reactContext: ReactApplicationContext,
-  taskId: String
+  taskId: String,
+  progressInterval: Int
 ): (
   Interceptor.Chain
 ) -> Response = fun(
@@ -94,6 +97,7 @@ private fun createDownloadProgressInterceptor(
       BlobCourierProgressResponse(
         reactContext,
         taskId,
+        progressInterval,
         it
       )
     ).build()
@@ -108,6 +112,8 @@ private fun startBlobUpload(
   uri: URL,
   method: String,
   headers: Map<String, String>,
+  returnResponse: Boolean,
+  progressInterval: Int,
   promise: Promise
 ) {
   val requestBody = BlobCourierProgressRequest(
@@ -118,7 +124,8 @@ private fun startBlobUpload(
         "file", file.name,
         RequestBody.create(MediaType.parse(mimeType), file)
       )
-      .build()
+      .build(),
+    progressInterval
   )
 
   val requestBuilder = Request.Builder()
@@ -142,7 +149,7 @@ private fun startBlobUpload(
           mapOf<String, Any>(
             "response" to mapOf(
               "code" to response.code(),
-              "data" to response.body()?.string().orEmpty(),
+              "data" to if (returnResponse) response.body()?.string().orEmpty() else "",
               "headers" to response.headers().toMultimap()
             )
           )
@@ -183,6 +190,14 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
 
     val headers = filterHeaders(unfilteredHeaders)
 
+    val returnResponse =
+      input.hasKey(PARAMETER_RETURN_RESPONSE) && input.getBoolean(PARAMETER_RETURN_RESPONSE)
+
+    val progressInterval =
+      if (input.hasKey(PARAMETER_SETTINGS_PROGRESS_INTERVAL))
+        input.getInt(PARAMETER_SETTINGS_PROGRESS_INTERVAL)
+      else DEFAULT_PROGRESS_TIMEOUT_MILLISECONDS
+
     if (maybeTaskId.isNullOrEmpty()) {
       processUnexpectedEmptyValue(promise, PARAMETER_TASK_ID)
       return
@@ -204,7 +219,18 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
 
     val uri = URL(maybeUrl)
 
-    startBlobUpload(reactContext, maybeTaskId, file, mimeType, uri, method, headers, promise)
+    startBlobUpload(
+      reactContext,
+      maybeTaskId,
+      file,
+      mimeType,
+      uri,
+      method,
+      headers,
+      returnResponse,
+      progressInterval,
+      promise
+    )
   }
 
   private fun fetchBlobUsingDownloadManager(
@@ -212,6 +238,7 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
     uri: Uri,
     filename: String,
     headers: Map<String, String>,
+    progressInterval: Int,
     promise: Promise
   ) {
     val fullFilePath = createFullFilePath(filename)
@@ -233,7 +260,7 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
           )
         }
 
-    ManagedProgressUpdater.start(reactContext, downloadId, taskId)
+    ManagedProgressUpdater.start(reactContext, downloadId, taskId, progressInterval)
 
     reactContext.registerReceiver(
       ManagedDownloadReceiver(downloadId, fullFilePath, promise),
@@ -249,6 +276,7 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
     filename: String,
     headers: Map<String, String>,
     method: String,
+    progressInterval: Int,
     promise: Promise
   ) {
     val fullFilePath = createFullFilePath(filename)
@@ -265,7 +293,7 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
 
     val httpCient =
       DEFAULT_OK_HTTP_CLIENT.newBuilder()
-        .addInterceptor(createDownloadProgressInterceptor(reactContext, taskId))
+        .addInterceptor(createDownloadProgressInterceptor(reactContext, taskId, progressInterval))
         .build()
 
     try {
@@ -318,6 +346,11 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
 
     val headers = filterHeaders(unfilteredHeaders)
 
+    val progressInterval =
+      if (input.hasKey(PARAMETER_SETTINGS_PROGRESS_INTERVAL))
+        input.getInt(PARAMETER_SETTINGS_PROGRESS_INTERVAL)
+      else DEFAULT_PROGRESS_TIMEOUT_MILLISECONDS
+
     if (maybeTaskId.isNullOrEmpty()) {
       processUnexpectedEmptyValue(promise, PARAMETER_TASK_ID)
       return
@@ -341,7 +374,8 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
       maybeFilename,
       promise,
       method,
-      headers
+      headers,
+      progressInterval
     )
   }
 
@@ -352,11 +386,20 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
     filename: String,
     promise: Promise,
     method: String,
-    headers: Map<String, String>
+    headers: Map<String, String>,
+    progressInterval: Int
   ) =
     if (useDownloadManager)
-      fetchBlobUsingDownloadManager(taskId, uri, filename, headers, promise)
-    else fetchBlobWithoutDownloadManager(taskId, uri, filename, headers, method, promise)
+      fetchBlobUsingDownloadManager(taskId, uri, filename, headers, progressInterval, promise)
+    else fetchBlobWithoutDownloadManager(
+      taskId,
+      uri,
+      filename,
+      headers,
+      method,
+      progressInterval,
+      promise
+    )
 
   @ReactMethod
   fun fetchBlob(input: ReadableMap, promise: Promise) {

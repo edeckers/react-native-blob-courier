@@ -15,10 +15,13 @@ open class BlobCourier: NSObject {
   static let parameterFilePath = "filePath"
   static let parameterHeaders = "headers"
   static let parameterMethod = "method"
+  static let parameterProgressInterval = "settings.progressIntervalMilliseconds"
+  static let parameterReturnResponse = "returnResponse"
   static let parameterTaskId = "taskId"
   static let parameterUrl = "url"
 
   static let defaultMethod = "GET"
+  static let defaultProgressIntervalMilliseconds = 500
 
   static let requiredParameterProcessor = [
     "Boolean": { (input: NSDictionary, parameterName: String) in return input[parameterName]! },
@@ -56,6 +59,10 @@ open class BlobCourier: NSObject {
   ) throws {
     let taskId = (input[BlobCourier.parameterTaskId] as? String) ?? ""
 
+    let progressIntervalMilliseconds =
+      (input[BlobCourier.parameterProgressInterval] as? Int) ??
+        BlobCourier.defaultProgressIntervalMilliseconds
+
     let url = (input[BlobCourier.parameterUrl] as? String) ?? ""
 
     let urlObject = URL(string: url)
@@ -81,6 +88,7 @@ open class BlobCourier: NSObject {
       DownloaderDelegate(
         taskId: taskId,
         destinationFileUrl: destinationFileUrl,
+        progressIntervalMilliseconds: progressIntervalMilliseconds,
         resolve: resolve,
         reject: reject)
 
@@ -142,6 +150,10 @@ open class BlobCourier: NSObject {
     print("Start uploadBlobFromValidatedParameters")
     let taskId = (input[BlobCourier.parameterTaskId] as? String) ?? ""
 
+    let progressIntervalMilliseconds =
+      (input[BlobCourier.parameterProgressInterval] as? Int) ??
+        BlobCourier.defaultProgressIntervalMilliseconds
+
     let url = (input[BlobCourier.parameterUrl] as? String) ?? ""
 
     let urlObject = URL(string: url)!
@@ -150,8 +162,16 @@ open class BlobCourier: NSObject {
 
     let filePathObject = URL(string: filePath)!
 
+    let returnResponse = (input[BlobCourier.parameterReturnResponse] as? Bool) ?? false
+
     let sessionConfig = URLSessionConfiguration.default
-    let uploaderDelegate = UploaderDelegate(taskId: taskId, resolve: resolve, reject: reject)
+    let uploaderDelegate =
+      UploaderDelegate(
+        taskId: taskId,
+        returnResponse: returnResponse,
+        progressIntervalMilliseconds: progressIntervalMilliseconds,
+        resolve: resolve,
+        reject: reject)
     let session = URLSession(configuration: sessionConfig, delegate: uploaderDelegate, delegateQueue: nil)
 
     let headers =

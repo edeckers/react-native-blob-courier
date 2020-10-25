@@ -8,17 +8,21 @@ import { NativeEventEmitter, NativeModules } from 'react-native';
 import type {
   AndroidBlobFetchRequest,
   BlobFetchRequest,
+  BlobRequestSettings,
   BlobRequestTask,
-  BlobResponse,
+  BlobFetchResponse,
   BlobUploadRequest,
+  BlobUploadResponse,
 } from './Requests';
 import { uuid } from './Utils';
 
 type BlobCourierType = {
   fetchBlob(
     input: (AndroidBlobFetchRequest | BlobFetchRequest) & BlobRequestTask
-  ): Promise<BlobResponse>;
-  uploadBlob(input: BlobUploadRequest & BlobRequestTask): Promise<BlobResponse>;
+  ): Promise<BlobFetchResponse>;
+  uploadBlob(
+    input: BlobUploadRequest & BlobRequestTask
+  ): Promise<BlobUploadResponse>;
 };
 
 const { BlobCourier, BlobCourierEventEmitter } = NativeModules;
@@ -26,6 +30,7 @@ const { BlobCourier, BlobCourierEventEmitter } = NativeModules;
 const EventEmitter = new NativeEventEmitter(BlobCourierEventEmitter);
 
 const BLOB_COURIER_PROGRESS = 'BlobCourierProgress';
+const SETTINGS_PREFIX = 'settings';
 
 export interface BlobCourierProgress<T> extends Promise<T> {
   onProgress: (fn: (e: any) => void) => Promise<T>;
@@ -59,9 +64,35 @@ const extendInputWithTaskId = (
     BlobRequestTask);
 
 class BlobCourierWrapper {
+  private static prefixSettings = (settings: BlobRequestSettings) =>
+    Object.keys(settings).reduce(
+      (p, k) => ({
+        ...p,
+        [`${SETTINGS_PREFIX}.${k}`]: (settings as any)[k],
+      }),
+      {}
+    ) as BlobRequestSettings;
+
+  public static settings = (settings: BlobRequestSettings) => ({
+    fetchBlob: (
+      input: AndroidBlobFetchRequest | BlobFetchRequest
+    ): BlobCourierProgress<BlobFetchResponse> =>
+      BlobCourierWrapper.fetchBlob({
+        ...BlobCourierWrapper.prefixSettings(settings),
+        ...input,
+      }),
+    uploadBlob: (
+      input: BlobUploadRequest
+    ): BlobCourierProgress<BlobUploadResponse> =>
+      BlobCourierWrapper.uploadBlob({
+        ...BlobCourierWrapper.prefixSettings(settings),
+        ...input,
+      }),
+  });
+
   public static fetchBlob = (
     input: AndroidBlobFetchRequest | BlobFetchRequest
-  ): BlobCourierProgress<BlobResponse> => {
+  ): BlobCourierProgress<BlobFetchResponse> => {
     const inputWithTaskId = extendInputWithTaskId(input) as (
       | AndroidBlobFetchRequest
       | BlobFetchRequest
@@ -76,7 +107,7 @@ class BlobCourierWrapper {
 
   public static uploadBlob = (
     input: BlobUploadRequest
-  ): BlobCourierProgress<BlobResponse> => {
+  ): BlobCourierProgress<BlobUploadResponse> => {
     const inputWithTaskId = extendInputWithTaskId(input) as BlobUploadRequest &
       BlobRequestTask;
 

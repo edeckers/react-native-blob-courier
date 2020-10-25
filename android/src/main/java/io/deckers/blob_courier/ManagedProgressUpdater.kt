@@ -12,17 +12,29 @@ import com.facebook.react.bridge.ReactApplicationContext
 
 class ManagedProgressUpdater {
   companion object {
-    fun start(context: ReactApplicationContext, downloadId: Long, taskId: String) {
-      ProgressUpdateRunner(context, createDownloadManager(context), downloadId, taskId).run()
+    fun start(
+      context: ReactApplicationContext,
+      downloadId: Long,
+      taskId: String,
+      progressInterval: Int
+    ) {
+      ProgressUpdateRunner(
+        context,
+        createDownloadManager(context),
+        downloadId,
+        taskId,
+        progressInterval
+      )
+        .run()
     }
 
     private class ProgressUpdateRunner(
       private val context: ReactApplicationContext,
       private val dm: DownloadManager,
       private val downloadId: Long,
-      private val taskId: String
+      private val taskId: String,
+      private val progressInterval: Int
     ) : Runnable {
-      private val progressUpdaterDelayMilliseconds = DEFAULT_PROGRESS_TIMEOUT_MILLISECONDS
       private val handler = Handler()
 
       private var isRunning = true
@@ -64,7 +76,7 @@ class ManagedProgressUpdater {
           updateStatus()
         } finally {
           if (isRunning) {
-            handler.postDelayed(this, progressUpdaterDelayMilliseconds)
+            handler.postDelayed(this, progressInterval.toLong())
           }
         }
       }
