@@ -29,10 +29,15 @@ export declare interface AndroidBlobFetchRequest extends BlobFetchRequest {
 
 export declare interface BlobUploadRequest extends BlobBaseRequest {
   readonly filePath: string;
+  readonly retrieveResponse?: boolean;
 }
 
 export declare interface BlobRequestTask {
   readonly taskId: string;
+}
+
+export declare interface BlobRequestSettings {
+  progressIntervalMilliseconds: number;
 }
 
 export declare interface BlobUnmanagedHttpResponse {

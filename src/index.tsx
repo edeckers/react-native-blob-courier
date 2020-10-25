@@ -8,6 +8,7 @@ import { NativeEventEmitter, NativeModules } from 'react-native';
 import type {
   AndroidBlobFetchRequest,
   BlobFetchRequest,
+  BlobRequestSettings,
   BlobRequestTask,
   BlobResponse,
   BlobUploadRequest,
@@ -59,6 +60,15 @@ const extendInputWithTaskId = (
     BlobRequestTask);
 
 class BlobCourierWrapper {
+  public static settings = (settings: BlobRequestSettings) => ({
+    fetchBlob: (
+      input: AndroidBlobFetchRequest | BlobFetchRequest
+    ): BlobCourierProgress<BlobResponse> =>
+      BlobCourierWrapper.fetchBlob({ ...settings, ...input }),
+    uploadBlob: (input: BlobUploadRequest): BlobCourierProgress<BlobResponse> =>
+      BlobCourierWrapper.uploadBlob({ ...settings, ...input }),
+  });
+
   public static fetchBlob = (
     input: AndroidBlobFetchRequest | BlobFetchRequest
   ): BlobCourierProgress<BlobResponse> => {

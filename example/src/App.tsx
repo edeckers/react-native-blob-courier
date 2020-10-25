@@ -20,6 +20,7 @@ import BlobCourier, {
 } from 'react-native-blob-courier';
 
 const DEFAULT_MARGIN = 10;
+const DEFAULT_PROGRESS_INTERVAL_MILLISECONDS = 200;
 
 const styles = StyleSheet.create({
   container: {
@@ -186,15 +187,19 @@ const UploaderView = (props: UVProps) => {
     setIsUploading(true);
 
     try {
-      const uploadResult = await BlobCourier.uploadBlob({
-        filePath: props.fromLocalPath,
-        method: 'POST',
-        mimeType: 'text/plain',
-        url: props.toUrl,
-      } as BlobUploadRequest).onProgress((e: any) => {
-        setReceived(parseInt(e.written, 10));
-        setExpected(parseInt(e.total, 10));
-      });
+      const uploadResult = await BlobCourier.settings({
+        progressIntervalMilliseconds: DEFAULT_PROGRESS_INTERVAL_MILLISECONDS,
+      })
+        .uploadBlob({
+          filePath: props.fromLocalPath,
+          method: 'POST',
+          mimeType: 'text/plain',
+          url: props.toUrl,
+        } as BlobUploadRequest)
+        .onProgress((e: any) => {
+          setReceived(parseInt(e.written, 10));
+          setExpected(parseInt(e.total, 10));
+        });
 
       props.onFinished(uploadResult);
     } catch (e) {
@@ -244,19 +249,23 @@ const DownloaderView = (props: DVProps) => {
     setIsDownloading(true);
 
     try {
-      const fetchedResult = await BlobCourier.fetchBlob({
-        filename: props.filename,
-        method: 'GET',
-        url: props.fromUrl,
-        useDownloadManager: useDownloadManager,
-      } as AndroidBlobFetchRequest).onProgress((e: any) => {
-        const serializedMaybeTotal = parseInt(e.total, 10);
-        const maybeTotal =
-          serializedMaybeTotal > 0 ? serializedMaybeTotal : undefined;
+      const fetchedResult = await BlobCourier.settings({
+        progressIntervalMilliseconds: DEFAULT_PROGRESS_INTERVAL_MILLISECONDS,
+      })
+        .fetchBlob({
+          filename: props.filename,
+          method: 'GET',
+          url: props.fromUrl,
+          useDownloadManager: useDownloadManager,
+        } as AndroidBlobFetchRequest)
+        .onProgress((e: any) => {
+          const serializedMaybeTotal = parseInt(e.total, 10);
+          const maybeTotal =
+            serializedMaybeTotal > 0 ? serializedMaybeTotal : undefined;
 
-        setReceived(parseInt(e.written, 10));
-        setExpected(maybeTotal);
-      });
+          setReceived(parseInt(e.written, 10));
+          setExpected(maybeTotal);
+        });
 
       props.onFinished(fetchedResult);
     } catch (e) {
