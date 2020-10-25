@@ -16,6 +16,7 @@ open class BlobCourier: NSObject {
   static let parameterHeaders = "headers"
   static let parameterMethod = "method"
   static let parameterProgressInterval = "settings.progressIntervalMilliseconds"
+  static let parameterReturnResponse = "returnResponse"
   static let parameterTaskId = "taskId"
   static let parameterUrl = "url"
 
@@ -161,10 +162,13 @@ open class BlobCourier: NSObject {
 
     let filePathObject = URL(string: filePath)!
 
+    let returnResponse = (input[BlobCourier.parameterReturnResponse] as? Bool) ?? false
+
     let sessionConfig = URLSessionConfiguration.default
     let uploaderDelegate =
       UploaderDelegate(
         taskId: taskId,
+        returnResponse: returnResponse,
         progressIntervalMilliseconds: progressIntervalMilliseconds,
         resolve: resolve,
         reject: reject)

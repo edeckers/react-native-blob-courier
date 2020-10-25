@@ -10,7 +10,9 @@ open class UploaderDelegate: NSObject, URLSessionDataDelegate, URLSessionTaskDel
 
   private let resolve: RCTPromiseResolveBlock
   private let reject: RCTPromiseRejectBlock
+
   private let taskId: String
+  private let returnResponse: Bool
 
   private let eventEmitter: BlobCourierDelayedEventEmitter
 
@@ -18,10 +20,12 @@ open class UploaderDelegate: NSObject, URLSessionDataDelegate, URLSessionTaskDel
 
   init(
     taskId: String,
+    returnResponse: Bool,
     progressIntervalMilliseconds: Int,
     resolve: @escaping RCTPromiseResolveBlock,
     reject: @escaping RCTPromiseRejectBlock) {
     self.taskId = taskId
+    self.returnResponse = returnResponse
 
     self.resolve = resolve
     self.reject = reject
@@ -64,11 +68,10 @@ open class UploaderDelegate: NSObject, URLSessionDataDelegate, URLSessionTaskDel
       }
 
       if let statusCode = (response as? HTTPURLResponse)?.statusCode {
-        let rawResponse = String(data: data, encoding: String.Encoding.utf8)
+        let rawResponse = returnResponse ? String(data: data, encoding: String.Encoding.utf8) : ""
 
         let result: NSDictionary = [
-          "type": UploaderDelegate.uploadTypeUnmanaged,
-          "data": [
+          "response": [
             "code": statusCode,
             "data": rawResponse,
             "headers": []
