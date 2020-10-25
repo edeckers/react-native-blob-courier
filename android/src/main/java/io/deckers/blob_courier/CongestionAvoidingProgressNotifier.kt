@@ -13,13 +13,13 @@ class CongestionAvoidingProgressNotifier(
   private val context: ReactApplicationContext,
   private val taskId: String,
   private val totalNumberOfBytes: Long,
-  private val timeoutMilliseconds: Long = DEFAULT_PROGRESS_TIMEOUT_MILLISECONDS
+  private val progressInterval: Int
 ) {
   var lastProgressUpdate: Date = Date()
 
   fun notify(numberOfBytesUntilNow: Long) {
     val isDownloadFinished = numberOfBytesUntilNow == totalNumberOfBytes
-    val timeoutHasPassed = (Date().time - lastProgressUpdate.time) > timeoutMilliseconds
+    val timeoutHasPassed = (Date().time - lastProgressUpdate.time) > progressInterval
     val shouldUpdate = isDownloadFinished || timeoutHasPassed
 
     if (!shouldUpdate) {

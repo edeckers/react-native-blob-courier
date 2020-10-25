@@ -19,6 +19,7 @@ import okio.Timeout
 class BlobCourierProgressResponse(
   private val context: ReactApplicationContext,
   private val taskId: String,
+  private val progressInterval: Int,
   private val responseBody: ResponseBody
 ) : ResponseBody() {
   private val totalNumberOfBytes = contentLength()
@@ -34,7 +35,7 @@ class BlobCourierProgressResponse(
     private var totalNumberOfBytesRead: Long = 0
 
     private val progressNotifier =
-      CongestionAvoidingProgressNotifier(context, taskId, totalNumberOfBytes)
+      CongestionAvoidingProgressNotifier(context, taskId, totalNumberOfBytes, progressInterval)
 
     private fun processNumberOfBytesRead(numberOfBytesRead: Long) {
       totalNumberOfBytesRead += if (numberOfBytesRead > 0) numberOfBytesRead else 0

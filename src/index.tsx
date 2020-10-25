@@ -27,6 +27,7 @@ const { BlobCourier, BlobCourierEventEmitter } = NativeModules;
 const EventEmitter = new NativeEventEmitter(BlobCourierEventEmitter);
 
 const BLOB_COURIER_PROGRESS = 'BlobCourierProgress';
+const SETTINGS_PREFIX = 'settings';
 
 export interface BlobCourierProgress<T> extends Promise<T> {
   onProgress: (fn: (e: any) => void) => Promise<T>;
@@ -60,13 +61,28 @@ const extendInputWithTaskId = (
     BlobRequestTask);
 
 class BlobCourierWrapper {
+  private static prefixSettings = (settings: BlobRequestSettings) =>
+    Object.keys(settings).reduce(
+      (p, k) => ({
+        ...p,
+        [`${SETTINGS_PREFIX}.${k}`]: (settings as any)[k],
+      }),
+      {}
+    ) as BlobRequestSettings;
+
   public static settings = (settings: BlobRequestSettings) => ({
     fetchBlob: (
       input: AndroidBlobFetchRequest | BlobFetchRequest
     ): BlobCourierProgress<BlobResponse> =>
-      BlobCourierWrapper.fetchBlob({ ...settings, ...input }),
+      BlobCourierWrapper.fetchBlob({
+        ...BlobCourierWrapper.prefixSettings(settings),
+        ...input,
+      }),
     uploadBlob: (input: BlobUploadRequest): BlobCourierProgress<BlobResponse> =>
-      BlobCourierWrapper.uploadBlob({ ...settings, ...input }),
+      BlobCourierWrapper.uploadBlob({
+        ...BlobCourierWrapper.prefixSettings(settings),
+        ...input,
+      }),
   });
 
   public static fetchBlob = (
