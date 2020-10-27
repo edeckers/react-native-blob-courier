@@ -8,17 +8,14 @@ package io.deckers.blob_courier
 
 import android.app.DownloadManager
 import android.content.Context
-import com.facebook.react.bridge.Arguments
-import com.facebook.react.bridge.ReactApplicationContext
-import com.facebook.react.bridge.WritableMap
-import com.facebook.react.bridge.WritableNativeMap
+import com.facebook.react.bridge.*
 import com.facebook.react.modules.core.DeviceEventManagerModule
 import org.json.JSONException
 import org.json.JSONObject
 
 @Throws(JSONException::class)
 fun convertJsonToMap(jsonObject: JSONObject): WritableMap {
-  val map = WritableNativeMap()
+    val map = Arguments.createMap()
 
   for (key in jsonObject.keys()) when (val value = jsonObject.get(key)) {
     is JSONObject -> map.putMap(key, convertJsonToMap(value))
