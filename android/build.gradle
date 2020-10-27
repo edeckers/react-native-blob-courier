@@ -128,4 +128,5 @@ dependencies {
   api 'com.facebook.react:react-native:+'
   implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
   testImplementation 'junit:junit:4.12'
+  testImplementation 'org.robolectric:robolectric:3.6.1'
 }
