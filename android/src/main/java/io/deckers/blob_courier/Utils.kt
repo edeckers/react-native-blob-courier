@@ -15,7 +15,7 @@ import org.json.JSONObject
 
 @Throws(JSONException::class)
 fun convertJsonToMap(jsonObject: JSONObject): WritableMap {
-    val map = Arguments.createMap()
+  val map = Arguments.createMap()
 
   for (key in jsonObject.keys()) when (val value = jsonObject.get(key)) {
     is JSONObject -> map.putMap(key, convertJsonToMap(value))
