@@ -1,0 +1,2 @@
+include ':blob_courier'
+include ':blob_courier_test'

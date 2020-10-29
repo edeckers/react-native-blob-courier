@@ -1,6 +1,6 @@
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
 buildscript {
-  // Buildscript is evaluated before everything else so we can't use getExtOrDefault
-  def kotlin_version = rootProject.ext.has('kotlinVersion') ? rootProject.ext.get('kotlinVersion') : project.properties['BlobCourier_kotlinVersion']
+  ext.kotlin_version = "1.3.72"
 
   repositories {
     google()
@@ -8,126 +8,87 @@ buildscript {
   }
 
   dependencies {
-    classpath 'com.android.tools.build:gradle:3.2.1'
-    // noinspection DifferentKotlinGradleVersion
+    classpath "com.android.tools.build:gradle:4.1.0"
     classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+
+    // NOTE: Do not place your application dependencies here; they belong
+    // in the individual module build.gradle files
   }
 }
 
-apply plugin: 'com.android.library'
-apply plugin: 'kotlin-android'
+allprojects {
+  repositories {
+    mavenCentral()
+    jcenter()
+    google()
 
-def getExtOrDefault(name) {
-  return rootProject.ext.has(name) ? rootProject.ext.get(name) : project.properties['BlobCourier_' + name]
-}
+    def found = false
+    def defaultDir = null
+    def androidSourcesName = 'React Native sources'
 
-def getExtOrIntegerDefault(name) {
-  return rootProject.ext.has(name) ? rootProject.ext.get(name) : (project.properties['BlobCourier_' + name]).toInteger()
-}
-
-android {
-  compileSdkVersion getExtOrIntegerDefault('compileSdkVersion')
-  buildToolsVersion getExtOrDefault('buildToolsVersion')
-  defaultConfig {
-    minSdkVersion 19
-    targetSdkVersion getExtOrIntegerDefault('targetSdkVersion')
-    versionCode 1
-    versionName "1.0"
-    
-  }
-  
-  buildTypes {
-    release {
-      minifyEnabled false
-    }
-  }
-  lintOptions {
-    disable 'GradleCompatible'
-  }
-  compileOptions {
-    sourceCompatibility JavaVersion.VERSION_1_8
-    targetCompatibility JavaVersion.VERSION_1_8
-  }
-}
-
-repositories {
-  mavenCentral()
-  jcenter()
-  google()
-
-  def found = false
-  def defaultDir = null
-  def androidSourcesName = 'React Native sources'
-
-  if (rootProject.ext.has('reactNativeAndroidRoot')) {
-    defaultDir = rootProject.ext.get('reactNativeAndroidRoot')
-  } else {
-    defaultDir = new File(
-            projectDir,
-            '/../../../node_modules/react-native/android'
-    )
-  }
-
-  if (defaultDir.exists()) {
-    maven {
-      url defaultDir.toString()
-      name androidSourcesName
+    if (rootProject.ext.has('reactNativeAndroidRoot')) {
+      defaultDir = rootProject.ext.get('reactNativeAndroidRoot')
+    } else {
+      defaultDir = new File(
+        projectDir,
+        '/../../../../node_modules/react-native/android'
+      )
     }
 
-    logger.info(":${project.name}:reactNativeAndroidRoot ${defaultDir.canonicalPath}")
-    found = true
-  } else {
-    def parentDir = rootProject.projectDir
-
-    1.upto(5, {
-      if (found) return true
-      parentDir = parentDir.parentFile
-
-      def androidSourcesDir = new File(
-              parentDir,
-              'node_modules/react-native'
-      )
-
-      def androidPrebuiltBinaryDir = new File(
-              parentDir,
-              'node_modules/react-native/android'
-      )
-
-      if (androidPrebuiltBinaryDir.exists()) {
-        maven {
-          url androidPrebuiltBinaryDir.toString()
-          name androidSourcesName
-        }
-
-        logger.info(":${project.name}:reactNativeAndroidRoot ${androidPrebuiltBinaryDir.canonicalPath}")
-        found = true
-      } else if (androidSourcesDir.exists()) {
-        maven {
-          url androidSourcesDir.toString()
-          name androidSourcesName
-        }
-
-        logger.info(":${project.name}:reactNativeAndroidRoot ${androidSourcesDir.canonicalPath}")
-        found = true
+    if (defaultDir.exists()) {
+      maven {
+        url defaultDir.toString()
+        name androidSourcesName
       }
-    })
-  }
 
-  if (!found) {
-    throw new GradleException(
-            "${project.name}: unable to locate React Native android sources. " +
-                    "Ensure you have you installed React Native as a dependency in your project and try again."
-    )
+      logger.info(":${project.name}:reactNativeAndroidRoot ${defaultDir.canonicalPath}")
+      found = true
+    } else {
+      def parentDir = rootProject.projectDir
+
+      1.upto(5, {
+        if (found) return true
+        parentDir = parentDir.parentFile
+
+        def androidSourcesDir = new File(
+          parentDir,
+          'node_modules/react-native'
+        )
+
+        def androidPrebuiltBinaryDir = new File(
+          parentDir,
+          'node_modules/react-native/android'
+        )
+
+        if (androidPrebuiltBinaryDir.exists()) {
+          maven {
+            url androidPrebuiltBinaryDir.toString()
+            name androidSourcesName
+          }
+
+          logger.info(":${project.name}:reactNativeAndroidRoot ${androidPrebuiltBinaryDir.canonicalPath}")
+          found = true
+        } else if (androidSourcesDir.exists()) {
+          maven {
+            url androidSourcesDir.toString()
+            name androidSourcesName
+          }
+
+          logger.info(":${project.name}:reactNativeAndroidRoot ${androidSourcesDir.canonicalPath}")
+          found = true
+        }
+      })
+    }
+
+    if (!found) {
+      throw new GradleException(
+        "${project.name}: unable to locate React Native android sources. " +
+          "Ensure you have you installed React Native as a dependency in your project and try again."
+      )
+    }
   }
 }
 
-def kotlin_version = getExtOrDefault('kotlinVersion')
-
-dependencies {
-  // noinspection GradleDynamicVersion
-  api 'com.facebook.react:react-native:+'
-  implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-  testImplementation 'junit:junit:4.12'
-  testImplementation 'org.robolectric:robolectric:3.6.1'
-  testImplementation "io.mockk:mockk:1.10.2"
+task clean(type: Delete) {
+  delete rootProject.buildDir
 }
