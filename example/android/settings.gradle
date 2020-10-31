@@ -2,5 +2,5 @@ rootProject.name = 'BlobCourierExample'
 apply from: file("../node_modules/@react-native-community/cli-platform-android/native_modules.gradle"); applyNativeModulesSettingsGradle(settings)
 include ':app'
 
-project(':android').projectDir = new File(rootProject.projectDir, '../..')
 include ':blob_courier'
+project(':blob_courier').projectDir = new File(rootProject.projectDir, '../../android')

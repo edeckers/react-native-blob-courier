@@ -71,8 +71,8 @@ private fun assertRequiredParameter(input: ReadableMap, type: Type, parameterNam
   val unknownProcessor = { _: ReadableMap, _: String -> throw Exception(defaultFallback) }
 
   val maybeValue =
-    REQUIRED_PARAMETER_PROCESSORS.getOrDefault(
-      type.toString(), unknownProcessor
+    REQUIRED_PARAMETER_PROCESSORS.getOrElse(
+      type.toString(), { unknownProcessor }
     )(input, parameterName)
 
   maybeValue ?: throw BlobCourierError(
@@ -262,7 +262,7 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
           )
         }
 
-    ManagedProgressUpdater.start(reactContext, downloadId, taskId, progressInterval)
+    ManagedProgressUpdater.start(reactContext, downloadId, taskId, progressInterval.toLong())
 
     reactContext.registerReceiver(
       ManagedDownloadReceiver(downloadId, fullFilePath, promise),

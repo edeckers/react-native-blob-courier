@@ -29,7 +29,12 @@ jobs:
         with:
           build-root-directory: android
           wrapper-directory: android
-          arguments: test
+          arguments: testDebugUnitTest
+      # - uses: reactivecircus/android-emulator-runner@v2
+      #   with:
+      #     api-level: 29
+      #     working-directory: './android' 
+      #     script: ./gradlew connectedAndroidTest
   build-ios:
     needs: install-and-test
     runs-on: macOS-latest

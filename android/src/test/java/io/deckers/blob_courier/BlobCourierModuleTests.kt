@@ -6,11 +6,12 @@
  */
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.JavaOnlyMap
-import io.deckers.blob_courier.BooleanPromise
-import io.deckers.blob_courier.create_sublists_from_list
-import io.deckers.blob_courier.create_valid_test_parameter_map
-import io.deckers.blob_courier.run_fetch_blob
-import io.deckers.blob_courier.toReactMap
+import com.facebook.react.bridge.ReactApplicationContext
+import io.deckers.blob_courier.Fixtures.BooleanPromise
+import io.deckers.blob_courier.Fixtures.create_valid_test_parameter_map
+import io.deckers.blob_courier.Fixtures.run_fetch_blob
+import io.deckers.blob_courier.TestUtils.create_sublists_from_list
+import io.deckers.blob_courier.TestUtils.toReactMap
 import io.mockk.every
 import io.mockk.mockkStatic
 import org.junit.Assert.assertFalse
@@ -19,6 +20,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.RuntimeEnvironment
 
 @RunWith(RobolectricTestRunner::class)
 class BlobCourierModuleTests {
@@ -45,7 +47,9 @@ class BlobCourierModuleTests {
   fun all_required_parameters_provided_resolves_promise() {
     val allRequiredParametersMap = create_valid_test_parameter_map().toReactMap()
 
-    run_fetch_blob(allRequiredParametersMap, BooleanPromise { v -> assertTrue(v) })
+    val ctx = ReactApplicationContext(RuntimeEnvironment.application)
+
+    run_fetch_blob(ctx, allRequiredParametersMap, BooleanPromise { v -> assertTrue(v) })
   }
 
   private fun assert_missing_required_parameter_rejects_promise(
@@ -57,8 +61,10 @@ class BlobCourierModuleTests {
     availableParameters.forEach { availableParametersAsMap.putString(it.first, it.second) }
 
     val missingValues = allValuesMapping.keys.minus(availableParameters.map { it.first })
-    System.out.println("Missing values: ${missingValues.joinToString()}")
+    println("Missing values: ${missingValues.joinToString()}")
 
-    run_fetch_blob(availableParametersAsMap, BooleanPromise { v -> assertFalse(v) })
+    val ctx = ReactApplicationContext(RuntimeEnvironment.application)
+
+    run_fetch_blob(ctx, availableParametersAsMap, BooleanPromise { v -> assertFalse(v) })
   }
 }
