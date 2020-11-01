@@ -10,6 +10,9 @@ export declare interface BlobRequestHeaders {
 export declare interface BlobRequestMethod {
   readonly method?: string;
 }
+export declare interface BlobRequestMimeType {
+  readonly mimeType: string;
+}
 export declare interface BlobRequestUrl {
   readonly url: string;
 }
@@ -17,6 +20,7 @@ export declare interface BlobRequestUrl {
 export declare interface BlobBaseRequest
   extends BlobRequestHeaders,
     BlobRequestMethod,
+    BlobRequestMimeType,
     BlobRequestUrl {}
 
 export declare interface BlobFetchRequest extends BlobBaseRequest {

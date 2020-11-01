@@ -236,6 +236,7 @@ const ManagedDownloadToggle = (props: MDTProps) => (
 interface DVProps {
   filename: string;
   fromUrl: string;
+  mimeType?: string;
   onFinished: (response: BlobFetchResponse) => void;
 }
 
@@ -257,6 +258,7 @@ const DownloaderView = (props: DVProps) => {
         .fetchBlob({
           filename: props.filename,
           method: 'GET',
+          mimeType: props.mimeType ?? 'text/plain',
           url: props.fromUrl,
           useDownloadManager: useDownloadManager,
         } as AndroidBlobFetchRequest)
