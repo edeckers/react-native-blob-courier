@@ -40,15 +40,17 @@ jobs:
     runs-on: macOS-latest
     steps: 
       - uses: actions/checkout@v2
+      - run: xcrun simctl boot "iPhone 11"
       - uses: actions/setup-node@v2-beta
         with:
           node-version: '12'
       - run: cd example && yarn
       - run: yarn
+      - run: cd ios && pod install
       - run: cd example/ios && pod install
       - uses: sersoft-gmbh/xcodebuild-action@v1
         with:
-          workspace: example/ios/BlobCourierExample.xcworkspace
-          scheme: BlobCourierExample
+          workspace: ios/BlobCourier.xcworkspace
+          scheme: BlobCourierTests
           destination: 'platform=iOS Simulator,name=iPhone 11'
           action: test
