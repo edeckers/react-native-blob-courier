@@ -310,20 +310,19 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
           }
 
           promise.resolve(
-            convertJsonToMap(
-              JSONObject(
-                mapOf(
-                  "type" to DOWNLOAD_TYPE_UNMANAGED,
-                  "data" to mapOf(
-                    "fullFilePath" to fullFilePath,
-                    "response" to mapOf<String, Any>(
-                      "code" to response.code(),
-                      "headers" to response.headers().toMultimap()
-                    )
-                  )
+            mapOf(
+              "type" to DOWNLOAD_TYPE_UNMANAGED,
+              "data" to mapOf(
+                "fullFilePath" to fullFilePath,
+                "response" to mapOf(
+                  "code" to response.code(),
+                  "headers" to response.headers()
+                    .toMultimap()
+                    .map { entry -> Pair(entry.key, entry.value.joinToString()) }
+                    .toMap()
                 )
               )
-            )
+            ).toReactMap()
           )
         }
       }

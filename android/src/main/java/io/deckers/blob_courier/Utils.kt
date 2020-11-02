@@ -36,7 +36,11 @@ fun notifyBridgeOfProgress(
   taskId: String,
   totalNumberOfBytesRead: Long,
   totalLength: Long
-) =
+) {
+  if (!context.hasActiveCatalystInstance()) {
+    return
+  }
+
   context.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
     .emit(
       DEVICE_EVENT_PROGRESS,
@@ -46,6 +50,21 @@ fun notifyBridgeOfProgress(
         putString("total", totalLength.toString())
       }
     )
+}
 
 fun createDownloadManager(context: Context) =
   context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
+
+fun Map<*, *>.toReactMap(): WritableMap {
+  val thisMap = this
+
+  return Arguments.createMap().apply {
+    thisMap.forEach { (k, v) ->
+      when {
+        (v is String) -> putString(k.toString(), v)
+        (v is Map<*, *>) -> putMap(k.toString(), v.toReactMap())
+        else -> putString(k.toString(), v.toString())
+      }
+    }
+  }
+}

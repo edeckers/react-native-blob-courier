@@ -7,11 +7,14 @@
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.JavaOnlyMap
 import com.facebook.react.bridge.ReactApplicationContext
+import io.deckers.blob_courier.Fixtures
 import io.deckers.blob_courier.Fixtures.BooleanPromise
-import io.deckers.blob_courier.Fixtures.create_valid_test_parameter_map
-import io.deckers.blob_courier.Fixtures.run_fetch_blob
-import io.deckers.blob_courier.TestUtils.create_sublists_from_list
-import io.deckers.blob_courier.TestUtils.toReactMap
+import io.deckers.blob_courier.Fixtures.createValidTestFetchParameterMap
+import io.deckers.blob_courier.Fixtures.createValidUploadTestParameterMap
+import io.deckers.blob_courier.Fixtures.runFetchBlob
+import io.deckers.blob_courier.Fixtures.runUploadBlob
+import io.deckers.blob_courier.TestUtils.createSublistsFromList
+import io.deckers.blob_courier.toReactMap
 import io.mockk.every
 import io.mockk.mockkStatic
 import org.junit.Assert.assertFalse
@@ -32,27 +35,64 @@ class BlobCourierModuleTests {
   }
 
   @Test
-  fun missing_required_fetch_parameters_rejects_promise() {
-    val allValuesMapping = create_valid_test_parameter_map()
+  fun missing_required_fetch_parameters_rejects_fetch_promise() {
+    val allValuesMapping = createValidTestFetchParameterMap()
     val parameterValuePairs = allValuesMapping.entries.map { it.key to it.value }
+    val oneTooFew = allValuesMapping.count() - 1
 
-    val setsOfParametersMissingSinglePair = create_sublists_from_list(parameterValuePairs, 2)
+    val setsOfParametersMissingSinglePair = createSublistsFromList(parameterValuePairs, oneTooFew)
 
     setsOfParametersMissingSinglePair.forEach {
-      assert_missing_required_parameter_rejects_promise(it, allValuesMapping)
+      assert_missing_required_fetch_parameter_rejects_promise(it, allValuesMapping)
     }
   }
 
   @Test
-  fun all_required_parameters_provided_resolves_promise() {
-    val allRequiredParametersMap = create_valid_test_parameter_map().toReactMap()
+  fun all_required_fetch_parameters_provided_resolves_promise() {
+    val allRequiredParametersMap = createValidTestFetchParameterMap().toReactMap()
 
     val ctx = ReactApplicationContext(RuntimeEnvironment.application)
 
-    run_fetch_blob(ctx, allRequiredParametersMap, BooleanPromise { v -> assertTrue(v) })
+    runFetchBlob(ctx, allRequiredParametersMap, BooleanPromise { v -> assertTrue(v) })
   }
 
-  private fun assert_missing_required_parameter_rejects_promise(
+  @Test
+  fun all_required_parameters_provided_resolves_upload_promise() {
+    val allRequiredParametersMap = createValidTestFetchParameterMap().toReactMap()
+
+    val ctx = ReactApplicationContext(RuntimeEnvironment.application)
+
+    runFetchBlob(
+      ctx,
+      allRequiredParametersMap,
+      Fixtures.EitherPromise(
+        { assertTrue(false) },
+        { m ->
+          val taskId = allRequiredParametersMap.getString("taskId") ?: ""
+          val fullFilePath = m?.getMap("data")?.getString("fullFilePath") ?: ""
+
+          val uploadParametersMap =
+            createValidUploadTestParameterMap(taskId, fullFilePath).toReactMap()
+          runUploadBlob(ctx, uploadParametersMap, BooleanPromise { v -> assertTrue(v) })
+        }
+      )
+    )
+  }
+
+  @Test
+  fun missing_required_upload_parameters_rejects_fetch_promise() {
+    val allValuesMapping = createValidUploadTestParameterMap("some-task-id", "/tmp")
+    val parameterValuePairs = allValuesMapping.entries.map { it.key to it.value }
+    val oneTooFew = allValuesMapping.count() - 1
+
+    val setsOfParametersMissingSinglePair = createSublistsFromList(parameterValuePairs, oneTooFew)
+
+    setsOfParametersMissingSinglePair.forEach {
+      assert_missing_required_upload_parameter_rejects_promise(it, allValuesMapping)
+    }
+  }
+
+  private fun assert_missing_required_fetch_parameter_rejects_promise(
     availableParameters: List<Pair<String, String>>,
     allValuesMapping: Map<String, String>
   ) {
@@ -65,6 +105,37 @@ class BlobCourierModuleTests {
 
     val ctx = ReactApplicationContext(RuntimeEnvironment.application)
 
-    run_fetch_blob(ctx, availableParametersAsMap, BooleanPromise { v -> assertFalse(v) })
+    runFetchBlob(ctx, availableParametersAsMap, BooleanPromise { v -> assertFalse(v) })
+  }
+
+  private fun assert_missing_required_upload_parameter_rejects_promise(
+    availableParameters: List<Pair<String, String>>,
+    allValuesMapping: Map<String, String>
+  ) {
+    val allFetchParametersMap = createValidTestFetchParameterMap()
+    val availableParametersAsMap = availableParameters.toMap().toReactMap()
+
+    availableParameters.forEach { availableParametersAsMap.putString(it.first, it.second) }
+
+    val missingValues = allValuesMapping.keys.minus(availableParameters.map { it.first })
+    println("Missing values: ${missingValues.joinToString()}")
+
+    val ctx = ReactApplicationContext(RuntimeEnvironment.application)
+
+    runFetchBlob(
+      ctx,
+      allFetchParametersMap.toReactMap(),
+      Fixtures.EitherPromise(
+        { assertTrue(false) },
+        { m ->
+          val taskId = allFetchParametersMap["taskId"] ?: ""
+          val fullFilePath = m?.getMap("data")?.getString("fullFilePath") ?: ""
+
+          val uploadParametersMap =
+            createValidUploadTestParameterMap(taskId, fullFilePath).toReactMap()
+          runUploadBlob(ctx, uploadParametersMap, BooleanPromise { v -> assertTrue(v) })
+        }
+      )
+    )
   }
 }
