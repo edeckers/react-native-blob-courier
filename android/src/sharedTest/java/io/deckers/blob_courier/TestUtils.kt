@@ -7,8 +7,6 @@
 package io.deckers.blob_courier
 
 import android.os.Build
-import com.facebook.react.bridge.Arguments
-import com.facebook.react.bridge.WritableMap
 import java.lang.reflect.Method
 
 object TestUtils {
@@ -18,7 +16,7 @@ object TestUtils {
   private const val setHiddenApiExemptionsMethodName = "setHiddenApiExemptions"
 
   // TODO Make this a little prettier
-  fun <T> create_sublists_from_list(theList: List<T>, length: Int): List<List<T>> {
+  fun <T> createSublistsFromList(theList: List<T>, length: Int): List<List<T>> {
     val restCount = length - 1
     val subLists = mutableListOf<List<T>>()
 
@@ -32,14 +30,6 @@ object TestUtils {
     }
 
     return subLists.toList()
-  }
-
-  fun Map<String, String>.toReactMap(): WritableMap {
-    val thisMap = this
-
-    return Arguments.createMap().apply {
-      thisMap.forEach { (k, v) -> putString(k, v) }
-    }
   }
 
   fun circumventHiddenApiExemptionsForMockk() {

@@ -16,13 +16,22 @@ private const val DEFAULT_PROMISE_TIMEOUT_MILLISECONDS = 10_000L
 
 object Fixtures {
 
-  fun create_valid_test_parameter_map(): Map<String, String> = mapOf(
+  fun createValidTestFetchParameterMap(): Map<String, String> = mapOf(
     "taskId" to "some-task-id",
     "filename" to "some-filename.png",
     "url" to "https://github.com/edeckers/react-native-blob-courier"
   )
 
-  fun run_fetch_blob(
+  fun createValidUploadTestParameterMap(
+    taskId: String,
+    localPath: String
+  ): Map<String, String> = mapOf(
+    "taskId" to taskId,
+    "filePath" to localPath,
+    "url" to "https://file.io"
+  )
+
+  fun runFetchBlob(
     context: ReactApplicationContext,
     input: ReadableMap,
     promise: Promise,
@@ -32,6 +41,21 @@ object Fixtures {
 
     thread {
       m.fetchBlob(input, promise)
+    }
+
+    Thread.sleep(timeoutMilliseconds)
+  }
+
+  fun runUploadBlob(
+    context: ReactApplicationContext,
+    input: ReadableMap,
+    promise: Promise,
+    timeoutMilliseconds: Long = DEFAULT_PROMISE_TIMEOUT_MILLISECONDS
+  ) {
+    val m = BlobCourierModule(context)
+
+    thread {
+      m.uploadBlob(input, promise)
     }
 
     Thread.sleep(timeoutMilliseconds)
