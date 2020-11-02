@@ -35,6 +35,13 @@ jobs:
       #     api-level: 29
       #     working-directory: './android' 
       #     script: ./gradlew connectedAndroidTest
+      - uses: EnricoMi/publish-unit-test-result-action@v1.3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          check_name: "Tests: Android"
+          files: android/build/test-results/**/*.xml
+          report_individual_runs: true
+          deduplicate_classes_by_file_name: false
   build-ios:
     needs: install-and-test
     runs-on: macOS-latest
