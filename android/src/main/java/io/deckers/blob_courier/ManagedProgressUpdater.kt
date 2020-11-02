@@ -7,8 +7,9 @@
 package io.deckers.blob_courier
 
 import android.app.DownloadManager
-import android.os.Handler
 import com.facebook.react.bridge.ReactApplicationContext
+import java.util.Timer
+import kotlin.concurrent.timerTask
 
 class ManagedProgressUpdater {
   companion object {
@@ -16,16 +17,22 @@ class ManagedProgressUpdater {
       context: ReactApplicationContext,
       downloadId: Long,
       taskId: String,
-      progressInterval: Int
+      progressInterval: Long
     ) {
-      ProgressUpdateRunner(
-        context,
-        createDownloadManager(context),
-        downloadId,
-        taskId,
-        progressInterval
+      val progressUpdaterInterval = Timer()
+
+      progressUpdaterInterval.scheduleAtFixedRate(
+        timerTask {
+          ProgressUpdateRunner(
+            context,
+            createDownloadManager(context),
+            downloadId,
+            taskId,
+            progressUpdaterInterval
+          )
+        },
+        0, progressInterval
       )
-        .run()
     }
 
     private class ProgressUpdateRunner(
@@ -33,11 +40,8 @@ class ManagedProgressUpdater {
       private val dm: DownloadManager,
       private val downloadId: Long,
       private val taskId: String,
-      private val progressInterval: Int
+      private val progressUpdaterInterval: Timer
     ) : Runnable {
-      private val handler = Handler()
-
-      private var isRunning = true
 
       private fun updateStatus() =
         dm.query(
@@ -51,7 +55,7 @@ class ManagedProgressUpdater {
             return
           }
 
-          isRunning = false
+          progressUpdaterInterval.cancel()
         }
 
       private fun updateProgress() =
@@ -65,7 +69,9 @@ class ManagedProgressUpdater {
           val totalSizeBytes =
             cursor.getLong(cursor.getColumnIndex(DownloadManager.COLUMN_TOTAL_SIZE_BYTES))
 
-          isRunning = numberOfBytes != totalSizeBytes
+          if (numberOfBytes == totalSizeBytes) {
+            progressUpdaterInterval.cancel()
+          }
 
           notifyBridgeOfProgress(context, taskId, numberOfBytes, totalSizeBytes)
         }
@@ -75,9 +81,6 @@ class ManagedProgressUpdater {
           updateProgress()
           updateStatus()
         } finally {
-          if (isRunning) {
-            handler.postDelayed(this, progressInterval.toLong())
-          }
         }
       }
     }
