@@ -10,7 +10,7 @@ import XCTest
 class BlobCourierTests: XCTestCase {
     static let defaultPromiseTimeoutSeconds: UInt32 = 10
 
-    var sut : BlobCourier? = nil
+    var sut: BlobCourier?
 
     override func setUpWithError() throws {
         try super.setUpWithError()
@@ -22,15 +22,38 @@ class BlobCourierTests: XCTestCase {
         try super.tearDownWithError()
     }
 
-    func testAllRequiredParametersProvidedResolvesPromise() throws {
-        
-        let input : NSDictionary = [
+    func testAllRequiredFetchParametersProvidedResolvesPromise() throws {
+        let input: NSDictionary = [
           "filename": "some-filename.png",
           "taskId": "some-task-id",
-          "url": "https://github.com/edeckers/react-native-blob-courier",
+          "url": "https://github.com/edeckers/react-native-blob-courier"
         ]
-        let resolve: RCTPromiseResolveBlock = { (s:Any?) -> Void in XCTAssertTrue(true) }
-        let reject: RCTPromiseRejectBlock = { (s:String?, t:String?, o:Error?) -> Void in XCTAssertTrue(false) }
+        let resolve: RCTPromiseResolveBlock = { (_: Any?) -> Void in XCTAssertTrue(true) }
+        let reject: RCTPromiseRejectBlock = { (_: String?, _: String?, _: Error?) -> Void in XCTAssertTrue(false) }
+
+        sut?.fetchBlob(input: input, resolve: resolve, reject: reject)
+
+        sleep(BlobCourierTests.defaultPromiseTimeoutSeconds)
+    }
+
+    func testAllRequiredUploadParametersProvidedResolvesPromise() throws {
+        let input: NSDictionary = [
+          "filename": "some-filename.png",
+          "taskId": "some-task-id",
+          "url": "https://github.com/edeckers/react-native-blob-courier"
+        ]
+        let reject: RCTPromiseRejectBlock = { (_: String?, _: String?, _: Error?) -> Void in XCTAssertTrue(false) }
+        let resolveUpload: RCTPromiseResolveBlock = { (_: Any?) -> Void in XCTAssertTrue(true) }
+        let resolve: RCTPromiseResolveBlock = { (response: Any?) -> Void in
+            let dict = response as? NSDictionary ?? [:]
+            let data = dict["data"] as? NSDictionary ?? [:]
+
+            self.sut?.uploadBlob(input: [
+                "filePath": data["fullFilePath"] ?? "",
+             "taskId": data["taskId"] ?? "",
+             "url": "https://file.io"
+           ], resolve: resolveUpload, reject: reject)
+        }
 
         sut?.fetchBlob(input: input, resolve: resolve, reject: reject)
 
