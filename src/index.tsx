@@ -40,7 +40,9 @@ const extendWithProgress = <T extends unknown>(
   p: Promise<T>,
   taskId: String
 ): BlobCourierProgress<T> => ({
-  ...p,
+  [Symbol.toStringTag]: p[Symbol.toStringTag],
+  catch: (onRejected) => p.catch(onRejected),
+  finally: (onFinally) => p.finally(onFinally),
   onProgress: (fn: (e: any) => void) => {
     EventEmitter.addListener(BLOB_COURIER_PROGRESS, (e: any) => {
       if (e.taskId === taskId) {
@@ -50,6 +52,7 @@ const extendWithProgress = <T extends unknown>(
 
     return p;
   },
+  then: (onFulfilled, onRejected) => p.then(onFulfilled, onRejected),
 });
 
 const createTaskId = () => `task-${uuid()}`;
