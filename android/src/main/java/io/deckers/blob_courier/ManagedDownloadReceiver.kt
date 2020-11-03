@@ -16,7 +16,6 @@ import com.facebook.react.bridge.Promise
 import java.io.File
 import java.io.FileOutputStream
 import java.io.InputStream
-import org.json.JSONObject
 
 class ManagedDownloadReceiver(
   private val downloadId: Long,
@@ -60,11 +59,7 @@ class ManagedDownloadReceiver(
 
     promise.reject(
       ERROR_UNEXPECTED_EXCEPTION,
-      convertJsonToMap(
-        JSONObject(
-          mapOf<String, Any>("result" to MANAGED_DOWNLOAD_FAILURE)
-        )
-      )
+      mapOf<String, Any>("result" to MANAGED_DOWNLOAD_FAILURE).toReactMap()
     )
   }
 
@@ -92,17 +87,13 @@ class ManagedDownloadReceiver(
     moveFileToInternalStorage(context, localFileUri)
 
     promise.resolve(
-      convertJsonToMap(
-        JSONObject(
-          mapOf(
-            "type" to DOWNLOAD_TYPE_MANAGED,
-            "data" to mapOf(
-              "fullFilePath" to destinationFile,
-              "result" to MANAGED_DOWNLOAD_SUCCESS
-            )
-          )
+      mapOf(
+        "type" to DOWNLOAD_TYPE_MANAGED,
+        "data" to mapOf(
+          "fullFilePath" to destinationFile,
+          "result" to MANAGED_DOWNLOAD_SUCCESS
         )
-      )
+      ).toReactMap()
     )
   }
 

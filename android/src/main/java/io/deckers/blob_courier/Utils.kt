@@ -12,24 +12,6 @@ import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.WritableMap
 import com.facebook.react.modules.core.DeviceEventManagerModule
-import org.json.JSONException
-import org.json.JSONObject
-
-@Throws(JSONException::class)
-fun convertJsonToMap(jsonObject: JSONObject): WritableMap {
-  val map = Arguments.createMap()
-
-  for (key in jsonObject.keys()) when (val value = jsonObject.get(key)) {
-    is JSONObject -> map.putMap(key, convertJsonToMap(value))
-    is Boolean -> map.putBoolean(key, value)
-    is Int -> map.putInt(key, value)
-    is Double -> map.putDouble(key, value)
-    is String -> map.putString(key, value)
-    else -> map.putString(key, value.toString())
-  }
-
-  return map
-}
 
 fun notifyBridgeOfProgress(
   context: ReactApplicationContext,
