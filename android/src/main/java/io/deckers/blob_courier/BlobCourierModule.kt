@@ -21,6 +21,7 @@ import java.io.File
 import java.lang.reflect.Type
 import java.net.URL
 import kotlin.concurrent.thread
+import okhttp3.Headers
 import okhttp3.Interceptor
 import okhttp3.MediaType
 import okhttp3.MultipartBody
@@ -29,7 +30,6 @@ import okhttp3.RequestBody
 import okhttp3.Response
 import okio.Okio
 import okio.Source
-import org.json.JSONObject
 
 private const val ERROR_MISSING_REQUIRED_PARAMETER = "ERROR_MISSING_REQUIRED_PARAMETER"
 
@@ -64,6 +64,12 @@ private fun processUnexpectedEmptyValue(promise: Promise, parameterName: String)
   ERROR_UNEXPECTED_EMPTY_VALUE,
   "Parameter `$parameterName` cannot be empty."
 )
+
+private fun mapHeadersToMap(headers: Headers): Map<String, String> =
+  headers
+    .toMultimap()
+    .map { entry -> Pair(entry.key, entry.value.joinToString()) }
+    .toMap()
 
 private fun assertRequiredParameter(input: ReadableMap, type: Type, parameterName: String) {
   val defaultFallback =
@@ -144,17 +150,13 @@ private fun startBlobUpload(
     ).execute()
 
     promise.resolve(
-      convertJsonToMap(
-        JSONObject(
-          mapOf<String, Any>(
-            "response" to mapOf(
-              "code" to response.code(),
-              "data" to if (returnResponse) response.body()?.string().orEmpty() else "",
-              "headers" to response.headers().toMultimap()
-            )
-          )
+      mapOf(
+        "response" to mapOf(
+          "code" to response.code(),
+          "data" to if (returnResponse) response.body()?.string().orEmpty() else "",
+          "headers" to mapHeadersToMap(response.headers())
         )
-      )
+      ).toReactMap()
     )
   }
 }
@@ -316,10 +318,7 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
                 "fullFilePath" to fullFilePath,
                 "response" to mapOf(
                   "code" to response.code(),
-                  "headers" to response.headers()
-                    .toMultimap()
-                    .map { entry -> Pair(entry.key, entry.value.joinToString()) }
-                    .toMap()
+                  "headers" to mapHeadersToMap(response.headers())
                 )
               )
             ).toReactMap()
