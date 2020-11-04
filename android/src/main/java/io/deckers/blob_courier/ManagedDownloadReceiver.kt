@@ -90,7 +90,7 @@ class ManagedDownloadReceiver(
       mapOf(
         "type" to DOWNLOAD_TYPE_MANAGED,
         "data" to mapOf(
-          "fullFilePath" to destinationFile,
+          "absoluteFilePath" to destinationFile,
           "result" to MANAGED_DOWNLOAD_SUCCESS
         )
       ).toReactMap()

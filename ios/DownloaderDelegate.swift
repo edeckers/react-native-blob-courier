@@ -70,7 +70,7 @@ open class DownloaderDelegate: NSObject, URLSessionDownloadDelegate {
       let result: NSDictionary = [
         "type": DownloaderDelegate.downloadTypeUnmanaged,
         "data": [
-          "fullFilePath": "\(self.destinationFileUrl)",
+          "absoluteFilePath": "\(self.destinationFileUrl)",
           "response": [
             "code": statusCode
           ]
