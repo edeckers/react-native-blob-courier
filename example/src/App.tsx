@@ -13,11 +13,12 @@ import {
   Switch,
 } from 'react-native';
 import BlobCourier, {
-  AndroidBlobFetchRequest,
+  AndroidManagedBlobFetchRequest,
   BlobFilePathData,
   BlobFetchResponse,
   BlobUploadRequest,
   BlobUploadResponse,
+  BlobFetchRequest,
 } from 'react-native-blob-courier';
 
 const DEFAULT_MARGIN = 10;
@@ -251,17 +252,28 @@ const DownloaderView = (props: DVProps) => {
   const startDownload = async () => {
     setIsDownloading(true);
 
+    const req0: BlobFetchRequest | AndroidManagedBlobFetchRequest =
+      Platform.OS === 'android' && useDownloadManager
+        ? ({
+            downloadManager: {
+              enableNotifications: false,
+              description: 'description',
+            },
+            filename: props.filename,
+            mimeType: props.mimeType ?? 'text/plain',
+            url: props.fromUrl,
+          } as AndroidManagedBlobFetchRequest)
+        : ({
+            filename: props.filename,
+            method: 'GET',
+            url: props.fromUrl,
+          } as BlobFetchRequest);
+
     try {
       const fetchedResult = await BlobCourier.settings({
         progressIntervalMilliseconds: DEFAULT_PROGRESS_INTERVAL_MILLISECONDS,
       })
-        .fetchBlob({
-          filename: props.filename,
-          method: 'GET',
-          mimeType: props.mimeType ?? 'text/plain',
-          url: props.fromUrl,
-          useDownloadManager: useDownloadManager,
-        } as AndroidBlobFetchRequest)
+        .fetchBlob(req0)
         .onProgress((e: any) => {
           const serializedMaybeTotal = parseInt(e.total, 10);
           const maybeTotal =
