@@ -35,6 +35,7 @@ private const val ERROR_MISSING_REQUIRED_PARAMETER = "ERROR_MISSING_REQUIRED_PAR
 
 private const val PARAMETER_FILENAME = "filename"
 private const val PARAMETER_FILE_PATH = "filePath"
+private const val PARAMETER_DOWNLOAD_MANAGER_SETTINGS = "androidDownloadManager"
 private const val PARAMETER_HEADERS = "headers"
 private const val PARAMETER_METHOD = "method"
 private const val PARAMETER_MIME_TYPE = "mimeType"
@@ -42,7 +43,11 @@ private const val PARAMETER_RETURN_RESPONSE = "returnResponse"
 private const val PARAMETER_SETTINGS_PROGRESS_INTERVAL = "settings.progressIntervalMilliseconds"
 private const val PARAMETER_TASK_ID = "taskId"
 private const val PARAMETER_URL = "url"
-private const val PARAMETER_USE_DOWNLOAD_MANAGER = "useDownloadManager"
+private const val PARAMETER_USE_DOWNLOAD_MANAGER = "useAndroidDownloadManager"
+
+private const val DOWNLOAD_MANAGER_PARAMETER_DESCRIPTION = "description"
+private const val DOWNLOAD_MANAGER_PARAMETER_ENABLE_NOTIFICATIONS = "enableNotifications"
+private const val DOWNLOAD_MANAGER_PARAMETER_TITLE = "title"
 
 private val REQUIRED_PARAMETER_PROCESSORS = ImmutableMap.of(
   Boolean::class.java.toString(),
@@ -237,6 +242,7 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
 
   private fun fetchBlobUsingDownloadManager(
     taskId: String,
+    downloadManagerSettings: Map<String, Any>,
     uri: Uri,
     filename: String,
     headers: Map<String, String>,
@@ -246,23 +252,45 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
   ) {
     val absoluteFilePath = createAbsoluteFilePath(filename)
 
-    val downloadId =
+    val request =
       DownloadManager.Request(uri)
         .setAllowedOverRoaming(true)
         .setMimeType(mimeType)
         .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-        .let { requestBuilder
-          ->
-          requestBuilder.apply {
-            headers.forEach { e: Map.Entry<String, String> ->
-              addRequestHeader(e.key, e.value)
-            }
-          }
 
-          defaultDownloadManager.enqueue(
-            requestBuilder
-          )
+    if (downloadManagerSettings.containsKey(DOWNLOAD_MANAGER_PARAMETER_DESCRIPTION)) {
+      request.setDescription(
+        downloadManagerSettings[DOWNLOAD_MANAGER_PARAMETER_DESCRIPTION] as String
+      )
+    }
+
+    if (downloadManagerSettings.containsKey(DOWNLOAD_MANAGER_PARAMETER_TITLE)) {
+      request.setTitle(
+        downloadManagerSettings[DOWNLOAD_MANAGER_PARAMETER_TITLE] as String
+      )
+    }
+
+    if (downloadManagerSettings.containsKey(DOWNLOAD_MANAGER_PARAMETER_ENABLE_NOTIFICATIONS)) {
+      val enableNotifications =
+        downloadManagerSettings.containsKey(DOWNLOAD_MANAGER_PARAMETER_ENABLE_NOTIFICATIONS) &&
+          downloadManagerSettings[DOWNLOAD_MANAGER_PARAMETER_ENABLE_NOTIFICATIONS] == true
+
+      request.setNotificationVisibility(if (enableNotifications) 1 else 0)
+    }
+
+    val downloadId = request
+      .let { requestBuilder
+        ->
+        requestBuilder.apply {
+          headers.forEach { e: Map.Entry<String, String> ->
+            addRequestHeader(e.key, e.value)
+          }
         }
+
+        defaultDownloadManager.enqueue(
+          requestBuilder
+        )
+      }
 
     ManagedProgressUpdater.start(reactContext, downloadId, taskId, progressInterval.toLong())
 
@@ -337,8 +365,14 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
     val useDownloadManager =
       input.hasKey(PARAMETER_USE_DOWNLOAD_MANAGER) &&
         input.getBoolean(PARAMETER_USE_DOWNLOAD_MANAGER)
+
     val method = input.getString(PARAMETER_METHOD) ?: DEFAULT_FETCH_METHOD
     val mimeType = input.getString(PARAMETER_MIME_TYPE) ?: DEFAULT_MIME_TYPE
+
+    val downloadManagerSettings =
+      if (input.hasKey(PARAMETER_DOWNLOAD_MANAGER_SETTINGS))
+        input.getMap(PARAMETER_DOWNLOAD_MANAGER_SETTINGS)?.toHashMap() ?: emptyMap<String, Any>()
+      else emptyMap<String, Any>()
 
     val unfilteredHeaders =
       if (input.hasKey(PARAMETER_HEADERS))
@@ -372,6 +406,7 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
       maybeTaskId,
       Uri.parse(maybeUrl),
       useDownloadManager,
+      downloadManagerSettings,
       maybeFilename,
       mimeType,
       promise,
@@ -385,6 +420,7 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
     taskId: String,
     uri: Uri,
     useDownloadManager: Boolean,
+    downloadManagerSettings: Map<String, Any>,
     filename: String,
     mimeType: String,
     promise: Promise,
@@ -395,6 +431,7 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
     if (useDownloadManager)
       fetchBlobUsingDownloadManager(
         taskId,
+        downloadManagerSettings,
         uri,
         filename,
         headers,

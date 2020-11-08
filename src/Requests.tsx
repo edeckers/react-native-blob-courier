@@ -33,9 +33,18 @@ export declare interface BlobFetchRequest
   readonly filename: string;
 }
 
+export declare interface AndroidDownloadManagerToggle {
+  useAndroidDownloadManager?: boolean;
+}
+
 export declare interface AndroidDownloadManagerSettings {
   description?: string;
   enableNotifications?: boolean;
+  title?: string;
+}
+
+export declare interface AndroidDownloadManager {
+  androidDownloadManager?: AndroidDownloadManagerSettings;
 }
 
 export declare interface BlobUploadRequest
@@ -50,7 +59,7 @@ export declare interface BlobRequestTask {
 }
 
 export declare interface BlobRequestSettings {
-  progressIntervalMilliseconds: number;
+  progressIntervalMilliseconds?: number;
 }
 
 export declare interface BlobUnmanagedHttpResponse {

@@ -260,7 +260,7 @@ const DownloaderView = (props: DVProps) => {
     const req0 = {
       filename: props.filename,
       method: 'GET',
-      mimeType: 'application/zip',
+      mimeType: 'text/plain',
       url: props.fromUrl,
     } as BlobFetchRequest;
 
@@ -280,8 +280,7 @@ const DownloaderView = (props: DVProps) => {
 
       const withDownloadManager = useAndroidDownloadManager
         ? reqSettings.useDownloadManagerOnAndroid({
-            enableNotifications: false,
-            description: 'description',
+            enableNotifications: true,
           })
         : reqSettings;
 
