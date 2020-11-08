@@ -11,7 +11,7 @@ export declare interface BlobRequestMethod {
   readonly method?: string;
 }
 export declare interface BlobRequestMimeType {
-  readonly mimeType?: string;
+  readonly mimeType: string;
 }
 export declare interface BlobRequestUrl {
   readonly url: string;
@@ -28,15 +28,9 @@ export declare interface BlobFetchRequest
   readonly filename: string;
 }
 
-export declare interface AndroidDownloadManager {
+export declare interface AndroidDownloadManagerSettings {
   description?: string;
   enableNotifications?: boolean;
-}
-
-export declare interface AndroidManagedBlobFetchRequest
-  extends BlobFetchRequest {
-  readonly downloadManager?: AndroidDownloadManager | true;
-  readonly mimeType: string;
 }
 
 export declare interface BlobUploadRequest

@@ -6,22 +6,22 @@
  */
 import { NativeEventEmitter, NativeModules } from 'react-native';
 import type {
-  AndroidManagedBlobFetchRequest,
   BlobFetchRequest,
   BlobRequestSettings,
   BlobRequestTask,
   BlobFetchResponse,
   BlobUploadRequest,
   BlobUploadResponse,
+  AndroidDownloadManagerSettings,
 } from './Requests';
 import { uuid } from './Utils';
 
 type BlobCourierType = {
-  fetchBlob(
-    input: (AndroidManagedBlobFetchRequest | BlobFetchRequest) & BlobRequestTask
+  fetchBlob<T extends BlobFetchRequest & BlobRequestTask>(
+    input: T
   ): Promise<BlobFetchResponse>;
-  uploadBlob(
-    input: BlobUploadRequest & BlobRequestTask
+  uploadBlob<T extends BlobUploadRequest & BlobRequestTask>(
+    input: T
   ): Promise<BlobUploadResponse>;
 };
 
@@ -32,95 +32,103 @@ const EventEmitter = new NativeEventEmitter(BlobCourierEventEmitter);
 const BLOB_COURIER_PROGRESS = 'BlobCourierProgress';
 const SETTINGS_PREFIX = 'settings';
 
-export interface BlobCourierProgress<T> extends Promise<T> {
-  onProgress: (fn: (e: any) => void) => Promise<T>;
-}
+const createTaskId = () => `rnbc-req-${uuid()}`;
 
-const extendWithProgress = <T extends unknown>(
-  p: Promise<T>,
-  taskId: String
-): BlobCourierProgress<T> => ({
-  [Symbol.toStringTag]: p[Symbol.toStringTag],
-  catch: (onRejected) => p.catch(onRejected),
-  finally: (onFinally) => p.finally(onFinally),
-  onProgress: (fn: (e: any) => void) => {
-    EventEmitter.addListener(BLOB_COURIER_PROGRESS, (e: any) => {
-      if (e.taskId === taskId) {
-        fn(e);
-      }
-    });
-
-    return p;
-  },
-  then: (onFulfilled, onRejected) => p.then(onFulfilled, onRejected),
-});
-
-const createTaskId = () => `task-${uuid()}`;
-
-const extendInputWithTaskId = (
-  input: AndroidManagedBlobFetchRequest | BlobFetchRequest | BlobUploadRequest
+const prefixDict = <T extends { [key: string]: any }>(
+  dict: T,
+  prefix: string
 ) =>
-  ({
-    ...input,
-    taskId: createTaskId(),
-  } as (AndroidManagedBlobFetchRequest | BlobFetchRequest | BlobUploadRequest) &
-    BlobRequestTask);
+  Object.keys(dict).reduce(
+    (p, k) => ({
+      ...p,
+      [`${prefix}.${k}`]: (dict as any)[k],
+    }),
+    {}
+  ) as T;
 
-class BlobCourierWrapper {
-  private static prefixSettings = (settings: BlobRequestSettings) =>
-    Object.keys(settings).reduce(
-      (p, k) => ({
-        ...p,
-        [`${SETTINGS_PREFIX}.${k}`]: (settings as any)[k],
-      }),
-      {}
-    ) as BlobRequestSettings;
+const prefixSettings = (settings: BlobRequestSettings) =>
+  prefixDict(settings, SETTINGS_PREFIX);
 
-  public static settings = (settings: BlobRequestSettings) => ({
-    fetchBlob: (
-      input: AndroidManagedBlobFetchRequest | BlobFetchRequest
-    ): BlobCourierProgress<BlobFetchResponse> =>
-      BlobCourierWrapper.fetchBlob({
-        ...BlobCourierWrapper.prefixSettings(settings),
-        ...input,
-      }),
-    uploadBlob: (
-      input: BlobUploadRequest
-    ): BlobCourierProgress<BlobUploadResponse> =>
-      BlobCourierWrapper.uploadBlob({
-        ...BlobCourierWrapper.prefixSettings(settings),
-        ...input,
-      }),
+const fetchBlob = (BlobCourier as BlobCourierType).fetchBlob;
+
+const uploadBlob = (BlobCourier as BlobCourierType).uploadBlob;
+
+const onProgress = (taskId: string, fn: (e: any) => void) => {
+  EventEmitter.addListener(BLOB_COURIER_PROGRESS, (e: any) => {
+    if (e.taskId === taskId) {
+      fn(e);
+    }
   });
 
-  public static fetchBlob = (
-    input: AndroidManagedBlobFetchRequest | BlobFetchRequest
-  ): BlobCourierProgress<BlobFetchResponse> => {
-    const inputWithTaskId = extendInputWithTaskId(input) as (
-      | AndroidManagedBlobFetchRequest
-      | BlobFetchRequest
-    ) &
-      BlobRequestTask;
-
-    return extendWithProgress(
-      (BlobCourier as BlobCourierType).fetchBlob(inputWithTaskId),
-      inputWithTaskId.taskId
-    );
+  return {
+    fetchBlob: (input: BlobFetchRequest) =>
+      fetchBlob({
+        ...input,
+        taskId,
+      }),
+    uploadBlob: (input: BlobUploadRequest) =>
+      uploadBlob({
+        ...input,
+        taskId,
+      }),
+    useDownloadManagerOnAndroid: (
+      downloadManagerSettings?: AndroidDownloadManagerSettings
+    ) => useDownloadManagerOnAndroid(createTaskId(), downloadManagerSettings),
   };
+};
 
-  public static uploadBlob = (
-    input: BlobUploadRequest
-  ): BlobCourierProgress<BlobUploadResponse> => {
-    const inputWithTaskId = extendInputWithTaskId(input) as BlobUploadRequest &
-      BlobRequestTask;
+const useDownloadManagerOnAndroid = (
+  taskId: string,
+  downloadManagerSettings?: AndroidDownloadManagerSettings
+) => ({
+  fetchBlob: (input: BlobFetchRequest) =>
+    fetchBlob({
+      ...input,
+      ...downloadManagerSettings,
+      useDownloadManager: true,
+      taskId,
+    }),
+});
 
-    return extendWithProgress(
-      (BlobCourier as BlobCourierType).uploadBlob(inputWithTaskId),
-      inputWithTaskId.taskId
-    );
+const settings = (requestSettings: BlobRequestSettings) => {
+  const applySettings = <T,>(input: T) =>
+    ({
+      ...input,
+      ...prefixSettings(requestSettings),
+    } as T & BlobRequestSettings);
+
+  const taskId = createTaskId();
+
+  return {
+    fetchBlob: (input: BlobFetchRequest) =>
+      fetchBlob({
+        ...applySettings(input),
+        taskId,
+      }),
+    onProgress: (fn: (e: any) => void) => onProgress(taskId, fn),
+    uploadBlob: (input: BlobUploadRequest) =>
+      uploadBlob({
+        ...applySettings(input),
+        taskId,
+      }),
+    useDownloadManagerOnAndroid: (
+      downloadManagerSettings: AndroidDownloadManagerSettings
+    ) => useDownloadManagerOnAndroid(taskId, downloadManagerSettings),
   };
-}
+};
 
-export default BlobCourierWrapper;
+export default {
+  fetchBlob,
+  fluent: () => ({
+    settings,
+    fetchBlob,
+    uploadBlob,
+    onProgress: (fn: (e: any) => void) => onProgress(createTaskId(), fn),
+    useDownloadManagerOnAndroid: (
+      downloadManagerSettings: AndroidDownloadManagerSettings
+    ) => useDownloadManagerOnAndroid(createTaskId(), downloadManagerSettings),
+  }),
+  uploadBlob,
+};
 
 export * from './Requests';
