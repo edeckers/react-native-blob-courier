@@ -35,6 +35,8 @@ cd ios && pod install
 
 ## Usage
 
+The library provides both a fluent and a more concise interface. In the examples the concise approach is applied; fluent interface is demonstrated later in this document.
+
 ### Straightforward down- and upload
 
 ```tsx
@@ -48,7 +50,7 @@ const request0 = {
   method: 'GET',
   mimeType: 'application/zip',
   url: 'http://ipv4.download.thinkbroadband.com/5MB.zip',
-} as BlobFetchRequest
+}
 
 const fetchedResult = await BlobCourier.fetchBlob(request0);
 console.log(fetchedResult)
@@ -76,7 +78,7 @@ const request1 = {
   method: 'POST',
   mimeType: 'application/zip',
   url: 'https://file.io',
-} as BlobUploadRequest)
+}
 
 const uploadResult = await BlobCourier.uploadBlob(request1)
 
@@ -106,14 +108,15 @@ const request0 = ...
 
 const fetchedResult =
   await BlobCourier
-    .fetchBlob(request0)
     .onProgress((e: any) => {
       console.log(e)
       // {
       //  "written": <some_number_of_bytes_written>,
       //  "total": <some_total_number_of_bytes>
       // }
-    });
+    })
+    .fetchBlob(request0)
+
 
 // ...
 
@@ -122,25 +125,29 @@ const request1 = ...
 
 const uploadResult =
   await BlobCourier
-    .uploadBlob(request1)
     .onProgress((e: any) => {
-      // ...
+      console.log(e)
+      // {
+      //  "written": <some_number_of_bytes_written>,
+      //  "total": <some_total_number_of_bytes>
+      // }
     });
+    .uploadBlob(request1)
 
 // ...
 
-// Set request settings
+// Set progress updater interval
 const request2 = ...
 
 const someResult =
   await BlobCourier
-    .settings({
-      progressIntervalMilliseconds: 1000,
-    })
-    .fetchBlob(request2)
     .onProgress((e:any) => {
       // ...
-    });
+    })
+    .fetchBlob({
+      ...request2,
+      progressIntervalMilliseconds: 1000,
+    })
 ```
 
 ### Managed download on Android (not available on iOS)
@@ -168,8 +175,32 @@ console.log(fetchedResult)
 //   },
 //   "type":"Managed"
 // }
-
 ```
+
+## Fluent interface
+
+Blob Courier provides a fluent interface, that both prevents the programmer from impossible setting combinations and arguably improves request readability.
+
+```tsx
+const req0 = ...
+
+const someResult =
+  await BlobCourier
+    .fluent()
+    .settings({
+      progressIntervalMilliseconds: 1000,
+    })
+    .onProgress((e:any) => {
+      // ...
+    })
+    .useAndroidDownloadManager({
+      description: "Some file description",
+      enableNotification: true,
+    })
+    .fetchBlob(req0)
+```
+
+## Available parameters
 
 ## Example app
 

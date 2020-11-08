@@ -71,6 +71,14 @@ const onProgress = (taskId: string, fn: (e: any) => void) => {
         ...input,
         taskId,
       }),
+  };
+};
+
+const onProgressFluent = (taskId: string, fn: (e: any) => void) => {
+  const result = onProgress(taskId, fn);
+
+  return {
+    ...result,
     useDownloadManagerOnAndroid: (
       downloadManagerSettings?: AndroidDownloadManagerSettings
     ) => useDownloadManagerOnAndroid(createTaskId(), downloadManagerSettings),
@@ -105,7 +113,7 @@ const settings = (requestSettings: BlobRequestSettings) => {
         ...applySettings(input),
         taskId,
       }),
-    onProgress: (fn: (e: any) => void) => onProgress(taskId, fn),
+    onProgress: (fn: (e: any) => void) => onProgressFluent(taskId, fn),
     uploadBlob: (input: BlobUploadRequest) =>
       uploadBlob({
         ...applySettings(input),
@@ -123,11 +131,12 @@ export default {
     settings,
     fetchBlob,
     uploadBlob,
-    onProgress: (fn: (e: any) => void) => onProgress(createTaskId(), fn),
+    onProgress: (fn: (e: any) => void) => onProgressFluent(createTaskId(), fn),
     useDownloadManagerOnAndroid: (
       downloadManagerSettings: AndroidDownloadManagerSettings
     ) => useDownloadManagerOnAndroid(createTaskId(), downloadManagerSettings),
   }),
+  onProgress: (fn: (e: any) => void) => onProgress(createTaskId(), fn),
   uploadBlob,
 };
 
