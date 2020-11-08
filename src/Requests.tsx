@@ -7,14 +7,17 @@
 export declare interface BlobRequestHeaders {
   readonly headers?: { [key: string]: string };
 }
+
 export declare interface BlobRequestMethod {
   readonly method?: string;
 }
+
 export declare interface BlobRequestMimeType {
   readonly mimeType: string;
 }
+
 export declare interface BlobRequestOnProgress {
-  readonly onProgress?: (e: any) => void;
+  readonly onProgress?: (e: BlobProgressEvent) => void;
 }
 
 export declare interface BlobRequestUrl {
@@ -45,6 +48,11 @@ export declare interface AndroidDownloadManagerSettings {
 
 export declare interface AndroidDownloadManager {
   androidDownloadManager?: AndroidDownloadManagerSettings;
+}
+
+export declare interface BlobProgressEvent {
+  total: number;
+  written: number;
 }
 
 export declare interface BlobUploadRequest

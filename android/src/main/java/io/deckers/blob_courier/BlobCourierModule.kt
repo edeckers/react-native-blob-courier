@@ -270,13 +270,11 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
       )
     }
 
-    if (downloadManagerSettings.containsKey(DOWNLOAD_MANAGER_PARAMETER_ENABLE_NOTIFICATIONS)) {
-      val enableNotifications =
-        downloadManagerSettings.containsKey(DOWNLOAD_MANAGER_PARAMETER_ENABLE_NOTIFICATIONS) &&
-          downloadManagerSettings[DOWNLOAD_MANAGER_PARAMETER_ENABLE_NOTIFICATIONS] == true
+    val enableNotifications =
+      downloadManagerSettings.containsKey(DOWNLOAD_MANAGER_PARAMETER_ENABLE_NOTIFICATIONS) &&
+        downloadManagerSettings[DOWNLOAD_MANAGER_PARAMETER_ENABLE_NOTIFICATIONS] == true
 
-      request.setNotificationVisibility(if (enableNotifications) 1 else 0)
-    }
+    request.setNotificationVisibility(if (enableNotifications) 1 else 0)
 
     val downloadId = request
       .let { requestBuilder

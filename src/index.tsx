@@ -15,6 +15,7 @@ import type {
   AndroidDownloadManagerSettings,
   AndroidDownloadManagerToggle,
   AndroidDownloadManager,
+  BlobProgressEvent,
 } from './Requests';
 import { uuid } from './Utils';
 
@@ -54,10 +55,18 @@ const prefixDict = <T extends { [key: string]: any }>(
     {}
   ) as T;
 
-const addProgressListener = (taskId: string, fn: (e: any) => void) =>
+const addProgressListener = (
+  taskId: string,
+  fn: (e: BlobProgressEvent) => void
+) =>
   EventEmitter.addListener(BLOB_COURIER_PROGRESS, (e: any) => {
+    const parsedEvent: BlobProgressEvent = {
+      written: parseInt(e.written, 10),
+      total: parseInt(e.total, 10),
+    };
+
     if (e.taskId === taskId) {
-      fn(e);
+      fn(parsedEvent);
     }
   });
 
@@ -134,7 +143,7 @@ const sanitizeUploadData = <T extends BlobUploadInput>(
 const wrapEmitter = async <T,>(
   taskId: string,
   wrappedFn: () => Promise<T>,
-  fnOnProgress?: (e: any) => void
+  fnOnProgress?: (e: BlobProgressEvent) => void
 ) => {
   const emitterSubscription = fnOnProgress
     ? addProgressListener(taskId, fnOnProgress)
@@ -164,7 +173,7 @@ const uploadBlob = <T extends BlobUploadInput>(input: T) =>
 
 const onProgress = (
   taskId: string,
-  fn: (e: any) => void,
+  fn: (e: BlobProgressEvent) => void,
   requestSettings?: BlobRequestSettings
 ) => ({
   fetchBlob: (input: BlobFetchRequest) =>
@@ -216,7 +225,7 @@ const settings = (requestSettings: BlobRequestSettings) => {
         ...requestSettings,
         taskId,
       }),
-    onProgress: (fn: (e: any) => void) =>
+    onProgress: (fn: (e: BlobProgressEvent) => void) =>
       onProgress(taskId, fn, requestSettings),
     uploadBlob: (input: BlobUploadRequest) =>
       uploadBlob({
@@ -239,7 +248,8 @@ export default {
   fetchBlob,
   fluent: () => ({
     settings,
-    onProgress: (fn: (e: any) => void) => onProgress(createTaskId(), fn),
+    onProgress: (fn: (e: BlobProgressEvent) => void) =>
+      onProgress(createTaskId(), fn),
     useDownloadManagerOnAndroid: (
       downloadManagerSettings: AndroidDownloadManagerSettings
     ) => useDownloadManagerOnAndroid(createTaskId(), downloadManagerSettings),

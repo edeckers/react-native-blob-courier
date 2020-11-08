@@ -13,11 +13,11 @@ import {
   Switch,
 } from 'react-native';
 import BlobCourier, {
-  BlobFilePathData,
   BlobFetchResponse,
   BlobUploadRequest,
   BlobUploadResponse,
   BlobFetchRequest,
+  BlobProgressEvent,
 } from 'react-native-blob-courier';
 
 const DEFAULT_MARGIN = 10;
@@ -188,9 +188,9 @@ const UploaderView = (props: UVProps) => {
         .settings({
           progressIntervalMilliseconds: DEFAULT_PROGRESS_INTERVAL_MILLISECONDS,
         })
-        .onProgress((e: any) => {
-          setReceived(parseInt(e.written, 10));
-          setExpected(parseInt(e.total, 10));
+        .onProgress((e: BlobProgressEvent) => {
+          setReceived(e.written);
+          setExpected(e.total);
         })
         .uploadBlob({
           filePath: props.fromLocalPath,
@@ -269,12 +269,12 @@ const DownloaderView = (props: DVProps) => {
         .settings({
           progressIntervalMilliseconds: DEFAULT_PROGRESS_INTERVAL_MILLISECONDS,
         })
-        .onProgress((e: any) => {
-          const serializedMaybeTotal = parseInt(e.total, 10);
+        .onProgress((e: BlobProgressEvent) => {
+          const serializedMaybeTotal = e.total;
           const maybeTotal =
             serializedMaybeTotal > 0 ? serializedMaybeTotal : undefined;
 
-          setReceived(parseInt(e.written, 10));
+          setReceived(e.written);
           setExpected(maybeTotal);
         });
 
@@ -335,9 +335,7 @@ export const App = () => {
   }, []);
 
   const onDownloadCompleted = (downloadResult: BlobFetchResponse) => {
-    setDownloadedFilePath(
-      (downloadResult.data as BlobFilePathData).absoluteFilePath ?? ''
-    );
+    setDownloadedFilePath(downloadResult.data.absoluteFilePath);
 
     setRoute('upload');
   };
