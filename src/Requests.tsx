@@ -13,6 +13,10 @@ export declare interface BlobRequestMethod {
 export declare interface BlobRequestMimeType {
   readonly mimeType: string;
 }
+export declare interface BlobRequestOnProgress {
+  readonly onProgress?: (e: any) => void;
+}
+
 export declare interface BlobRequestUrl {
   readonly url: string;
 }
@@ -20,6 +24,7 @@ export declare interface BlobRequestUrl {
 export declare interface BlobBaseRequest
   extends BlobRequestHeaders,
     BlobRequestMimeType,
+    BlobRequestOnProgress,
     BlobRequestUrl {}
 
 export declare interface BlobFetchRequest

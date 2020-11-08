@@ -46,44 +46,52 @@ const prefixDict = <T extends { [key: string]: any }>(
     {}
   ) as T;
 
-const prefixSettings = (settings: BlobRequestSettings) =>
-  prefixDict(settings, SETTINGS_PREFIX);
-
-const fetchBlob = (BlobCourier as BlobCourierType).fetchBlob;
-
-const uploadBlob = (BlobCourier as BlobCourierType).uploadBlob;
-
-const onProgress = (taskId: string, fn: (e: any) => void) => {
+const addProgressListener = (taskId: string, fn: (e: any) => void) => {
   EventEmitter.addListener(BLOB_COURIER_PROGRESS, (e: any) => {
     if (e.taskId === taskId) {
       fn(e);
     }
   });
-
-  return {
-    fetchBlob: (input: BlobFetchRequest) =>
-      fetchBlob({
-        ...input,
-        taskId,
-      }),
-    uploadBlob: (input: BlobUploadRequest) =>
-      uploadBlob({
-        ...input,
-        taskId,
-      }),
-  };
 };
 
-const onProgressFluent = (taskId: string, fn: (e: any) => void) => {
-  const result = onProgress(taskId, fn);
+const prefixSettings = (settings: BlobRequestSettings) =>
+  prefixDict(settings, SETTINGS_PREFIX);
 
-  return {
-    ...result,
-    useDownloadManagerOnAndroid: (
-      downloadManagerSettings?: AndroidDownloadManagerSettings
-    ) => useDownloadManagerOnAndroid(createTaskId(), downloadManagerSettings),
-  };
+const fetchBlob = <T extends BlobFetchRequest & BlobRequestTask>(input: T) => {
+  if (input.onProgress) {
+    addProgressListener(input.taskId, input.onProgress);
+  }
+
+  return (BlobCourier as BlobCourierType).fetchBlob(input);
 };
+
+const uploadBlob = <T extends BlobUploadRequest & BlobRequestTask>(
+  input: T
+) => {
+  if (input.onProgress) {
+    addProgressListener(input.taskId, input.onProgress);
+  }
+
+  return (BlobCourier as BlobCourierType).uploadBlob(input);
+};
+
+const onProgress = (taskId: string, fn: (e: any) => void) => ({
+  fetchBlob: (input: BlobFetchRequest) =>
+    fetchBlob({
+      ...input,
+      onProgress: fn,
+      taskId,
+    }),
+  uploadBlob: (input: BlobUploadRequest) =>
+    uploadBlob({
+      ...input,
+      onProgress: fn,
+      taskId,
+    }),
+  useDownloadManagerOnAndroid: (
+    downloadManagerSettings?: AndroidDownloadManagerSettings
+  ) => useDownloadManagerOnAndroid(createTaskId(), downloadManagerSettings),
+});
 
 const useDownloadManagerOnAndroid = (
   taskId: string,
@@ -113,7 +121,7 @@ const settings = (requestSettings: BlobRequestSettings) => {
         ...applySettings(input),
         taskId,
       }),
-    onProgress: (fn: (e: any) => void) => onProgressFluent(taskId, fn),
+    onProgress: (fn: (e: any) => void) => onProgress(taskId, fn),
     uploadBlob: (input: BlobUploadRequest) =>
       uploadBlob({
         ...applySettings(input),
@@ -131,12 +139,11 @@ export default {
     settings,
     fetchBlob,
     uploadBlob,
-    onProgress: (fn: (e: any) => void) => onProgressFluent(createTaskId(), fn),
+    onProgress: (fn: (e: any) => void) => onProgress(createTaskId(), fn),
     useDownloadManagerOnAndroid: (
       downloadManagerSettings: AndroidDownloadManagerSettings
     ) => useDownloadManagerOnAndroid(createTaskId(), downloadManagerSettings),
   }),
-  onProgress: (fn: (e: any) => void) => onProgress(createTaskId(), fn),
   uploadBlob,
 };
 
