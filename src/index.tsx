@@ -246,13 +246,13 @@ const settings = (requestSettings: BlobRequestSettings) => {
 
 export default {
   fetchBlob,
-  settings,
   onProgress: (fn: (e: BlobProgressEvent) => void) =>
     onProgress(createTaskId(), fn),
+  settings,
+  uploadBlob,
   useDownloadManagerOnAndroid: (
     downloadManagerSettings: AndroidDownloadManagerSettings
   ) => useDownloadManagerOnAndroid(createTaskId(), downloadManagerSettings),
-  uploadBlob,
 };
 
 export * from './Requests';
