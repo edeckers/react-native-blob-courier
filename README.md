@@ -40,7 +40,7 @@ The library provides both a fluent and a more concise interface. In the examples
 ### Straightforward down- and upload
 
 ```tsx
-import BlobCourier from "react-native-blob-courier";
+import BlobCourier from 'react-native-blob-courier';
 
 // ...
 
@@ -99,7 +99,7 @@ console.log(uploadResult):
 ### Transfer progress reporting
 
 ```tsx
-import BlobCourier from "react-native-blob-courier";
+import BlobCourier from 'react-native-blob-courier';
 
 // ...
 
@@ -149,7 +149,7 @@ const someResult =
 ### Managed download on Android (not available on iOS)
 
 ```tsx
-import BlobCourier from "react-native-blob-courier";
+import BlobCourier from 'react-native-blob-courier';
 
 // ...
 
@@ -364,7 +364,7 @@ To enable the download manager, simply hand an `AndroidBlobFetchRequest` to `fet
 As this library is focussed on transferring files, it only supports storage to the app's _cache_ directory. To move files from the _cache_ directory to the _Downloads_, or _Documents_ directory, use another library like [@react-native-community/cameraroll](https://github.com/react-native-community/react-native-cameraroll), e.g.:
 
 ```tsx
-import BlobCourier from "react-native-blob-courier";
+import BlobCourier from 'react-native-blob-courier';
 import CameraRoll from '@react-native-community/cameraroll';
 
 // ...
