@@ -14,7 +14,6 @@ import {
 } from 'react-native';
 import BlobCourier, {
   BlobFetchResponse,
-  BlobUploadRequest,
   BlobUploadResponse,
   BlobFetchRequest,
   BlobProgressEvent,
@@ -197,7 +196,7 @@ const UploaderView = (props: UVProps) => {
           mimeType: 'text/plain',
           returnResponse: true,
           url: props.toUrl,
-        } as BlobUploadRequest);
+        });
 
       props.onFinished(uploadResult);
     } catch (e) {

@@ -378,7 +378,7 @@ const request = {
 
 const cageResult = await BlobCourier.fetchBlob(request)
 
-const cageLocalPath = (cageResult.data as BlobFilePathData).absoluteFilePath ?? ''
+const cageLocalPath = cageResult.data.absoluteFilePath
 
 CameraRoll.save(cageLocalPath);
 ```
