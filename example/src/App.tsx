@@ -184,10 +184,9 @@ const UploaderView = (props: UVProps) => {
     setIsUploading(true);
 
     try {
-      const uploadResult = await BlobCourier.fluent()
-        .settings({
-          progressIntervalMilliseconds: DEFAULT_PROGRESS_INTERVAL_MILLISECONDS,
-        })
+      const uploadResult = await BlobCourier.settings({
+        progressIntervalMilliseconds: DEFAULT_PROGRESS_INTERVAL_MILLISECONDS,
+      })
         .onProgress((e: BlobProgressEvent) => {
           setReceived(e.written);
           setExpected(e.total);
@@ -265,18 +264,16 @@ const DownloaderView = (props: DVProps) => {
     } as BlobFetchRequest;
 
     try {
-      const reqSettings = BlobCourier.fluent()
-        .settings({
-          progressIntervalMilliseconds: DEFAULT_PROGRESS_INTERVAL_MILLISECONDS,
-        })
-        .onProgress((e: BlobProgressEvent) => {
-          const serializedMaybeTotal = e.total;
-          const maybeTotal =
-            serializedMaybeTotal > 0 ? serializedMaybeTotal : undefined;
+      const reqSettings = BlobCourier.settings({
+        progressIntervalMilliseconds: DEFAULT_PROGRESS_INTERVAL_MILLISECONDS,
+      }).onProgress((e: BlobProgressEvent) => {
+        const serializedMaybeTotal = e.total;
+        const maybeTotal =
+          serializedMaybeTotal > 0 ? serializedMaybeTotal : undefined;
 
-          setReceived(e.written);
-          setExpected(maybeTotal);
-        });
+        setReceived(e.written);
+        setExpected(maybeTotal);
+      });
 
       const withDownloadManager = useAndroidDownloadManager
         ? reqSettings.useDownloadManagerOnAndroid({

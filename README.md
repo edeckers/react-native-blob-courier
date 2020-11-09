@@ -182,7 +182,6 @@ const req0 = ...
 
 const someResult =
   await BlobCourier
-    .fluent()
     .settings({
       progressIntervalMilliseconds: 1000,
     })
