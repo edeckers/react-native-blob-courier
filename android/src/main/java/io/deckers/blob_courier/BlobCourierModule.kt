@@ -176,7 +176,7 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
 
   override fun getName(): String = LIBRARY_NAME
 
-  private fun createFullFilePath(filename: String) = File(reactContext.cacheDir, filename)
+  private fun createAbsoluteFilePath(filename: String) = File(reactContext.cacheDir, filename)
 
   private fun uploadBlobFromValidatedParameters(input: ReadableMap, promise: Promise) {
     val maybeTaskId = input.getString(PARAMETER_TASK_ID)
@@ -244,7 +244,7 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
     progressInterval: Int,
     promise: Promise
   ) {
-    val fullFilePath = createFullFilePath(filename)
+    val absoluteFilePath = createAbsoluteFilePath(filename)
 
     val downloadId =
       DownloadManager.Request(uri)
@@ -267,7 +267,7 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
     ManagedProgressUpdater.start(reactContext, downloadId, taskId, progressInterval.toLong())
 
     reactContext.registerReceiver(
-      ManagedDownloadReceiver(downloadId, fullFilePath, promise),
+      ManagedDownloadReceiver(downloadId, absoluteFilePath, promise),
       IntentFilter(
         DownloadManager.ACTION_DOWNLOAD_COMPLETE
       )
@@ -283,7 +283,7 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
     progressInterval: Int,
     promise: Promise
   ) {
-    val fullFilePath = createFullFilePath(filename)
+    val absoluteFilePath = createAbsoluteFilePath(filename)
 
     val request = Request.Builder()
       .method(method, null)
@@ -305,7 +305,7 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
       httpCient.newCall(request).execute().use { response ->
         thread {
           response.body()?.source().use { source ->
-            Okio.buffer(Okio.sink(fullFilePath)).use { sink ->
+            Okio.buffer(Okio.sink(absoluteFilePath)).use { sink ->
 
               sink.writeAll(source as Source)
             }
@@ -315,7 +315,7 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
             mapOf(
               "type" to DOWNLOAD_TYPE_UNMANAGED,
               "data" to mapOf(
-                "fullFilePath" to fullFilePath,
+                "absoluteFilePath" to absoluteFilePath,
                 "response" to mapOf(
                   "code" to response.code(),
                   "headers" to mapHeadersToMap(response.headers())

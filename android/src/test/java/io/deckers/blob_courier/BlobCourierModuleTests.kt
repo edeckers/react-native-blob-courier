@@ -69,10 +69,10 @@ class BlobCourierModuleTests {
         { assertTrue(false) },
         { m ->
           val taskId = allRequiredParametersMap.getString("taskId") ?: ""
-          val fullFilePath = m?.getMap("data")?.getString("fullFilePath") ?: ""
+          val absoluteFilePath = m?.getMap("data")?.getString("absoluteFilePath") ?: ""
 
           val uploadParametersMap =
-            createValidUploadTestParameterMap(taskId, fullFilePath).toReactMap()
+            createValidUploadTestParameterMap(taskId, absoluteFilePath).toReactMap()
           runUploadBlob(ctx, uploadParametersMap, BooleanPromise { v -> assertTrue(v) })
         }
       )
@@ -129,10 +129,10 @@ class BlobCourierModuleTests {
         { assertTrue(false) },
         { m ->
           val taskId = allFetchParametersMap["taskId"] ?: ""
-          val fullFilePath = m?.getMap("data")?.getString("fullFilePath") ?: ""
+          val absoluteFilePath = m?.getMap("data")?.getString("absoluteFilePath") ?: ""
 
           val uploadParametersMap =
-            createValidUploadTestParameterMap(taskId, fullFilePath).toReactMap()
+            createValidUploadTestParameterMap(taskId, absoluteFilePath).toReactMap()
           runUploadBlob(ctx, uploadParametersMap, BooleanPromise { v -> assertTrue(v) })
         }
       )

@@ -50,7 +50,7 @@ export declare interface BlobUnmanagedHttpResponse {
 }
 
 export declare interface BlobFilePathData {
-  readonly fullFilePath: string;
+  readonly absoluteFilePath: string;
 }
 
 export declare interface BlobManagedData extends BlobFilePathData {

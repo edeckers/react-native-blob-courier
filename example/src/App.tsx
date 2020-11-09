@@ -319,7 +319,7 @@ export const App = () => {
 
   const onDownloadCompleted = (downloadResult: BlobFetchResponse) => {
     setDownloadedFilePath(
-      (downloadResult.data as BlobFilePathData).fullFilePath ?? ''
+      (downloadResult.data as BlobFilePathData).absoluteFilePath ?? ''
     );
 
     setRoute('upload');

@@ -54,7 +54,7 @@ const fetchedResult = await BlobCourier.fetchBlob(request0);
 console.log(fetchedResult)
 // {
 //   "data": {
-//     "fullFilePath": "/path/to/app/cache/5MB.zip",
+//     "absoluteFilePath": "/path/to/app/cache/5MB.zip",
 //     "response": {
 //       "code":200,
 //       "headers": {
@@ -69,7 +69,7 @@ console.log(fetchedResult)
 // ...
 
 // Upload a file
-const filePath = fetchedResult.data.fullFilePath
+const filePath = fetchedResult.data.absoluteFilePath
 
 const request1 = {
   filePath,
@@ -164,7 +164,7 @@ console.log(fetchedResult)
 // {
 //   "data": {
 //     "result": "SUCCESS",
-//     "fullFilePath": "/path/to/app/cache/5MB.zip"
+//     "absoluteFilePath": "/path/to/app/cache/5MB.zip"
 //   },
 //   "type":"Managed"
 // }
@@ -263,7 +263,7 @@ const request = {
 
 const cageResult = await BlobCourier.fetchBlob(request)
 
-const cageLocalPath = (cageResult.data as BlobFilePathData).fullFilePath ?? ''
+const cageLocalPath = (cageResult.data as BlobFilePathData).absoluteFilePath ?? ''
 
 CameraRoll.save(cageLocalPath);
 ```
