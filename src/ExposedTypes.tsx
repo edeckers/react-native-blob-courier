@@ -37,22 +37,22 @@ export declare interface BlobFetchRequest
 }
 
 export declare interface AndroidDownloadManagerToggle {
-  useAndroidDownloadManager?: boolean;
+  readonly useAndroidDownloadManager?: boolean;
 }
 
 export declare interface AndroidDownloadManagerSettings {
-  description?: string;
-  enableNotifications?: boolean;
-  title?: string;
+  readonly description?: string;
+  readonly enableNotifications?: boolean;
+  readonly title?: string;
 }
 
 export declare interface AndroidDownloadManager {
-  androidDownloadManager?: AndroidDownloadManagerSettings;
+  readonly androidDownloadManager?: AndroidDownloadManagerSettings;
 }
 
 export declare interface BlobProgressEvent {
-  total: number;
-  written: number;
+  readonly total: number;
+  readonly written: number;
 }
 
 export declare interface BlobUploadRequest
@@ -67,7 +67,7 @@ export declare interface BlobRequestTask {
 }
 
 export declare interface BlobRequestSettings {
-  progressIntervalMilliseconds?: number;
+  readonly progressIntervalMilliseconds?: number;
 }
 
 export declare interface BlobUnmanagedHttpResponse {

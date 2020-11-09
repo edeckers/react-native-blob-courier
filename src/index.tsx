@@ -16,8 +16,8 @@ import type {
   AndroidDownloadManagerToggle,
   AndroidDownloadManager,
   BlobProgressEvent,
-} from './Requests';
-import { uuid } from './Utils';
+} from './ExposedTypes';
+import { createTaskId, prefixDict } from './Utils';
 
 type BlobFetchInput = BlobFetchRequest &
   BlobRequestTask &
@@ -41,20 +41,6 @@ const EventEmitter = new NativeEventEmitter(BlobCourierEventEmitter);
 const BLOB_COURIER_PROGRESS = 'BlobCourierProgress';
 const SETTINGS_PREFIX = 'settings';
 
-const createTaskId = () => `rnbc-req-${uuid()}`;
-
-const prefixDict = <T extends { [key: string]: any }>(
-  dict: T,
-  prefix: string
-) =>
-  Object.keys(dict).reduce(
-    (p, k) => ({
-      ...p,
-      [`${prefix}.${k}`]: (dict as any)[k],
-    }),
-    {}
-  ) as T;
-
 const addProgressListener = (
   taskId: string,
   fn: (e: BlobProgressEvent) => void
@@ -74,7 +60,7 @@ const prefixSettings = (settings: BlobRequestSettings) =>
   prefixDict(settings, SETTINGS_PREFIX);
 
 const sanitizeSettingsData = <T extends BlobFetchInput | BlobUploadInput>(
-  input: T
+  input: Readonly<T>
 ) => {
   const { progressIntervalMilliseconds } = input;
 
@@ -84,7 +70,7 @@ const sanitizeSettingsData = <T extends BlobFetchInput | BlobUploadInput>(
 };
 
 const sanitizeFetchData = <T extends BlobFetchInput>(
-  input: T
+  input: Readonly<T>
 ): BlobFetchInput => {
   const { filename, headers, method, mimeType, url } = input;
 
@@ -116,7 +102,7 @@ const sanitizeFetchData = <T extends BlobFetchInput>(
 };
 
 const sanitizeUploadData = <T extends BlobUploadInput>(
-  input: T
+  input: Readonly<T>
 ): BlobUploadInput => {
   const { filePath, headers, method, mimeType, returnResponse, url } = input;
 
@@ -156,14 +142,14 @@ const wrapEmitter = async <T,>(
   return result;
 };
 
-const fetchBlob = <T extends BlobFetchInput>(input: T) =>
+const fetchBlob = <T extends BlobFetchInput>(input: Readonly<T>) =>
   wrapEmitter(
     input.taskId,
     () => (BlobCourier as BlobCourierType).fetchBlob(sanitizeFetchData(input)),
     input.onProgress
   );
 
-const uploadBlob = <T extends BlobUploadInput>(input: T) =>
+const uploadBlob = <T extends BlobUploadInput>(input: Readonly<T>) =>
   wrapEmitter(
     input.taskId,
     () =>
@@ -255,4 +241,4 @@ export default {
   ) => useDownloadManagerOnAndroid(createTaskId(), downloadManagerSettings),
 };
 
-export * from './Requests';
+export * from './ExposedTypes';
