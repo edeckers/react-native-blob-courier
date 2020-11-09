@@ -35,10 +35,12 @@ cd ios && pod install
 
 ## Usage
 
+The library provides both a fluent and a more concise interface. In the examples the concise approach is applied; fluent interface is demonstrated later in this document.
+
 ### Straightforward down- and upload
 
 ```tsx
-import BlobCourier from "react-native-blob-courier";
+import BlobCourier from 'react-native-blob-courier';
 
 // ...
 
@@ -48,10 +50,10 @@ const request0 = {
   method: 'GET',
   mimeType: 'application/zip',
   url: 'http://ipv4.download.thinkbroadband.com/5MB.zip',
-} as BlobFetchRequest
+};
 
 const fetchedResult = await BlobCourier.fetchBlob(request0);
-console.log(fetchedResult)
+console.log(fetchedResult);
 // {
 //   "data": {
 //     "absoluteFilePath": "/path/to/app/cache/5MB.zip",
@@ -69,18 +71,18 @@ console.log(fetchedResult)
 // ...
 
 // Upload a file
-const filePath = fetchedResult.data.absoluteFilePath
+const filePath = fetchedResult.data.absoluteFilePath;
 
 const request1 = {
   filePath,
   method: 'POST',
   mimeType: 'application/zip',
   url: 'https://file.io',
-} as BlobUploadRequest)
+};
 
-const uploadResult = await BlobCourier.uploadBlob(request1)
+const uploadResult = await BlobCourier.uploadBlob(request1);
 
-console.log(uploadResult)
+console.log(uploadResult):
 // {
 //   "response": {
 //     "code": {
@@ -97,56 +99,57 @@ console.log(uploadResult)
 ### Transfer progress reporting
 
 ```tsx
-import BlobCourier from "react-native-blob-courier";
+import BlobCourier from 'react-native-blob-courier';
 
 // ...
 
 // Download a file
-const request0 = ...
+const request0 = {
+  // ...
+  onProgress: ((e: BlobProgressEvent) => {
+    console.log(e)
+    // {
+    //  "written": <some_number_of_bytes_written>,
+    //  "total": <some_total_number_of_bytes>
+    // }
+  })
+};
 
-const fetchedResult =
-  await BlobCourier
-    .fetchBlob(request0)
-    .onProgress((e: any) => {
-      console.log(e)
-      // {
-      //  "written": <some_number_of_bytes_written>,
-      //  "total": <some_total_number_of_bytes>
-      // }
-    });
+const fetchedResult = await BlobCourier.fetchBlob(request0);
 
 // ...
 
 // Upload a file
-const request1 = ...
+const request1 = {
+  // ...
+  onProgress: ((e: BlobProgressEvent) => {
+    console.log(e)
+    // {
+    //  "written": <some_number_of_bytes_written>,
+    //  "total": <some_total_number_of_bytes>
+    // }
+  })
+};
 
-const uploadResult =
-  await BlobCourier
-    .uploadBlob(request1)
-    .onProgress((e: any) => {
-      // ...
-    });
+const uploadResult = await BlobCourier.uploadBlob(request1)
 
 // ...
 
-// Set request settings
+// Set progress updater interval
 const request2 = ...
 
 const someResult =
   await BlobCourier
-    .settings({
+    .fetchBlob({
+      ...request2,
       progressIntervalMilliseconds: 1000,
-    })
-    .fetchBlob(request2)
-    .onProgress((e:any) => {
-      // ...
     });
 ```
 
 ### Managed download on Android (not available on iOS)
 
 ```tsx
-import BlobCourier from "react-native-blob-courier";
+import BlobCourier from 'react-native-blob-courier';
 
 // ...
 
@@ -155,12 +158,12 @@ const request = {
   method: 'GET',
   mimeType: 'application/zip',
   url: 'http://ipv4.download.thinkbroadband.com/5MB.zip',
-  useDownloadManager: true // <--- set useDownloadManager to "true"
-} as AndroidBlobFetchRequest; // <--- use AndroidBlobFetchRequest instead of BlobRequest
+  useAndroidDownloadManager: true // <--- set useAndroidDownloadManager to "true"
+};
 
 const fetchResult = await BlobCourier.fetchBlob(request);
 
-console.log(fetchedResult)
+console.log(fetchedResult);
 // {
 //   "data": {
 //     "result": "SUCCESS",
@@ -168,8 +171,120 @@ console.log(fetchedResult)
 //   },
 //   "type":"Managed"
 // }
-
 ```
+
+## Fluent interface
+
+Blob Courier provides a fluent interface, that both prevents you from impossible setting combinations and arguably improves readability.
+
+```tsx
+const req0 = ...
+
+const someResult =
+  await BlobCourier
+    .settings({
+      progressIntervalMilliseconds: 1000,
+    })
+    .onProgress((e: BlobProgressEvent) => {
+      // ...
+    })
+    .useAndroidDownloadManager({
+      description: "Some file description",
+      enableNotification: true,
+      title: "Some title"
+    })
+    .fetchBlob(req0)
+```
+
+## Available methods
+
+### `fetchBlob(input: BlobFetchRequest)`
+
+Required
+
+| **Field**  | **Type** | **Description**                                                     |
+| ---------- | -------- | ------------------------------------------------------------------- |
+| `filename` | `string` | The name the file will have on disk after fetch.                    |
+| `mimeType` | `string` | What is the mime type of the blob being transferred?                |
+| `url`      | `string` | From which url will the blob be fetched?                            |
+
+Optional
+
+| **Field**                   | **Type**                         | **Description**                           | **Default** |
+| ----------------------------| -------------------------------- | ----------------------------------------- | ----------- |
+| `headers`                   | `{ [key: string]: string }`      | Map of headers to send with the request   | `{}`        |
+| `method`                    | `string`                         | Representing the HTTP method              | `GET`       |
+| `onProgress`                | `(e: BlobProgressEvent) => void` | Function handling progress updates        | `() => { }` |
+| `useAndroidDownloadManager` | `boolean`                        | Enable download manager on Android?       | `false`     |
+| `androidDownloadManager`    | `AndroidDownloadManagerSettings` | Settings to be used on download manager   | `{}`        |
+
+Response
+
+| **Field** | **Type**                               | **Description**                                                       |
+| --------- | -------------------------------------- | --------------------------------------------------------------------- |
+| `type`    | `"Managed" \| "Unmanaged"`             | Was the blob downloaded through Android Download Manager, or without? |
+| `data`    | `BlobManagedData \| BlobUnmanagedData` | Either managed or HTTP response data                                  |
+
+### `uploadBlob(input: BlobUploadRequest)`
+
+Required
+
+| **Field**  | **Type** | **Description**                                          |
+| ---------- | ---------| -------------------------------------------------------- |
+| `filePath` | `string` | Path to the file to be uploaded                          |
+| `mimeType` | `string` | Mime type of the blob being transferred                  |
+| `url`      | `string` | Url to upload the blob to                                |
+
+Optional
+
+| **Field**        | **Type**                         | **Description**                           | **Default** |
+| ---------------- | -------------------------------- | ----------------------------------------- | ----------- |
+| `headers`        | `{ [key: string]: string }`      | Map of headers to send with the request   | `{}`        |
+| `method`         | `string`                         | The HTTP method to be used in the request | `POST`      |
+| `onProgress`     | `(e: BlobProgressEvent) => void` | Function handling progress updates        | `() => { }` |
+| `returnResponse` | `boolean`                        | Return the HTTP response body?            | `false`     |
+
+Response
+
+| **Field** | **Type**                     | **Description**   |
+| --------- | ---------------------------- | ----------------- |
+| `response` | `BlobUnmanagedHttpResponse` | The HTTP response |
+
+#### `AndroidDownloadManagerSettings`
+
+| **Field**             | **Type**  | **Description**                              |
+| --------------------- | ----------| -------------------------------------------- |
+| `description?`        | `string`  | Description of the downloaded file           |
+| `enableNotification?` | `boolean` | Display notification when download completes |
+| `title?`              | `string`  | Title to be displayed with the download      |
+
+#### `BlobProgressEvent`
+
+| **Field** | **Type** | **Description**                       |
+| --------- | ---------| ------------------------------------- |
+| `written` | `number` | Number of bytes processed             |
+| `total`   | `number` | Total number of bytes to be processed |
+
+#### `BlobUnmanagedHttpResponse`
+
+| **Field** | **Type**                    | **Description**       |
+| --------- | --------------------------- | --------------------- |
+| `code`    | `number`                    | HTTP status code      |
+| `headers` | `{ [key: string]: string }` | HTTP response headers |
+
+#### `BlobManagedData`
+
+| **Field**          | **Type**                 | **Description**                                     |
+| ------------------ | ------------------------ | --------------------------------------------------- |
+| `absoluteFilePath` | `string`                 | The absolute file path to where the file was stored |
+| `result`           | `"SUCCESS" \| "FAILURE"` | Was the request successful or did it fail?          |
+
+#### `BlobUnmanagedData`
+
+| **Field**          | **Type**                    | **Description**                                     |
+| ------------------ | --------------------------- | --------------------------------------------------- |
+| `absoluteFilePath` | `string`                    | The absolute file path to where the file was stored |
+| `response`         | `BlobUnmanagedHttpResponse` | HTTP response, including headers and status code    |
 
 ## Example app
 
@@ -242,14 +357,14 @@ Add to `Info.plist` of your app:
 
 This library allows you to use the integrated download manager on Android, this option is not available for iOS.
 
-To enable the download manager, simply hand an `AndroidBlobFetchRequest` to `fetchBlob` with the `useDownloadManager`-field set to `true`.
+To enable the download manager, simply hand an `AndroidBlobFetchRequest` to `fetchBlob` with the `useAndroidDownloadManager`-field set to `true`.
 
 ## Shared directories
 
 As this library is focussed on transferring files, it only supports storage to the app's _cache_ directory. To move files from the _cache_ directory to the _Downloads_, or _Documents_ directory, use another library like [@react-native-community/cameraroll](https://github.com/react-native-community/react-native-cameraroll), e.g.:
 
 ```tsx
-import BlobCourier from "react-native-blob-courier";
+import BlobCourier from 'react-native-blob-courier';
 import CameraRoll from '@react-native-community/cameraroll';
 
 // ...
@@ -259,11 +374,11 @@ const request = {
   method: 'GET',
   mimeType: 'image/png',
   url: 'https://www.placecage.com/640/360',
-} as BlobFetchRequest;
+};
 
 const cageResult = await BlobCourier.fetchBlob(request)
 
-const cageLocalPath = (cageResult.data as BlobFilePathData).absoluteFilePath ?? ''
+const cageLocalPath = cageResult.data.absoluteFilePath
 
 CameraRoll.save(cageLocalPath);
 ```

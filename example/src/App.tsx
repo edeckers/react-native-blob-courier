@@ -13,11 +13,10 @@ import {
   Switch,
 } from 'react-native';
 import BlobCourier, {
-  AndroidBlobFetchRequest,
-  BlobFilePathData,
   BlobFetchResponse,
-  BlobUploadRequest,
   BlobUploadResponse,
+  BlobFetchRequest,
+  BlobProgressEvent,
 } from 'react-native-blob-courier';
 
 const DEFAULT_MARGIN = 10;
@@ -123,25 +122,21 @@ interface PIProps {
   total?: number;
 }
 
-const ProgressIndicator = (props: PIProps) => {
-  const progress = props.total ? props.value / props.total : 0;
-
-  return (
-    <>
-      <Progress.Bar
-        animationType={'timing'}
-        indeterminate={props.total === undefined}
-        progress={progress}
-        useNativeDriver={true}
-        width={props.width}
-      />
-      <Text style={styles.progress}>
-        {formatBytes(props.value)}B /{' '}
-        {props.total !== undefined ? formatBytes(props.total) : '?'}B
-      </Text>
-    </>
-  );
-};
+const ProgressIndicator = (props: PIProps) => (
+  <>
+    <Progress.Bar
+      animationType={'timing'}
+      indeterminate={props.total === undefined}
+      progress={props.total ? props.value / props.total : 0}
+      useNativeDriver={true}
+      width={props.width}
+    />
+    <Text style={styles.progress}>
+      {formatBytes(props.value)}B /{' '}
+      {props.total !== undefined ? formatBytes(props.total) : '?'}B
+    </Text>
+  </>
+);
 
 interface UDVProps {
   buttonText: string;
@@ -191,16 +186,16 @@ const UploaderView = (props: UVProps) => {
       const uploadResult = await BlobCourier.settings({
         progressIntervalMilliseconds: DEFAULT_PROGRESS_INTERVAL_MILLISECONDS,
       })
+        .onProgress((e: BlobProgressEvent) => {
+          setReceived(e.written);
+          setExpected(e.total);
+        })
         .uploadBlob({
           filePath: props.fromLocalPath,
           method: 'POST',
           mimeType: 'text/plain',
           returnResponse: true,
           url: props.toUrl,
-        } as BlobUploadRequest)
-        .onProgress((e: any) => {
-          setReceived(parseInt(e.written, 10));
-          setExpected(parseInt(e.total, 10));
         });
 
       props.onFinished(uploadResult);
@@ -228,8 +223,15 @@ interface MDTProps {
 }
 const ManagedDownloadToggle = (props: MDTProps) => (
   <View style={styles.downloadToggle}>
-    <Text>Enable managed</Text>
-    <Switch onValueChange={props.onValueChange} value={props.value} />
+    <Text>
+      Enable managed
+      {Platform.OS !== 'android' ? ' (disabled: Android only)' : ''}
+    </Text>
+    <Switch
+      disabled={Platform.OS !== 'android'}
+      onValueChange={props.onValueChange}
+      value={props.value}
+    />
   </View>
 );
 
@@ -242,7 +244,9 @@ interface DVProps {
 
 const DownloaderView = (props: DVProps) => {
   const [isDownloading, setIsDownloading] = useState(false);
-  const [useDownloadManager, setUseDownloadManager] = useState(false);
+  const [useAndroidDownloadManager, setUseAndroidDownloadManager] = useState(
+    false
+  );
   const [received, setReceived] = useState<number>(0);
   const [expected, setExpected] = useState<number | undefined>(0);
 
@@ -251,25 +255,32 @@ const DownloaderView = (props: DVProps) => {
   const startDownload = async () => {
     setIsDownloading(true);
 
-    try {
-      const fetchedResult = await BlobCourier.settings({
-        progressIntervalMilliseconds: DEFAULT_PROGRESS_INTERVAL_MILLISECONDS,
-      })
-        .fetchBlob({
-          filename: props.filename,
-          method: 'GET',
-          mimeType: props.mimeType ?? 'text/plain',
-          url: props.fromUrl,
-          useDownloadManager: useDownloadManager,
-        } as AndroidBlobFetchRequest)
-        .onProgress((e: any) => {
-          const serializedMaybeTotal = parseInt(e.total, 10);
-          const maybeTotal =
-            serializedMaybeTotal > 0 ? serializedMaybeTotal : undefined;
+    const req0 = {
+      filename: props.filename,
+      method: 'GET',
+      mimeType: 'text/plain',
+      url: props.fromUrl,
+    } as BlobFetchRequest;
 
-          setReceived(parseInt(e.written, 10));
-          setExpected(maybeTotal);
-        });
+    try {
+      const reqSettings = BlobCourier.settings({
+        progressIntervalMilliseconds: DEFAULT_PROGRESS_INTERVAL_MILLISECONDS,
+      }).onProgress((e: BlobProgressEvent) => {
+        const serializedMaybeTotal = e.total;
+        const maybeTotal =
+          serializedMaybeTotal > 0 ? serializedMaybeTotal : undefined;
+
+        setReceived(e.written);
+        setExpected(maybeTotal);
+      });
+
+      const withDownloadManager = useAndroidDownloadManager
+        ? reqSettings.useDownloadManagerOnAndroid({
+            enableNotifications: true,
+          })
+        : reqSettings;
+
+      const fetchedResult = await withDownloadManager.fetchBlob(req0);
 
       props.onFinished(fetchedResult);
     } catch (e) {
@@ -289,8 +300,10 @@ const DownloaderView = (props: DVProps) => {
         to={props.filename}
       />
       <ManagedDownloadToggle
-        onValueChange={() => setUseDownloadManager(!useDownloadManager)}
-        value={useDownloadManager}
+        onValueChange={() =>
+          setUseAndroidDownloadManager(!useAndroidDownloadManager)
+        }
+        value={useAndroidDownloadManager}
       />
     </>
   );
@@ -318,9 +331,7 @@ export const App = () => {
   }, []);
 
   const onDownloadCompleted = (downloadResult: BlobFetchResponse) => {
-    setDownloadedFilePath(
-      (downloadResult.data as BlobFilePathData).absoluteFilePath ?? ''
-    );
+    setDownloadedFilePath(downloadResult.data.absoluteFilePath);
 
     setRoute('upload');
   };

@@ -7,31 +7,57 @@
 export declare interface BlobRequestHeaders {
   readonly headers?: { [key: string]: string };
 }
+
 export declare interface BlobRequestMethod {
   readonly method?: string;
 }
+
 export declare interface BlobRequestMimeType {
   readonly mimeType: string;
 }
+
+export declare interface BlobRequestOnProgress {
+  readonly onProgress?: (e: BlobProgressEvent) => void;
+}
+
 export declare interface BlobRequestUrl {
   readonly url: string;
 }
 
 export declare interface BlobBaseRequest
   extends BlobRequestHeaders,
-    BlobRequestMethod,
     BlobRequestMimeType,
+    BlobRequestOnProgress,
     BlobRequestUrl {}
 
-export declare interface BlobFetchRequest extends BlobBaseRequest {
+export declare interface BlobFetchRequest
+  extends BlobBaseRequest,
+    BlobRequestMethod {
   readonly filename: string;
 }
 
-export declare interface AndroidBlobFetchRequest extends BlobFetchRequest {
-  readonly useDownloadManager: boolean;
+export declare interface AndroidDownloadManagerToggle {
+  readonly useAndroidDownloadManager?: boolean;
 }
 
-export declare interface BlobUploadRequest extends BlobBaseRequest {
+export declare interface AndroidDownloadManagerSettings {
+  readonly description?: string;
+  readonly enableNotifications?: boolean;
+  readonly title?: string;
+}
+
+export declare interface AndroidDownloadManager {
+  readonly androidDownloadManager?: AndroidDownloadManagerSettings;
+}
+
+export declare interface BlobProgressEvent {
+  readonly total: number;
+  readonly written: number;
+}
+
+export declare interface BlobUploadRequest
+  extends BlobBaseRequest,
+    BlobRequestMethod {
   readonly filePath: string;
   readonly returnResponse?: boolean;
 }
@@ -41,7 +67,7 @@ export declare interface BlobRequestTask {
 }
 
 export declare interface BlobRequestSettings {
-  progressIntervalMilliseconds: number;
+  readonly progressIntervalMilliseconds?: number;
 }
 
 export declare interface BlobUnmanagedHttpResponse {
