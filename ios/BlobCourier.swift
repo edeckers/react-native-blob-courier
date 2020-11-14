@@ -15,7 +15,7 @@ open class BlobCourier: NSObject {
   static let parameterFilePath = "filePath"
   static let parameterHeaders = "headers"
   static let parameterMethod = "method"
-  static let parameterProgressInterval = "settings.progressIntervalMilliseconds"
+  static let parameterProgressInterval = "progressIntervalMilliseconds"
   static let parameterReturnResponse = "returnResponse"
   static let parameterTaskId = "taskId"
   static let parameterUrl = "url"

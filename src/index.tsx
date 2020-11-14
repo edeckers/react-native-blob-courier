@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 import { NativeEventEmitter, NativeModules } from 'react-native';
+import { BLOB_FETCH_FALLBACK_PARAMETERS } from './Consts';
+import './Extensions';
 import type {
   BlobFetchRequest,
   BlobRequestSettings,
@@ -17,35 +19,39 @@ import type {
   AndroidDownloadManager,
   BlobProgressEvent,
 } from './ExposedTypes';
-import { createTaskId, prefixDict } from './Utils';
+import { uuid } from './Utils';
 
 type BlobFetchInput = BlobFetchRequest &
-  BlobRequestTask &
   BlobRequestSettings &
   AndroidDownloadManagerToggle &
   AndroidDownloadManager;
 
-type BlobUploadInput = BlobUploadRequest &
-  BlobRequestTask &
-  BlobRequestSettings;
+type BlobFetchNativeInput = BlobFetchInput & BlobRequestTask;
+
+type BlobUploadInput = BlobUploadRequest & BlobRequestSettings;
+
+type BlobUploadNativeInput = BlobUploadInput & BlobRequestTask;
 
 type BlobCourierType = {
-  fetchBlob(input: BlobFetchInput): Promise<BlobFetchResponse>;
+  fetchBlob(input: BlobFetchNativeInput): Promise<BlobFetchResponse>;
   uploadBlob(input: BlobUploadInput): Promise<BlobUploadResponse>;
 };
 
 const { BlobCourier, BlobCourierEventEmitter } = NativeModules;
 
-const EventEmitter = new NativeEventEmitter(BlobCourierEventEmitter);
+const EventEmitter = BlobCourierEventEmitter // Module is null during testing
+  ? new NativeEventEmitter(BlobCourierEventEmitter)
+  : undefined;
 
-const BLOB_COURIER_PROGRESS = 'BlobCourierProgress';
-const SETTINGS_PREFIX = 'settings';
+const BLOB_COURIER_PROGRESS_EVENT_NAME = 'BlobCourierProgress';
+
+export const createTaskId = () => `rnbc-req-${uuid()}`;
 
 const addProgressListener = (
   taskId: string,
   fn: (e: BlobProgressEvent) => void
 ) =>
-  EventEmitter.addListener(BLOB_COURIER_PROGRESS, (e: any) => {
+  EventEmitter?.addListener(BLOB_COURIER_PROGRESS_EVENT_NAME, (e: any) => {
     const parsedEvent: BlobProgressEvent = {
       written: parseInt(e.written, 10),
       total: parseInt(e.total, 10),
@@ -56,22 +62,19 @@ const addProgressListener = (
     }
   });
 
-const prefixSettings = (settings: BlobRequestSettings) =>
-  prefixDict(settings, SETTINGS_PREFIX);
-
-const sanitizeSettingsData = <T extends BlobFetchInput | BlobUploadInput>(
+const sanitizeSettingsData = <T extends BlobFetchNativeInput | BlobUploadInput>(
   input: Readonly<T>
 ) => {
   const { progressIntervalMilliseconds } = input;
 
-  return prefixSettings({
+  return {
     progressIntervalMilliseconds,
-  });
+  };
 };
 
-const sanitizeFetchData = <T extends BlobFetchInput>(
+const sanitizeFetchData = <T extends BlobFetchNativeInput>(
   input: Readonly<T>
-): BlobFetchInput => {
+): BlobFetchNativeInput => {
   const { filename, headers, method, mimeType, url } = input;
 
   const { taskId } = input;
@@ -82,28 +85,32 @@ const sanitizeFetchData = <T extends BlobFetchInput>(
 
   const request = {
     filename,
-    headers,
-    method,
     mimeType,
     url,
   };
 
+  const optionalRequestParameters = {
+    headers,
+    method,
+  }.intersect(BLOB_FETCH_FALLBACK_PARAMETERS);
+
   const androidDownloadManagerSettings = {
     useAndroidDownloadManager,
     androidDownloadManager,
-  };
+  }.intersect(BLOB_FETCH_FALLBACK_PARAMETERS);
 
   return {
     ...settings,
     ...androidDownloadManagerSettings,
+    ...optionalRequestParameters,
     ...request,
     taskId,
   };
 };
 
-const sanitizeUploadData = <T extends BlobUploadInput>(
+const sanitizeUploadData = <T extends BlobUploadNativeInput>(
   input: Readonly<T>
-): BlobUploadInput => {
+): BlobUploadNativeInput => {
   const { filePath, headers, method, mimeType, returnResponse, url } = input;
 
   const { taskId } = input;
@@ -142,14 +149,14 @@ const wrapEmitter = async <T,>(
   return result;
 };
 
-const fetchBlob = <T extends BlobFetchInput>(input: Readonly<T>) =>
+const fetchBlob = <T extends BlobFetchNativeInput>(input: Readonly<T>) =>
   wrapEmitter(
     input.taskId,
     () => (BlobCourier as BlobCourierType).fetchBlob(sanitizeFetchData(input)),
     input.onProgress
   );
 
-const uploadBlob = <T extends BlobUploadInput>(input: Readonly<T>) =>
+const uploadBlob = <T extends BlobUploadNativeInput>(input: Readonly<T>) =>
   wrapEmitter(
     input.taskId,
     () =>
@@ -231,11 +238,13 @@ const settings = (requestSettings: BlobRequestSettings) => {
 };
 
 export default {
-  fetchBlob,
+  fetchBlob: (input: BlobFetchInput) =>
+    fetchBlob({ ...input, taskId: createTaskId() }),
   onProgress: (fn: (e: BlobProgressEvent) => void) =>
     onProgress(createTaskId(), fn),
   settings,
-  uploadBlob,
+  uploadBlob: (input: BlobUploadInput) =>
+    uploadBlob({ ...input, taskId: createTaskId() }),
   useDownloadManagerOnAndroid: (
     downloadManagerSettings: AndroidDownloadManagerSettings
   ) => useDownloadManagerOnAndroid(createTaskId(), downloadManagerSettings),
