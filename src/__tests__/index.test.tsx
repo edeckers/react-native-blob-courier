@@ -1,3 +1,9 @@
+/**
+ * Copyright (c) Ely Deckers.
+ *
+ * This source code is licensed under the MPL-2.0 license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
 import { uuid } from '../Utils';
 import { BLOB_FETCH_FALLBACK_PARAMETERS } from '../Consts';
 import BlobCourier from '../index';
