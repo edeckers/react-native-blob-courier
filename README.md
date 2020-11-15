@@ -188,7 +188,7 @@ const someResult =
     .onProgress((e: BlobProgressEvent) => {
       // ...
     })
-    .useAndroidDownloadManager({
+    .useDownloadManagerOnAndroid({
       description: "Some file description",
       enableNotification: true,
       title: "Some title"
@@ -357,7 +357,7 @@ Add to `Info.plist` of your app:
 
 This library allows you to use the integrated download manager on Android, this option is not available for iOS.
 
-To enable the download manager, simply hand an `AndroidBlobFetchRequest` to `fetchBlob` with the `useAndroidDownloadManager`-field set to `true`.
+To enable the download manager, simply set the request's `useAndroidDownloadManager` to `true` when passing it to `fetchBlob`, or call the `useDownloadManagerOnAndroid` method when using the fluent interface.
 
 ## Shared directories
 

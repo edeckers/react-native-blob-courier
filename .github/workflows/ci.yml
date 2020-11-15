@@ -11,6 +11,16 @@ jobs:
           node-version: '12'
       - run: cd example && yarn
       - run: yarn
+      - run: yarn test
+      - uses: EnricoMi/publish-unit-test-result-action@v1.4
+        with:
+          check_name: "Tests: TypeScript"
+          comment_title: TypeScript Test Report
+          deduplicate_classes_by_file_name: false
+          files: output/typescript-test-output.xml
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          hide_comments: all but latest
+          report_individual_runs: true
   build-android:
     needs: install-and-test
     runs-on: ubuntu-latest
@@ -35,13 +45,15 @@ jobs:
       #     api-level: 29
       #     working-directory: './android' 
       #     script: ./gradlew connectedAndroidTest
-      - uses: EnricoMi/publish-unit-test-result-action@v1.3
+      - uses: EnricoMi/publish-unit-test-result-action@v1.4
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
           check_name: "Tests: Android"
-          files: android/build/test-results/**/*.xml
-          report_individual_runs: true
+          comment_title: Android Test Report
           deduplicate_classes_by_file_name: false
+          files: android/build/test-results/**/*.xml
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          hide_comments: all but latest
+          report_individual_runs: true
   build-ios:
     needs: install-and-test
     runs-on: macOS-latest
