@@ -11,6 +11,14 @@ jobs:
           node-version: '12'
       - run: cd example && yarn
       - run: yarn
+      - run: yarn test
+      - uses: EnricoMi/publish-unit-test-result-action@v1.3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          check_name: "Tests: TypeScript"
+          files: output/typescript-test-output.xml
+          report_individual_runs: true
+          deduplicate_classes_by_file_name: false
   build-android:
     needs: install-and-test
     runs-on: ubuntu-latest
