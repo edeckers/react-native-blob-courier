@@ -23,6 +23,7 @@ import type {
   BlobProgressEvent,
 } from './ExposedTypes';
 import { uuid } from './Utils';
+import { dict } from './Extensions';
 
 type BlobFetchInput = BlobFetchRequest &
   BlobRequestSettings &
@@ -42,9 +43,7 @@ type BlobCourierType = {
 
 const { BlobCourier, BlobCourierEventEmitter } = NativeModules;
 
-const EventEmitter = BlobCourierEventEmitter // Module is null during testing
-  ? new NativeEventEmitter(BlobCourierEventEmitter)
-  : undefined;
+const EventEmitter = new NativeEventEmitter(BlobCourierEventEmitter);
 
 const BLOB_COURIER_PROGRESS_EVENT_NAME = 'BlobCourierProgress';
 
@@ -54,7 +53,7 @@ const addProgressListener = (
   taskId: string,
   fn: (e: BlobProgressEvent) => void
 ) =>
-  EventEmitter?.addListener(BLOB_COURIER_PROGRESS_EVENT_NAME, (e: any) => {
+  EventEmitter.addListener(BLOB_COURIER_PROGRESS_EVENT_NAME, (e: any) => {
     const parsedEvent: BlobProgressEvent = {
       written: parseInt(e.written, 10),
       total: parseInt(e.total, 10),
@@ -92,15 +91,15 @@ const sanitizeFetchData = <T extends BlobFetchNativeInput>(
     url,
   };
 
-  const optionalRequestParameters = {
+  const optionalRequestParameters = dict({
     headers,
     method,
-  }.intersect(BLOB_FETCH_FALLBACK_PARAMETERS);
+  }).intersect(BLOB_FETCH_FALLBACK_PARAMETERS);
 
-  const androidDownloadManagerSettings = {
+  const androidDownloadManagerSettings = dict({
     useAndroidDownloadManager,
     androidDownloadManager,
-  }.intersect(BLOB_FETCH_FALLBACK_PARAMETERS);
+  }).intersect(BLOB_FETCH_FALLBACK_PARAMETERS);
 
   return {
     ...settings,
@@ -126,11 +125,11 @@ const sanitizeUploadData = <T extends BlobUploadNativeInput>(
     url,
   };
 
-  const optionalRequestParameters = {
+  const optionalRequestParameters = dict({
     headers,
     method,
     returnResponse,
-  }.intersect(BLOB_UPLOAD_FALLBACK_PARAMETERS);
+  }).intersect(BLOB_UPLOAD_FALLBACK_PARAMETERS);
 
   return {
     ...settings,
