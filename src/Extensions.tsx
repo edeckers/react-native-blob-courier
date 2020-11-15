@@ -6,22 +6,12 @@
  */
 import { intersectObjects, prefixDict } from './Utils';
 
-declare global {
-  interface Object {
-    /**
-     * @param secondary contains fallback values for `undefined`
-     * @returns an intersection of both objects
-     */
-    intersect(this: Object, secondary: Object): Object;
-    prefixKeys(this: Object, prefix: string): Object;
-  }
-}
-
-// eslint-disable-next-line no-extend-native
-Object.prototype.intersect = function (this: Object, secondary: Object) {
-  return intersectObjects(this, secondary);
-};
-// eslint-disable-next-line no-extend-native
-Object.prototype.prefixKeys = function (this: Object, prefix: string) {
-  return prefixDict(this, prefix);
-};
+export const dict = (o: { [key: string]: any }) => ({
+  /**
+   * @param secondary contains fallback values for `undefined`
+   * @returns an intersection of both objects
+   */
+  intersect: (secondary: { [key: string]: any }) =>
+    intersectObjects(o, secondary),
+  prefixKeys: (prefix: string) => prefixDict(o, prefix),
+});

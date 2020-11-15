@@ -9,6 +9,7 @@ import {
   BLOB_FETCH_FALLBACK_PARAMETERS,
   BLOB_UPLOAD_FALLBACK_PARAMETERS,
 } from '../Consts';
+import { dict } from '../Extensions';
 import BlobCourier from '../index';
 import { NativeModules, NativeEventEmitter } from 'react-native';
 const { BlobCourier: BCTest } = NativeModules;
@@ -167,7 +168,7 @@ describe('Given a regular fetch request', () => {
         BCTest.fetchBlob
       );
 
-      const overriddenValues = calledWithParameters.intersect(
+      const overriddenValues = dict(calledWithParameters).intersect(
         BLOB_FETCH_FALLBACK_PARAMETERS
       );
 
@@ -205,7 +206,7 @@ describe('Given a fluent fetch request', () => {
         };
 
         expect(expectedParameters).toMatchObject(
-          calledWithParameters.intersect(expectedParameters)
+          dict(calledWithParameters).intersect(expectedParameters)
         );
         verifyPropertyExistsAndIsDefined(calledWithParameters, 'taskId');
       }
@@ -237,7 +238,7 @@ describe('Given a fluent fetch request', () => {
         };
 
         expect(expectedParameters).toMatchObject(
-          calledWithParameters.intersect(expectedParameters)
+          dict(calledWithParameters).intersect(expectedParameters)
         );
         verifyPropertyExistsAndIsDefined(calledWithParameters, 'taskId');
       }
@@ -313,7 +314,7 @@ describe('Given a regular upload request', () => {
         BCTest.uploadBlob
       );
 
-      const overriddenValues = calledWithParameters.intersect(
+      const overriddenValues = dict(calledWithParameters).intersect(
         BLOB_UPLOAD_FALLBACK_PARAMETERS
       );
 
@@ -351,7 +352,7 @@ describe('Given a fluent upload request', () => {
         };
 
         expect(expectedParameters).toMatchObject(
-          calledWithParameters.intersect(expectedParameters)
+          dict(calledWithParameters).intersect(expectedParameters)
         );
         verifyPropertyExistsAndIsDefined(calledWithParameters, 'taskId');
       }
