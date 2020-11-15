@@ -5,7 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 import { NativeEventEmitter, NativeModules } from 'react-native';
-import { BLOB_FETCH_FALLBACK_PARAMETERS } from './Consts';
+import {
+  BLOB_FETCH_FALLBACK_PARAMETERS,
+  BLOB_UPLOAD_FALLBACK_PARAMETERS,
+} from './Consts';
 import './Extensions';
 import type {
   BlobFetchRequest,
@@ -119,15 +122,19 @@ const sanitizeUploadData = <T extends BlobUploadNativeInput>(
 
   const request = {
     filePath,
-    headers,
-    method,
     mimeType,
-    returnResponse,
     url,
   };
 
+  const optionalRequestParameters = {
+    headers,
+    method,
+    returnResponse,
+  }.intersect(BLOB_UPLOAD_FALLBACK_PARAMETERS);
+
   return {
     ...settings,
+    ...optionalRequestParameters,
     ...request,
     taskId,
   };
