@@ -10,3 +10,9 @@ export const BLOB_FETCH_FALLBACK_PARAMETERS = {
   method: 'GET',
   useAndroidDownloadManager: false,
 };
+
+export const BLOB_UPLOAD_FALLBACK_PARAMETERS = {
+  headers: {},
+  method: 'POST',
+  returnResponse: false,
+};

@@ -5,7 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 import { uuid } from '../Utils';
-import { BLOB_FETCH_FALLBACK_PARAMETERS } from '../Consts';
+import {
+  BLOB_FETCH_FALLBACK_PARAMETERS,
+  BLOB_UPLOAD_FALLBACK_PARAMETERS,
+} from '../Consts';
 import BlobCourier from '../index';
 import { NativeModules, NativeEventEmitter } from 'react-native';
 const { BlobCourier: BCTest } = NativeModules;
@@ -25,11 +28,17 @@ jest.mock('react-native', () => {
     /* noop */
   });
 
+  const uploadBlob = jest.fn(() => {
+    /* noop */
+  });
+
   class BlobCourierMock {
     public fetchBlob = fetchBlob;
+    public uploadBlob = uploadBlob;
   }
 
   BlobCourierMock.prototype.fetchBlob = fetchBlob;
+  BlobCourierMock.prototype.uploadBlob = uploadBlob;
 
   return {
     NativeEventEmitter: NativeEventEmitterMock,
@@ -44,6 +53,12 @@ jest.mock('react-native', () => {
 
 const DEFAULT_FETCH_REQUEST = {
   filename: 'some_filename.ext',
+  mimeType: 'plain/text',
+  url: 'https://github.com/edeckers/react-native-blob-courier',
+};
+
+const DEFAULT_UPLOAD_REQUEST = {
+  filePath: 'some_filename.ext',
   mimeType: 'plain/text',
   url: 'https://github.com/edeckers/react-native-blob-courier',
 };
@@ -100,6 +115,7 @@ const testAsync = (name: string, testableFunction: () => Promise<void>) => {
 
 beforeEach(() => {
   BCTest.fetchBlob.mockReset();
+  BCTest.uploadBlob.mockReset();
 });
 
 describe('Given a regular fetch request', () => {
@@ -238,6 +254,120 @@ describe('Given a fluent fetch request', () => {
 
         const calledWithParameters = getLastMockCallFirstParameter(
           BCTest.fetchBlob
+        );
+
+        expect(NativeEventEmitter.prototype.addListener).toHaveBeenCalled();
+
+        verifyPropertyExistsAndIsDefined(calledWithParameters, 'taskId');
+      }
+    );
+  });
+});
+
+describe('Given a regular upload request', () => {
+  testAsync(
+    'The native module is called with the same parameters',
+    async () => {
+      await BlobCourier.uploadBlob(DEFAULT_UPLOAD_REQUEST);
+
+      expect(BCTest.uploadBlob).toHaveBeenCalledWith(
+        expect.objectContaining(DEFAULT_UPLOAD_REQUEST)
+      );
+
+      const calledWithParameters = getLastMockCallFirstParameter(
+        BCTest.uploadBlob
+      );
+
+      verifyPropertyExistsAndIsDefined(calledWithParameters, 'taskId');
+    }
+  );
+
+  describe('And no optional parameters are provided', () => {
+    testAsync(
+      'The native module is called with fallback parameters',
+      async () => {
+        await BlobCourier.uploadBlob(DEFAULT_UPLOAD_REQUEST);
+
+        const calledWithParameters = getLastMockCallFirstParameter(
+          BCTest.uploadBlob
+        );
+
+        expect(calledWithParameters).toMatchObject(
+          BLOB_UPLOAD_FALLBACK_PARAMETERS
+        );
+        verifyPropertyExistsAndIsDefined(calledWithParameters, 'taskId');
+      }
+    );
+  });
+
+  describe('And all optional parameters are provided', () => {
+    testAsync('The provided values override the fallbacks', async () => {
+      const randomAndInvertedRequest = createRandomObjectFromDefault({
+        ...DEFAULT_UPLOAD_REQUEST,
+        ...BLOB_UPLOAD_FALLBACK_PARAMETERS,
+      });
+
+      await BlobCourier.uploadBlob(randomAndInvertedRequest);
+
+      const calledWithParameters = getLastMockCallFirstParameter(
+        BCTest.uploadBlob
+      );
+
+      const overriddenValues = calledWithParameters.intersect(
+        BLOB_UPLOAD_FALLBACK_PARAMETERS
+      );
+
+      expect(Object.keys(overriddenValues).sort()).toEqual(
+        Object.keys(BLOB_UPLOAD_FALLBACK_PARAMETERS).sort()
+      );
+
+      Object.keys(overriddenValues).forEach((k) => {
+        expect((overriddenValues as any)[k]).not.toEqual(
+          (BLOB_UPLOAD_FALLBACK_PARAMETERS as any)[k]
+        );
+      });
+      verifyPropertyExistsAndIsDefined(calledWithParameters, 'taskId');
+    });
+  });
+});
+
+describe('Given a fluent upload request', () => {
+  describe('And settings are provided', () => {
+    testAsync(
+      'The native module is called with all required values and the provided settings',
+      async () => {
+        const progressIntervalMilliseconds = Math.random();
+        await BlobCourier.settings({
+          progressIntervalMilliseconds,
+        }).uploadBlob(DEFAULT_UPLOAD_REQUEST);
+
+        const calledWithParameters = getLastMockCallFirstParameter(
+          BCTest.uploadBlob
+        );
+
+        const expectedParameters = {
+          ...DEFAULT_FETCH_REQUEST,
+          progressIntervalMilliseconds,
+        };
+
+        expect(expectedParameters).toMatchObject(
+          calledWithParameters.intersect(expectedParameters)
+        );
+        verifyPropertyExistsAndIsDefined(calledWithParameters, 'taskId');
+      }
+    );
+  });
+
+  describe('And a progress updater callback are provided', () => {
+    testAsync(
+      'The native module is called with all required values and the provided callback',
+      async () => {
+        await BlobCourier.onProgress(() => {
+          /* noop */
+        }).uploadBlob(DEFAULT_UPLOAD_REQUEST);
+
+        const calledWithParameters = getLastMockCallFirstParameter(
+          BCTest.uploadBlob
         );
 
         expect(NativeEventEmitter.prototype.addListener).toHaveBeenCalled();
