@@ -12,10 +12,12 @@ import {
 import { dict } from '../Extensions';
 import { NativeModules } from 'react-native';
 import BlobCourier from '../index';
-const { BlobCourier: BCTest, BlobCourierEventEmitter } = NativeModules;
+const {
+  BlobCourier: BlobCourierNative,
+  BlobCourierEventEmitter,
+} = NativeModules;
 
 jest.mock('react-native/Libraries/BatchedBridge/NativeModules', () => ({
-  PlatformConstants: {},
   BlobCourier: {
     fetchBlob: jest.fn(),
     uploadBlob: jest.fn(),
@@ -24,6 +26,7 @@ jest.mock('react-native/Libraries/BatchedBridge/NativeModules', () => ({
     addListener: jest.fn(),
     removeListeners: jest.fn(),
   },
+  PlatformConstants: {},
 }));
 
 const DEFAULT_FETCH_REQUEST = {
@@ -89,8 +92,27 @@ const testAsync = (name: string, testableFunction: () => Promise<void>) => {
 };
 
 beforeEach(() => {
-  BCTest.fetchBlob.mockReset();
-  BCTest.uploadBlob.mockReset();
+  BlobCourierNative.fetchBlob.mockReset();
+  BlobCourierNative.uploadBlob.mockReset();
+});
+
+describe('Given fallback parameters are provided through a constant', () => {
+  test('Fetch constant should not accidentally be changed', () => {
+    expect(BLOB_FETCH_FALLBACK_PARAMETERS).toStrictEqual({
+      androidDownloadManager: {},
+      headers: {},
+      method: 'GET',
+      useAndroidDownloadManager: false,
+    });
+  });
+
+  test('Upload constant should not accidentally be changed', () => {
+    expect(BLOB_UPLOAD_FALLBACK_PARAMETERS).toStrictEqual({
+      headers: {},
+      method: 'POST',
+      returnResponse: false,
+    });
+  });
 });
 
 describe('Given a regular fetch request', () => {
@@ -99,12 +121,12 @@ describe('Given a regular fetch request', () => {
     async () => {
       await BlobCourier.fetchBlob(DEFAULT_FETCH_REQUEST);
 
-      expect(BCTest.fetchBlob).toHaveBeenCalledWith(
+      expect(BlobCourierNative.fetchBlob).toHaveBeenCalledWith(
         expect.objectContaining(DEFAULT_FETCH_REQUEST)
       );
 
       const calledWithParameters = getLastMockCallFirstParameter(
-        BCTest.fetchBlob
+        BlobCourierNative.fetchBlob
       );
 
       verifyPropertyExistsAndIsDefined(calledWithParameters, 'taskId');
@@ -118,7 +140,7 @@ describe('Given a regular fetch request', () => {
         await BlobCourier.fetchBlob(DEFAULT_FETCH_REQUEST);
 
         const calledWithParameters = getLastMockCallFirstParameter(
-          BCTest.fetchBlob
+          BlobCourierNative.fetchBlob
         );
 
         expect(calledWithParameters).toMatchObject(
@@ -139,7 +161,7 @@ describe('Given a regular fetch request', () => {
       await BlobCourier.fetchBlob(randomAndInvertedRequest);
 
       const calledWithParameters = getLastMockCallFirstParameter(
-        BCTest.fetchBlob
+        BlobCourierNative.fetchBlob
       );
 
       const overriddenValues = dict(calledWithParameters).intersect(
@@ -171,7 +193,7 @@ describe('Given a fluent fetch request', () => {
         }).fetchBlob(DEFAULT_FETCH_REQUEST);
 
         const calledWithParameters = getLastMockCallFirstParameter(
-          BCTest.fetchBlob
+          BlobCourierNative.fetchBlob
         );
 
         const expectedParameters = {
@@ -185,6 +207,42 @@ describe('Given a fluent fetch request', () => {
         verifyPropertyExistsAndIsDefined(calledWithParameters, 'taskId');
       }
     );
+  });
+
+  describe('And a progress updater callback is provided', () => {
+    testAsync(
+      'The native module is called with all required values and the provided callback',
+      async () => {
+        const progressIntervalMilliseconds = Math.random();
+        await BlobCourier.settings({ progressIntervalMilliseconds })
+          .onProgress(() => {
+            /* noop */
+          })
+          .fetchBlob(DEFAULT_FETCH_REQUEST);
+
+        const calledWithParameters = getLastMockCallFirstParameter(
+          BlobCourierNative.fetchBlob
+        );
+
+        expect(BlobCourierEventEmitter.addListener).toHaveBeenCalled();
+
+        verifyPropertyExistsAndIsDefined(calledWithParameters, 'taskId');
+      }
+    );
+
+    testAsync('Progress updates are handled', async () => {
+      await BlobCourier.onProgress(() => {
+        /* noop */
+      }).fetchBlob(DEFAULT_FETCH_REQUEST);
+
+      const calledWithParameters = getLastMockCallFirstParameter(
+        BlobCourierNative.fetchBlob
+      );
+
+      expect(BlobCourierEventEmitter.addListener).toHaveBeenCalled();
+
+      verifyPropertyExistsAndIsDefined(calledWithParameters, 'taskId');
+    });
   });
 
   describe('And Android Download Manager settings are provided', () => {
@@ -202,7 +260,7 @@ describe('Given a fluent fetch request', () => {
         ).fetchBlob(DEFAULT_FETCH_REQUEST);
 
         const calledWithParameters = getLastMockCallFirstParameter(
-          BCTest.fetchBlob
+          BlobCourierNative.fetchBlob
         );
 
         const expectedParameters = {
@@ -218,25 +276,6 @@ describe('Given a fluent fetch request', () => {
       }
     );
   });
-
-  describe('And a progress updater callback are provided', () => {
-    testAsync(
-      'The native module is called with all required values and the provided callback',
-      async () => {
-        await BlobCourier.onProgress(() => {
-          /* noop */
-        }).fetchBlob(DEFAULT_FETCH_REQUEST);
-
-        const calledWithParameters = getLastMockCallFirstParameter(
-          BCTest.fetchBlob
-        );
-
-        expect(BlobCourierEventEmitter.addListener).toHaveBeenCalled();
-
-        verifyPropertyExistsAndIsDefined(calledWithParameters, 'taskId');
-      }
-    );
-  });
 });
 
 describe('Given a regular upload request', () => {
@@ -245,12 +284,12 @@ describe('Given a regular upload request', () => {
     async () => {
       await BlobCourier.uploadBlob(DEFAULT_UPLOAD_REQUEST);
 
-      expect(BCTest.uploadBlob).toHaveBeenCalledWith(
+      expect(BlobCourierNative.uploadBlob).toHaveBeenCalledWith(
         expect.objectContaining(DEFAULT_UPLOAD_REQUEST)
       );
 
       const calledWithParameters = getLastMockCallFirstParameter(
-        BCTest.uploadBlob
+        BlobCourierNative.uploadBlob
       );
 
       verifyPropertyExistsAndIsDefined(calledWithParameters, 'taskId');
@@ -264,7 +303,7 @@ describe('Given a regular upload request', () => {
         await BlobCourier.uploadBlob(DEFAULT_UPLOAD_REQUEST);
 
         const calledWithParameters = getLastMockCallFirstParameter(
-          BCTest.uploadBlob
+          BlobCourierNative.uploadBlob
         );
 
         expect(calledWithParameters).toMatchObject(
@@ -285,7 +324,7 @@ describe('Given a regular upload request', () => {
       await BlobCourier.uploadBlob(randomAndInvertedRequest);
 
       const calledWithParameters = getLastMockCallFirstParameter(
-        BCTest.uploadBlob
+        BlobCourierNative.uploadBlob
       );
 
       const overriddenValues = dict(calledWithParameters).intersect(
@@ -317,7 +356,7 @@ describe('Given a fluent upload request', () => {
         }).uploadBlob(DEFAULT_UPLOAD_REQUEST);
 
         const calledWithParameters = getLastMockCallFirstParameter(
-          BCTest.uploadBlob
+          BlobCourierNative.uploadBlob
         );
 
         const expectedParameters = {
@@ -333,7 +372,7 @@ describe('Given a fluent upload request', () => {
     );
   });
 
-  describe('And a progress updater callback are provided', () => {
+  describe('And a progress updater callback is provided', () => {
     testAsync(
       'The native module is called with all required values and the provided callback',
       async () => {
@@ -342,7 +381,7 @@ describe('Given a fluent upload request', () => {
         }).uploadBlob(DEFAULT_UPLOAD_REQUEST);
 
         const calledWithParameters = getLastMockCallFirstParameter(
-          BCTest.uploadBlob
+          BlobCourierNative.uploadBlob
         );
 
         expect(BlobCourierEventEmitter.addListener).toHaveBeenCalled();
@@ -350,5 +389,19 @@ describe('Given a fluent upload request', () => {
         verifyPropertyExistsAndIsDefined(calledWithParameters, 'taskId');
       }
     );
+
+    testAsync('Progress updates are handled', async () => {
+      await BlobCourier.onProgress(() => {
+        /* noop */
+      }).uploadBlob(DEFAULT_UPLOAD_REQUEST);
+
+      const calledWithParameters = getLastMockCallFirstParameter(
+        BlobCourierNative.uploadBlob
+      );
+
+      expect(BlobCourierEventEmitter.addListener).toHaveBeenCalled();
+
+      verifyPropertyExistsAndIsDefined(calledWithParameters, 'taskId');
+    });
   });
 });
