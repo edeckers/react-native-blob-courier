@@ -10,47 +10,21 @@ import {
   BLOB_UPLOAD_FALLBACK_PARAMETERS,
 } from '../Consts';
 import { dict } from '../Extensions';
+import { NativeModules } from 'react-native';
 import BlobCourier from '../index';
-import { NativeModules, NativeEventEmitter } from 'react-native';
-const { BlobCourier: BCTest } = NativeModules;
+const { BlobCourier: BCTest, BlobCourierEventEmitter } = NativeModules;
 
-jest.mock('react-native', () => {
-  const addListener = jest.fn(() => {
-    /* noop */
-  });
-
-  class NativeEventEmitterMock {
-    public addListener = addListener;
-  }
-
-  NativeEventEmitterMock.prototype.addListener = addListener;
-
-  const fetchBlob = jest.fn(() => {
-    /* noop */
-  });
-
-  const uploadBlob = jest.fn(() => {
-    /* noop */
-  });
-
-  class BlobCourierMock {
-    public fetchBlob = fetchBlob;
-    public uploadBlob = uploadBlob;
-  }
-
-  BlobCourierMock.prototype.fetchBlob = fetchBlob;
-  BlobCourierMock.prototype.uploadBlob = uploadBlob;
-
-  return {
-    NativeEventEmitter: NativeEventEmitterMock,
-    NativeModules: {
-      BlobCourier: new BlobCourierMock(),
-      BlobCourierEventEmitter: jest.mock(
-        'react-native/Libraries/vendor/emitter/EventSubscriptionVendor'
-      ),
-    },
-  };
-});
+jest.mock('react-native/Libraries/BatchedBridge/NativeModules', () => ({
+  PlatformConstants: {},
+  BlobCourier: {
+    fetchBlob: jest.fn(),
+    uploadBlob: jest.fn(),
+  },
+  BlobCourierEventEmitter: {
+    addListener: jest.fn(),
+    removeListeners: jest.fn(),
+  },
+}));
 
 const DEFAULT_FETCH_REQUEST = {
   filename: 'some_filename.ext',
@@ -257,7 +231,7 @@ describe('Given a fluent fetch request', () => {
           BCTest.fetchBlob
         );
 
-        expect(NativeEventEmitter.prototype.addListener).toHaveBeenCalled();
+        expect(BlobCourierEventEmitter.addListener).toHaveBeenCalled();
 
         verifyPropertyExistsAndIsDefined(calledWithParameters, 'taskId');
       }
@@ -371,7 +345,7 @@ describe('Given a fluent upload request', () => {
           BCTest.uploadBlob
         );
 
-        expect(NativeEventEmitter.prototype.addListener).toHaveBeenCalled();
+        expect(BlobCourierEventEmitter.addListener).toHaveBeenCalled();
 
         verifyPropertyExistsAndIsDefined(calledWithParameters, 'taskId');
       }
