@@ -6,6 +6,7 @@
  */
 import { NativeEventEmitter, NativeModules } from 'react-native';
 import {
+  BLOB_COURIER_PROGRESS_EVENT_NAME,
   BLOB_FETCH_FALLBACK_PARAMETERS,
   BLOB_UPLOAD_FALLBACK_PARAMETERS,
 } from './Consts';
@@ -44,8 +45,6 @@ type BlobCourierType = {
 const { BlobCourier, BlobCourierEventEmitter } = NativeModules;
 
 const EventEmitter = new NativeEventEmitter(BlobCourierEventEmitter);
-
-const BLOB_COURIER_PROGRESS_EVENT_NAME = 'BlobCourierProgress';
 
 export const createTaskId = () => `rnbc-req-${uuid()}`;
 
@@ -233,7 +232,7 @@ const settings = (requestSettings: BlobRequestSettings) => {
         taskId,
       }),
     useDownloadManagerOnAndroid: (
-      downloadManagerSettings: AndroidDownloadManagerSettings
+      downloadManagerSettings?: AndroidDownloadManagerSettings
     ) =>
       useDownloadManagerOnAndroid(
         taskId,

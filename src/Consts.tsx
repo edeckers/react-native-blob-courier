@@ -16,3 +16,5 @@ export const BLOB_UPLOAD_FALLBACK_PARAMETERS = {
   method: 'POST',
   returnResponse: false,
 };
+
+export const BLOB_COURIER_PROGRESS_EVENT_NAME = 'BlobCourierProgress';

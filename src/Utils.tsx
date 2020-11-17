@@ -10,15 +10,6 @@ const createUuidPart = () => Math.random().toString(36).substring(2, 15);
 
 export const uuid = () => `${createUuidPart()}${createUuidPart()}`;
 
-export const prefixDict = (dict: { [key: string]: any }, prefix: string) =>
-  Object.keys(dict).reduce(
-    (p, k) => ({
-      ...p,
-      [`${prefix}.${k}`]: (dict as any)[k],
-    }),
-    {}
-  ) as { [key: string]: any };
-
 export const intersectObjects = (
   primary: { [key: string]: any },
   secondary: { [key: string]: any }
