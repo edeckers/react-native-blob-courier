@@ -25,6 +25,7 @@ import type {
 } from './ExposedTypes';
 import { uuid } from './Utils';
 import { dict } from './Extensions';
+import type { BlobRequestOnProgress } from 'lib/typescript/src';
 
 type BlobFetchInput = BlobFetchRequest &
   BlobRequestSettings &
@@ -191,17 +192,16 @@ const onProgress = (
   useDownloadManagerOnAndroid: (
     downloadManagerSettings?: AndroidDownloadManagerSettings
   ) =>
-    useDownloadManagerOnAndroid(
-      createTaskId(),
-      downloadManagerSettings,
-      requestSettings
-    ),
+    useDownloadManagerOnAndroid(taskId, downloadManagerSettings, {
+      ...requestSettings,
+      onProgress: fn,
+    }),
 });
 
 const useDownloadManagerOnAndroid = (
   taskId: string,
   downloadManagerSettings?: AndroidDownloadManagerSettings,
-  requestSettings?: BlobRequestSettings
+  requestSettings?: BlobRequestSettings & BlobRequestOnProgress
 ) => ({
   fetchBlob: (input: BlobFetchRequest) =>
     fetchBlob({
@@ -213,41 +213,37 @@ const useDownloadManagerOnAndroid = (
     }),
 });
 
-const settings = (requestSettings: BlobRequestSettings) => {
-  const taskId = createTaskId();
-
-  return {
-    fetchBlob: (input: BlobFetchRequest) =>
-      fetchBlob({
-        ...input,
-        ...requestSettings,
-        taskId,
-      }),
-    onProgress: (fn: (e: BlobProgressEvent) => void) =>
-      onProgress(taskId, fn, requestSettings),
-    uploadBlob: (input: BlobUploadRequest) =>
-      uploadBlob({
-        ...input,
-        ...requestSettings,
-        taskId,
-      }),
-    useDownloadManagerOnAndroid: (
-      downloadManagerSettings?: AndroidDownloadManagerSettings
-    ) =>
-      useDownloadManagerOnAndroid(
-        taskId,
-        downloadManagerSettings,
-        requestSettings
-      ),
-  };
-};
+const settings = (taskId: string, requestSettings: BlobRequestSettings) => ({
+  fetchBlob: (input: BlobFetchRequest) =>
+    fetchBlob({
+      ...input,
+      ...requestSettings,
+      taskId,
+    }),
+  onProgress: (fn: (e: BlobProgressEvent) => void) =>
+    onProgress(taskId, fn, requestSettings),
+  uploadBlob: (input: BlobUploadRequest) =>
+    uploadBlob({
+      ...input,
+      ...requestSettings,
+      taskId,
+    }),
+  useDownloadManagerOnAndroid: (
+    downloadManagerSettings?: AndroidDownloadManagerSettings
+  ) =>
+    useDownloadManagerOnAndroid(
+      taskId,
+      downloadManagerSettings,
+      requestSettings
+    ),
+});
 
 export default {
   fetchBlob: (input: BlobFetchInput) =>
     fetchBlob({ ...input, taskId: createTaskId() }),
   onProgress: (fn: (e: BlobProgressEvent) => void) =>
     onProgress(createTaskId(), fn),
-  settings,
+  settings: (input: BlobRequestSettings) => settings(createTaskId(), input),
   uploadBlob: (input: BlobUploadInput) =>
     uploadBlob({ ...input, taskId: createTaskId() }),
   useDownloadManagerOnAndroid: (
