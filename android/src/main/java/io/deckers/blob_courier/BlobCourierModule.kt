@@ -290,12 +290,15 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
         )
       }
 
-    ManagedProgressUpdater.start(reactContext, downloadId, taskId, progressInterval.toLong())
+    val progressUpdater =
+      ManagedProgressUpdater(reactContext, taskId, downloadId, progressInterval.toLong())
+
+    progressUpdater.start()
 
     reactContext.registerReceiver(
-      ManagedDownloadReceiver(downloadId, absoluteFilePath, promise),
+      ManagedDownloadReceiver(downloadId, absoluteFilePath, progressUpdater, promise),
       IntentFilter(
-        DownloadManager.ACTION_DOWNLOAD_COMPLETE
+        DownloadManager.ACTION_DOWNLOAD_COMPLETE,
       )
     )
   }
