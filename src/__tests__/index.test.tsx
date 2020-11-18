@@ -105,6 +105,7 @@ jest.mock('react-native/Libraries/BatchedBridge/NativeModules', () => ({
 beforeEach(() => {
   BlobCourierNative.fetchBlob.mockReset();
   BlobCourierNative.uploadBlob.mockReset();
+  (BlobCourierEventEmitter as any).addListener.mockReset();
 });
 
 describe('Given fallback parameters are provided through a constant', () => {
@@ -224,12 +225,9 @@ describe('Given a fluent fetch request', () => {
     testAsync(
       'The native module is called with all required values and the provided callback',
       async () => {
-        const progressIntervalMilliseconds = Math.random();
-        await BlobCourier.settings({ progressIntervalMilliseconds })
-          .onProgress(() => {
-            /* noop */
-          })
-          .fetchBlob(DEFAULT_FETCH_REQUEST);
+        await BlobCourier.onProgress(() => {
+          /* noop */
+        }).fetchBlob(DEFAULT_FETCH_REQUEST);
 
         expect(BlobCourierEventEmitter.addListener).toHaveBeenCalled();
       }
@@ -239,14 +237,14 @@ describe('Given a fluent fetch request', () => {
       testAsync(
         'The native module is called with all required values and the provided download manager settings',
         async () => {
-          const androidSettings = {
+          const androidDownloadManager = {
             description: uuid(),
             enableNotifications: true,
             title: uuid(),
           };
 
           await BlobCourier.onProgress(() => {})
-            .useDownloadManagerOnAndroid(androidSettings)
+            .useDownloadManagerOnAndroid(androidDownloadManager)
             .fetchBlob(DEFAULT_FETCH_REQUEST);
 
           const calledWithParameters = getLastMockCallFirstParameter(
@@ -256,12 +254,15 @@ describe('Given a fluent fetch request', () => {
           const expectedParameters = {
             ...DEFAULT_FETCH_REQUEST,
             useAndroidDownloadManager: true,
-            androidSettings,
+            androidDownloadManager,
           };
 
-          expect(expectedParameters).toMatchObject(
-            dict(calledWithParameters).intersect(expectedParameters)
+          const parameterIntersection = dict(calledWithParameters).intersect(
+            expectedParameters
           );
+
+          expect(expectedParameters).toEqual(parameterIntersection);
+          expect(BlobCourierEventEmitter.addListener).toHaveBeenCalled();
           verifyPropertyExistsAndIsDefined(calledWithParameters, 'taskId');
         }
       );
@@ -272,14 +273,14 @@ describe('Given a fluent fetch request', () => {
     testAsync(
       'The native module is called with all required values and the provided download manager settings',
       async () => {
-        const androidSettings = {
+        const androidDownloadManager = {
           description: uuid(),
           enableNotifications: true,
           title: uuid(),
         };
 
         await BlobCourier.useDownloadManagerOnAndroid(
-          androidSettings
+          androidDownloadManager
         ).fetchBlob(DEFAULT_FETCH_REQUEST);
 
         const calledWithParameters = getLastMockCallFirstParameter(
@@ -289,12 +290,14 @@ describe('Given a fluent fetch request', () => {
         const expectedParameters = {
           ...DEFAULT_FETCH_REQUEST,
           useAndroidDownloadManager: true,
-          androidSettings,
+          androidDownloadManager,
         };
 
-        expect(expectedParameters).toMatchObject(
-          dict(calledWithParameters).intersect(expectedParameters)
+        const parameterIntersection = dict(calledWithParameters).intersect(
+          expectedParameters
         );
+
+        expect(expectedParameters).toEqual(parameterIntersection);
         verifyPropertyExistsAndIsDefined(calledWithParameters, 'taskId');
       }
     );

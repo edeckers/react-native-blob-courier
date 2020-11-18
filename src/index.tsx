@@ -22,10 +22,10 @@ import type {
   AndroidDownloadManagerToggle,
   AndroidDownloadManager,
   BlobProgressEvent,
+  BlobRequestOnProgress,
 } from './ExposedTypes';
 import { uuid } from './Utils';
 import { dict } from './Extensions';
-import type { BlobRequestOnProgress } from 'lib/typescript/src';
 
 type BlobFetchInput = BlobFetchRequest &
   BlobRequestSettings &
