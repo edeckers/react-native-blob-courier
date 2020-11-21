@@ -447,7 +447,7 @@ describe('Given a fluent upload request', () => {
       testAsync(
         'The native module is called with all required values and the provided download manager settings',
         async () => {
-          const androidSettings = {
+          const downloadManager = {
             description: uuid(),
             enableNotifications: true,
             title: uuid(),
@@ -457,7 +457,7 @@ describe('Given a fluent upload request', () => {
           await BlobCourier.settings({
             progressIntervalMilliseconds,
           })
-            .useDownloadManagerOnAndroid()
+            .useDownloadManagerOnAndroid(downloadManager)
             .fetchBlob(DEFAULT_FETCH_REQUEST);
 
           const calledWithParameters = getLastMockCallFirstParameter(
@@ -466,11 +466,13 @@ describe('Given a fluent upload request', () => {
 
           const expectedParameters = {
             ...DEFAULT_FETCH_REQUEST,
-            useAndroidDownloadManager: true,
-            androidSettings,
+            android: {
+              useDownloadManager: true,
+              downloadManager,
+            },
           };
 
-          expect(expectedParameters).toMatchObject(
+          expect(expectedParameters).toEqual(
             dict(calledWithParameters).intersect(expectedParameters)
           );
           verifyPropertyExistsAndIsDefined(calledWithParameters, 'taskId');
