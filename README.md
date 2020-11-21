@@ -154,11 +154,13 @@ import BlobCourier from 'react-native-blob-courier';
 // ...
 
 const request = {
+  android: {
+    useDownloadManager: true // <--- set useDownloadManager to "true"
+  },
   filename: '5MB.zip',
   method: 'GET',
   mimeType: 'application/zip',
   url: 'http://ipv4.download.thinkbroadband.com/5MB.zip',
-  useAndroidDownloadManager: true // <--- set useAndroidDownloadManager to "true"
 };
 
 const fetchResult = await BlobCourier.fetchBlob(request);
@@ -363,7 +365,7 @@ Add to `Info.plist` of your app:
 
 This library allows you to use the integrated download manager on Android, this option is not available for iOS.
 
-To enable the download manager, simply set the request's `useAndroidDownloadManager` to `true` when passing it to `fetchBlob`, or call the `useDownloadManagerOnAndroid` method when using the fluent interface.
+To enable the download manager, simply set the request's `useDownloadManager` property of field `android` to `true` when passing it to `fetchBlob`, or call the `useDownloadManagerOnAndroid` method when using the fluent interface.
 
 ## Shared directories
 
