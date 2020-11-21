@@ -37,7 +37,7 @@ export declare interface BlobFetchRequest
 }
 
 export declare interface AndroidDownloadManagerToggle {
-  readonly useAndroidDownloadManager?: boolean;
+  readonly useDownloadManager?: boolean;
 }
 
 export declare interface AndroidDownloadManagerSettings {
@@ -47,7 +47,11 @@ export declare interface AndroidDownloadManagerSettings {
 }
 
 export declare interface AndroidDownloadManager {
-  readonly androidDownloadManager?: AndroidDownloadManagerSettings;
+  readonly downloadManager?: AndroidDownloadManagerSettings;
+}
+
+export declare interface AndroidSettings {
+  readonly android?: AndroidDownloadManagerToggle & AndroidDownloadManager;
 }
 
 export declare interface BlobProgressEvent {

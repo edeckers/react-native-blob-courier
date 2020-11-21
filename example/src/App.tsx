@@ -285,7 +285,7 @@ const DownloaderView = (props: DVProps) => {
 
       setTimeout(
         () => props.onFinished(fetchedResult),
-        2 * DEFAULT_PROGRESS_INTERVAL_MILLISECONDS // Allow progress indicator to finish / prevent 'glitchy' ui
+        DEFAULT_PROGRESS_INTERVAL_MILLISECONDS * 2 // Allow progress indicator to finish / prevent 'glitchy' ui
       );
     } catch (e) {
       console.warn(e);

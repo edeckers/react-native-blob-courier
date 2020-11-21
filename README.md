@@ -210,13 +210,12 @@ Required
 
 Optional
 
-| **Field**                   | **Type**                         | **Description**                           | **Default** |
-| ----------------------------| -------------------------------- | ----------------------------------------- | ----------- |
-| `headers`                   | `{ [key: string]: string }`      | Map of headers to send with the request   | `{}`        |
-| `method`                    | `string`                         | Representing the HTTP method              | `GET`       |
-| `onProgress`                | `(e: BlobProgressEvent) => void` | Function handling progress updates        | `() => { }` |
-| `useAndroidDownloadManager` | `boolean`                        | Enable download manager on Android?       | `false`     |
-| `androidDownloadManager`    | `AndroidDownloadManagerSettings` | Settings to be used on download manager   | `{}`        |
+| **Field**    | **Type**                         | **Description**                           | **Default** |
+| ------------ | -------------------------------- | ----------------------------------------- | ---------------------------------------------------- |
+| `android`    | `AndroidSettings`                | Settings to be used on Android            | `{ useDownloadManager: false, downloadManager: {} }` |
+| `headers`    | `{ [key: string]: string }`      | Map of headers to send with the request   | `{}`                                                 |
+| `method`     | `string`                         | Representing the HTTP method              | `GET`                                                |
+| `onProgress` | `(e: BlobProgressEvent) => void` | Function handling progress updates        | `() => { }`                                          |
 
 Response
 
@@ -257,6 +256,13 @@ Response
 | `description?`        | `string`  | Description of the downloaded file           |
 | `enableNotification?` | `boolean` | Display notification when download completes |
 | `title?`              | `string`  | Title to be displayed with the download      |
+
+#### `AndroidSettings`
+
+| **Field**            | **Type**                         | **Description**                         |
+| -------------------- | -------------------------------- | --------------------------------------- |
+| `downloadManager`    | `AndroidDownloadManagerSettings` | Settings to be used on download manager |
+| `useDownloadManager` | `boolean`                        | Enable download manager on Android?     |
 
 #### `BlobProgressEvent`
 

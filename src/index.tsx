@@ -19,18 +19,14 @@ import type {
   BlobUploadRequest,
   BlobUploadResponse,
   AndroidDownloadManagerSettings,
-  AndroidDownloadManagerToggle,
-  AndroidDownloadManager,
   BlobProgressEvent,
   BlobRequestOnProgress,
+  AndroidSettings,
 } from './ExposedTypes';
 import { uuid } from './Utils';
 import { dict } from './Extensions';
 
-type BlobFetchInput = BlobFetchRequest &
-  BlobRequestSettings &
-  AndroidDownloadManagerToggle &
-  AndroidDownloadManager;
+type BlobFetchInput = BlobFetchRequest & BlobRequestSettings & AndroidSettings;
 
 type BlobFetchNativeInput = BlobFetchInput & BlobRequestTask;
 
@@ -77,11 +73,7 @@ const sanitizeSettingsData = <T extends BlobFetchNativeInput | BlobUploadInput>(
 const sanitizeFetchData = <T extends BlobFetchNativeInput>(
   input: Readonly<T>
 ): BlobFetchNativeInput => {
-  const { filename, headers, method, mimeType, url } = input;
-
-  const { taskId } = input;
-
-  const { useAndroidDownloadManager, androidDownloadManager } = input;
+  const { android, filename, headers, method, mimeType, taskId, url } = input;
 
   const settings = sanitizeSettingsData(input);
 
@@ -92,18 +84,13 @@ const sanitizeFetchData = <T extends BlobFetchNativeInput>(
   };
 
   const optionalRequestParameters = dict({
+    ...settings,
+    android,
     headers,
     method,
-  }).intersect(BLOB_FETCH_FALLBACK_PARAMETERS);
-
-  const androidDownloadManagerSettings = dict({
-    useAndroidDownloadManager,
-    androidDownloadManager,
-  }).intersect(BLOB_FETCH_FALLBACK_PARAMETERS);
+  }).fallback(BLOB_FETCH_FALLBACK_PARAMETERS);
 
   return {
-    ...settings,
-    ...androidDownloadManagerSettings,
     ...optionalRequestParameters,
     ...request,
     taskId,
@@ -136,7 +123,7 @@ const sanitizeUploadData = <T extends BlobUploadNativeInput>(
     headers,
     method,
     returnResponse,
-  }).intersect(BLOB_UPLOAD_FALLBACK_PARAMETERS);
+  }).fallback(BLOB_UPLOAD_FALLBACK_PARAMETERS);
 
   return {
     ...settings,
@@ -214,8 +201,10 @@ const useDownloadManagerOnAndroid = (
     fetchBlob({
       ...input,
       ...requestSettings,
-      useAndroidDownloadManager: true,
-      androidDownloadManager: downloadManagerSettings,
+      android: {
+        downloadManager: downloadManagerSettings,
+        useDownloadManager: true,
+      },
       taskId,
     }),
 });

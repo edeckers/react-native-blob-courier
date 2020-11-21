@@ -4,11 +4,22 @@
  * This source code is licensed under the MPL-2.0 license found in the
  * LICENSE file in the root directory of this source tree.
  */
+export const ANDROID_DOWNLOAD_MANAGER_FALLBACK_PARAMETERS = {
+  description: undefined,
+  enableNotifications: true,
+  title: undefined,
+};
+
+export const DEFAULT_PROGRESS_UPDATE_INTERVAL_MILLISECONDS = 200;
+
 export const BLOB_FETCH_FALLBACK_PARAMETERS = {
-  androidDownloadManager: {},
+  android: {
+    downloadManager: ANDROID_DOWNLOAD_MANAGER_FALLBACK_PARAMETERS,
+    useDownloadManager: false,
+  },
   headers: {},
   method: 'GET',
-  useAndroidDownloadManager: false,
+  progressIntervalMilliseconds: DEFAULT_PROGRESS_UPDATE_INTERVAL_MILLISECONDS,
 };
 
 export const BLOB_UPLOAD_FALLBACK_PARAMETERS = {

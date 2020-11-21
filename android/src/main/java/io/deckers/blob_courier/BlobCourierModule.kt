@@ -33,9 +33,10 @@ import okio.Source
 
 private const val ERROR_MISSING_REQUIRED_PARAMETER = "ERROR_MISSING_REQUIRED_PARAMETER"
 
-private const val PARAMETER_FILENAME = "filename"
 private const val PARAMETER_ABSOLUTE_FILE_PATH = "absoluteFilePath"
-private const val PARAMETER_DOWNLOAD_MANAGER_SETTINGS = "androidDownloadManager"
+private const val PARAMETER_ANDROID_SETTINGS = "android"
+private const val PARAMETER_DOWNLOAD_MANAGER_SETTINGS = "downloadManager"
+private const val PARAMETER_FILENAME = "filename"
 private const val PARAMETER_HEADERS = "headers"
 private const val PARAMETER_METHOD = "method"
 private const val PARAMETER_MIME_TYPE = "mimeType"
@@ -43,7 +44,7 @@ private const val PARAMETER_RETURN_RESPONSE = "returnResponse"
 private const val PARAMETER_SETTINGS_PROGRESS_INTERVAL = "progressIntervalMilliseconds"
 private const val PARAMETER_TASK_ID = "taskId"
 private const val PARAMETER_URL = "url"
-private const val PARAMETER_USE_DOWNLOAD_MANAGER = "useAndroidDownloadManager"
+private const val PARAMETER_USE_DOWNLOAD_MANAGER = "useDownloadManager"
 
 private const val DOWNLOAD_MANAGER_PARAMETER_DESCRIPTION = "description"
 private const val DOWNLOAD_MANAGER_PARAMETER_ENABLE_NOTIFICATIONS = "enableNotifications"
@@ -324,14 +325,14 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
       }
       .build()
 
-    val httpCient =
+    val httpClient =
       DEFAULT_OK_HTTP_CLIENT.newBuilder()
         .addInterceptor(createDownloadProgressInterceptor(reactContext, taskId, progressInterval))
         .build()
 
     try {
 
-      httpCient.newCall(request).execute().use { response ->
+      httpClient.newCall(request).execute().use { response ->
         thread {
           response.body()?.source().use { source ->
             Okio.buffer(Okio.sink(absoluteFilePath)).use { sink ->
@@ -363,22 +364,24 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
     val maybeTaskId = input.getString(PARAMETER_TASK_ID)
     val maybeFilename = input.getString(PARAMETER_FILENAME)
     val maybeUrl = input.getString(PARAMETER_URL)
-    val useDownloadManager =
-      input.hasKey(PARAMETER_USE_DOWNLOAD_MANAGER) &&
-        input.getBoolean(PARAMETER_USE_DOWNLOAD_MANAGER)
 
     val method = input.getString(PARAMETER_METHOD) ?: DEFAULT_FETCH_METHOD
     val mimeType = input.getString(PARAMETER_MIME_TYPE) ?: DEFAULT_MIME_TYPE
 
-    val downloadManagerSettings =
-      if (input.hasKey(PARAMETER_DOWNLOAD_MANAGER_SETTINGS))
-        input.getMap(PARAMETER_DOWNLOAD_MANAGER_SETTINGS)?.toHashMap() ?: emptyMap<String, Any>()
-      else emptyMap<String, Any>()
+    val maybeAndroidSettings =
+      if (input.hasKey(PARAMETER_ANDROID_SETTINGS))
+        input.getMap(PARAMETER_ANDROID_SETTINGS)
+      else null
+
+    val downloadManagerSettings = maybeAndroidSettings?.let {
+      it.getMap(PARAMETER_DOWNLOAD_MANAGER_SETTINGS)?.toHashMap()
+    } ?: emptyMap<String, Any>()
+
+    val useDownloadManager =
+      maybeAndroidSettings?.getBoolean(PARAMETER_USE_DOWNLOAD_MANAGER) ?: false
 
     val unfilteredHeaders =
-      if (input.hasKey(PARAMETER_HEADERS))
-        input.getMap(PARAMETER_HEADERS)?.toHashMap() ?: emptyMap<String, Any>()
-      else emptyMap<String, Any>()
+      input.getMap(PARAMETER_HEADERS)?.toHashMap() ?: emptyMap<String, Any>()
 
     val headers = filterHeaders(unfilteredHeaders)
 

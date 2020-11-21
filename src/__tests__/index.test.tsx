@@ -6,9 +6,11 @@
  */
 import { uuid } from '../Utils';
 import {
+  ANDROID_DOWNLOAD_MANAGER_FALLBACK_PARAMETERS,
   BLOB_COURIER_PROGRESS_EVENT_NAME,
   BLOB_FETCH_FALLBACK_PARAMETERS,
   BLOB_UPLOAD_FALLBACK_PARAMETERS,
+  DEFAULT_PROGRESS_UPDATE_INTERVAL_MILLISECONDS,
 } from '../Consts';
 import { dict } from '../Extensions';
 import { NativeEventEmitter, NativeModules } from 'react-native';
@@ -53,20 +55,30 @@ const getLastMockCallFirstParameter = (m: any) =>
   getLastMockCallParameters(m)[0];
 
 const generateValue = (type: string) =>
-  type in RANDOM_VALUE_GENERATORS ? RANDOM_VALUE_GENERATORS[type]() : undefined;
+  type in RANDOM_VALUE_GENERATORS ? RANDOM_VALUE_GENERATORS[type]() : uuid();
 
-const createRandomObjectFromDefault = function <T>(o: T) {
-  return Object.keys(o).reduce(
+const createRandomObjectFromDefault = <T,>(o: T): T =>
+  Object.keys(o).reduce(
     (p, c) => ({
       ...p,
-      [c]:
-        typeof (o as any)[c] === 'boolean'
-          ? !(o as any)[c]
-          : generateValue(typeof (o as any)[c]),
+      [c]: (() => {
+        const m = (o as any)[c];
+
+        if (typeof m === 'boolean') {
+          return !m;
+        }
+
+        if (typeof m === 'object') {
+          return createRandomObjectFromDefault(
+            Object.keys(m).length === 0 ? generateValue('object') : m
+          );
+        }
+
+        return generateValue(typeof m);
+      })(),
     }),
     {}
   ) as T;
-};
 
 const verifyPropertyExistsAndIsDefined = (o: any, key: string) => {
   expect(o).toHaveProperty(key);
@@ -111,10 +123,13 @@ beforeEach(() => {
 describe('Given fallback parameters are provided through a constant', () => {
   test('Fetch constant should not accidentally be changed', () => {
     expect(BLOB_FETCH_FALLBACK_PARAMETERS).toStrictEqual({
-      androidDownloadManager: {},
+      android: {
+        downloadManager: ANDROID_DOWNLOAD_MANAGER_FALLBACK_PARAMETERS,
+        useDownloadManager: false,
+      },
       headers: {},
       method: 'GET',
-      useAndroidDownloadManager: false,
+      progressIntervalMilliseconds: DEFAULT_PROGRESS_UPDATE_INTERVAL_MILLISECONDS,
     });
   });
 
@@ -191,6 +206,30 @@ describe('Given a regular fetch request', () => {
       });
       verifyPropertyExistsAndIsDefined(calledWithParameters, 'taskId');
     });
+
+    testAsync('Fallback overrides provided `undefined` value', async () => {
+      const randomAndInvertedRequest = createRandomObjectFromDefault({
+        ...DEFAULT_FETCH_REQUEST,
+        ...BLOB_FETCH_FALLBACK_PARAMETERS,
+      });
+
+      await BlobCourier.fetchBlob(randomAndInvertedRequest);
+
+      const calledWithParameters = getLastMockCallFirstParameter(
+        BlobCourierNative.fetchBlob
+      );
+
+      const calledWithSomeUndefinedParameter = {
+        ...calledWithParameters,
+        headers: undefined,
+      };
+
+      const overriddenValues = dict(calledWithSomeUndefinedParameter).intersect(
+        BLOB_FETCH_FALLBACK_PARAMETERS
+      );
+
+      expect(overriddenValues.headers).toBeDefined();
+    });
   });
 });
 
@@ -199,7 +238,8 @@ describe('Given a fluent fetch request', () => {
     testAsync(
       'The native module is called with all required values and the provided settings',
       async () => {
-        const progressIntervalMilliseconds = Math.random();
+        const progressIntervalMilliseconds = DEFAULT_PROGRESS_UPDATE_INTERVAL_MILLISECONDS;
+
         await BlobCourier.settings({
           progressIntervalMilliseconds,
         }).fetchBlob(DEFAULT_FETCH_REQUEST);
@@ -225,9 +265,11 @@ describe('Given a fluent fetch request', () => {
     testAsync(
       'The native module is called with all required values and the provided callback',
       async () => {
-        await BlobCourier.onProgress(() => {
-          /* noop */
-        }).fetchBlob(DEFAULT_FETCH_REQUEST);
+        await BlobCourier.settings({})
+          .onProgress(() => {
+            /* noop */
+          })
+          .fetchBlob(DEFAULT_FETCH_REQUEST);
 
         expect(BlobCourierEventEmitter.addListener).toHaveBeenCalled();
       }
@@ -237,14 +279,14 @@ describe('Given a fluent fetch request', () => {
       testAsync(
         'The native module is called with all required values and the provided download manager settings',
         async () => {
-          const androidDownloadManager = {
+          const downloadManager = {
             description: uuid(),
             enableNotifications: true,
             title: uuid(),
           };
 
           await BlobCourier.onProgress(() => {})
-            .useDownloadManagerOnAndroid(androidDownloadManager)
+            .useDownloadManagerOnAndroid(downloadManager)
             .fetchBlob(DEFAULT_FETCH_REQUEST);
 
           const calledWithParameters = getLastMockCallFirstParameter(
@@ -253,8 +295,10 @@ describe('Given a fluent fetch request', () => {
 
           const expectedParameters = {
             ...DEFAULT_FETCH_REQUEST,
-            useAndroidDownloadManager: true,
-            androidDownloadManager,
+            android: {
+              useDownloadManager: true,
+              downloadManager,
+            },
           };
 
           const parameterIntersection = dict(calledWithParameters).intersect(
@@ -273,14 +317,14 @@ describe('Given a fluent fetch request', () => {
     testAsync(
       'The native module is called with all required values and the provided download manager settings',
       async () => {
-        const androidDownloadManager = {
+        const downloadManager = {
           description: uuid(),
           enableNotifications: true,
           title: uuid(),
         };
 
         await BlobCourier.useDownloadManagerOnAndroid(
-          androidDownloadManager
+          downloadManager
         ).fetchBlob(DEFAULT_FETCH_REQUEST);
 
         const calledWithParameters = getLastMockCallFirstParameter(
@@ -289,8 +333,10 @@ describe('Given a fluent fetch request', () => {
 
         const expectedParameters = {
           ...DEFAULT_FETCH_REQUEST,
-          useAndroidDownloadManager: true,
-          androidDownloadManager,
+          android: {
+            useDownloadManager: true,
+            downloadManager,
+          },
         };
 
         const parameterIntersection = dict(calledWithParameters).intersect(
