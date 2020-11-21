@@ -33,9 +33,10 @@ import okio.Source
 
 private const val ERROR_MISSING_REQUIRED_PARAMETER = "ERROR_MISSING_REQUIRED_PARAMETER"
 
+private const val PARAMETER_ABSOLUTE_FILE_PATH = "absoluteFilePath"
+private const val PARAMETER_ANDROID_SETTINGS = "android"
+private const val PARAMETER_DOWNLOAD_MANAGER_SETTINGS = "downloadManager"
 private const val PARAMETER_FILENAME = "filename"
-private const val PARAMETER_FILE_PATH = "filePath"
-private const val PARAMETER_DOWNLOAD_MANAGER_SETTINGS = "androidDownloadManager"
 private const val PARAMETER_HEADERS = "headers"
 private const val PARAMETER_METHOD = "method"
 private const val PARAMETER_MIME_TYPE = "mimeType"
@@ -43,7 +44,7 @@ private const val PARAMETER_RETURN_RESPONSE = "returnResponse"
 private const val PARAMETER_SETTINGS_PROGRESS_INTERVAL = "progressIntervalMilliseconds"
 private const val PARAMETER_TASK_ID = "taskId"
 private const val PARAMETER_URL = "url"
-private const val PARAMETER_USE_DOWNLOAD_MANAGER = "useAndroidDownloadManager"
+private const val PARAMETER_USE_DOWNLOAD_MANAGER = "useDownloadManager"
 
 private const val DOWNLOAD_MANAGER_PARAMETER_DESCRIPTION = "description"
 private const val DOWNLOAD_MANAGER_PARAMETER_ENABLE_NOTIFICATIONS = "enableNotifications"
@@ -185,25 +186,20 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
 
   private fun uploadBlobFromValidatedParameters(input: ReadableMap, promise: Promise) {
     val maybeTaskId = input.getString(PARAMETER_TASK_ID)
-    val maybeFilePath = input.getString(PARAMETER_FILE_PATH)
+    val maybeFilePath = input.getString(PARAMETER_ABSOLUTE_FILE_PATH)
     val maybeUrl = input.getString(PARAMETER_URL)
     val method = input.getString(PARAMETER_METHOD) ?: DEFAULT_UPLOAD_METHOD
     val mimeType = input.getString(PARAMETER_MIME_TYPE) ?: DEFAULT_MIME_TYPE
 
     val unfilteredHeaders =
-      if (input.hasKey(PARAMETER_HEADERS))
-        input.getMap(PARAMETER_HEADERS)?.toHashMap() ?: emptyMap<String, Any>()
-      else emptyMap<String, Any>()
+      input.getMap(PARAMETER_HEADERS)?.toHashMap() ?: emptyMap<String, Any>()
 
     val headers = filterHeaders(unfilteredHeaders)
 
-    val returnResponse =
-      input.hasKey(PARAMETER_RETURN_RESPONSE) && input.getBoolean(PARAMETER_RETURN_RESPONSE)
+    val returnResponse = input.getBoolean(PARAMETER_RETURN_RESPONSE)
 
     val progressInterval =
-      if (input.hasKey(PARAMETER_SETTINGS_PROGRESS_INTERVAL))
-        input.getInt(PARAMETER_SETTINGS_PROGRESS_INTERVAL)
-      else DEFAULT_PROGRESS_TIMEOUT_MILLISECONDS
+      getMapInt(input, PARAMETER_SETTINGS_PROGRESS_INTERVAL, DEFAULT_PROGRESS_TIMEOUT_MILLISECONDS)
 
     if (maybeTaskId.isNullOrEmpty()) {
       processUnexpectedEmptyValue(promise, PARAMETER_TASK_ID)
@@ -211,7 +207,7 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
     }
 
     if (maybeFilePath.isNullOrEmpty()) {
-      processUnexpectedEmptyValue(promise, PARAMETER_FILE_PATH)
+      processUnexpectedEmptyValue(promise, PARAMETER_ABSOLUTE_FILE_PATH)
 
       return
     }
@@ -290,12 +286,15 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
         )
       }
 
-    ManagedProgressUpdater.start(reactContext, downloadId, taskId, progressInterval.toLong())
+    val progressUpdater =
+      ManagedProgressUpdater(reactContext, taskId, downloadId, progressInterval.toLong())
+
+    progressUpdater.start()
 
     reactContext.registerReceiver(
-      ManagedDownloadReceiver(downloadId, absoluteFilePath, promise),
+      ManagedDownloadReceiver(downloadId, absoluteFilePath, progressUpdater, promise),
       IntentFilter(
-        DownloadManager.ACTION_DOWNLOAD_COMPLETE
+        DownloadManager.ACTION_DOWNLOAD_COMPLETE,
       )
     )
   }
@@ -321,14 +320,14 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
       }
       .build()
 
-    val httpCient =
+    val httpClient =
       DEFAULT_OK_HTTP_CLIENT.newBuilder()
         .addInterceptor(createDownloadProgressInterceptor(reactContext, taskId, progressInterval))
         .build()
 
     try {
 
-      httpCient.newCall(request).execute().use { response ->
+      httpClient.newCall(request).execute().use { response ->
         thread {
           response.body()?.source().use { source ->
             Okio.buffer(Okio.sink(absoluteFilePath)).use { sink ->
@@ -356,33 +355,34 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
     }
   }
 
+  @Suppress("SameParameterValue")
+  private fun getMapInt(input: ReadableMap, field: String, fallback: Int): Int =
+    if (input.hasKey(field)) input.getInt(field) else fallback
+
   private fun fetchBlobFromValidatedParameters(input: ReadableMap, promise: Promise) {
     val maybeTaskId = input.getString(PARAMETER_TASK_ID)
     val maybeFilename = input.getString(PARAMETER_FILENAME)
     val maybeUrl = input.getString(PARAMETER_URL)
-    val useDownloadManager =
-      input.hasKey(PARAMETER_USE_DOWNLOAD_MANAGER) &&
-        input.getBoolean(PARAMETER_USE_DOWNLOAD_MANAGER)
 
     val method = input.getString(PARAMETER_METHOD) ?: DEFAULT_FETCH_METHOD
     val mimeType = input.getString(PARAMETER_MIME_TYPE) ?: DEFAULT_MIME_TYPE
 
-    val downloadManagerSettings =
-      if (input.hasKey(PARAMETER_DOWNLOAD_MANAGER_SETTINGS))
-        input.getMap(PARAMETER_DOWNLOAD_MANAGER_SETTINGS)?.toHashMap() ?: emptyMap<String, Any>()
-      else emptyMap<String, Any>()
+    val maybeAndroidSettings = input.getMap(PARAMETER_ANDROID_SETTINGS)
+
+    val downloadManagerSettings = maybeAndroidSettings?.let {
+      it.getMap(PARAMETER_DOWNLOAD_MANAGER_SETTINGS)?.toHashMap()
+    } ?: emptyMap<String, Any>()
+
+    val useDownloadManager =
+      maybeAndroidSettings?.getBoolean(PARAMETER_USE_DOWNLOAD_MANAGER) ?: false
 
     val unfilteredHeaders =
-      if (input.hasKey(PARAMETER_HEADERS))
-        input.getMap(PARAMETER_HEADERS)?.toHashMap() ?: emptyMap<String, Any>()
-      else emptyMap<String, Any>()
+      input.getMap(PARAMETER_HEADERS)?.toHashMap() ?: emptyMap<String, Any>()
 
     val headers = filterHeaders(unfilteredHeaders)
 
     val progressInterval =
-      if (input.hasKey(PARAMETER_SETTINGS_PROGRESS_INTERVAL))
-        input.getInt(PARAMETER_SETTINGS_PROGRESS_INTERVAL)
-      else DEFAULT_PROGRESS_TIMEOUT_MILLISECONDS
+      getMapInt(input, PARAMETER_SETTINGS_PROGRESS_INTERVAL, DEFAULT_PROGRESS_TIMEOUT_MILLISECONDS)
 
     if (maybeTaskId.isNullOrEmpty()) {
       processUnexpectedEmptyValue(promise, PARAMETER_TASK_ID)
@@ -466,7 +466,7 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
   fun uploadBlob(input: ReadableMap, promise: Promise) {
     try {
       assertRequiredParameter(input, String::class.java, PARAMETER_TASK_ID)
-      assertRequiredParameter(input, String::class.java, PARAMETER_FILE_PATH)
+      assertRequiredParameter(input, String::class.java, PARAMETER_ABSOLUTE_FILE_PATH)
       assertRequiredParameter(input, String::class.java, PARAMETER_URL)
 
       uploadBlobFromValidatedParameters(input, promise)

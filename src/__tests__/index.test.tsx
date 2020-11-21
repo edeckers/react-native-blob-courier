@@ -6,51 +6,24 @@
  */
 import { uuid } from '../Utils';
 import {
+  ANDROID_DOWNLOAD_MANAGER_FALLBACK_PARAMETERS,
+  BLOB_COURIER_PROGRESS_EVENT_NAME,
   BLOB_FETCH_FALLBACK_PARAMETERS,
   BLOB_UPLOAD_FALLBACK_PARAMETERS,
+  DEFAULT_PROGRESS_UPDATE_INTERVAL_MILLISECONDS,
 } from '../Consts';
 import { dict } from '../Extensions';
+import { NativeEventEmitter, NativeModules } from 'react-native';
 import BlobCourier from '../index';
-import { NativeModules, NativeEventEmitter } from 'react-native';
-const { BlobCourier: BCTest } = NativeModules;
 
-jest.mock('react-native', () => {
-  const addListener = jest.fn(() => {
-    /* noop */
-  });
+const {
+  BlobCourier: BlobCourierNative,
+  BlobCourierEventEmitter,
+} = NativeModules;
 
-  class NativeEventEmitterMock {
-    public addListener = addListener;
-  }
-
-  NativeEventEmitterMock.prototype.addListener = addListener;
-
-  const fetchBlob = jest.fn(() => {
-    /* noop */
-  });
-
-  const uploadBlob = jest.fn(() => {
-    /* noop */
-  });
-
-  class BlobCourierMock {
-    public fetchBlob = fetchBlob;
-    public uploadBlob = uploadBlob;
-  }
-
-  BlobCourierMock.prototype.fetchBlob = fetchBlob;
-  BlobCourierMock.prototype.uploadBlob = uploadBlob;
-
-  return {
-    NativeEventEmitter: NativeEventEmitterMock,
-    NativeModules: {
-      BlobCourier: new BlobCourierMock(),
-      BlobCourierEventEmitter: jest.mock(
-        'react-native/Libraries/vendor/emitter/EventSubscriptionVendor'
-      ),
-    },
-  };
-});
+const NATIVE_EVENT_EMITTER_SINGLETON = new NativeEventEmitter(
+  BlobCourierEventEmitter
+);
 
 const DEFAULT_FETCH_REQUEST = {
   filename: 'some_filename.ext',
@@ -59,7 +32,7 @@ const DEFAULT_FETCH_REQUEST = {
 };
 
 const DEFAULT_UPLOAD_REQUEST = {
-  filePath: 'some_filename.ext',
+  absoluteFilePath: '/path/to/some_file.ext',
   mimeType: 'plain/text',
   url: 'https://github.com/edeckers/react-native-blob-courier',
 };
@@ -82,20 +55,30 @@ const getLastMockCallFirstParameter = (m: any) =>
   getLastMockCallParameters(m)[0];
 
 const generateValue = (type: string) =>
-  type in RANDOM_VALUE_GENERATORS ? RANDOM_VALUE_GENERATORS[type]() : undefined;
+  type in RANDOM_VALUE_GENERATORS ? RANDOM_VALUE_GENERATORS[type]() : uuid();
 
-const createRandomObjectFromDefault = function <T>(o: T) {
-  return Object.keys(o).reduce(
+const createRandomObjectFromDefault = <T,>(o: T): T =>
+  Object.keys(o).reduce(
     (p, c) => ({
       ...p,
-      [c]:
-        typeof (o as any)[c] === 'boolean'
-          ? !(o as any)[c]
-          : generateValue(typeof (o as any)[c]),
+      [c]: (() => {
+        const m = (o as any)[c];
+
+        if (typeof m === 'boolean') {
+          return !m;
+        }
+
+        if (typeof m === 'object') {
+          return createRandomObjectFromDefault(
+            Object.keys(m).length === 0 ? generateValue('object') : m
+          );
+        }
+
+        return generateValue(typeof m);
+      })(),
     }),
     {}
   ) as T;
-};
 
 const verifyPropertyExistsAndIsDefined = (o: any, key: string) => {
   expect(o).toHaveProperty(key);
@@ -114,9 +97,49 @@ const testAsync = (name: string, testableFunction: () => Promise<void>) => {
   });
 };
 
+jest.mock(
+  'react-native/Libraries/EventEmitter/NativeEventEmitter',
+  () => require('../__mocks__/NativeEventEmitter.mock').default
+);
+
+jest.mock('react-native/Libraries/BatchedBridge/NativeModules', () => ({
+  BlobCourier: {
+    fetchBlob: jest.fn(),
+    uploadBlob: jest.fn(),
+  },
+  BlobCourierEventEmitter: {
+    addListener: jest.fn(),
+    removeListeners: jest.fn(),
+  },
+  PlatformConstants: {},
+}));
+
 beforeEach(() => {
-  BCTest.fetchBlob.mockReset();
-  BCTest.uploadBlob.mockReset();
+  BlobCourierNative.fetchBlob.mockReset();
+  BlobCourierNative.uploadBlob.mockReset();
+  (BlobCourierEventEmitter as any).addListener.mockReset();
+});
+
+describe('Given fallback parameters are provided through a constant', () => {
+  test('Fetch constant should not accidentally be changed', () => {
+    expect(BLOB_FETCH_FALLBACK_PARAMETERS).toStrictEqual({
+      android: {
+        downloadManager: ANDROID_DOWNLOAD_MANAGER_FALLBACK_PARAMETERS,
+        useDownloadManager: false,
+      },
+      headers: {},
+      method: 'GET',
+      progressIntervalMilliseconds: DEFAULT_PROGRESS_UPDATE_INTERVAL_MILLISECONDS,
+    });
+  });
+
+  test('Upload constant should not accidentally be changed', () => {
+    expect(BLOB_UPLOAD_FALLBACK_PARAMETERS).toStrictEqual({
+      headers: {},
+      method: 'POST',
+      returnResponse: false,
+    });
+  });
 });
 
 describe('Given a regular fetch request', () => {
@@ -125,12 +148,12 @@ describe('Given a regular fetch request', () => {
     async () => {
       await BlobCourier.fetchBlob(DEFAULT_FETCH_REQUEST);
 
-      expect(BCTest.fetchBlob).toHaveBeenCalledWith(
+      expect(BlobCourierNative.fetchBlob).toHaveBeenCalledWith(
         expect.objectContaining(DEFAULT_FETCH_REQUEST)
       );
 
       const calledWithParameters = getLastMockCallFirstParameter(
-        BCTest.fetchBlob
+        BlobCourierNative.fetchBlob
       );
 
       verifyPropertyExistsAndIsDefined(calledWithParameters, 'taskId');
@@ -144,7 +167,7 @@ describe('Given a regular fetch request', () => {
         await BlobCourier.fetchBlob(DEFAULT_FETCH_REQUEST);
 
         const calledWithParameters = getLastMockCallFirstParameter(
-          BCTest.fetchBlob
+          BlobCourierNative.fetchBlob
         );
 
         expect(calledWithParameters).toMatchObject(
@@ -165,7 +188,7 @@ describe('Given a regular fetch request', () => {
       await BlobCourier.fetchBlob(randomAndInvertedRequest);
 
       const calledWithParameters = getLastMockCallFirstParameter(
-        BCTest.fetchBlob
+        BlobCourierNative.fetchBlob
       );
 
       const overriddenValues = dict(calledWithParameters).intersect(
@@ -183,6 +206,30 @@ describe('Given a regular fetch request', () => {
       });
       verifyPropertyExistsAndIsDefined(calledWithParameters, 'taskId');
     });
+
+    testAsync('Fallback overrides provided `undefined` value', async () => {
+      const randomAndInvertedRequest = createRandomObjectFromDefault({
+        ...DEFAULT_FETCH_REQUEST,
+        ...BLOB_FETCH_FALLBACK_PARAMETERS,
+      });
+
+      await BlobCourier.fetchBlob(randomAndInvertedRequest);
+
+      const calledWithParameters = getLastMockCallFirstParameter(
+        BlobCourierNative.fetchBlob
+      );
+
+      const calledWithSomeUndefinedParameter = {
+        ...calledWithParameters,
+        headers: undefined,
+      };
+
+      const overriddenValues = dict(calledWithSomeUndefinedParameter).intersect(
+        BLOB_FETCH_FALLBACK_PARAMETERS
+      );
+
+      expect(overriddenValues.headers).toBeDefined();
+    });
   });
 });
 
@@ -191,13 +238,14 @@ describe('Given a fluent fetch request', () => {
     testAsync(
       'The native module is called with all required values and the provided settings',
       async () => {
-        const progressIntervalMilliseconds = Math.random();
+        const progressIntervalMilliseconds = DEFAULT_PROGRESS_UPDATE_INTERVAL_MILLISECONDS;
+
         await BlobCourier.settings({
           progressIntervalMilliseconds,
         }).fetchBlob(DEFAULT_FETCH_REQUEST);
 
         const calledWithParameters = getLastMockCallFirstParameter(
-          BCTest.fetchBlob
+          BlobCourierNative.fetchBlob
         );
 
         const expectedParameters = {
@@ -211,54 +259,91 @@ describe('Given a fluent fetch request', () => {
         verifyPropertyExistsAndIsDefined(calledWithParameters, 'taskId');
       }
     );
+  });
+
+  describe('And a progress updater callback is provided', () => {
+    testAsync(
+      'The native module is called with all required values and the provided callback',
+      async () => {
+        await BlobCourier.settings({})
+          .onProgress(() => {
+            /* noop */
+          })
+          .fetchBlob(DEFAULT_FETCH_REQUEST);
+
+        expect(BlobCourierEventEmitter.addListener).toHaveBeenCalled();
+      }
+    );
+
+    describe('And Android Download Manager settings are provided', () => {
+      testAsync(
+        'The native module is called with all required values and the provided download manager settings',
+        async () => {
+          const downloadManager = {
+            description: uuid(),
+            enableNotifications: true,
+            title: uuid(),
+          };
+
+          await BlobCourier.onProgress(() => {})
+            .useDownloadManagerOnAndroid(downloadManager)
+            .fetchBlob(DEFAULT_FETCH_REQUEST);
+
+          const calledWithParameters = getLastMockCallFirstParameter(
+            BlobCourierNative.fetchBlob
+          );
+
+          const expectedParameters = {
+            ...DEFAULT_FETCH_REQUEST,
+            android: {
+              useDownloadManager: true,
+              downloadManager,
+            },
+          };
+
+          const parameterIntersection = dict(calledWithParameters).intersect(
+            expectedParameters
+          );
+
+          expect(expectedParameters).toEqual(parameterIntersection);
+          expect(BlobCourierEventEmitter.addListener).toHaveBeenCalled();
+          verifyPropertyExistsAndIsDefined(calledWithParameters, 'taskId');
+        }
+      );
+    });
   });
 
   describe('And Android Download Manager settings are provided', () => {
     testAsync(
       'The native module is called with all required values and the provided download manager settings',
       async () => {
-        const androidSettings = {
+        const downloadManager = {
           description: uuid(),
           enableNotifications: true,
           title: uuid(),
         };
 
         await BlobCourier.useDownloadManagerOnAndroid(
-          androidSettings
+          downloadManager
         ).fetchBlob(DEFAULT_FETCH_REQUEST);
 
         const calledWithParameters = getLastMockCallFirstParameter(
-          BCTest.fetchBlob
+          BlobCourierNative.fetchBlob
         );
 
         const expectedParameters = {
           ...DEFAULT_FETCH_REQUEST,
-          useAndroidDownloadManager: true,
-          androidSettings,
+          android: {
+            useDownloadManager: true,
+            downloadManager,
+          },
         };
 
-        expect(expectedParameters).toMatchObject(
-          dict(calledWithParameters).intersect(expectedParameters)
-        );
-        verifyPropertyExistsAndIsDefined(calledWithParameters, 'taskId');
-      }
-    );
-  });
-
-  describe('And a progress updater callback are provided', () => {
-    testAsync(
-      'The native module is called with all required values and the provided callback',
-      async () => {
-        await BlobCourier.onProgress(() => {
-          /* noop */
-        }).fetchBlob(DEFAULT_FETCH_REQUEST);
-
-        const calledWithParameters = getLastMockCallFirstParameter(
-          BCTest.fetchBlob
+        const parameterIntersection = dict(calledWithParameters).intersect(
+          expectedParameters
         );
 
-        expect(NativeEventEmitter.prototype.addListener).toHaveBeenCalled();
-
+        expect(expectedParameters).toEqual(parameterIntersection);
         verifyPropertyExistsAndIsDefined(calledWithParameters, 'taskId');
       }
     );
@@ -271,12 +356,12 @@ describe('Given a regular upload request', () => {
     async () => {
       await BlobCourier.uploadBlob(DEFAULT_UPLOAD_REQUEST);
 
-      expect(BCTest.uploadBlob).toHaveBeenCalledWith(
+      expect(BlobCourierNative.uploadBlob).toHaveBeenCalledWith(
         expect.objectContaining(DEFAULT_UPLOAD_REQUEST)
       );
 
       const calledWithParameters = getLastMockCallFirstParameter(
-        BCTest.uploadBlob
+        BlobCourierNative.uploadBlob
       );
 
       verifyPropertyExistsAndIsDefined(calledWithParameters, 'taskId');
@@ -290,7 +375,7 @@ describe('Given a regular upload request', () => {
         await BlobCourier.uploadBlob(DEFAULT_UPLOAD_REQUEST);
 
         const calledWithParameters = getLastMockCallFirstParameter(
-          BCTest.uploadBlob
+          BlobCourierNative.uploadBlob
         );
 
         expect(calledWithParameters).toMatchObject(
@@ -311,7 +396,7 @@ describe('Given a regular upload request', () => {
       await BlobCourier.uploadBlob(randomAndInvertedRequest);
 
       const calledWithParameters = getLastMockCallFirstParameter(
-        BCTest.uploadBlob
+        BlobCourierNative.uploadBlob
       );
 
       const overriddenValues = dict(calledWithParameters).intersect(
@@ -343,7 +428,7 @@ describe('Given a fluent upload request', () => {
         }).uploadBlob(DEFAULT_UPLOAD_REQUEST);
 
         const calledWithParameters = getLastMockCallFirstParameter(
-          BCTest.uploadBlob
+          BlobCourierNative.uploadBlob
         );
 
         const expectedParameters = {
@@ -357,24 +442,114 @@ describe('Given a fluent upload request', () => {
         verifyPropertyExistsAndIsDefined(calledWithParameters, 'taskId');
       }
     );
+
+    describe('And Android Download Manager settings are provided', () => {
+      testAsync(
+        'The native module is called with all required values and the provided download manager settings',
+        async () => {
+          const downloadManager = {
+            description: uuid(),
+            enableNotifications: true,
+            title: uuid(),
+          };
+
+          const progressIntervalMilliseconds = Math.random();
+          await BlobCourier.settings({
+            progressIntervalMilliseconds,
+          })
+            .useDownloadManagerOnAndroid(downloadManager)
+            .fetchBlob(DEFAULT_FETCH_REQUEST);
+
+          const calledWithParameters = getLastMockCallFirstParameter(
+            BlobCourierNative.fetchBlob
+          );
+
+          const expectedParameters = {
+            ...DEFAULT_FETCH_REQUEST,
+            android: {
+              useDownloadManager: true,
+              downloadManager,
+            },
+          };
+
+          expect(expectedParameters).toEqual(
+            dict(calledWithParameters).intersect(expectedParameters)
+          );
+          verifyPropertyExistsAndIsDefined(calledWithParameters, 'taskId');
+        }
+      );
+    });
+  });
+});
+
+describe('Given a progress updater callback is provided', () => {
+  testAsync('Progress updates are handled', async () => {
+    const p0 = jest.fn();
+
+    const r0 = BlobCourier.onProgress(p0).uploadBlob(DEFAULT_UPLOAD_REQUEST);
+
+    const { taskId } = getLastMockCallFirstParameter(
+      BlobCourierNative.uploadBlob
+    );
+
+    const TEST_EVENT_PAYLOAD = {
+      taskId,
+      written: 42,
+      total: 314,
+    };
+
+    NATIVE_EVENT_EMITTER_SINGLETON.emit(
+      BLOB_COURIER_PROGRESS_EVENT_NAME,
+      TEST_EVENT_PAYLOAD
+    );
+
+    const expectedArgument = (({ written, total }) => ({
+      written,
+      total,
+    }))(TEST_EVENT_PAYLOAD);
+
+    expect(p0).toBeCalledTimes(1);
+    expect(p0).toHaveBeenCalledWith(expectedArgument);
+
+    await r0;
   });
 
-  describe('And a progress updater callback are provided', () => {
-    testAsync(
-      'The native module is called with all required values and the provided callback',
-      async () => {
-        await BlobCourier.onProgress(() => {
-          /* noop */
-        }).uploadBlob(DEFAULT_UPLOAD_REQUEST);
+  testAsync('It only fires for this particular instance', async () => {
+    const p0 = jest.fn();
 
-        const calledWithParameters = getLastMockCallFirstParameter(
-          BCTest.uploadBlob
-        );
+    const r0 = BlobCourier.onProgress(p0).uploadBlob(DEFAULT_UPLOAD_REQUEST);
 
-        expect(NativeEventEmitter.prototype.addListener).toHaveBeenCalled();
-
-        verifyPropertyExistsAndIsDefined(calledWithParameters, 'taskId');
-      }
+    const { taskId } = getLastMockCallFirstParameter(
+      BlobCourierNative.uploadBlob
     );
+
+    const TEST_EVENT_PAYLOAD = {
+      written: 42,
+      total: 314,
+    };
+
+    const SUCCESS_TEST_EVENT_PAYLOAD = {
+      taskId,
+      ...TEST_EVENT_PAYLOAD,
+    };
+
+    const FAILED_TEST_EVENT_PAYLOAD = {
+      taskId: uuid(),
+      ...TEST_EVENT_PAYLOAD,
+    };
+
+    NATIVE_EVENT_EMITTER_SINGLETON.emit(
+      BLOB_COURIER_PROGRESS_EVENT_NAME,
+      FAILED_TEST_EVENT_PAYLOAD
+    );
+
+    NATIVE_EVENT_EMITTER_SINGLETON.emit(
+      BLOB_COURIER_PROGRESS_EVENT_NAME,
+      SUCCESS_TEST_EVENT_PAYLOAD
+    );
+
+    expect(p0).toBeCalledTimes(1);
+
+    await r0;
   });
 });

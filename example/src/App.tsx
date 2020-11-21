@@ -127,6 +127,9 @@ const ProgressIndicator = (props: PIProps) => (
     <Progress.Bar
       animationType={'timing'}
       indeterminate={props.total === undefined}
+      indeterminateAnimationDuration={
+        DEFAULT_PROGRESS_INTERVAL_MILLISECONDS * 2 // Prevent 'glitchy' animation
+      }
       progress={props.total ? props.value / props.total : 0}
       useNativeDriver={true}
       width={props.width}
@@ -191,7 +194,7 @@ const UploaderView = (props: UVProps) => {
           setExpected(e.total);
         })
         .uploadBlob({
-          filePath: props.fromLocalPath,
+          absoluteFilePath: props.fromLocalPath,
           method: 'POST',
           mimeType: 'text/plain',
           returnResponse: true,
@@ -266,9 +269,7 @@ const DownloaderView = (props: DVProps) => {
       const reqSettings = BlobCourier.settings({
         progressIntervalMilliseconds: DEFAULT_PROGRESS_INTERVAL_MILLISECONDS,
       }).onProgress((e: BlobProgressEvent) => {
-        const serializedMaybeTotal = e.total;
-        const maybeTotal =
-          serializedMaybeTotal > 0 ? serializedMaybeTotal : undefined;
+        const maybeTotal = e.total > 0 ? e.total : undefined;
 
         setReceived(e.written);
         setExpected(maybeTotal);
@@ -282,7 +283,10 @@ const DownloaderView = (props: DVProps) => {
 
       const fetchedResult = await withDownloadManager.fetchBlob(req0);
 
-      props.onFinished(fetchedResult);
+      setTimeout(
+        () => props.onFinished(fetchedResult),
+        DEFAULT_PROGRESS_INTERVAL_MILLISECONDS * 2 // Allow progress indicator to finish / prevent 'glitchy' ui
+      );
     } catch (e) {
       console.warn(e);
     }

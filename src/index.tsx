@@ -6,6 +6,7 @@
  */
 import { NativeEventEmitter, NativeModules } from 'react-native';
 import {
+  BLOB_COURIER_PROGRESS_EVENT_NAME,
   BLOB_FETCH_FALLBACK_PARAMETERS,
   BLOB_UPLOAD_FALLBACK_PARAMETERS,
 } from './Consts';
@@ -18,17 +19,14 @@ import type {
   BlobUploadRequest,
   BlobUploadResponse,
   AndroidDownloadManagerSettings,
-  AndroidDownloadManagerToggle,
-  AndroidDownloadManager,
   BlobProgressEvent,
+  BlobRequestOnProgress,
+  AndroidSettings,
 } from './ExposedTypes';
 import { uuid } from './Utils';
 import { dict } from './Extensions';
 
-type BlobFetchInput = BlobFetchRequest &
-  BlobRequestSettings &
-  AndroidDownloadManagerToggle &
-  AndroidDownloadManager;
+type BlobFetchInput = BlobFetchRequest & BlobRequestSettings & AndroidSettings;
 
 type BlobFetchNativeInput = BlobFetchInput & BlobRequestTask;
 
@@ -44,8 +42,6 @@ type BlobCourierType = {
 const { BlobCourier, BlobCourierEventEmitter } = NativeModules;
 
 const EventEmitter = new NativeEventEmitter(BlobCourierEventEmitter);
-
-const BLOB_COURIER_PROGRESS_EVENT_NAME = 'BlobCourierProgress';
 
 export const createTaskId = () => `rnbc-req-${uuid()}`;
 
@@ -77,11 +73,7 @@ const sanitizeSettingsData = <T extends BlobFetchNativeInput | BlobUploadInput>(
 const sanitizeFetchData = <T extends BlobFetchNativeInput>(
   input: Readonly<T>
 ): BlobFetchNativeInput => {
-  const { filename, headers, method, mimeType, url } = input;
-
-  const { taskId } = input;
-
-  const { useAndroidDownloadManager, androidDownloadManager } = input;
+  const { android, filename, headers, method, mimeType, taskId, url } = input;
 
   const settings = sanitizeSettingsData(input);
 
@@ -92,18 +84,13 @@ const sanitizeFetchData = <T extends BlobFetchNativeInput>(
   };
 
   const optionalRequestParameters = dict({
+    ...settings,
+    android,
     headers,
     method,
-  }).intersect(BLOB_FETCH_FALLBACK_PARAMETERS);
-
-  const androidDownloadManagerSettings = dict({
-    useAndroidDownloadManager,
-    androidDownloadManager,
-  }).intersect(BLOB_FETCH_FALLBACK_PARAMETERS);
+  }).fallback(BLOB_FETCH_FALLBACK_PARAMETERS);
 
   return {
-    ...settings,
-    ...androidDownloadManagerSettings,
     ...optionalRequestParameters,
     ...request,
     taskId,
@@ -113,14 +100,21 @@ const sanitizeFetchData = <T extends BlobFetchNativeInput>(
 const sanitizeUploadData = <T extends BlobUploadNativeInput>(
   input: Readonly<T>
 ): BlobUploadNativeInput => {
-  const { filePath, headers, method, mimeType, returnResponse, url } = input;
+  const {
+    absoluteFilePath,
+    headers,
+    method,
+    mimeType,
+    returnResponse,
+    url,
+  } = input;
 
   const { taskId } = input;
 
   const settings = sanitizeSettingsData(input);
 
   const request = {
-    filePath,
+    absoluteFilePath,
     mimeType,
     url,
   };
@@ -129,7 +123,7 @@ const sanitizeUploadData = <T extends BlobUploadNativeInput>(
     headers,
     method,
     returnResponse,
-  }).intersect(BLOB_UPLOAD_FALLBACK_PARAMETERS);
+  }).fallback(BLOB_UPLOAD_FALLBACK_PARAMETERS);
 
   return {
     ...settings,
@@ -192,63 +186,60 @@ const onProgress = (
   useDownloadManagerOnAndroid: (
     downloadManagerSettings?: AndroidDownloadManagerSettings
   ) =>
-    useDownloadManagerOnAndroid(
-      createTaskId(),
-      downloadManagerSettings,
-      requestSettings
-    ),
+    useDownloadManagerOnAndroid(taskId, downloadManagerSettings, {
+      ...requestSettings,
+      onProgress: fn,
+    }),
 });
 
 const useDownloadManagerOnAndroid = (
   taskId: string,
   downloadManagerSettings?: AndroidDownloadManagerSettings,
-  requestSettings?: BlobRequestSettings
+  requestSettings?: BlobRequestSettings & BlobRequestOnProgress
 ) => ({
   fetchBlob: (input: BlobFetchRequest) =>
     fetchBlob({
       ...input,
       ...requestSettings,
-      useAndroidDownloadManager: true,
-      androidDownloadManager: downloadManagerSettings,
+      android: {
+        downloadManager: downloadManagerSettings,
+        useDownloadManager: true,
+      },
       taskId,
     }),
 });
 
-const settings = (requestSettings: BlobRequestSettings) => {
-  const taskId = createTaskId();
-
-  return {
-    fetchBlob: (input: BlobFetchRequest) =>
-      fetchBlob({
-        ...input,
-        ...requestSettings,
-        taskId,
-      }),
-    onProgress: (fn: (e: BlobProgressEvent) => void) =>
-      onProgress(taskId, fn, requestSettings),
-    uploadBlob: (input: BlobUploadRequest) =>
-      uploadBlob({
-        ...input,
-        ...requestSettings,
-        taskId,
-      }),
-    useDownloadManagerOnAndroid: (
-      downloadManagerSettings: AndroidDownloadManagerSettings
-    ) =>
-      useDownloadManagerOnAndroid(
-        taskId,
-        downloadManagerSettings,
-        requestSettings
-      ),
-  };
-};
+const settings = (taskId: string, requestSettings: BlobRequestSettings) => ({
+  fetchBlob: (input: BlobFetchRequest) =>
+    fetchBlob({
+      ...input,
+      ...requestSettings,
+      taskId,
+    }),
+  onProgress: (fn: (e: BlobProgressEvent) => void) =>
+    onProgress(taskId, fn, requestSettings),
+  uploadBlob: (input: BlobUploadRequest) =>
+    uploadBlob({
+      ...input,
+      ...requestSettings,
+      taskId,
+    }),
+  useDownloadManagerOnAndroid: (
+    downloadManagerSettings?: AndroidDownloadManagerSettings
+  ) =>
+    useDownloadManagerOnAndroid(
+      taskId,
+      downloadManagerSettings,
+      requestSettings
+    ),
+});
 
 export default {
   fetchBlob: (input: BlobFetchInput) =>
     fetchBlob({ ...input, taskId: createTaskId() }),
   onProgress: (fn: (e: BlobProgressEvent) => void) =>
     onProgress(createTaskId(), fn),
-  settings,
+  settings: (input: BlobRequestSettings) => settings(createTaskId(), input),
   uploadBlob: (input: BlobUploadInput) =>
     uploadBlob({ ...input, taskId: createTaskId() }),
   useDownloadManagerOnAndroid: (

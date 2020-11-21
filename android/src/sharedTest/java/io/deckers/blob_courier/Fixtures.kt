@@ -27,7 +27,7 @@ object Fixtures {
     localPath: String
   ): Map<String, String> = mapOf(
     "taskId" to taskId,
-    "filePath" to localPath,
+    "absoluteFilePath" to localPath,
     "url" to "https://file.io"
   )
 

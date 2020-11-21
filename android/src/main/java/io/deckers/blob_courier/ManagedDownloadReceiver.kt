@@ -13,6 +13,7 @@ import android.content.Intent
 import android.database.Cursor
 import android.net.Uri
 import com.facebook.react.bridge.Promise
+import java.io.Closeable
 import java.io.File
 import java.io.FileOutputStream
 import java.io.InputStream
@@ -20,13 +21,21 @@ import java.io.InputStream
 class ManagedDownloadReceiver(
   private val downloadId: Long,
   private val destinationFile: File,
+  private val managedProgressUpdater: ManagedProgressUpdater,
   private val promise: Promise
 ) :
-  BroadcastReceiver() {
+  BroadcastReceiver(), Closeable {
   override fun onReceive(context: Context, intent: Intent) {
-    val downloadManager = createDownloadManager(context)
+    try {
+      val downloadManager = createDownloadManager(context)
 
-    processDownloadCompleteAction(downloadManager, context)
+      processDownloadCompleteAction(downloadManager, context)
+    } catch (e: Exception) {
+      promise.reject(e)
+    } finally {
+      context.unregisterReceiver(this)
+      close()
+    }
   }
 
   private fun processDownloadCompleteAction(downloadManager: DownloadManager, context: Context) {
@@ -38,8 +47,6 @@ class ManagedDownloadReceiver(
       }
 
       processCompletedDownloadStatus(context, cursor)
-
-      context.unregisterReceiver(this)
     }
   }
 
@@ -102,4 +109,6 @@ class ManagedDownloadReceiver(
       writeFileOnInternalStorage(fis)
     }
   }
+
+  override fun close() = managedProgressUpdater.close()
 }

@@ -49,7 +49,7 @@ class BlobCourierTests: XCTestCase {
             let data = dict["data"] as? NSDictionary ?? [:]
 
             self.sut?.uploadBlob(input: [
-                "filePath": data["absoluteFilePath"] ?? "",
+             "absoluteFilePath": data["absoluteFilePath"] ?? "",
              "taskId": data["taskId"] ?? "",
              "url": "https://file.io"
            ], resolve: resolveUpload, reject: reject)
