@@ -192,19 +192,14 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
     val mimeType = input.getString(PARAMETER_MIME_TYPE) ?: DEFAULT_MIME_TYPE
 
     val unfilteredHeaders =
-      if (input.hasKey(PARAMETER_HEADERS))
-        input.getMap(PARAMETER_HEADERS)?.toHashMap() ?: emptyMap<String, Any>()
-      else emptyMap<String, Any>()
+      input.getMap(PARAMETER_HEADERS)?.toHashMap() ?: emptyMap<String, Any>()
 
     val headers = filterHeaders(unfilteredHeaders)
 
-    val returnResponse =
-      input.hasKey(PARAMETER_RETURN_RESPONSE) && input.getBoolean(PARAMETER_RETURN_RESPONSE)
+    val returnResponse = input.getBoolean(PARAMETER_RETURN_RESPONSE)
 
     val progressInterval =
-      if (input.hasKey(PARAMETER_SETTINGS_PROGRESS_INTERVAL))
-        input.getInt(PARAMETER_SETTINGS_PROGRESS_INTERVAL)
-      else DEFAULT_PROGRESS_TIMEOUT_MILLISECONDS
+      getMapInt(input, PARAMETER_SETTINGS_PROGRESS_INTERVAL, DEFAULT_PROGRESS_TIMEOUT_MILLISECONDS)
 
     if (maybeTaskId.isNullOrEmpty()) {
       processUnexpectedEmptyValue(promise, PARAMETER_TASK_ID)
@@ -360,6 +355,10 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
     }
   }
 
+  @Suppress("SameParameterValue")
+  private fun getMapInt(input: ReadableMap, field: String, fallback: Int): Int =
+    if (input.hasKey(field)) input.getInt(field) else fallback
+
   private fun fetchBlobFromValidatedParameters(input: ReadableMap, promise: Promise) {
     val maybeTaskId = input.getString(PARAMETER_TASK_ID)
     val maybeFilename = input.getString(PARAMETER_FILENAME)
@@ -368,10 +367,7 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
     val method = input.getString(PARAMETER_METHOD) ?: DEFAULT_FETCH_METHOD
     val mimeType = input.getString(PARAMETER_MIME_TYPE) ?: DEFAULT_MIME_TYPE
 
-    val maybeAndroidSettings =
-      if (input.hasKey(PARAMETER_ANDROID_SETTINGS))
-        input.getMap(PARAMETER_ANDROID_SETTINGS)
-      else null
+    val maybeAndroidSettings = input.getMap(PARAMETER_ANDROID_SETTINGS)
 
     val downloadManagerSettings = maybeAndroidSettings?.let {
       it.getMap(PARAMETER_DOWNLOAD_MANAGER_SETTINGS)?.toHashMap()
@@ -386,9 +382,7 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
     val headers = filterHeaders(unfilteredHeaders)
 
     val progressInterval =
-      if (input.hasKey(PARAMETER_SETTINGS_PROGRESS_INTERVAL))
-        input.getInt(PARAMETER_SETTINGS_PROGRESS_INTERVAL)
-      else DEFAULT_PROGRESS_TIMEOUT_MILLISECONDS
+      getMapInt(input, PARAMETER_SETTINGS_PROGRESS_INTERVAL, DEFAULT_PROGRESS_TIMEOUT_MILLISECONDS)
 
     if (maybeTaskId.isNullOrEmpty()) {
       processUnexpectedEmptyValue(promise, PARAMETER_TASK_ID)
