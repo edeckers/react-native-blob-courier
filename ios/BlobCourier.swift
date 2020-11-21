@@ -12,7 +12,7 @@ open class BlobCourier: NSObject {
   static let libraryDomain  = "io.deckers.blob_courier"
 
   static let parameterFilename = "filename"
-  static let parameterFilePath = "filePath"
+  static let parameterAbsoluteFilePath = "absoluteFilePath"
   static let parameterHeaders = "headers"
   static let parameterMethod = "method"
   static let parameterProgressInterval = "progressIntervalMilliseconds"
@@ -158,9 +158,9 @@ open class BlobCourier: NSObject {
 
     let urlObject = URL(string: url)!
 
-    let filePath = (input[BlobCourier.parameterFilePath] as? String) ?? ""
+    let absoluteFilePath = (input[BlobCourier.parameterAbsoluteFilePath] as? String) ?? ""
 
-    let filePathObject = URL(string: filePath)!
+    let absoluteFilePathObject = URL(string: absoluteFilePath)!
 
     let returnResponse = (input[BlobCourier.parameterReturnResponse] as? Bool) ?? false
 
@@ -179,7 +179,7 @@ open class BlobCourier: NSObject {
         (input[BlobCourier.parameterHeaders] as? NSDictionary) ??
         NSDictionary())
 
-    let (request, fileData) = buildRequestDataForFileUpload(url: urlObject, fileUrl: filePathObject, headers: headers)
+    let (request, fileData) = buildRequestDataForFileUpload(url: urlObject, fileUrl: absoluteFilePathObject, headers: headers)
 
     session.uploadTask(with: request, from: fileData).resume()
   }
@@ -211,7 +211,7 @@ open class BlobCourier: NSObject {
     print("Start uploadBlob")
     do {
       try assertRequiredParameter(
-        input: input, type: "String", parameterName: BlobCourier.parameterFilePath)
+        input: input, type: "String", parameterName: BlobCourier.parameterAbsoluteFilePath)
       try assertRequiredParameter(
         input: input, type: "String", parameterName: BlobCourier.parameterTaskId)
       try assertRequiredParameter(

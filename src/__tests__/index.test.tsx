@@ -30,7 +30,7 @@ const DEFAULT_FETCH_REQUEST = {
 };
 
 const DEFAULT_UPLOAD_REQUEST = {
-  filePath: 'some_filename.ext',
+  absoluteFilePath: '/path/to/some_file.ext',
   mimeType: 'plain/text',
   url: 'https://github.com/edeckers/react-native-blob-courier',
 };

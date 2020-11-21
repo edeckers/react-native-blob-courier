@@ -58,7 +58,7 @@ export declare interface BlobProgressEvent {
 export declare interface BlobUploadRequest
   extends BlobBaseRequest,
     BlobRequestMethod {
-  readonly filePath: string;
+  readonly absoluteFilePath: string;
   readonly returnResponse?: boolean;
 }
 

@@ -113,14 +113,21 @@ const sanitizeFetchData = <T extends BlobFetchNativeInput>(
 const sanitizeUploadData = <T extends BlobUploadNativeInput>(
   input: Readonly<T>
 ): BlobUploadNativeInput => {
-  const { filePath, headers, method, mimeType, returnResponse, url } = input;
+  const {
+    absoluteFilePath,
+    headers,
+    method,
+    mimeType,
+    returnResponse,
+    url,
+  } = input;
 
   const { taskId } = input;
 
   const settings = sanitizeSettingsData(input);
 
   const request = {
-    filePath,
+    absoluteFilePath,
     mimeType,
     url,
   };

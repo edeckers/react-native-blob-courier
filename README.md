@@ -1,7 +1,7 @@
 # react-native-blob-courier
 
 [![License: MPL 2.0](https://img.shields.io/badge/License-MPL%202.0-brightgreen.svg)](https://opensource.org/licenses/MPL-2.0)
-![Build](https://github.com/edeckers/react-native-blob-courier/workflows/Build%20Android%20and%20iOS/badge.svg)
+[![Build](https://github.com/edeckers/react-native-blob-courier/workflows/Build%20Android%20and%20iOS/badge.svg)](https://github.com/edeckers/react-native-blob-courier/actions)
 
 Use this library to efficiently _download_ and _upload_ blobs in React Native. The library was inspired by [rn-fetch-blob](https://github.com/joltup/rn-fetch-blob), and aims to focus strictly on blob transfers.
 
@@ -71,10 +71,10 @@ console.log(fetchedResult);
 // ...
 
 // Upload a file
-const filePath = fetchedResult.data.absoluteFilePath;
+const absoluteFilePath = fetchedResult.data.absoluteFilePath;
 
 const request1 = {
-  filePath,
+  absoluteFilePath,
   method: 'POST',
   mimeType: 'application/zip',
   url: 'https://file.io',
@@ -229,11 +229,11 @@ Response
 
 Required
 
-| **Field**  | **Type** | **Description**                                          |
-| ---------- | ---------| -------------------------------------------------------- |
-| `filePath` | `string` | Path to the file to be uploaded                          |
-| `mimeType` | `string` | Mime type of the blob being transferred                  |
-| `url`      | `string` | Url to upload the blob to                                |
+| **Field**          | **Type** | **Description**                                          |
+| ------------------ | -------- | -------------------------------------------------------- |
+| `absoluteFilePath` | `string` | Path to the file to be uploaded                          |
+| `mimeType`         | `string` | Mime type of the blob being transferred                  |
+| `url`              | `string` | Url to upload the blob to                                |
 
 Optional
 

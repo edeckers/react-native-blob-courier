@@ -34,7 +34,7 @@ import okio.Source
 private const val ERROR_MISSING_REQUIRED_PARAMETER = "ERROR_MISSING_REQUIRED_PARAMETER"
 
 private const val PARAMETER_FILENAME = "filename"
-private const val PARAMETER_FILE_PATH = "filePath"
+private const val PARAMETER_ABSOLUTE_FILE_PATH = "absoluteFilePath"
 private const val PARAMETER_DOWNLOAD_MANAGER_SETTINGS = "androidDownloadManager"
 private const val PARAMETER_HEADERS = "headers"
 private const val PARAMETER_METHOD = "method"
@@ -185,7 +185,7 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
 
   private fun uploadBlobFromValidatedParameters(input: ReadableMap, promise: Promise) {
     val maybeTaskId = input.getString(PARAMETER_TASK_ID)
-    val maybeFilePath = input.getString(PARAMETER_FILE_PATH)
+    val maybeFilePath = input.getString(PARAMETER_ABSOLUTE_FILE_PATH)
     val maybeUrl = input.getString(PARAMETER_URL)
     val method = input.getString(PARAMETER_METHOD) ?: DEFAULT_UPLOAD_METHOD
     val mimeType = input.getString(PARAMETER_MIME_TYPE) ?: DEFAULT_MIME_TYPE
@@ -211,7 +211,7 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
     }
 
     if (maybeFilePath.isNullOrEmpty()) {
-      processUnexpectedEmptyValue(promise, PARAMETER_FILE_PATH)
+      processUnexpectedEmptyValue(promise, PARAMETER_ABSOLUTE_FILE_PATH)
 
       return
     }
@@ -469,7 +469,7 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
   fun uploadBlob(input: ReadableMap, promise: Promise) {
     try {
       assertRequiredParameter(input, String::class.java, PARAMETER_TASK_ID)
-      assertRequiredParameter(input, String::class.java, PARAMETER_FILE_PATH)
+      assertRequiredParameter(input, String::class.java, PARAMETER_ABSOLUTE_FILE_PATH)
       assertRequiredParameter(input, String::class.java, PARAMETER_URL)
 
       uploadBlobFromValidatedParameters(input, promise)

@@ -191,7 +191,7 @@ const UploaderView = (props: UVProps) => {
           setExpected(e.total);
         })
         .uploadBlob({
-          filePath: props.fromLocalPath,
+          absoluteFilePath: props.fromLocalPath,
           method: 'POST',
           mimeType: 'text/plain',
           returnResponse: true,
