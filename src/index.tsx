@@ -25,6 +25,7 @@ import {
   BlobMultipartUploadRequest as BlobUploadMultipartRequest,
   AndroidFetchSettings,
   AndroidRootDirectory,
+  AndroidFetchTarget,
 } from './ExposedTypes';
 import { uuid } from './Utils';
 import { dict } from './Extensions';
@@ -250,6 +251,25 @@ const onProgress = (
     }),
 });
 
+const useFetchTarget = (
+  taskId: string,
+  target: {
+    android?: AndroidFetchTarget;
+  },
+  input0: any
+) => ({
+  useDownloadManagerOnAndroid: (
+    downloadManagerSettings?: AndroidDownloadManagerSettings
+  ) => useDownloadManagerOnAndroid(taskId, downloadManagerSettings, input0),
+  fetchBlob: (input: BlobFetchRequest) =>
+    fetchBlob({
+      ...input,
+      ...input0,
+      target,
+      taskId,
+    }),
+});
+
 const useDownloadManagerOnAndroid = (
   taskId: string,
   downloadManagerSettings?: AndroidDownloadManagerSettings,
@@ -296,6 +316,8 @@ const settings = (taskId: string, requestSettings: BlobRequestSettings) => ({
       downloadManagerSettings,
       requestSettings
     ),
+  useFetchTarget: (x: { android?: AndroidFetchTarget }) =>
+    useFetchTarget(taskId, x, requestSettings),
 });
 
 export default {

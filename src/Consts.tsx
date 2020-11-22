@@ -4,6 +4,9 @@
  * This source code is licensed under the MPL-2.0 license found in the
  * LICENSE file in the root directory of this source tree.
  */
+
+import { AndroidRootDirectory } from './ExposedTypes';
+
 export const ANDROID_DOWNLOAD_MANAGER_FALLBACK_PARAMETERS = {
   description: undefined,
   enableNotifications: true,
@@ -11,7 +14,7 @@ export const ANDROID_DOWNLOAD_MANAGER_FALLBACK_PARAMETERS = {
 };
 
 export const ANDROID_TARGET_FALLBACK_PARAMETERS = {
-  rootDirectory: 'Cache',
+  rootDirectory: AndroidRootDirectory.Cache,
   relativeDirectory: undefined,
 };
 

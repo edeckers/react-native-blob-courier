@@ -61,7 +61,7 @@ export declare interface AndroidDirectorySettings {
   relativeDirectory?: string;
 }
 
-export declare interface AndroidDirectory {
+export declare interface AndroidFetchTarget {
   readonly target?: AndroidDirectorySettings;
 }
 export declare interface AndroidDownloadManager {
@@ -69,7 +69,9 @@ export declare interface AndroidDownloadManager {
 }
 
 export declare interface AndroidFetchSettings {
-  readonly android?: AndroidDownloadManagerToggle & AndroidDownloadManager;
+  readonly android?: AndroidDownloadManagerToggle &
+    AndroidFetchTarget &
+    AndroidDownloadManager;
 }
 
 export declare interface BlobProgressEvent {
