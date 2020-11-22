@@ -10,12 +10,18 @@ export const ANDROID_DOWNLOAD_MANAGER_FALLBACK_PARAMETERS = {
   title: undefined,
 };
 
+export const ANDROID_TARGET_FALLBACK_PARAMETERS = {
+  rootDirectory: 'Cache',
+  relativeDirectory: undefined,
+};
+
 export const DEFAULT_PROGRESS_UPDATE_INTERVAL_MILLISECONDS = 200;
 export const DEFAULT_FILE_MULTIPART_FIELD_NAME = 'file';
 
 export const BLOB_FETCH_FALLBACK_PARAMETERS = {
   android: {
     downloadManager: ANDROID_DOWNLOAD_MANAGER_FALLBACK_PARAMETERS,
+    target: ANDROID_TARGET_FALLBACK_PARAMETERS,
     useDownloadManager: false,
   },
   headers: {},

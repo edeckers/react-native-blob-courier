@@ -50,11 +50,25 @@ export declare interface AndroidDownloadManagerSettings {
   readonly title?: string;
 }
 
+export enum AndroidRootDirectory {
+  Cache,
+  Data,
+  Files,
+}
+
+export declare interface AndroidDirectorySettings {
+  rootDirectory: AndroidRootDirectory;
+  relativeDirectory?: string;
+}
+
+export declare interface AndroidDirectory {
+  readonly target?: AndroidDirectorySettings;
+}
 export declare interface AndroidDownloadManager {
   readonly downloadManager?: AndroidDownloadManagerSettings;
 }
 
-export declare interface AndroidSettings {
+export declare interface AndroidFetchSettings {
   readonly android?: AndroidDownloadManagerToggle & AndroidDownloadManager;
 }
 

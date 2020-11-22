@@ -7,6 +7,7 @@
 import { uuid } from '../Utils';
 import {
   ANDROID_DOWNLOAD_MANAGER_FALLBACK_PARAMETERS,
+  ANDROID_TARGET_FALLBACK_PARAMETERS,
   BLOB_COURIER_PROGRESS_EVENT_NAME,
   BLOB_FETCH_FALLBACK_PARAMETERS,
   BLOB_MULTIPART_UPLOAD_FALLBACK_PARAMETERS,
@@ -142,6 +143,7 @@ describe('Given fallback parameters are provided through a constant', () => {
     expect(BLOB_FETCH_FALLBACK_PARAMETERS).toStrictEqual({
       android: {
         downloadManager: ANDROID_DOWNLOAD_MANAGER_FALLBACK_PARAMETERS,
+        target: ANDROID_TARGET_FALLBACK_PARAMETERS,
         useDownloadManager: false,
       },
       headers: {},
@@ -313,8 +315,9 @@ describe('Given a fluent fetch request', () => {
           const expectedParameters = {
             ...DEFAULT_FETCH_REQUEST,
             android: {
-              useDownloadManager: true,
               downloadManager,
+              target: ANDROID_TARGET_FALLBACK_PARAMETERS,
+              useDownloadManager: true,
             },
           };
 
@@ -323,6 +326,7 @@ describe('Given a fluent fetch request', () => {
           );
 
           expect(expectedParameters).toEqual(parameterIntersection);
+
           expect(BlobCourierEventEmitter.addListener).toHaveBeenCalled();
           verifyPropertyExistsAndIsDefined(calledWithParameters, 'taskId');
         }
@@ -351,8 +355,9 @@ describe('Given a fluent fetch request', () => {
         const expectedParameters = {
           ...DEFAULT_FETCH_REQUEST,
           android: {
-            useDownloadManager: true,
             downloadManager,
+            target: ANDROID_TARGET_FALLBACK_PARAMETERS,
+            useDownloadManager: true,
           },
         };
 
@@ -609,8 +614,9 @@ describe('Given a fluent upload request', () => {
           const expectedParameters = {
             ...DEFAULT_FETCH_REQUEST,
             android: {
-              useDownloadManager: true,
               downloadManager,
+              target: ANDROID_TARGET_FALLBACK_PARAMETERS,
+              useDownloadManager: true,
             },
           };
 

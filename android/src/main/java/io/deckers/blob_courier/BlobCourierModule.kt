@@ -43,6 +43,9 @@ private const val PARAMETER_PART_PAYLOAD = "payload"
 private const val PARAMETER_PARTS = "parts"
 private const val PARAMETER_RETURN_RESPONSE = "returnResponse"
 private const val PARAMETER_SETTINGS_PROGRESS_INTERVAL = "progressIntervalMilliseconds"
+private const val PARAMETER_TARGET_ROOT_DIRECTORY = "rootDirectory"
+private const val PARAMETER_TARGET_RELATIVE_DIRECTORY = "relativeDirectory"
+private const val PARAMETER_TARGET_SETTINGS = "target"
 private const val PARAMETER_TASK_ID = "taskId"
 private const val PARAMETER_URL = "url"
 private const val PARAMETER_USE_DOWNLOAD_MANAGER = "useDownloadManager"
@@ -286,6 +289,10 @@ private fun filterHeaders(unfilteredHeaders: Map<String, Any>): Map<String, Stri
     .mapNotNull { (k, v) -> v?.let { k to it } }
     .toMap()
 
+@Suppress("SameParameterValue")
+private fun getMapInt(input: ReadableMap, field: String, fallback: Int): Int =
+  if (input.hasKey(field)) input.getInt(field) else fallback
+
 class BlobCourierModule(private val reactContext: ReactApplicationContext) :
   ReactContextBaseJavaModule(reactContext) {
 
@@ -294,7 +301,12 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
 
   override fun getName(): String = LIBRARY_NAME
 
-  private fun createAbsoluteFilePath(filename: String) = File(reactContext.cacheDir, filename)
+  private fun createAbsoluteFilePath(
+    filename: String,
+    rootPath: File,
+    relativePath: File?
+  ) = relativePath?.let { File(it, filename).relativeTo(rootPath) }
+    ?: File(rootPath, filename)
 
   private fun uploadBlobFromValidatedParameters(input: ReadableMap, promise: Promise) {
     val maybeTaskId = input.getString(PARAMETER_TASK_ID)
@@ -351,15 +363,13 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
   private fun fetchBlobUsingDownloadManager(
     taskId: String,
     downloadManagerSettings: Map<String, Any>,
+    absoluteFilePath: File,
     uri: Uri,
-    filename: String,
     headers: Map<String, String>,
     mimeType: String,
     progressInterval: Int,
     promise: Promise
   ) {
-    val absoluteFilePath = createAbsoluteFilePath(filename)
-
     val request =
       DownloadManager.Request(uri)
         .setAllowedOverRoaming(true)
@@ -379,8 +389,7 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
     }
 
     val enableNotifications =
-      downloadManagerSettings.containsKey(DOWNLOAD_MANAGER_PARAMETER_ENABLE_NOTIFICATIONS) &&
-        downloadManagerSettings[DOWNLOAD_MANAGER_PARAMETER_ENABLE_NOTIFICATIONS] == true
+      downloadManagerSettings[DOWNLOAD_MANAGER_PARAMETER_ENABLE_NOTIFICATIONS] == true
 
     request.setNotificationVisibility(if (enableNotifications) 1 else 0)
 
@@ -414,14 +423,12 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
   private fun fetchBlobWithoutDownloadManager(
     taskId: String,
     uri: Uri,
-    filename: String,
     headers: Map<String, String>,
     method: String,
+    absoluteFilePath: File,
     progressInterval: Int,
     promise: Promise
   ) {
-    val absoluteFilePath = createAbsoluteFilePath(filename)
-
     val request = Request.Builder()
       .method(method, null)
       .url(uri.toString())
@@ -468,9 +475,10 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
     }
   }
 
-  @Suppress("SameParameterValue")
-  private fun getMapInt(input: ReadableMap, field: String, fallback: Int): Int =
-    if (input.hasKey(field)) input.getInt(field) else fallback
+  private fun mapDirEnumToFile(directoryEnum: String?): File = when (directoryEnum) {
+    "Files" -> reactContext.filesDir
+    else -> reactContext.cacheDir
+  }
 
   private fun fetchBlobFromValidatedParameters(input: ReadableMap, promise: Promise) {
     val maybeTaskId = input.getString(PARAMETER_TASK_ID)
@@ -485,6 +493,8 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
     val downloadManagerSettings = maybeAndroidSettings?.let {
       it.getMap(PARAMETER_DOWNLOAD_MANAGER_SETTINGS)?.toHashMap()
     } ?: emptyMap<String, Any>()
+
+    val maybeTargetSettings = maybeAndroidSettings?.getMap(PARAMETER_TARGET_SETTINGS)
 
     val useDownloadManager =
       maybeAndroidSettings?.getBoolean(PARAMETER_USE_DOWNLOAD_MANAGER) ?: false
@@ -513,12 +523,19 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
       return
     }
 
+    val rootPath =
+      mapDirEnumToFile(maybeTargetSettings?.getString(PARAMETER_TARGET_ROOT_DIRECTORY))
+    val relativePath =
+      mapDirEnumToFile(maybeTargetSettings?.getString(PARAMETER_TARGET_RELATIVE_DIRECTORY))
+
+    val absoluteFilePath = createAbsoluteFilePath(maybeFilename, rootPath, relativePath)
+
     startBlobFetch(
       maybeTaskId,
       Uri.parse(maybeUrl),
       useDownloadManager,
       downloadManagerSettings,
-      maybeFilename,
+      absoluteFilePath,
       mimeType,
       promise,
       method,
@@ -532,7 +549,7 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
     uri: Uri,
     useDownloadManager: Boolean,
     downloadManagerSettings: Map<String, Any>,
-    filename: String,
+    absoluteFilePath: File,
     mimeType: String,
     promise: Promise,
     method: String,
@@ -543,8 +560,8 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
       fetchBlobUsingDownloadManager(
         taskId,
         downloadManagerSettings,
+        absoluteFilePath,
         uri,
-        filename,
         headers,
         mimeType,
         progressInterval,
@@ -553,9 +570,9 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
     else fetchBlobWithoutDownloadManager(
       taskId,
       uri,
-      filename,
       headers,
       method,
+      absoluteFilePath,
       progressInterval,
       promise
     )
