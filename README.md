@@ -94,6 +94,40 @@ console.log(uploadResult):
 //   }
 // }
 
+// Multipart file upload
+const absoluteFilePath = fetchedResult.data.absoluteFilePath;
+
+const request2 = {
+  method: 'POST',
+  parts: {
+    body: {
+      value: 'some_value',
+      type: 'string',
+    },
+    file: {
+      absoluteFilePath,
+      mimeType: 'application/zip',
+      type: 'file',
+    },
+  },
+  url: 'https://file.io',
+};
+
+const multipartUploadResult = await BlobCourier.uploadBlob(request1);
+
+console.log(multipartUploadResult):
+// {
+//   "response": {
+//     "code": {
+//     "data": "<some response>",
+//     "headers": {
+//       "some_header": "some_value",
+//        ...
+//      }
+//   }
+// }
+
+
 ```
 
 ### Transfer progress reporting
