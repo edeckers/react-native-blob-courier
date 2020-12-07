@@ -26,12 +26,12 @@ export declare interface BlobRequestUrl {
 
 export declare interface BlobBaseRequest
   extends BlobRequestHeaders,
-    BlobRequestMimeType,
     BlobRequestOnProgress,
     BlobRequestUrl {}
 
 export declare interface BlobFetchRequest
   extends BlobBaseRequest,
+    BlobRequestMimeType,
     BlobRequestMethod {
   readonly filename: string;
 }
@@ -59,10 +59,37 @@ export declare interface BlobProgressEvent {
   readonly written: number;
 }
 
+export declare interface BlobMultipartFormDataBase {
+  readonly type: 'string' | 'file';
+}
+export declare interface BlobMultipartFormData
+  extends BlobMultipartFormDataBase {
+  readonly value: string;
+}
+
+export declare interface BlobMultipartFormDataFile
+  extends BlobMultipartFormDataBase {
+  readonly absoluteFilePath: string;
+  readonly filename?: string;
+  readonly mimeType: string;
+}
+
 export declare interface BlobUploadRequest
   extends BlobBaseRequest,
+    BlobRequestMimeType,
     BlobRequestMethod {
   readonly absoluteFilePath: string;
+  readonly multipartName?: string;
+  readonly filename?: string;
+  readonly returnResponse?: boolean;
+}
+
+export declare interface BlobMultipartUploadRequest
+  extends BlobBaseRequest,
+    BlobRequestMethod {
+  readonly parts: {
+    [key: string]: BlobMultipartFormData | BlobMultipartFormDataFile;
+  };
   readonly returnResponse?: boolean;
 }
 

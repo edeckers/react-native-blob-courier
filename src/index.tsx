@@ -9,6 +9,7 @@ import {
   BLOB_COURIER_PROGRESS_EVENT_NAME,
   BLOB_FETCH_FALLBACK_PARAMETERS,
   BLOB_UPLOAD_FALLBACK_PARAMETERS,
+  DEFAULT_FILE_MULTIPART_FIELD_NAME,
 } from './Consts';
 import './Extensions';
 import type {
@@ -22,6 +23,7 @@ import type {
   BlobProgressEvent,
   BlobRequestOnProgress,
   AndroidSettings,
+  BlobMultipartUploadRequest as BlobUploadMultipartRequest,
 } from './ExposedTypes';
 import { uuid } from './Utils';
 import { dict } from './Extensions';
@@ -34,9 +36,17 @@ type BlobUploadInput = BlobUploadRequest & BlobRequestSettings;
 
 type BlobUploadNativeInput = BlobUploadInput & BlobRequestTask;
 
+type BlobUploadMultipartInput = BlobUploadMultipartRequest &
+  BlobRequestSettings;
+
+type BlobUploadMultipartNativeInput = BlobUploadMultipartInput &
+  BlobRequestTask;
+
 type BlobCourierType = {
   fetchBlob(input: BlobFetchNativeInput): Promise<BlobFetchResponse>;
-  uploadBlob(input: BlobUploadInput): Promise<BlobUploadResponse>;
+  uploadBlob(
+    input: BlobUploadMultipartNativeInput
+  ): Promise<BlobUploadResponse>;
 };
 
 const { BlobCourier, BlobCourierEventEmitter } = NativeModules;
@@ -60,7 +70,7 @@ const addProgressListener = (
     }
   });
 
-const sanitizeSettingsData = <T extends BlobFetchNativeInput | BlobUploadInput>(
+const sanitizeSettingsData = <T extends BlobRequestSettings>(
   input: Readonly<T>
 ) => {
   const { progressIntervalMilliseconds } = input;
@@ -105,6 +115,7 @@ const sanitizeUploadData = <T extends BlobUploadNativeInput>(
     headers,
     method,
     mimeType,
+    multipartName,
     returnResponse,
     url,
   } = input;
@@ -116,6 +127,36 @@ const sanitizeUploadData = <T extends BlobUploadNativeInput>(
   const request = {
     absoluteFilePath,
     mimeType,
+    name: multipartName ?? DEFAULT_FILE_MULTIPART_FIELD_NAME,
+    url,
+  };
+
+  const optionalRequestParameters = dict({
+    headers,
+    method,
+    returnResponse,
+  }).fallback(BLOB_UPLOAD_FALLBACK_PARAMETERS);
+
+  return {
+    ...settings,
+    ...optionalRequestParameters,
+    ...request,
+    taskId,
+  };
+};
+
+const sanitizeMultipartUploadData = <T extends BlobUploadMultipartNativeInput>(
+  input: Readonly<T>
+): BlobUploadMultipartNativeInput => {
+  const { parts, headers, method, returnResponse, url } = input;
+
+  const { taskId } = input;
+
+  const settings = sanitizeSettingsData(input);
+
+  const request = {
+    mimeType: 'multipart/form-data',
+    parts,
     url,
   };
 
@@ -156,11 +197,51 @@ const fetchBlob = <T extends BlobFetchNativeInput>(input: Readonly<T>) =>
     input.onProgress
   );
 
-const uploadBlob = <T extends BlobUploadNativeInput>(input: Readonly<T>) =>
+const generateMultipartName = (prefix: string) => `${prefix}-${uuid()}`;
+
+const uploadParts = <T extends BlobUploadMultipartNativeInput>(
+  input: Readonly<T>
+) =>
   wrapEmitter(
     input.taskId,
     () =>
-      (BlobCourier as BlobCourierType).uploadBlob(sanitizeUploadData(input)),
+      (BlobCourier as BlobCourierType).uploadBlob(
+        sanitizeMultipartUploadData(input)
+      ),
+    input.onProgress
+  );
+
+const uploadBlob = <T extends BlobUploadNativeInput>(input: Readonly<T>) =>
+  wrapEmitter(
+    input.taskId,
+    () => {
+      const sanitizedUploadData = sanitizeUploadData(input);
+
+      const {
+        absoluteFilePath,
+        filename,
+        mimeType,
+        taskId,
+        url,
+      } = sanitizedUploadData;
+
+      const multipartName =
+        sanitizedUploadData.multipartName ??
+        generateMultipartName(DEFAULT_FILE_MULTIPART_FIELD_NAME);
+
+      return uploadParts({
+        parts: {
+          [multipartName]: {
+            absoluteFilePath,
+            filename,
+            mimeType,
+            type: 'file',
+          },
+        },
+        taskId,
+        url,
+      });
+    },
     input.onProgress
   );
 
@@ -178,6 +259,13 @@ const onProgress = (
     }),
   uploadBlob: (input: BlobUploadRequest) =>
     uploadBlob({
+      ...input,
+      ...requestSettings,
+      onProgress: fn,
+      taskId,
+    }),
+  uploadParts: (input: BlobUploadMultipartRequest) =>
+    uploadParts({
       ...input,
       ...requestSettings,
       onProgress: fn,
@@ -224,6 +312,12 @@ const settings = (taskId: string, requestSettings: BlobRequestSettings) => ({
       ...requestSettings,
       taskId,
     }),
+  uploadParts: (input: BlobUploadMultipartInput) =>
+    uploadParts({
+      ...input,
+      ...requestSettings,
+      taskId,
+    }),
   useDownloadManagerOnAndroid: (
     downloadManagerSettings?: AndroidDownloadManagerSettings
   ) =>
@@ -242,6 +336,8 @@ export default {
   settings: (input: BlobRequestSettings) => settings(createTaskId(), input),
   uploadBlob: (input: BlobUploadInput) =>
     uploadBlob({ ...input, taskId: createTaskId() }),
+  uploadParts: (input: BlobUploadMultipartInput) =>
+    uploadParts({ ...input, taskId: createTaskId() }),
   useDownloadManagerOnAndroid: (
     downloadManagerSettings: AndroidDownloadManagerSettings
   ) => useDownloadManagerOnAndroid(createTaskId(), downloadManagerSettings),
