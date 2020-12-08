@@ -145,6 +145,28 @@ const sanitizeUploadData = <T extends BlobUploadNativeInput>(
   };
 };
 
+const stringifyPartsValues = (parts: { [key: string]: any }) => {
+  const stringify = (part: { [key: string]: any }) =>
+    Object.keys(part).reduce(
+      (p, c) => ({
+        ...p,
+        [c]:
+          c === 'value' && typeof part.value === 'object'
+            ? JSON.stringify(part.value)
+            : part[c],
+      }),
+      {}
+    );
+
+  return Object.keys(parts).reduce(
+    (p, c) => ({
+      ...p,
+      [c]: stringify(parts[c]),
+    }),
+    {}
+  );
+};
+
 const sanitizeMultipartUploadData = <T extends BlobUploadMultipartNativeInput>(
   input: Readonly<T>
 ): BlobUploadMultipartNativeInput => {
@@ -156,7 +178,7 @@ const sanitizeMultipartUploadData = <T extends BlobUploadMultipartNativeInput>(
 
   const request = {
     mimeType: 'multipart/form-data',
-    parts,
+    parts: stringifyPartsValues(parts),
     url,
   };
 

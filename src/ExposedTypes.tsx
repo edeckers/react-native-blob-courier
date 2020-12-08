@@ -64,7 +64,7 @@ export declare interface BlobMultipartFormDataBase {
 }
 export declare interface BlobMultipartFormData
   extends BlobMultipartFormDataBase {
-  readonly value: string;
+  readonly value: string | { [key: string]: any };
 }
 
 export declare interface BlobMultipartFormDataFile

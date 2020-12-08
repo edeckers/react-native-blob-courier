@@ -205,7 +205,10 @@ const UploaderView = (props: UVProps) => {
           method: 'POST',
           parts: {
             body: {
-              value: 'some_value',
+              value: {
+                a: 'b',
+                c: 42,
+              },
               type: 'string',
             },
             file: {
