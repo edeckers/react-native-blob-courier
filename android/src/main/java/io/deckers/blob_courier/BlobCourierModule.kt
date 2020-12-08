@@ -12,15 +12,25 @@ import android.content.IntentFilter
 import android.net.Uri
 import android.util.Log
 import com.facebook.common.internal.ImmutableMap
-import com.facebook.react.bridge.*
+import com.facebook.react.bridge.Promise
+import com.facebook.react.bridge.ReactApplicationContext
+import com.facebook.react.bridge.ReactContextBaseJavaModule
+import com.facebook.react.bridge.ReactMethod
+import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.modules.network.OkHttpClientProvider
-import okhttp3.*
-import okio.Okio
-import okio.Source
+import okhttp3.Headers
+import okhttp3.Interceptor
+import okhttp3.MediaType
+import okhttp3.MultipartBody
+import okhttp3.Request
+import okhttp3.RequestBody
+import okhttp3.Response
 import java.io.File
 import java.lang.reflect.Type
 import java.net.URL
 import kotlin.concurrent.thread
+import okio.Okio
+import okio.Source
 
 private const val ERROR_MISSING_REQUIRED_PARAMETER = "ERROR_MISSING_REQUIRED_PARAMETER"
 
@@ -112,12 +122,12 @@ private fun createDownloadProgressInterceptor(
 
 private fun verifyFilePart(part: ReadableMap, promise: Promise): Boolean {
   if (!part.hasKey(PARAMETER_ABSOLUTE_FILE_PATH)) {
-    promise.reject(ERROR_MISSING_REQUIRED_PARAMETER, "part.${PARAMETER_ABSOLUTE_FILE_PATH}")
+    promise.reject(ERROR_MISSING_REQUIRED_PARAMETER, "part.$PARAMETER_ABSOLUTE_FILE_PATH")
     return false
   }
 
   if (!part.hasKey(PARAMETER_MIME_TYPE)) {
-    promise.reject(ERROR_MISSING_REQUIRED_PARAMETER, "part.${PARAMETER_MIME_TYPE}")
+    promise.reject(ERROR_MISSING_REQUIRED_PARAMETER, "part.$PARAMETER_MIME_TYPE")
     return false
   }
 
@@ -189,8 +199,10 @@ private fun startBlobUpload(
         "file" -> {
           val file = File(this.getString(PARAMETER_ABSOLUTE_FILE_PATH)!!)
           val filename =
-            if (this.hasKey(PARAMETER_FILENAME)) (this.getString(PARAMETER_FILENAME)
-              ?: file.name) else file.name
+            if (this.hasKey(PARAMETER_FILENAME)) (
+              this.getString(PARAMETER_FILENAME)
+                ?: file.name
+              ) else file.name
 
           mpb.addFormDataPart(
             multipartName,
