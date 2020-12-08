@@ -15,16 +15,20 @@ open class BlobCourier: NSObject {
   static let parameterAbsoluteFilePath = "absoluteFilePath"
   static let parameterHeaders = "headers"
   static let parameterMethod = "method"
+  static let parameterMimeType = "mimeType"
+  static let parameterParts = "parts"
   static let parameterProgressInterval = "progressIntervalMilliseconds"
   static let parameterReturnResponse = "returnResponse"
   static let parameterTaskId = "taskId"
   static let parameterUrl = "url"
 
   static let defaultMethod = "GET"
+  static let defaultMimeType = "application/octet-stream"
   static let defaultProgressIntervalMilliseconds = 500
 
   static let requiredParameterProcessor = [
     "Boolean": { (input: NSDictionary, parameterName: String) in return input[parameterName]! },
+    "NSDictionary": { (input: NSDictionary, parameterName: String) in return input[parameterName]! },
     "String": { (input: NSDictionary, parameterName: String) in return input[parameterName]! }
   ]
 
@@ -107,9 +111,36 @@ open class BlobCourier: NSObject {
     session.downloadTask(with: request).resume()
   }
 
-  func buildRequestDataForFileUpload(url: URL, fileUrl: URL, headers: NSDictionary) -> (URLRequest, Data) {
-    // https://igomobile.de/2020/06/16/swift-upload-a-file-with-multipart-form-data-in-ios-using-uploadtask-and-urlsession/
+  func addFormDataPart(data: inout Data, boundary: String, paramName: String, value: String) {
+    data.append("\r\n--\(boundary)\r\n")
+    data.append(
+      "Content-Disposition: form-data; name=\"\(paramName)\"\r\n")
+    data.append(value)
+    data.append("\r\n--\(boundary)--\r\n")
+  }
 
+  func addFilePart(
+    data: inout Data,
+    boundary: String,
+    paramName: String,
+    absoluteFilePath: String,
+    filename: String,
+    mimeType: String) {
+
+    let fileUrl = URL(string: absoluteFilePath)!
+    let fileData = try? Data(contentsOf: fileUrl)
+
+    data.append("\r\n--\(boundary)\r\n")
+    data.append(
+      "Content-Disposition: form-data; name=\"\(paramName)\"; filename=\"\(filename)\"\r\n"
+        .data(using: .utf8)!)
+    data.append("Content-Type: \(mimeType)\r\n\r\n")
+    data.append(fileData!)
+    data.append("\r\n--\(boundary)--\r\n")
+  }
+
+  func buildRequestDataForFileUpload(url: URL, parts: NSDictionary, headers: NSDictionary) -> (URLRequest, Data) {
+    // https://igomobile.de/2020/06/16/swift-upload-a-file-with-multipart-form-data-in-ios-using-uploadtask-and-urlsession/
     let boundary = UUID().uuidString
 
     var request = URLRequest(url: url)
@@ -124,20 +155,31 @@ open class BlobCourier: NSObject {
       }
     }
 
-    let fileName = fileUrl.lastPathComponent
-    let mimetype = "application/octet-stream"
-    let paramName = "file"
-    let fileData = try? Data(contentsOf: fileUrl)
-
     var data = Data()
 
-    data.append("\r\n--\(boundary)\r\n".data(using: .utf8)!)
-    data.append(
-      "Content-Disposition: form-data; name=\"\(paramName)\"; filename=\"\(fileName)\"\r\n"
-        .data(using: .utf8)!)
-    data.append("Content-Type: \(mimetype)\r\n\r\n".data(using: .utf8)!)
-    data.append(fileData!)
-    data.append("\r\n--\(boundary)--\r\n".data(using: .utf8)!)
+    for (key, value) in parts {
+      if let paramName = key as? String, let part = value as? [String: String] {
+        if part["type"] == "file" {
+          let absoluteFilePath = part[BlobCourier.parameterAbsoluteFilePath]!
+
+          let fileUrl = URL(string: absoluteFilePath)!
+          let filename = part[BlobCourier.parameterFilename] ?? fileUrl.lastPathComponent
+          let mimeType = part[BlobCourier.parameterMimeType] ?? BlobCourier.defaultMimeType
+
+          addFilePart(
+            data: &data,
+            boundary: boundary,
+            paramName: paramName,
+            absoluteFilePath: absoluteFilePath,
+            filename: filename,
+            mimeType: mimeType)
+          continue
+        }
+
+        let formDataValue = part["value"] ?? ""
+        addFormDataPart(data: &data, boundary: boundary, paramName: paramName, value: formDataValue)
+      }
+    }
 
     request.setValue(String(data.count), forHTTPHeaderField: "Content-Length")
 
@@ -158,9 +200,7 @@ open class BlobCourier: NSObject {
 
     let urlObject = URL(string: url)!
 
-    let absoluteFilePath = (input[BlobCourier.parameterAbsoluteFilePath] as? String) ?? ""
-
-    let absoluteFilePathObject = URL(string: absoluteFilePath)!
+    let parts = (input[BlobCourier.parameterParts] as? NSDictionary) ?? NSDictionary()
 
     let returnResponse = (input[BlobCourier.parameterReturnResponse] as? Bool) ?? false
 
@@ -179,7 +219,7 @@ open class BlobCourier: NSObject {
         (input[BlobCourier.parameterHeaders] as? NSDictionary) ??
         NSDictionary())
 
-    let (request, fileData) = buildRequestDataForFileUpload(url: urlObject, fileUrl: absoluteFilePathObject, headers: headers)
+    let (request, fileData) = buildRequestDataForFileUpload(url: urlObject, parts: parts, headers: headers)
 
     session.uploadTask(with: request, from: fileData).resume()
   }
@@ -211,7 +251,7 @@ open class BlobCourier: NSObject {
     print("Start uploadBlob")
     do {
       try assertRequiredParameter(
-        input: input, type: "String", parameterName: BlobCourier.parameterAbsoluteFilePath)
+        input: input, type: "NSDictionary", parameterName: BlobCourier.parameterParts)
       try assertRequiredParameter(
         input: input, type: "String", parameterName: BlobCourier.parameterTaskId)
       try assertRequiredParameter(
@@ -220,6 +260,14 @@ open class BlobCourier: NSObject {
       try uploadBlobFromValidatedParameters(input: input, resolve: resolve, reject: reject)
     } catch {
       print("\(error)")
+    }
+  }
+}
+
+extension Data {
+  mutating func append(_ string: String) {
+    if let data = string.data(using: .utf8) {
+      append(data)
     }
   }
 }
