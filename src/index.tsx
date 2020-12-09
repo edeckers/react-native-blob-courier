@@ -220,8 +220,6 @@ const fetchBlob = <T extends BlobFetchNativeInput>(input: Readonly<T>) =>
     input.onProgress
   );
 
-const generateMultipartName = (prefix: string) => `${prefix}-${uuid()}`;
-
 const uploadParts = <T extends BlobUploadMultipartNativeInput>(
   input: Readonly<T>
 ) =>
@@ -244,18 +242,15 @@ const uploadBlob = <T extends BlobUploadNativeInput>(input: Readonly<T>) =>
         absoluteFilePath,
         filename,
         mimeType,
+        multipartName,
         taskId,
         url,
       } = sanitizedUploadData;
 
-      const multipartName =
-        sanitizedUploadData.multipartName ??
-        generateMultipartName(DEFAULT_FILE_MULTIPART_FIELD_NAME);
-
       return uploadParts({
         ...sanitizedUploadData,
         parts: {
-          [multipartName]: {
+          [multipartName as string]: {
             absoluteFilePath,
             filename,
             mimeType,

@@ -11,11 +11,13 @@ import {
   BLOB_FETCH_FALLBACK_PARAMETERS,
   BLOB_MULTIPART_UPLOAD_FALLBACK_PARAMETERS,
   BLOB_UPLOAD_FALLBACK_PARAMETERS,
+  DEFAULT_FILE_MULTIPART_FIELD_NAME,
   DEFAULT_PROGRESS_UPDATE_INTERVAL_MILLISECONDS,
 } from '../Consts';
 import { dict } from '../Extensions';
 import { NativeEventEmitter, NativeModules } from 'react-native';
 import BlobCourier from '../index';
+import type { BlobMultipartUploadRequest } from 'src/ExposedTypes';
 
 const {
   BlobCourier: BlobCourierNative,
@@ -35,12 +37,10 @@ const DEFAULT_FETCH_REQUEST = {
 const DEFAULT_UPLOAD_REQUEST = {
   absoluteFilePath: '/path/to/some_file.txt',
   mimeType: 'plain/text',
-  multipartName: 'file',
   url: 'https://github.com/edeckers/react-native-blob-courier',
 };
 
-const DEFAULT_MULTIPART_UPLOAD_REQUEST = {
-  mimeType: 'multipart/form-data',
+const DEFAULT_MULTIPART_UPLOAD_REQUEST: BlobMultipartUploadRequest = {
   parts: {
     file: {
       absoluteFilePath: '/path/to/some_file.txt',
@@ -384,6 +384,78 @@ describe('Given a regular upload request', () => {
     }
   );
 
+  testAsync('Missing multipartNames are generated', async () => {
+    await BlobCourier.uploadBlob(DEFAULT_UPLOAD_REQUEST);
+
+    const calledWithParameters = getLastMockCallFirstParameter(
+      BlobCourierNative.uploadBlob
+    );
+
+    verifyPropertyExistsAndIsDefined(
+      calledWithParameters.parts,
+      DEFAULT_FILE_MULTIPART_FIELD_NAME
+    );
+  });
+
+  testAsync('Provided multipartNames are used', async () => {
+    const multipartName = RANDOM_VALUE_GENERATORS.string();
+
+    await BlobCourier.uploadBlob({
+      ...DEFAULT_UPLOAD_REQUEST,
+      multipartName,
+    });
+
+    const calledWithParameters = getLastMockCallFirstParameter(
+      BlobCourierNative.uploadBlob
+    );
+
+    verifyPropertyExistsAndIsDefined(calledWithParameters.parts, multipartName);
+  });
+
+  testAsync('JSON multi-part payloads are serialized', async () => {
+    await BlobCourier.uploadParts({
+      ...DEFAULT_UPLOAD_REQUEST,
+      parts: {
+        some_json_part: {
+          type: 'string',
+          mimeType: 'text/json',
+          value: { a: 1 },
+        },
+      },
+    });
+
+    const calledWithParameters = getLastMockCallFirstParameter(
+      BlobCourierNative.uploadBlob
+    );
+
+    expect(typeof calledWithParameters.parts.some_json_part.value).toEqual(
+      'string'
+    );
+  });
+
+  testAsync(
+    'The native module is called with all required multi part-values',
+    async () => {
+      const progressIntervalMilliseconds = Math.random();
+      await BlobCourier.uploadParts(DEFAULT_MULTIPART_UPLOAD_REQUEST);
+
+      const calledWithParameters = getLastMockCallFirstParameter(
+        BlobCourierNative.uploadBlob
+      );
+
+      const expectedParameters = {
+        ...DEFAULT_MULTIPART_UPLOAD_REQUEST,
+        progressIntervalMilliseconds,
+      };
+
+      expect(dict(calledWithParameters).intersect(expectedParameters)).toEqual(
+        expectedParameters
+      );
+
+      verifyPropertyExistsAndIsDefined(calledWithParameters, 'taskId');
+    }
+  );
+
   describe('And no optional parameters are provided', () => {
     testAsync(
       'The native module is called with fallback parameters',
@@ -442,6 +514,58 @@ describe('Given a fluent upload request', () => {
         await BlobCourier.settings({
           progressIntervalMilliseconds,
         }).uploadBlob(DEFAULT_UPLOAD_REQUEST);
+
+        const calledWithParameters = getLastMockCallFirstParameter(
+          BlobCourierNative.uploadBlob
+        );
+
+        const expectedParameters = {
+          ...DEFAULT_MULTIPART_UPLOAD_REQUEST,
+          progressIntervalMilliseconds,
+        };
+
+        expect(
+          dict(calledWithParameters).intersect(expectedParameters)
+        ).toEqual(expectedParameters);
+
+        verifyPropertyExistsAndIsDefined(calledWithParameters, 'taskId');
+      }
+    );
+
+    describe('And a progress updater is provided provided', () => {
+      testAsync(
+        'The native module is called with all required multi part-values and the provided settings',
+        async () => {
+          const progressIntervalMilliseconds = Math.random();
+          await BlobCourier.onProgress(() => {
+            /* noop */
+          }).uploadParts(DEFAULT_MULTIPART_UPLOAD_REQUEST);
+
+          const calledWithParameters = getLastMockCallFirstParameter(
+            BlobCourierNative.uploadBlob
+          );
+
+          const expectedParameters = {
+            ...DEFAULT_MULTIPART_UPLOAD_REQUEST,
+            progressIntervalMilliseconds,
+          };
+
+          expect(
+            dict(calledWithParameters).intersect(expectedParameters)
+          ).toEqual(expectedParameters);
+
+          verifyPropertyExistsAndIsDefined(calledWithParameters, 'taskId');
+        }
+      );
+    });
+
+    testAsync(
+      'The native module is called with all required multi part-values and the provided settings',
+      async () => {
+        const progressIntervalMilliseconds = Math.random();
+        await BlobCourier.settings({
+          progressIntervalMilliseconds,
+        }).uploadParts(DEFAULT_MULTIPART_UPLOAD_REQUEST);
 
         const calledWithParameters = getLastMockCallFirstParameter(
           BlobCourierNative.uploadBlob
