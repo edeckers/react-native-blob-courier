@@ -9,6 +9,7 @@ import {
   ANDROID_DOWNLOAD_MANAGER_FALLBACK_PARAMETERS,
   BLOB_COURIER_PROGRESS_EVENT_NAME,
   BLOB_FETCH_FALLBACK_PARAMETERS,
+  BLOB_MULTIPART_UPLOAD_FALLBACK_PARAMETERS,
   BLOB_UPLOAD_FALLBACK_PARAMETERS,
   DEFAULT_PROGRESS_UPDATE_INTERVAL_MILLISECONDS,
 } from '../Consts';
@@ -32,8 +33,22 @@ const DEFAULT_FETCH_REQUEST = {
 };
 
 const DEFAULT_UPLOAD_REQUEST = {
-  absoluteFilePath: '/path/to/some_file.ext',
+  absoluteFilePath: '/path/to/some_file.txt',
   mimeType: 'plain/text',
+  multipartName: 'file',
+  url: 'https://github.com/edeckers/react-native-blob-courier',
+};
+
+const DEFAULT_MULTIPART_UPLOAD_REQUEST = {
+  mimeType: 'multipart/form-data',
+  parts: {
+    file: {
+      absoluteFilePath: '/path/to/some_file.txt',
+      filename: undefined,
+      mimeType: 'plain/text',
+      type: 'file',
+    },
+  },
   url: 'https://github.com/edeckers/react-native-blob-courier',
 };
 
@@ -356,14 +371,15 @@ describe('Given a regular upload request', () => {
     async () => {
       await BlobCourier.uploadBlob(DEFAULT_UPLOAD_REQUEST);
 
-      expect(BlobCourierNative.uploadBlob).toHaveBeenCalledWith(
-        expect.objectContaining(DEFAULT_UPLOAD_REQUEST)
-      );
-
       const calledWithParameters = getLastMockCallFirstParameter(
         BlobCourierNative.uploadBlob
       );
 
+      const parameterIntersection = dict(calledWithParameters).intersect(
+        DEFAULT_MULTIPART_UPLOAD_REQUEST
+      );
+
+      expect(parameterIntersection).toEqual(DEFAULT_MULTIPART_UPLOAD_REQUEST);
       verifyPropertyExistsAndIsDefined(calledWithParameters, 'taskId');
     }
   );
@@ -400,16 +416,16 @@ describe('Given a regular upload request', () => {
       );
 
       const overriddenValues = dict(calledWithParameters).intersect(
-        BLOB_UPLOAD_FALLBACK_PARAMETERS
+        BLOB_MULTIPART_UPLOAD_FALLBACK_PARAMETERS
       );
 
       expect(Object.keys(overriddenValues).sort()).toEqual(
-        Object.keys(BLOB_UPLOAD_FALLBACK_PARAMETERS).sort()
+        Object.keys(BLOB_MULTIPART_UPLOAD_FALLBACK_PARAMETERS).sort()
       );
 
       Object.keys(overriddenValues).forEach((k) => {
         expect((overriddenValues as any)[k]).not.toEqual(
-          (BLOB_UPLOAD_FALLBACK_PARAMETERS as any)[k]
+          (BLOB_MULTIPART_UPLOAD_FALLBACK_PARAMETERS as any)[k]
         );
       });
       verifyPropertyExistsAndIsDefined(calledWithParameters, 'taskId');
@@ -432,13 +448,14 @@ describe('Given a fluent upload request', () => {
         );
 
         const expectedParameters = {
-          ...DEFAULT_FETCH_REQUEST,
+          ...DEFAULT_MULTIPART_UPLOAD_REQUEST,
           progressIntervalMilliseconds,
         };
 
-        expect(expectedParameters).toMatchObject(
+        expect(
           dict(calledWithParameters).intersect(expectedParameters)
-        );
+        ).toEqual(expectedParameters);
+
         verifyPropertyExistsAndIsDefined(calledWithParameters, 'taskId');
       }
     );

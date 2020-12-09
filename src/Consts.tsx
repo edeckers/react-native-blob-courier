@@ -29,4 +29,9 @@ export const BLOB_UPLOAD_FALLBACK_PARAMETERS = {
   returnResponse: false,
 };
 
+export const BLOB_MULTIPART_UPLOAD_FALLBACK_PARAMETERS = {
+  ...BLOB_UPLOAD_FALLBACK_PARAMETERS,
+  parts: {},
+};
+
 export const BLOB_COURIER_PROGRESS_EVENT_NAME = 'BlobCourierProgress';

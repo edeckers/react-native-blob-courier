@@ -8,6 +8,7 @@ import { NativeEventEmitter, NativeModules } from 'react-native';
 import {
   BLOB_COURIER_PROGRESS_EVENT_NAME,
   BLOB_FETCH_FALLBACK_PARAMETERS,
+  BLOB_MULTIPART_UPLOAD_FALLBACK_PARAMETERS,
   BLOB_UPLOAD_FALLBACK_PARAMETERS,
   DEFAULT_FILE_MULTIPART_FIELD_NAME,
 } from './Consts';
@@ -127,7 +128,7 @@ const sanitizeUploadData = <T extends BlobUploadNativeInput>(
   const request = {
     absoluteFilePath,
     mimeType,
-    name: multipartName ?? DEFAULT_FILE_MULTIPART_FIELD_NAME,
+    multipartName: multipartName ?? DEFAULT_FILE_MULTIPART_FIELD_NAME,
     url,
   };
 
@@ -186,7 +187,7 @@ const sanitizeMultipartUploadData = <T extends BlobUploadMultipartNativeInput>(
     headers,
     method,
     returnResponse,
-  }).fallback(BLOB_UPLOAD_FALLBACK_PARAMETERS);
+  }).fallback(BLOB_MULTIPART_UPLOAD_FALLBACK_PARAMETERS);
 
   return {
     ...settings,
@@ -252,6 +253,7 @@ const uploadBlob = <T extends BlobUploadNativeInput>(input: Readonly<T>) =>
         generateMultipartName(DEFAULT_FILE_MULTIPART_FIELD_NAME);
 
       return uploadParts({
+        ...sanitizedUploadData,
         parts: {
           [multipartName]: {
             absoluteFilePath,
