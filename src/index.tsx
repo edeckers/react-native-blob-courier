@@ -9,7 +9,6 @@ import {
   BLOB_COURIER_PROGRESS_EVENT_NAME,
   BLOB_FETCH_FALLBACK_PARAMETERS,
   BLOB_MULTIPART_UPLOAD_FALLBACK_PARAMETERS,
-  BLOB_UPLOAD_FALLBACK_PARAMETERS,
   DEFAULT_FILE_MULTIPART_FIELD_NAME,
 } from './Consts';
 import './Extensions';
@@ -108,44 +107,6 @@ const sanitizeFetchData = <T extends BlobFetchNativeInput>(
   };
 };
 
-const sanitizeUploadData = <T extends BlobUploadNativeInput>(
-  input: Readonly<T>
-): BlobUploadNativeInput => {
-  const {
-    absoluteFilePath,
-    headers,
-    method,
-    mimeType,
-    multipartName,
-    returnResponse,
-    url,
-  } = input;
-
-  const { taskId } = input;
-
-  const settings = sanitizeSettingsData(input);
-
-  const request = {
-    absoluteFilePath,
-    mimeType,
-    multipartName: multipartName ?? DEFAULT_FILE_MULTIPART_FIELD_NAME,
-    url,
-  };
-
-  const optionalRequestParameters = dict({
-    headers,
-    method,
-    returnResponse,
-  }).fallback(BLOB_UPLOAD_FALLBACK_PARAMETERS);
-
-  return {
-    ...settings,
-    ...optionalRequestParameters,
-    ...request,
-    taskId,
-  };
-};
-
 const stringifyPartsValues = (parts: { [key: string]: any }) => {
   const stringify = (part: { [key: string]: any }) =>
     Object.keys(part).reduce(
@@ -232,37 +193,21 @@ const uploadParts = <T extends BlobUploadMultipartNativeInput>(
     input.onProgress
   );
 
-const uploadBlob = <T extends BlobUploadNativeInput>(input: Readonly<T>) =>
-  wrapEmitter(
-    input.taskId,
-    () => {
-      const sanitizedUploadData = sanitizeUploadData(input);
+const uploadBlob = <T extends BlobUploadNativeInput>(input: Readonly<T>) => {
+  const { absoluteFilePath, filename, mimeType, multipartName } = input;
 
-      const {
+  return uploadParts({
+    ...input,
+    parts: {
+      [multipartName ?? DEFAULT_FILE_MULTIPART_FIELD_NAME]: {
         absoluteFilePath,
         filename,
         mimeType,
-        multipartName,
-        taskId,
-        url,
-      } = sanitizedUploadData;
-
-      return uploadParts({
-        ...sanitizedUploadData,
-        parts: {
-          [multipartName as string]: {
-            absoluteFilePath,
-            filename,
-            mimeType,
-            type: 'file',
-          },
-        },
-        taskId,
-        url,
-      });
+        type: 'file',
+      },
     },
-    input.onProgress
-  );
+  });
+};
 
 const onProgress = (
   taskId: string,
