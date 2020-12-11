@@ -18,6 +18,10 @@ import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReactMethod
 import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.modules.network.OkHttpClientProvider
+import java.io.File
+import java.lang.reflect.Type
+import java.net.URL
+import kotlin.concurrent.thread
 import okhttp3.Headers
 import okhttp3.Interceptor
 import okhttp3.MediaType
@@ -25,10 +29,6 @@ import okhttp3.MultipartBody
 import okhttp3.Request
 import okhttp3.RequestBody
 import okhttp3.Response
-import java.io.File
-import java.lang.reflect.Type
-import java.net.URL
-import kotlin.concurrent.thread
 import okio.Okio
 import okio.Source
 
@@ -284,7 +284,8 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
 
     val headers = filterHeaders(unfilteredHeaders)
 
-    val returnResponse = input.getBoolean(PARAMETER_RETURN_RESPONSE)
+    val returnResponse =
+      input.hasKey(PARAMETER_RETURN_RESPONSE) && input.getBoolean(PARAMETER_RETURN_RESPONSE)
 
     val progressInterval =
       getMapInt(input, PARAMETER_SETTINGS_PROGRESS_INTERVAL, DEFAULT_PROGRESS_TIMEOUT_MILLISECONDS)

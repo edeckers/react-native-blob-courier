@@ -10,9 +10,8 @@ import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.bridge.WritableMap
-import kotlin.concurrent.thread
 
-private const val DEFAULT_PROMISE_TIMEOUT_MILLISECONDS = 10_000L
+const val DEFAULT_PROMISE_TIMEOUT_MILLISECONDS = 60_000L
 
 object Fixtures {
 
@@ -25,9 +24,15 @@ object Fixtures {
   fun createValidUploadTestParameterMap(
     taskId: String,
     localPath: String
-  ): Map<String, String> = mapOf(
+  ): Map<String, Any> = mapOf(
     "taskId" to taskId,
-    "absoluteFilePath" to localPath,
+    "parts" to mapOf(
+      "file" to mapOf(
+        "absoluteFilePath" to localPath,
+        "mimeType" to "text/html",
+        "type" to "file"
+      )
+    ),
     "url" to "https://file.io"
   )
 
@@ -35,30 +40,20 @@ object Fixtures {
     context: ReactApplicationContext,
     input: ReadableMap,
     promise: Promise,
-    timeoutMilliseconds: Long = DEFAULT_PROMISE_TIMEOUT_MILLISECONDS
   ) {
     val m = BlobCourierModule(context)
 
-    thread {
-      m.fetchBlob(input, promise)
-    }
-
-    Thread.sleep(timeoutMilliseconds)
+    m.fetchBlob(input, promise)
   }
 
   fun runUploadBlob(
     context: ReactApplicationContext,
     input: ReadableMap,
     promise: Promise,
-    timeoutMilliseconds: Long = DEFAULT_PROMISE_TIMEOUT_MILLISECONDS
   ) {
     val m = BlobCourierModule(context)
 
-    thread {
-      m.uploadBlob(input, promise)
-    }
-
-    Thread.sleep(timeoutMilliseconds)
+    m.uploadBlob(input, promise)
   }
 
   class EitherPromise(
