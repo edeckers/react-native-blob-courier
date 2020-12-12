@@ -56,8 +56,6 @@ open class BlobCourier: NSObject {
 
     let url = (input[BlobCourier.parameterUrl] as? String) ?? ""
 
-    let urlObject = URL(string: url)
-
     let filename = (input[BlobCourier.parameterFilename] as? String) ?? ""
 
     let headers =
@@ -98,34 +96,6 @@ open class BlobCourier: NSObject {
     session.downloadTask(with: request).resume()
   }
 
-  func addFormDataPart(data: inout Data, boundary: String, paramName: String, value: String) {
-    data.append("\r\n--\(boundary)\r\n")
-    data.append(
-      "Content-Disposition: form-data; name=\"\(paramName)\"\r\n")
-    data.append(value)
-    data.append("\r\n--\(boundary)--\r\n")
-  }
-
-  func addFilePart(
-    data: inout Data,
-    boundary: String,
-    paramName: String,
-    absoluteFilePath: String,
-    filename: String,
-    mimeType: String) {
-
-    let fileUrl = URL(string: absoluteFilePath)!
-    let fileData = try? Data(contentsOf: fileUrl)
-
-    data.append("\r\n--\(boundary)\r\n")
-    data.append(
-      "Content-Disposition: form-data; name=\"\(paramName)\"; filename=\"\(filename)\"\r\n"
-        .data(using: .utf8)!)
-    data.append("Content-Type: \(mimeType)\r\n\r\n")
-    data.append(fileData!)
-    data.append("\r\n--\(boundary)--\r\n")
-  }
-
   func buildRequestDataForFileUpload(url: URL, parts: NSDictionary, headers: NSDictionary) -> (URLRequest, Data) {
     // https://igomobile.de/2020/06/16/swift-upload-a-file-with-multipart-form-data-in-ios-using-uploadtask-and-urlsession/
     let boundary = UUID().uuidString
@@ -153,8 +123,7 @@ open class BlobCourier: NSObject {
           let filename = part[BlobCourier.parameterFilename] ?? fileUrl.lastPathComponent
           let mimeType = part[BlobCourier.parameterMimeType] ?? BlobCourier.defaultMimeType
 
-          addFilePart(
-            data: &data,
+          data.addFilePart(
             boundary: boundary,
             paramName: paramName,
             absoluteFilePath: absoluteFilePath,
@@ -164,7 +133,7 @@ open class BlobCourier: NSObject {
         }
 
         let formDataValue = part["value"] ?? ""
-        addFormDataPart(data: &data, boundary: boundary, paramName: paramName, value: formDataValue)
+        data.addFormDataPart(boundary: boundary, paramName: paramName, value: formDataValue)
       }
     }
 
@@ -254,9 +223,36 @@ open class BlobCourier: NSObject {
 }
 
 extension Data {
-  mutating func append(_ string: String) {
+  mutating func append(string: String) {
     if let data = string.data(using: .utf8) {
       append(data)
     }
+  }
+
+  mutating func addFormDataPart(boundary: String, paramName: String, value: String) {
+    append(string: "\r\n--\(boundary)\r\n")
+    append(
+      string: "Content-Disposition: form-data; name=\"\(paramName)\"\r\n")
+    append(string: value)
+    append(string: "\r\n--\(boundary)--\r\n")
+  }
+
+  mutating func addFilePart(
+    boundary: String,
+    paramName: String,
+    absoluteFilePath: String,
+    filename: String,
+    mimeType: String) {
+
+    let fileUrl = URL(string: absoluteFilePath)!
+    let fileData = try? Data(contentsOf: fileUrl)
+
+    append(string: "\r\n--\(boundary)\r\n")
+    append(
+      "Content-Disposition: form-data; name=\"\(paramName)\"; filename=\"\(filename)\"\r\n"
+        .data(using: .utf8)!)
+    append(string: "Content-Type: \(mimeType)\r\n\r\n")
+    append(fileData!)
+    append(string: "\r\n--\(boundary)--\r\n")
   }
 }

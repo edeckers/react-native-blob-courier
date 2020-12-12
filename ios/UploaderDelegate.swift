@@ -68,7 +68,8 @@ open class UploaderDelegate: NSObject, URLSessionDataDelegate, URLSessionTaskDel
       }
 
       if let statusCode = (response as? HTTPURLResponse)?.statusCode {
-        let rawResponse = returnResponse ? String(data: data, encoding: String.Encoding.utf8) : ""
+        let maybeRawResponse = returnResponse ? String(data: data, encoding: String.Encoding.utf8) : nil
+        let rawResponse = maybeRawResponse ?? ""
 
         let result: NSDictionary = [
           "response": [
