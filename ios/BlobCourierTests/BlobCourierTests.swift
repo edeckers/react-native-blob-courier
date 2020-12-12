@@ -65,8 +65,11 @@ class BlobCourierTests: XCTestCase {
             self.sut?.uploadBlob(input: [
              "parts": [
                "file": [
-                 "absoluteFilePath": data["absoluteFilePath"] ?? "",
-                 "mimeType": "image/png"
+                 "payload": [
+                    "absoluteFilePath": data["absoluteFilePath"] ?? "",
+                    "mimeType": "image/png"
+                 ],
+                 "type": "file"
                ]
              ],
              "taskId": data["taskId"] ?? "",
@@ -94,8 +97,11 @@ class BlobCourierTests: XCTestCase {
             self.sut?.uploadBlob(input: [
              "parts": [
                "file": [
-                 "absoluteFilePath": data["absoluteFilePath"] ?? "",
-                 "mimeType": "image/png"
+                 "payload": [
+                   "absoluteFilePath": data["absoluteFilePath"] ?? "",
+                   "mimeType": "image/png"
+                 ],
+                 "type": "file"
                ]
              ],
              "taskId": data["taskId"] ?? ""

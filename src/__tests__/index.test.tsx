@@ -43,9 +43,11 @@ const DEFAULT_UPLOAD_REQUEST = {
 const DEFAULT_MULTIPART_UPLOAD_REQUEST: BlobMultipartUploadRequest = {
   parts: {
     file: {
-      absoluteFilePath: '/path/to/some_file.txt',
-      filename: undefined,
-      mimeType: 'plain/text',
+      payload: {
+        absoluteFilePath: '/path/to/some_file.txt',
+        filename: undefined,
+        mimeType: 'plain/text',
+      },
       type: 'file',
     },
   },
@@ -418,8 +420,7 @@ describe('Given a regular upload request', () => {
       parts: {
         some_json_part: {
           type: 'string',
-          mimeType: 'text/json',
-          value: { a: 1 },
+          payload: { a: 1 },
         },
       },
     });
@@ -428,7 +429,7 @@ describe('Given a regular upload request', () => {
       BlobCourierNative.uploadBlob
     );
 
-    expect(typeof calledWithParameters.parts.some_json_part.value).toEqual(
+    expect(typeof calledWithParameters.parts.some_json_part.payload).toEqual(
       'string'
     );
   });

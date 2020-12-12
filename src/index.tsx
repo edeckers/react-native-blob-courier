@@ -109,16 +109,9 @@ const sanitizeFetchData = <T extends BlobFetchNativeInput>(
 
 const stringifyPartsValues = (parts: { [key: string]: any }) => {
   const stringify = (part: { [key: string]: any }) =>
-    Object.keys(part).reduce(
-      (p, c) => ({
-        ...p,
-        [c]:
-          c === 'value' && typeof part.value === 'object'
-            ? JSON.stringify(part.value)
-            : part[c],
-      }),
-      {}
-    );
+    part.type === 'string' && typeof part.payload === 'object'
+      ? { ...part, payload: JSON.stringify(part.payload) }
+      : part;
 
   return Object.keys(parts).reduce(
     (p, c) => ({
@@ -200,9 +193,11 @@ const uploadBlob = <T extends BlobUploadNativeInput>(input: Readonly<T>) => {
     ...input,
     parts: {
       [multipartName ?? DEFAULT_FILE_MULTIPART_FIELD_NAME]: {
-        absoluteFilePath,
-        filename,
-        mimeType,
+        payload: {
+          absoluteFilePath,
+          filename,
+          mimeType,
+        },
         type: 'file',
       },
     },

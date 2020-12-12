@@ -6,8 +6,7 @@ import Foundation
 
 @objc(BlobCourier)
 open class BlobCourier: NSObject {
-
- static let downloadTypeUnmanaged  = "Unmanaged"
+  static let downloadTypeUnmanaged  = "Unmanaged"
 
   static let libraryDomain  = "io.deckers.blob_courier"
 
@@ -16,6 +15,7 @@ open class BlobCourier: NSObject {
   static let parameterHeaders = "headers"
   static let parameterMethod = "method"
   static let parameterMimeType = "mimeType"
+  static let parameterPartPayload = "payload"
   static let parameterParts = "parts"
   static let parameterProgressInterval = "progressIntervalMilliseconds"
   static let parameterReturnResponse = "returnResponse"
@@ -97,7 +97,6 @@ open class BlobCourier: NSObject {
   }
 
   func buildRequestDataForFileUpload(url: URL, parts: NSDictionary, headers: NSDictionary) -> (URLRequest, Data) {
-    // https://igomobile.de/2020/06/16/swift-upload-a-file-with-multipart-form-data-in-ios-using-uploadtask-and-urlsession/
     let boundary = UUID().uuidString
 
     var request = URLRequest(url: url)
@@ -114,26 +113,37 @@ open class BlobCourier: NSObject {
 
     var data = Data()
 
+    var index = 0
     for (key, value) in parts {
-      if let paramName = key as? String, let part = value as? [String: String] {
-        if part["type"] == "file" {
-          let absoluteFilePath = part[BlobCourier.parameterAbsoluteFilePath]!
+      if let paramName = key as? String, let part = value as? [String: Any] {
+        if part["type"] as? String == "file" {
+          let payload = part[BlobCourier.parameterPartPayload] as? [String: String] ?? [:]
+          let absoluteFilePath = payload[BlobCourier.parameterAbsoluteFilePath]!
 
           let fileUrl = URL(string: absoluteFilePath)!
-          let filename = part[BlobCourier.parameterFilename] ?? fileUrl.lastPathComponent
-          let mimeType = part[BlobCourier.parameterMimeType] ?? BlobCourier.defaultMimeType
+          let filename = payload[BlobCourier.parameterFilename] ?? fileUrl.lastPathComponent
+          let mimeType = payload[BlobCourier.parameterMimeType] ?? BlobCourier.defaultMimeType
 
-          data.addFilePart(
-            boundary: boundary,
-            paramName: paramName,
-            absoluteFilePath: absoluteFilePath,
-            filename: filename,
-            mimeType: mimeType)
+          data.addfilePart(
+            part: FilePart(
+              boundary: boundary,
+              paramName: paramName,
+              absoluteFilePath: absoluteFilePath,
+              filename: filename,
+              mimeType: mimeType),
+            isLastPart: index + 1 == parts.count)
+          index += 1
           continue
         }
 
-        let formDataValue = part["value"] ?? ""
-        data.addFormDataPart(boundary: boundary, paramName: paramName, value: formDataValue)
+        let formDataValue = part[BlobCourier.parameterPartPayload] as? String ?? ""
+        data.addFormDataPart(
+          part: StringPart(
+              boundary: boundary,
+              paramName: paramName,
+              value: formDataValue),
+          isLastPart: index + 1 == parts.count)
+        index += 1
       }
     }
 
@@ -222,6 +232,20 @@ open class BlobCourier: NSObject {
   }
 }
 
+struct FilePart {
+  let boundary: String
+  let paramName: String
+  let absoluteFilePath: String
+  let filename: String
+  let mimeType: String
+}
+
+struct StringPart {
+  let boundary: String
+  let paramName: String
+  let value: String
+}
+
 extension Data {
   mutating func append(string: String) {
     if let data = string.data(using: .utf8) {
@@ -229,30 +253,34 @@ extension Data {
     }
   }
 
-  mutating func addFormDataPart(boundary: String, paramName: String, value: String) {
-    append(string: "\r\n--\(boundary)\r\n")
+  mutating func addFormDataPart(part: StringPart, isLastPart: Bool) {
+    append(string: "\r\n--\(part.boundary)\r\n")
     append(
-      string: "Content-Disposition: form-data; name=\"\(paramName)\"\r\n")
-    append(string: value)
-    append(string: "\r\n--\(boundary)--\r\n")
+      string: "Content-Disposition: form-data; name=\"\(part.paramName)\"\r\n")
+    append(string: "Content-Length: \(part.value.count)\r\n")
+    append(string: "\r\n")
+    append(string: part.value)
+    append(string: "\r\n--\(part.boundary)\(isLastPart ? "--" : "")\r\n")
   }
 
-  mutating func addFilePart(
-    boundary: String,
-    paramName: String,
-    absoluteFilePath: String,
-    filename: String,
-    mimeType: String) {
-
-    let fileUrl = URL(string: absoluteFilePath)!
+  mutating func addfilePart(part: FilePart, isLastPart: Bool) {
+    let fileUrl = URL(string: part.absoluteFilePath)!
     let fileData = try? Data(contentsOf: fileUrl)
 
-    append(string: "\r\n--\(boundary)\r\n")
+    let maybeFileAttributes = try? FileManager.default.attributesOfItem(atPath: part.absoluteFilePath)
+
+    append(string: "\r\n--\(part.boundary)\r\n")
     append(
-      "Content-Disposition: form-data; name=\"\(paramName)\"; filename=\"\(filename)\"\r\n"
+      "Content-Disposition: form-data; name=\"\(part.paramName)\"; filename=\"\(part.filename)\"\r\n"
         .data(using: .utf8)!)
-    append(string: "Content-Type: \(mimeType)\r\n\r\n")
+    append(string: "Content-Type: \(part.mimeType)\r\n")
+
+    if let fileSize = maybeFileAttributes?[.size] {
+      append(string: "Content-Length: \(fileSize)\r\n")
+    }
+
+    append(string: "\r\n")
     append(fileData!)
-    append(string: "\r\n--\(boundary)--\r\n")
+    append(string: "\r\n--\(part.boundary)\(isLastPart ? "--" : "")\r\n")
   }
 }

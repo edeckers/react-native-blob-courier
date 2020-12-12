@@ -59,16 +59,10 @@ export declare interface BlobProgressEvent {
   readonly written: number;
 }
 
-export declare interface BlobMultipartFormDataBase {
-  readonly type: 'string' | 'file';
-}
-export declare interface BlobMultipartFormData
-  extends BlobMultipartFormDataBase {
-  readonly value: string | { [key: string]: any };
-}
+export declare type BlobMultipartFormData = string | { [key: string]: any };
+export declare type BlobMultipartType = 'file' | 'string';
 
-export declare interface BlobMultipartFormDataFile
-  extends BlobMultipartFormDataBase {
+export declare interface BlobMultipartFormDataFile {
   readonly absoluteFilePath: string;
   readonly filename?: string;
   readonly mimeType: string;
@@ -88,7 +82,10 @@ export declare interface BlobMultipartUploadRequest
   extends BlobBaseRequest,
     BlobRequestMethod {
   readonly parts: {
-    [key: string]: BlobMultipartFormData | BlobMultipartFormDataFile;
+    [key: string]: {
+      payload: BlobMultipartFormData | BlobMultipartFormDataFile;
+      type: BlobMultipartType;
+    };
   };
   readonly returnResponse?: boolean;
 }

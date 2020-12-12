@@ -28,8 +28,10 @@ object Fixtures {
     "taskId" to taskId,
     "parts" to mapOf(
       "file" to mapOf(
-        "absoluteFilePath" to localPath,
-        "mimeType" to "text/html",
+        "payload" to mapOf(
+          "absoluteFilePath" to localPath,
+          "mimeType" to "text/html"
+        ),
         "type" to "file"
       )
     ),

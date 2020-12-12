@@ -40,6 +40,7 @@ private const val PARAMETER_FILENAME = "filename"
 private const val PARAMETER_HEADERS = "headers"
 private const val PARAMETER_METHOD = "method"
 private const val PARAMETER_MIME_TYPE = "mimeType"
+private const val PARAMETER_PART_PAYLOAD = "payload"
 private const val PARAMETER_PARTS = "parts"
 private const val PARAMETER_RETURN_RESPONSE = "returnResponse"
 private const val PARAMETER_SETTINGS_PROGRESS_INTERVAL = "progressIntervalMilliseconds"
@@ -120,22 +121,28 @@ private fun createDownloadProgressInterceptor(
 }
 
 private fun verifyFilePart(part: ReadableMap, promise: Promise): Boolean {
-  if (!part.hasKey(PARAMETER_ABSOLUTE_FILE_PATH)) {
+  if (!part.hasKey(PARAMETER_PART_PAYLOAD)) {
+    promise.reject(ERROR_MISSING_REQUIRED_PARAMETER, "part.$PARAMETER_PART_PAYLOAD")
+    return false
+  }
+
+  val payload = part.getMap(PARAMETER_PART_PAYLOAD)!!
+  if (!payload.hasKey(PARAMETER_ABSOLUTE_FILE_PATH)) {
     promise.reject(ERROR_MISSING_REQUIRED_PARAMETER, "part.$PARAMETER_ABSOLUTE_FILE_PATH")
     return false
   }
 
-  if (!part.hasKey(PARAMETER_MIME_TYPE)) {
+  if (!payload.hasKey(PARAMETER_MIME_TYPE)) {
     promise.reject(ERROR_MISSING_REQUIRED_PARAMETER, "part.$PARAMETER_MIME_TYPE")
     return false
   }
 
-  if (part.getString(PARAMETER_ABSOLUTE_FILE_PATH).isNullOrEmpty()) {
+  if (payload.getString(PARAMETER_ABSOLUTE_FILE_PATH).isNullOrEmpty()) {
     processUnexpectedEmptyValue(promise, PARAMETER_ABSOLUTE_FILE_PATH)
     return false
   }
 
-  if (part.getString(PARAMETER_MIME_TYPE).isNullOrEmpty()) {
+  if (payload.getString(PARAMETER_MIME_TYPE).isNullOrEmpty()) {
     processUnexpectedEmptyValue(promise, PARAMETER_MIME_TYPE)
     return false
   }
@@ -144,11 +151,11 @@ private fun verifyFilePart(part: ReadableMap, promise: Promise): Boolean {
 }
 
 private fun verifyStringPart(part: ReadableMap, promise: Promise): Boolean {
-  if (part.hasKey("value")) {
+  if (part.hasKey(PARAMETER_PART_PAYLOAD)) {
     return true
   }
 
-  promise.reject(ERROR_MISSING_REQUIRED_PARAMETER, "part.value")
+  promise.reject(ERROR_MISSING_REQUIRED_PARAMETER, "part.$PARAMETER_PART_PAYLOAD")
   return false
 }
 
@@ -196,20 +203,22 @@ private fun startBlobUpload(
     maybePart?.run {
       when (this.getString("type")) {
         "file" -> {
-          val file = File(this.getString(PARAMETER_ABSOLUTE_FILE_PATH)!!)
+          val payload = this.getMap(PARAMETER_PART_PAYLOAD)!!
+
+          val file = File(payload.getString(PARAMETER_ABSOLUTE_FILE_PATH)!!)
           val filename =
-            if (this.hasKey(PARAMETER_FILENAME)) (
-              this.getString(PARAMETER_FILENAME)
+            if (payload.hasKey(PARAMETER_FILENAME)) (
+              payload.getString(PARAMETER_FILENAME)
                 ?: file.name
               ) else file.name
 
           mpb.addFormDataPart(
             multipartName,
             filename,
-            RequestBody.create(MediaType.parse(this.getString(PARAMETER_MIME_TYPE)!!), file)
+            RequestBody.create(MediaType.parse(payload.getString(PARAMETER_MIME_TYPE)!!), file)
           )
         }
-        else -> mpb.addFormDataPart(multipartName, this.getString("value")!!)
+        else -> mpb.addFormDataPart(multipartName, this.getString(PARAMETER_PART_PAYLOAD)!!)
       }
     }
   }
