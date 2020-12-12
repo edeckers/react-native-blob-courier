@@ -26,21 +26,8 @@ open class BlobCourier: NSObject {
   static let defaultMimeType = "application/octet-stream"
   static let defaultProgressIntervalMilliseconds = 500
 
-  static let requiredParameterProcessor = [
-    "Boolean": { (input: NSDictionary, parameterName: String) in return input[parameterName]! },
-    "NSDictionary": { (input: NSDictionary, parameterName: String) in return input[parameterName]! },
-    "String": { (input: NSDictionary, parameterName: String) in return input[parameterName]! }
-  ]
-
   func assertRequiredParameter(input: NSDictionary, type: String, parameterName: String) throws {
-    let maybeValue = try
-      (BlobCourier.requiredParameterProcessor[type] ?? { (_, _) in
-        throw BlobCourierErrors.BlobCourierError.withMessage(
-          code: BlobCourierErrors.errorMissingRequiredParameter,
-          message:
-            "No processor defined for type `\(type)`, valid options: \(BlobCourier.requiredParameterProcessor.keys)"
-        )
-      })(input, parameterName)
+    let maybeValue = input[parameterName]
 
     if maybeValue == nil {
       throw BlobCourierErrors.BlobCourierError.withMessage(
@@ -238,6 +225,7 @@ open class BlobCourier: NSObject {
 
       try fetchBlobFromValidatedParameters(input: input, resolve: resolve, reject: reject)
     } catch {
+      BlobCourierErrors.processUnexpectedEmptyValue(reject: reject, parameterName: "TEST")
       print("\(error)")
     }
   }
@@ -259,6 +247,7 @@ open class BlobCourier: NSObject {
 
       try uploadBlobFromValidatedParameters(input: input, resolve: resolve, reject: reject)
     } catch {
+      BlobCourierErrors.processUnexpectedEmptyValue(reject: reject, parameterName: "TEST")
       print("\(error)")
     }
   }
