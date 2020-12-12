@@ -10,7 +10,6 @@ import android.app.DownloadManager
 import android.content.Context
 import android.content.IntentFilter
 import android.net.Uri
-import android.util.Log
 import com.facebook.common.internal.ImmutableMap
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
@@ -215,8 +214,6 @@ private fun startBlobUpload(
     }
   }
 
-  Log.e("NEEE", "eee")
-
   val multipartBody = mpb.build()
 
   val requestBody = BlobCourierProgressRequest(
@@ -242,7 +239,6 @@ private fun startBlobUpload(
     ).execute()
 
     val b = response.body()?.string().orEmpty()
-    Log.e("TESTET", b)
 
     promise.resolve(
       mapOf(

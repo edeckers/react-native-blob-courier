@@ -193,30 +193,10 @@ const UploaderView = (props: UVProps) => {
           setReceived(e.written);
           setExpected(e.total);
         })
-        // .uploadBlob({
-        //   absoluteFilePath: props.fromLocalPath,
-        //   method: 'POST',
-        //   multipartName: 'file',
-        //   mimeType: 'text/plain',
-        //   returnResponse: true,
-        //   url: props.toUrl,
-        // });
-        .uploadParts({
+        .uploadBlob({
+          absoluteFilePath: props.fromLocalPath,
           method: 'POST',
-          parts: {
-            body: {
-              value: {
-                a: 'b',
-                c: 42,
-              },
-              type: 'string',
-            },
-            file: {
-              absoluteFilePath: props.fromLocalPath,
-              mimeType: 'text/plain',
-              type: 'file',
-            },
-          },
+          mimeType: 'text/plain',
           returnResponse: true,
           url: props.toUrl,
         });
@@ -382,8 +362,7 @@ export const App = () => {
       <UploaderView
         fromLocalPath={downloadedFilePath ?? ''}
         onFinished={onUploadCompleted}
-        // toUrl="https://file.io"
-        toUrl="http://192.168.0.103/uploader"
+        toUrl="https://file.io"
       />
     ),
     finished: <FinishedView onRetry={onRetry} />,
