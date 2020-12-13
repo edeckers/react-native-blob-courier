@@ -30,9 +30,7 @@ open class BlobCourier: NSObject {
     let maybeValue = input[parameterName]
 
     if maybeValue == nil {
-      throw BlobCourierErrors.BlobCourierError.withMessage(
-        code: BlobCourierErrors.errorMissingRequiredParameter,
-        message: "`\(parameterName)` is a required parameter of type `\(type)`")
+      throw BlobCourierErrors.BlobCourierError.requiredParameter(parameter: parameterName)
     }
   }
 
@@ -203,8 +201,10 @@ open class BlobCourier: NSObject {
         input: input, type: "String", parameterName: BlobCourier.parameterUrl)
 
       try fetchBlobFromValidatedParameters(input: input, resolve: resolve, reject: reject)
+    } catch BlobCourierErrors.BlobCourierError.requiredParameter(let parameterName) {
+      BlobCourierErrors.processUnexpectedEmptyValue(reject: reject, parameterName: parameterName)
     } catch {
-      BlobCourierErrors.processUnexpectedEmptyValue(reject: reject, parameterName: "TEST")
+      BlobCourierErrors.processUnexpectedException(reject: reject, error: error)
       print("\(error)")
     }
   }
@@ -225,8 +225,10 @@ open class BlobCourier: NSObject {
         input: input, type: "String", parameterName: BlobCourier.parameterUrl)
 
       try uploadBlobFromValidatedParameters(input: input, resolve: resolve, reject: reject)
+    } catch BlobCourierErrors.BlobCourierError.requiredParameter(let parameterName) {
+      BlobCourierErrors.processUnexpectedEmptyValue(reject: reject, parameterName: parameterName)
     } catch {
-      BlobCourierErrors.processUnexpectedEmptyValue(reject: reject, parameterName: "TEST")
+      BlobCourierErrors.processUnexpectedException(reject: reject, error: error)
       print("\(error)")
     }
   }

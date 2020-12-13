@@ -11,15 +11,16 @@ open class BlobCourierErrors: NSObject {
   static let errorUnexpectedValue = "ERROR_UNEXPECTED_VALUE"
 
   enum BlobCourierError: Error {
+    case requiredParameter(parameter: String)
     case withMessage(code: String, message: String)
   }
 
   static func processUnexpectedException(
-    reject: @escaping RCTPromiseRejectBlock, error: NSError?
+    reject: @escaping RCTPromiseRejectBlock, error: Error
   ) {
     reject(
       BlobCourierErrors.errorUnexpectedException,
-      "An unexpected exception occurred: \(error?.localizedDescription ?? "")", error)
+      "An unexpected exception occurred: \(error.localizedDescription)", error)
   }
 
   static func processUnexpectedEmptyValue(

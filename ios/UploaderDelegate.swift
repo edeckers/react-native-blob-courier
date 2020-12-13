@@ -59,13 +59,13 @@ open class UploaderDelegate: NSObject, URLSessionDataDelegate, URLSessionTaskDel
   }
 
   func processCompletedUpload(data: Data, response: URLResponse?, error: Error?) {
-     if error != nil {
+     if let theError = error {
         print(
-          "Error took place while uploading a file. Error description: \(error?.localizedDescription ?? "")"
+          "Error while uploading a file. Error description: \(theError.localizedDescription)"
         )
-        BlobCourierErrors.processUnexpectedException(reject: reject, error: error as NSError?)
+        BlobCourierErrors.processUnexpectedException(reject: reject, error: theError)
         return
-      }
+     }
 
       if let statusCode = (response as? HTTPURLResponse)?.statusCode {
         let maybeRawResponse = returnResponse ? String(data: data, encoding: String.Encoding.utf8) : nil
