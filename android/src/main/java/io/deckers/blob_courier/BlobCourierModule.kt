@@ -430,9 +430,9 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
         .addInterceptor(createDownloadProgressInterceptor(reactContext, taskId, progressInterval))
         .build()
 
-    httpClient.newCall(request).execute().use { response ->
-      thread {
-        try {
+    thread {
+      try {
+        httpClient.newCall(request).execute().use { response ->
           response.body()?.source().use { source ->
             Okio.buffer(Okio.sink(absoluteFilePath)).use { sink ->
 
@@ -452,11 +452,11 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
               )
             ).toReactMap()
           )
-        } catch (e0: Exception) {
-          promise.reject(ERROR_UNEXPECTED_EXCEPTION, e0.message)
-        } catch (e0: Error) {
-          promise.reject(ERROR_UNEXPECTED_ERROR, e0.message)
         }
+      } catch (e0: Exception) {
+        promise.reject(ERROR_UNEXPECTED_EXCEPTION, e0.message)
+      } catch (e0: Error) {
+        promise.reject(ERROR_UNEXPECTED_ERROR, e0.message)
       }
     }
   }
