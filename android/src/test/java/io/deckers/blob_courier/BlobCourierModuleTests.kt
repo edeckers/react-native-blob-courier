@@ -6,6 +6,7 @@
  */
 package io.deckers.blob_courier
 
+import android.net.Uri
 import androidx.test.core.app.ApplicationProvider
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.JavaOnlyMap
@@ -25,6 +26,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.Shadows
 import org.robolectric.annotation.Config
 
 private fun retrieveMissingKeys(
@@ -208,6 +210,9 @@ class BlobCourierModuleTests {
               val taskId = allRequiredParametersMap.getString("taskId") ?: ""
               val absoluteFilePath = r0?.getMap("data")?.getString("absoluteFilePath") ?: ""
 
+              Shadows.shadowOf(ctx.contentResolver)
+                .registerInputStream(Uri.parse(absoluteFilePath), "".byteInputStream())
+
               val uploadParametersMap =
                 createValidUploadTestParameterMap(taskId, absoluteFilePath).toReactMap()
 
@@ -359,6 +364,9 @@ class BlobCourierModuleTests {
             { r0 ->
               val taskId = allFetchParametersMap["taskId"] ?: ""
               val absoluteFilePath = r0?.getMap("data")?.getString("absoluteFilePath") ?: ""
+
+              Shadows.shadowOf(ctx.contentResolver)
+                .registerInputStream(Uri.parse(absoluteFilePath), "".byteInputStream())
 
               val uploadParametersMap =
                 createValidUploadTestParameterMap(taskId, absoluteFilePath).toReactMap()

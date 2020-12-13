@@ -211,6 +211,9 @@ private fun startBlobUpload(
           val payload = this.getMap(PARAMETER_PART_PAYLOAD)!!
 
           val fileUrl = Uri.parse(payload.getString(PARAMETER_ABSOLUTE_FILE_PATH)!!)
+          val fileUrlWithScheme =
+            if (fileUrl.scheme == null) Uri.parse("file://$fileUrl") else fileUrl
+
           val filename =
             if (payload.hasKey(PARAMETER_FILENAME)) (
               payload.getString(PARAMETER_FILENAME)
@@ -223,7 +226,7 @@ private fun startBlobUpload(
             InputStreamRequestBody(
               payload.getString(PARAMETER_MIME_TYPE)?.toMediaTypeOrNull()!!, // FIXME Use fallback
               reactContext.contentResolver,
-              fileUrl
+              fileUrlWithScheme
             )
           )
         }
