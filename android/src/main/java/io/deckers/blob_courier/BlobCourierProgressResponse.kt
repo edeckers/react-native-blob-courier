@@ -12,9 +12,9 @@ import okhttp3.MediaType
 import okhttp3.ResponseBody
 import okio.Buffer
 import okio.BufferedSource
-import okio.Okio
 import okio.Source
 import okio.Timeout
+import okio.buffer
 
 class BlobCourierProgressResponse(
   private val context: ReactApplicationContext,
@@ -29,7 +29,7 @@ class BlobCourierProgressResponse(
   override fun contentLength(): Long = responseBody.contentLength()
 
   override fun source(): BufferedSource =
-    Okio.buffer(ProgressReportingSource())
+    ProgressReportingSource().buffer()
 
   private inner class ProgressReportingSource : Source {
     private var totalNumberOfBytesRead: Long = 0
@@ -52,7 +52,7 @@ class BlobCourierProgressResponse(
       return numberOfBytesRead
     }
 
-    override fun timeout(): Timeout? = Timeout.NONE
+    override fun timeout(): Timeout = Timeout.NONE
 
     @Throws(IOException::class)
     override fun close() = Unit

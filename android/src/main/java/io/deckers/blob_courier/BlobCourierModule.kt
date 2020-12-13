@@ -23,13 +23,13 @@ import java.net.URL
 import kotlin.concurrent.thread
 import okhttp3.Headers
 import okhttp3.Interceptor
-import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.Request
-import okhttp3.RequestBody
 import okhttp3.Response
-import okio.Okio
 import okio.Source
+import okio.buffer
+import okio.sink
 
 private const val ERROR_MISSING_REQUIRED_PARAMETER = "ERROR_MISSING_REQUIRED_PARAMETER"
 
@@ -113,7 +113,7 @@ private fun createDownloadProgressInterceptor(
 ): Response {
   val originalResponse = chain.proceed(chain.request())
 
-  return originalResponse.body()?.let {
+  return originalResponse.body?.let {
     originalResponse.newBuilder().body(
       BlobCourierProgressResponse(
         reactContext,
@@ -210,17 +210,21 @@ private fun startBlobUpload(
         "file" -> {
           val payload = this.getMap(PARAMETER_PART_PAYLOAD)!!
 
-          val file = File(payload.getString(PARAMETER_ABSOLUTE_FILE_PATH)!!)
+          val fileUrl = Uri.parse(payload.getString(PARAMETER_ABSOLUTE_FILE_PATH)!!)
           val filename =
             if (payload.hasKey(PARAMETER_FILENAME)) (
               payload.getString(PARAMETER_FILENAME)
-                ?: file.name
-              ) else file.name
+                ?: fileUrl.lastPathSegment
+              ) else fileUrl.lastPathSegment
 
           mpb.addFormDataPart(
             multipartName,
             filename,
-            RequestBody.create(MediaType.parse(payload.getString(PARAMETER_MIME_TYPE)!!), file)
+            InputStreamRequestBody(
+              payload.getString(PARAMETER_MIME_TYPE)?.toMediaTypeOrNull()!!, // FIXME Use fallback
+              reactContext.contentResolver,
+              fileUrl
+            )
           )
         }
         else -> mpb.addFormDataPart(multipartName, this.getString(PARAMETER_PART_PAYLOAD)!!)
@@ -253,14 +257,14 @@ private fun startBlobUpload(
         requestBuilder
       ).execute()
 
-      val b = response.body()?.string().orEmpty()
+      val b = response.body?.string().orEmpty()
 
       promise.resolve(
         mapOf(
           "response" to mapOf(
-            "code" to response.code(),
+            "code" to response.code,
             "data" to if (returnResponse) b else "",
-            "headers" to mapHeadersToMap(response.headers())
+            "headers" to mapHeadersToMap(response.headers)
           )
         ).toReactMap()
       )
@@ -433,8 +437,8 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
     thread {
       try {
         httpClient.newCall(request).execute().use { response ->
-          response.body()?.source().use { source ->
-            Okio.buffer(Okio.sink(absoluteFilePath)).use { sink ->
+          response.body?.source().use { source ->
+            absoluteFilePath.sink().buffer().use { sink ->
 
               sink.writeAll(source as Source)
             }
@@ -446,8 +450,8 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
               "data" to mapOf(
                 "absoluteFilePath" to absoluteFilePath,
                 "response" to mapOf(
-                  "code" to response.code(),
-                  "headers" to mapHeadersToMap(response.headers())
+                  "code" to response.code,
+                  "headers" to mapHeadersToMap(response.headers)
                 )
               )
             ).toReactMap()
