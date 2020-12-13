@@ -451,7 +451,7 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
             mapOf(
               "type" to DOWNLOAD_TYPE_UNMANAGED,
               "data" to mapOf(
-                "absoluteFilePath" to absoluteFilePath,
+                "absoluteFilePath" to Uri.fromFile(absoluteFilePath),
                 "response" to mapOf(
                   "code" to response.code,
                   "headers" to mapHeadersToMap(response.headers)
