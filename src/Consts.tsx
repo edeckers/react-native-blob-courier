@@ -11,6 +11,7 @@ export const ANDROID_DOWNLOAD_MANAGER_FALLBACK_PARAMETERS = {
 };
 
 export const DEFAULT_PROGRESS_UPDATE_INTERVAL_MILLISECONDS = 200;
+export const DEFAULT_FILE_MULTIPART_FIELD_NAME = 'file';
 
 export const BLOB_FETCH_FALLBACK_PARAMETERS = {
   android: {
@@ -26,6 +27,11 @@ export const BLOB_UPLOAD_FALLBACK_PARAMETERS = {
   headers: {},
   method: 'POST',
   returnResponse: false,
+};
+
+export const BLOB_MULTIPART_UPLOAD_FALLBACK_PARAMETERS = {
+  ...BLOB_UPLOAD_FALLBACK_PARAMETERS,
+  parts: {},
 };
 
 export const BLOB_COURIER_PROGRESS_EVENT_NAME = 'BlobCourierProgress';

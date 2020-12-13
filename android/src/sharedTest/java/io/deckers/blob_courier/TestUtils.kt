@@ -15,23 +15,6 @@ object TestUtils {
   private const val getRuntimeMethodName = "getRuntime"
   private const val setHiddenApiExemptionsMethodName = "setHiddenApiExemptions"
 
-  // TODO Make this a little prettier
-  fun <T> createSublistsFromList(theList: List<T>, length: Int): List<List<T>> {
-    val restCount = length - 1
-    val subLists = mutableListOf<List<T>>()
-
-    for (i in theList.indices) {
-      val head = theList[i]
-      val next = i + 1
-      val tailList = theList.takeLast(theList.size - next)
-      for (j in 0..tailList.size - restCount) {
-        subLists.add(listOf(head) + tailList.subList(j, j + restCount))
-      }
-    }
-
-    return subLists.toList()
-  }
-
   fun circumventHiddenApiExemptionsForMockk() {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
       return

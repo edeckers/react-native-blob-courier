@@ -40,6 +40,8 @@ private const val PARAMETER_FILENAME = "filename"
 private const val PARAMETER_HEADERS = "headers"
 private const val PARAMETER_METHOD = "method"
 private const val PARAMETER_MIME_TYPE = "mimeType"
+private const val PARAMETER_PART_PAYLOAD = "payload"
+private const val PARAMETER_PARTS = "parts"
 private const val PARAMETER_RETURN_RESPONSE = "returnResponse"
 private const val PARAMETER_SETTINGS_PROGRESS_INTERVAL = "progressIntervalMilliseconds"
 private const val PARAMETER_TASK_ID = "taskId"
@@ -53,6 +55,8 @@ private const val DOWNLOAD_MANAGER_PARAMETER_TITLE = "title"
 private val REQUIRED_PARAMETER_PROCESSORS = ImmutableMap.of(
   Boolean::class.java.toString(),
   { input: ReadableMap, parameterName: String -> input.getBoolean(parameterName) },
+  ReadableMap::class.java.toString(),
+  { input: ReadableMap, parameterName: String -> input.getMap(parameterName) },
   String::class.java.toString(),
   { input: ReadableMap, parameterName: String -> input.getString(parameterName) }
 )
@@ -116,27 +120,115 @@ private fun createDownloadProgressInterceptor(
   } ?: originalResponse
 }
 
+private fun verifyFilePart(part: ReadableMap, promise: Promise): Boolean {
+  if (!part.hasKey(PARAMETER_PART_PAYLOAD)) {
+    promise.reject(ERROR_MISSING_REQUIRED_PARAMETER, "part.$PARAMETER_PART_PAYLOAD")
+    return false
+  }
+
+  val payload = part.getMap(PARAMETER_PART_PAYLOAD)!!
+  if (!payload.hasKey(PARAMETER_ABSOLUTE_FILE_PATH)) {
+    promise.reject(ERROR_MISSING_REQUIRED_PARAMETER, "part.$PARAMETER_ABSOLUTE_FILE_PATH")
+    return false
+  }
+
+  if (!payload.hasKey(PARAMETER_MIME_TYPE)) {
+    promise.reject(ERROR_MISSING_REQUIRED_PARAMETER, "part.$PARAMETER_MIME_TYPE")
+    return false
+  }
+
+  if (payload.getString(PARAMETER_ABSOLUTE_FILE_PATH).isNullOrEmpty()) {
+    processUnexpectedEmptyValue(promise, PARAMETER_ABSOLUTE_FILE_PATH)
+    return false
+  }
+
+  if (payload.getString(PARAMETER_MIME_TYPE).isNullOrEmpty()) {
+    processUnexpectedEmptyValue(promise, PARAMETER_MIME_TYPE)
+    return false
+  }
+
+  return true
+}
+
+private fun verifyStringPart(part: ReadableMap, promise: Promise): Boolean {
+  if (part.hasKey(PARAMETER_PART_PAYLOAD)) {
+    return true
+  }
+
+  promise.reject(ERROR_MISSING_REQUIRED_PARAMETER, "part.$PARAMETER_PART_PAYLOAD")
+  return false
+}
+
+private fun verifyPart(part: ReadableMap?, promise: Promise): Boolean {
+  if (part == null) {
+    processUnexpectedEmptyValue(promise, "part")
+    return false
+  }
+
+  if (!part.hasKey("type")) {
+    promise.reject(ERROR_MISSING_REQUIRED_PARAMETER, "part.type")
+    return false
+  }
+
+  if (part.getString("type") == "file") {
+    return verifyFilePart(part, promise)
+  }
+
+  return verifyStringPart(part, promise)
+}
+
+private fun verifyParts(parts: ReadableMap, promise: Promise): Boolean =
+  parts.toHashMap().keys.fold(
+    true,
+    { p, c -> verifyPart(parts.getMap(c), promise) && p }
+  )
+
 private fun startBlobUpload(
   reactContext: ReactApplicationContext,
   taskId: String,
-  file: File,
-  mimeType: String,
+  verifiedParts: ReadableMap,
   uri: URL,
   method: String,
   headers: Map<String, String>,
   returnResponse: Boolean,
   progressInterval: Int,
-  promise: Promise
+  promise: Promise,
 ) {
+  val mpb = MultipartBody.Builder()
+    .setType(MultipartBody.FORM)
+
+  verifiedParts.toHashMap().keys.forEach { multipartName ->
+    val maybePart = verifiedParts.getMap(multipartName)
+
+    maybePart?.run {
+      when (this.getString("type")) {
+        "file" -> {
+          val payload = this.getMap(PARAMETER_PART_PAYLOAD)!!
+
+          val file = File(payload.getString(PARAMETER_ABSOLUTE_FILE_PATH)!!)
+          val filename =
+            if (payload.hasKey(PARAMETER_FILENAME)) (
+              payload.getString(PARAMETER_FILENAME)
+                ?: file.name
+              ) else file.name
+
+          mpb.addFormDataPart(
+            multipartName,
+            filename,
+            RequestBody.create(MediaType.parse(payload.getString(PARAMETER_MIME_TYPE)!!), file)
+          )
+        }
+        else -> mpb.addFormDataPart(multipartName, this.getString(PARAMETER_PART_PAYLOAD)!!)
+      }
+    }
+  }
+
+  val multipartBody = mpb.build()
+
   val requestBody = BlobCourierProgressRequest(
     reactContext,
     taskId,
-    MultipartBody.Builder().setType(MultipartBody.FORM)
-      .addFormDataPart(
-        "file", file.name,
-        RequestBody.create(MediaType.parse(mimeType), file)
-      )
-      .build(),
+    multipartBody,
     progressInterval
   )
 
@@ -155,11 +247,13 @@ private fun startBlobUpload(
       requestBuilder
     ).execute()
 
+    val b = response.body()?.string().orEmpty()
+
     promise.resolve(
       mapOf(
         "response" to mapOf(
           "code" to response.code(),
-          "data" to if (returnResponse) response.body()?.string().orEmpty() else "",
+          "data" to if (returnResponse) b else "",
           "headers" to mapHeadersToMap(response.headers())
         )
       ).toReactMap()
@@ -186,17 +280,17 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
 
   private fun uploadBlobFromValidatedParameters(input: ReadableMap, promise: Promise) {
     val maybeTaskId = input.getString(PARAMETER_TASK_ID)
-    val maybeFilePath = input.getString(PARAMETER_ABSOLUTE_FILE_PATH)
     val maybeUrl = input.getString(PARAMETER_URL)
     val method = input.getString(PARAMETER_METHOD) ?: DEFAULT_UPLOAD_METHOD
-    val mimeType = input.getString(PARAMETER_MIME_TYPE) ?: DEFAULT_MIME_TYPE
+    val maybeParts = input.getMap(PARAMETER_PARTS)
 
     val unfilteredHeaders =
       input.getMap(PARAMETER_HEADERS)?.toHashMap() ?: emptyMap<String, Any>()
 
     val headers = filterHeaders(unfilteredHeaders)
 
-    val returnResponse = input.getBoolean(PARAMETER_RETURN_RESPONSE)
+    val returnResponse =
+      input.hasKey(PARAMETER_RETURN_RESPONSE) && input.getBoolean(PARAMETER_RETURN_RESPONSE)
 
     val progressInterval =
       getMapInt(input, PARAMETER_SETTINGS_PROGRESS_INTERVAL, DEFAULT_PROGRESS_TIMEOUT_MILLISECONDS)
@@ -206,9 +300,8 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
       return
     }
 
-    if (maybeFilePath.isNullOrEmpty()) {
-      processUnexpectedEmptyValue(promise, PARAMETER_ABSOLUTE_FILE_PATH)
-
+    if (maybeParts == null) {
+      processUnexpectedEmptyValue(promise, PARAMETER_PARTS)
       return
     }
 
@@ -218,15 +311,16 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
       return
     }
 
-    val file = File(maybeFilePath)
+    if (!verifyParts(maybeParts, promise)) {
+      return
+    }
 
     val uri = URL(maybeUrl)
 
     startBlobUpload(
       reactContext,
       maybeTaskId,
-      file,
-      mimeType,
+      maybeParts,
       uri,
       method,
       headers,
@@ -466,7 +560,7 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
   fun uploadBlob(input: ReadableMap, promise: Promise) {
     try {
       assertRequiredParameter(input, String::class.java, PARAMETER_TASK_ID)
-      assertRequiredParameter(input, String::class.java, PARAMETER_ABSOLUTE_FILE_PATH)
+      assertRequiredParameter(input, ReadableMap::class.java, PARAMETER_PARTS)
       assertRequiredParameter(input, String::class.java, PARAMETER_URL)
 
       uploadBlobFromValidatedParameters(input, promise)

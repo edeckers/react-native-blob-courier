@@ -94,6 +94,40 @@ console.log(uploadResult):
 //   }
 // }
 
+// Multipart file upload
+const absoluteFilePath = fetchedResult.data.absoluteFilePath;
+
+const request2 = {
+  method: 'POST',
+  parts: {
+    body: {
+      payload: 'some_value',
+      type: 'string',
+    },
+    file: {
+      payload: {
+        absoluteFilePath,
+        mimeType: 'application/zip',
+      },
+      type: 'file',
+    },
+  },
+  url: 'https://file.io',
+};
+
+const multipartUploadResult = await BlobCourier.uploadBlob(request1);
+
+console.log(multipartUploadResult):
+// {
+//   "response": {
+//     "code": {
+//     "data": "<some response>",
+//     "headers": {
+//       "some_header": "some_value",
+//        ...
+//      }
+//   }
+// }
 ```
 
 ### Transfer progress reporting
@@ -177,7 +211,7 @@ console.log(fetchedResult);
 
 ## Fluent interface
 
-Blob Courier provides a fluent interface, that both prevents you from impossible setting combinations and arguably improves readability.
+Blob Courier provides a fluent interface, that both protects you from using impossible setting combinations and arguably improves readability.
 
 ```tsx
 const req0 = ...
@@ -228,6 +262,30 @@ Response
 
 ### `uploadBlob(input: BlobUploadRequest)`
 
+Alias for:
+
+```tsx
+const someResult =
+  await BlobCourier
+   (...)
+   .uploadParts({
+     headers,
+     method,
+     parts: {
+       file:
+         payload: {
+           absoluteFilePath,
+           filename,
+           mimeType,
+         },
+         type: 'file',
+       },
+     },
+     returnResponse,
+     url,
+   })
+```
+
 Required
 
 | **Field**          | **Type** | **Description**                                          |
@@ -238,10 +296,30 @@ Required
 
 Optional
 
+| **Field**        | **Type**                         | **Description**                           | **Default**                         |
+| ---------------- | -------------------------------- | ----------------------------------------- | ----------------------------------- |
+| `filename`       | `string`                         | Map of headers to send with the request   | `<name part of 'absoluteFilePath'>` |
+| `headers`        | `{ [key: string]: string }`      | Map of headers to send with the request   | `{}`                                |
+| `method`         | `string`                         | The HTTP method to be used in the request | `"POST"`                            |
+| `multipartName`  | `string`                         | Name for the file multipart               | `"file"`                            |
+| `onProgress`     | `(e: BlobProgressEvent) => void` | Function handling progress updates        | `() => { }`                         |
+| `returnResponse` | `boolean`                        | Return the HTTP response body?            | `false`                             |
+
+### `uploadParts(input: BlobMultipartUploadRequest)`
+
+Required
+
+| **Field**          | **Type**                           | **Description**           |
+| ------------------ | ---------------------------------- | --------------------------|
+| `parts`            | `{ [key: string]: BlobMultipart }` | The parts to be sent      |
+| `url`              | `string`                           | Url to upload the blob to |
+
+Optional
+
 | **Field**        | **Type**                         | **Description**                           | **Default** |
 | ---------------- | -------------------------------- | ----------------------------------------- | ----------- |
 | `headers`        | `{ [key: string]: string }`      | Map of headers to send with the request   | `{}`        |
-| `method`         | `string`                         | The HTTP method to be used in the request | `POST`      |
+| `method`         | `string`                         | The HTTP method to be used in the request | `"POST"`      |
 | `onProgress`     | `(e: BlobProgressEvent) => void` | Function handling progress updates        | `() => { }` |
 | `returnResponse` | `boolean`                        | Return the HTTP response body?            | `false`     |
 
@@ -266,20 +344,6 @@ Response
 | `downloadManager`    | `AndroidDownloadManagerSettings` | Settings to be used on download manager |
 | `useDownloadManager` | `boolean`                        | Enable download manager on Android?     |
 
-#### `BlobProgressEvent`
-
-| **Field** | **Type** | **Description**                       |
-| --------- | ---------| ------------------------------------- |
-| `written` | `number` | Number of bytes processed             |
-| `total`   | `number` | Total number of bytes to be processed |
-
-#### `BlobUnmanagedHttpResponse`
-
-| **Field** | **Type**                    | **Description**       |
-| --------- | --------------------------- | --------------------- |
-| `code`    | `number`                    | HTTP status code      |
-| `headers` | `{ [key: string]: string }` | HTTP response headers |
-
 #### `BlobManagedData`
 
 | **Field**          | **Type**                 | **Description**                                     |
@@ -287,12 +351,54 @@ Response
 | `absoluteFilePath` | `string`                 | The absolute file path to where the file was stored |
 | `result`           | `"SUCCESS" \| "FAILURE"` | Was the request successful or did it fail?          |
 
+#### `BlobMultipart`
+
+Required
+
+| **Field**  | **Type**                                             | **Description**                  |
+| ---------- | ---------------------------------------------------- | -------------------------------- |
+| `payload`  | `BlobMultipartFormData \| BlobMultipartFormDataFile` | Contains the payload of the part |
+| `type`     | `"string" \| "file"`                                 | What is the type of the payload? |
+
+#### `BlobMultipartFormData`
+
+Type of `string | { [key:string] : any }`
+
+#### `BlobMultipartFormDataFile`
+
+Required
+
+| **Field**          | **Type** | **Description**                                          |
+| ------------------ | -------- | -------------------------------------------------------- |
+| `absoluteFilePath` | `string` | Path to the file to be uploaded                          |
+| `mimeType`         | `string` | Mime type of the blob being transferred                  |
+
+Optional
+
+| **Field**        | **Type** | **Description**                           | **Default**                         |
+| ---------------- | ---------| ----------------------------------------- | ----------------------------------- |
+| `filename`       | `string` | Map of headers to send with the request   | `<name part of 'absoluteFilePath'>` |
+
+#### `BlobProgressEvent`
+
+| **Field** | **Type** | **Description**                       |
+| --------- | ---------| ------------------------------------- |
+| `written` | `number` | Number of bytes processed             |
+| `total`   | `number` | Total number of bytes to be processed |
+
 #### `BlobUnmanagedData`
 
 | **Field**          | **Type**                    | **Description**                                     |
 | ------------------ | --------------------------- | --------------------------------------------------- |
 | `absoluteFilePath` | `string`                    | The absolute file path to where the file was stored |
 | `response`         | `BlobUnmanagedHttpResponse` | HTTP response, including headers and status code    |
+
+#### `BlobUnmanagedHttpResponse`
+
+| **Field** | **Type**                    | **Description**       |
+| --------- | --------------------------- | --------------------- |
+| `code`    | `number`                    | HTTP status code      |
+| `headers` | `{ [key: string]: string }` | HTTP response headers |
 
 ## Example app
 

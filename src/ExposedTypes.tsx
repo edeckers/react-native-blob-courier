@@ -16,6 +16,10 @@ export declare interface BlobRequestMimeType {
   readonly mimeType: string;
 }
 
+export declare interface BlobRequestReturnResponse {
+  readonly returnResponse?: boolean;
+}
+
 export declare interface BlobRequestOnProgress {
   readonly onProgress?: (e: BlobProgressEvent) => void;
 }
@@ -26,12 +30,12 @@ export declare interface BlobRequestUrl {
 
 export declare interface BlobBaseRequest
   extends BlobRequestHeaders,
-    BlobRequestMimeType,
     BlobRequestOnProgress,
     BlobRequestUrl {}
 
 export declare interface BlobFetchRequest
   extends BlobBaseRequest,
+    BlobRequestMimeType,
     BlobRequestMethod {
   readonly filename: string;
 }
@@ -59,11 +63,36 @@ export declare interface BlobProgressEvent {
   readonly written: number;
 }
 
+export declare type BlobMultipartFormData = string | { [key: string]: any };
+export declare type BlobMultipartType = 'file' | 'string';
+export declare type BlobMultipart = {
+  payload: BlobMultipartFormData | BlobMultipartFormDataFile;
+  type: BlobMultipartType;
+};
+
+export declare interface BlobMultipartFormDataFile {
+  readonly absoluteFilePath: string;
+  readonly filename?: string;
+  readonly mimeType: string;
+}
+
 export declare interface BlobUploadRequest
   extends BlobBaseRequest,
-    BlobRequestMethod {
+    BlobRequestMimeType,
+    BlobRequestMethod,
+    BlobRequestReturnResponse {
   readonly absoluteFilePath: string;
-  readonly returnResponse?: boolean;
+  readonly filename?: string;
+  readonly multipartName?: string;
+}
+
+export declare interface BlobMultipartUploadRequest
+  extends BlobBaseRequest,
+    BlobRequestMethod,
+    BlobRequestReturnResponse {
+  readonly parts: {
+    [key: string]: BlobMultipart;
+  };
 }
 
 export declare interface BlobRequestTask {
