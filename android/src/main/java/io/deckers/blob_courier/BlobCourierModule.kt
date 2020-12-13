@@ -65,6 +65,11 @@ private val AVAILABLE_PARAMETER_PROCESSORS = REQUIRED_PARAMETER_PROCESSORS.keys.
 
 private val DEFAULT_OK_HTTP_CLIENT = OkHttpClientProvider.getOkHttpClient()
 
+private fun processUnexpectedError(promise: Promise, e: Error) = promise.reject(
+  ERROR_UNEXPECTED_ERROR,
+  "An unexpected error occurred: ${e.message}"
+)
+
 private fun processUnexpectedException(promise: Promise, e: Exception) = promise.reject(
   ERROR_UNEXPECTED_EXCEPTION,
   "An unexpected exception occurred: ${e.message}"
@@ -243,21 +248,27 @@ private fun startBlobUpload(
     .build()
 
   thread {
-    val response = DEFAULT_OK_HTTP_CLIENT.newCall(
-      requestBuilder
-    ).execute()
+    try {
+      val response = DEFAULT_OK_HTTP_CLIENT.newCall(
+        requestBuilder
+      ).execute()
 
-    val b = response.body()?.string().orEmpty()
+      val b = response.body()?.string().orEmpty()
 
-    promise.resolve(
-      mapOf(
-        "response" to mapOf(
-          "code" to response.code(),
-          "data" to if (returnResponse) b else "",
-          "headers" to mapHeadersToMap(response.headers())
-        )
-      ).toReactMap()
-    )
+      promise.resolve(
+        mapOf(
+          "response" to mapOf(
+            "code" to response.code(),
+            "data" to if (returnResponse) b else "",
+            "headers" to mapHeadersToMap(response.headers())
+          )
+        ).toReactMap()
+      )
+    } catch (e: Exception) {
+      promise.reject(ERROR_UNEXPECTED_EXCEPTION, e.message)
+    } catch (e: Error) {
+      promise.reject(ERROR_UNEXPECTED_ERROR, e.message)
+    }
   }
 }
 
@@ -419,10 +430,9 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
         .addInterceptor(createDownloadProgressInterceptor(reactContext, taskId, progressInterval))
         .build()
 
-    try {
-
-      httpClient.newCall(request).execute().use { response ->
-        thread {
+    httpClient.newCall(request).execute().use { response ->
+      thread {
+        try {
           response.body()?.source().use { source ->
             Okio.buffer(Okio.sink(absoluteFilePath)).use { sink ->
 
@@ -442,10 +452,12 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
               )
             ).toReactMap()
           )
+        } catch (e0: Exception) {
+          promise.reject(ERROR_UNEXPECTED_EXCEPTION, e0.message)
+        } catch (e0: Error) {
+          promise.reject(ERROR_UNEXPECTED_ERROR, e0.message)
         }
       }
-    } catch (e: Exception) {
-      promise.reject(ERROR_UNEXPECTED_EXCEPTION, e.message)
     }
   }
 
@@ -553,6 +565,8 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
       promise.reject(e.code, e.message)
     } catch (e: Exception) {
       processUnexpectedException(promise, e)
+    } catch (e: Error) {
+      processUnexpectedError(promise, e)
     }
   }
 
@@ -568,6 +582,8 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
       promise.reject(e.code, e.message)
     } catch (e: Exception) {
       processUnexpectedException(promise, e)
+    } catch (e: Error) {
+      processUnexpectedError(promise, e)
     }
   }
 }
