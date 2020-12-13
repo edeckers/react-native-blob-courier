@@ -133,6 +133,53 @@ class BlobCourierModuleTests {
   }
 
   @Test
+  fun unreachable_fetch_server_rejects_promise() {
+    val allRequiredParametersMap = createValidTestFetchParameterMap()
+    val requestWithNonExistentUrl =
+      allRequiredParametersMap.plus(Pair("url", "http://127.0.0.1:12345")).toReactMap()
+
+    val ctx = ReactApplicationContext(ApplicationProvider.getApplicationContext())
+
+    var result = Pair(false, "Unknown")
+
+    val pool = Executors.newSingleThreadExecutor()
+
+    val threadLock = Object()
+    val finishThread = { succeeded: Boolean, message: String ->
+      synchronized(threadLock) {
+        threadLock.notify()
+        result = Pair(succeeded, message)
+      }
+    }
+
+    pool.execute {
+      synchronized(threadLock) {
+        runFetchBlob(
+          ctx,
+          requestWithNonExistentUrl,
+          Fixtures.EitherPromise(
+            { m0 -> finishThread(true, "Success: $m0") },
+            { m0 -> finishThread(false, "Resolved but expected reject: $m0") }
+          )
+        )
+        threadLock.wait()
+      }
+    }
+
+    pool.shutdown()
+
+    if (!pool.awaitTermination(DEFAULT_PROMISE_TIMEOUT_MILLISECONDS * 1L, TimeUnit.MILLISECONDS)) {
+      pool.shutdownNow()
+      assertTrue(
+        "Test execution exceeded $DEFAULT_PROMISE_TIMEOUT_MILLISECONDS milliseconds", false
+      )
+      return
+    }
+
+    assertTrue(result.second, result.first)
+  }
+
+  @Test
   fun all_required_parameters_provided_resolves_upload_promise() {
     val allRequiredParametersMap = createValidTestFetchParameterMap().toReactMap()
 
@@ -170,6 +217,68 @@ class BlobCourierModuleTests {
                 Fixtures.EitherPromise(
                   { m1 -> finishThread(false, "Failed upload: $m1") },
                   { finishThread(true, "Success") }
+                )
+              )
+            }
+          )
+        )
+        threadLock.wait()
+      }
+    }
+
+    pool.shutdown()
+
+    if (!pool.awaitTermination(DEFAULT_PROMISE_TIMEOUT_MILLISECONDS * 1L, TimeUnit.MILLISECONDS)) {
+      pool.shutdownNow()
+      assertTrue(
+        "Test execution exceeded $DEFAULT_PROMISE_TIMEOUT_MILLISECONDS milliseconds", false
+      )
+      return
+    }
+
+    assertTrue(result.second, result.first)
+  }
+
+  @Test
+  fun unreachable_server_rjects_upload_promise() {
+    val allRequiredParametersMap = createValidTestFetchParameterMap().toReactMap()
+
+    val ctx = ReactApplicationContext(ApplicationProvider.getApplicationContext())
+
+    var result = Pair(false, "Unknown")
+
+    val pool = Executors.newSingleThreadExecutor()
+
+    val threadLock = Object()
+    val finishThread = { succeeded: Boolean, message: String ->
+      synchronized(threadLock) {
+        threadLock.notify()
+        result = Pair(succeeded, message)
+      }
+    }
+
+    pool.execute {
+      synchronized(threadLock) {
+        runFetchBlob(
+          ctx,
+          allRequiredParametersMap,
+          Fixtures.EitherPromise(
+            { m0 -> finishThread(false, "Failed fetch step: $m0") },
+            { r0 ->
+              val taskId = allRequiredParametersMap.getString("taskId") ?: ""
+              val absoluteFilePath = r0?.getMap("data")?.getString("absoluteFilePath") ?: ""
+
+              val uploadParametersMap =
+                createValidUploadTestParameterMap(taskId, absoluteFilePath)
+              val requestWithUnreachableUrl =
+                uploadParametersMap.plus(Pair("url", "http://127.0.0.1:12345")).toReactMap()
+
+              runUploadBlob(
+                ctx,
+                requestWithUnreachableUrl,
+                Fixtures.EitherPromise(
+                  { m1 -> finishThread(true, "Success: $m1") },
+                  { m1 -> finishThread(false, "Resolved but expected reject: $m1") }
                 )
               )
             }
