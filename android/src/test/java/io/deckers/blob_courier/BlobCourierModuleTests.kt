@@ -18,6 +18,7 @@ import io.deckers.blob_courier.Fixtures.runFetchBlob
 import io.deckers.blob_courier.Fixtures.runUploadBlob
 import io.mockk.every
 import io.mockk.mockkStatic
+import java.util.UUID
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import org.junit.Assert.assertFalse
@@ -247,7 +248,7 @@ class BlobCourierModuleTests {
   }
 
   @Test
-  fun unreachable_server_rjects_upload_promise() {
+  fun unreachable_server_rejects_upload_promise() {
     val allRequiredParametersMap = createValidTestFetchParameterMap().toReactMap()
 
     val ctx = ReactApplicationContext(ApplicationProvider.getApplicationContext())
@@ -317,6 +318,60 @@ class BlobCourierModuleTests {
     missingKeyCombinations.forEach {
       assert_missing_required_upload_parameter_rejects_promise(it, allValuesMapping)
     }
+  }
+
+  @Test
+  fun uploading_a_file_from_outside_app_data_directory_resolves_promise() {
+    val someFileThatIsAlwaysAvailable = "file:///system/etc/fonts.xml"
+
+    val ctx = ReactApplicationContext(ApplicationProvider.getApplicationContext())
+
+    var result = Pair(false, "Unknown")
+
+    val pool = Executors.newSingleThreadExecutor()
+
+    val threadLock = Object()
+    val finishThread = { succeeded: Boolean, message: String ->
+      synchronized(threadLock) {
+        threadLock.notify()
+        result = Pair(succeeded, message)
+      }
+    }
+
+    pool.execute {
+      synchronized(threadLock) {
+        Shadows.shadowOf(ctx.contentResolver)
+          .registerInputStream(Uri.parse(someFileThatIsAlwaysAvailable), "".byteInputStream())
+
+        val uploadParametersMap =
+          createValidUploadTestParameterMap(
+            UUID.randomUUID().toString(),
+            someFileThatIsAlwaysAvailable
+          ).toReactMap()
+
+        runUploadBlob(
+          ctx,
+          uploadParametersMap,
+          Fixtures.EitherPromise(
+            { m1 -> finishThread(false, "Failed upload: $m1") },
+            { finishThread(true, "Success") }
+          )
+        )
+        threadLock.wait()
+      }
+    }
+
+    pool.shutdown()
+
+    if (!pool.awaitTermination(DEFAULT_PROMISE_TIMEOUT_MILLISECONDS * 1L, TimeUnit.MILLISECONDS)) {
+      pool.shutdownNow()
+      assertTrue(
+        "Test execution exceeded $DEFAULT_PROMISE_TIMEOUT_MILLISECONDS milliseconds", false
+      )
+      return
+    }
+
+    assertTrue(result.second, result.first)
   }
 
   private fun assert_missing_required_fetch_parameter_rejects_promise(
