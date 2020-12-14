@@ -6,6 +6,7 @@
  */
 package io.deckers.blob_courier
 
+import android.net.Uri
 import androidx.test.core.app.ApplicationProvider
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.JavaOnlyMap
@@ -17,6 +18,7 @@ import io.deckers.blob_courier.Fixtures.runFetchBlob
 import io.deckers.blob_courier.Fixtures.runUploadBlob
 import io.mockk.every
 import io.mockk.mockkStatic
+import java.util.UUID
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import org.junit.Assert.assertFalse
@@ -25,6 +27,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.Shadows
 import org.robolectric.annotation.Config
 
 private fun retrieveMissingKeys(
@@ -88,7 +91,7 @@ class BlobCourierModuleTests {
     }
   }
 
-  @Test
+  @Test(timeout = DEFAULT_PROMISE_TIMEOUT_MILLISECONDS)
   fun all_required_fetch_parameters_provided_resolves_promise() {
     val allRequiredParametersMap = createValidTestFetchParameterMap().toReactMap()
 
@@ -109,7 +112,8 @@ class BlobCourierModuleTests {
     pool.execute {
       synchronized(threadLock) {
         runFetchBlob(
-          ctx, allRequiredParametersMap,
+          ctx,
+          allRequiredParametersMap,
           Fixtures.EitherPromise(
             { m0 -> finishThread(false, "Failed fetch: $m0") },
             { finishThread(true, "Success") }
@@ -132,7 +136,7 @@ class BlobCourierModuleTests {
     assertTrue(result.second, result.first)
   }
 
-  @Test
+  @Test(timeout = DEFAULT_PROMISE_TIMEOUT_MILLISECONDS)
   fun unreachable_fetch_server_rejects_promise() {
     val allRequiredParametersMap = createValidTestFetchParameterMap()
     val requestWithNonExistentUrl =
@@ -179,7 +183,7 @@ class BlobCourierModuleTests {
     assertTrue(result.second, result.first)
   }
 
-  @Test
+  @Test(timeout = DEFAULT_PROMISE_TIMEOUT_MILLISECONDS)
   fun all_required_parameters_provided_resolves_upload_promise() {
     val allRequiredParametersMap = createValidTestFetchParameterMap().toReactMap()
 
@@ -207,6 +211,9 @@ class BlobCourierModuleTests {
             { r0 ->
               val taskId = allRequiredParametersMap.getString("taskId") ?: ""
               val absoluteFilePath = r0?.getMap("data")?.getString("absoluteFilePath") ?: ""
+
+              Shadows.shadowOf(ctx.contentResolver)
+                .registerInputStream(Uri.parse(absoluteFilePath), "".byteInputStream())
 
               val uploadParametersMap =
                 createValidUploadTestParameterMap(taskId, absoluteFilePath).toReactMap()
@@ -239,8 +246,8 @@ class BlobCourierModuleTests {
     assertTrue(result.second, result.first)
   }
 
-  @Test
-  fun unreachable_server_rjects_upload_promise() {
+  @Test(timeout = DEFAULT_PROMISE_TIMEOUT_MILLISECONDS)
+  fun unreachable_server_rejects_upload_promise() {
     val allRequiredParametersMap = createValidTestFetchParameterMap().toReactMap()
 
     val ctx = ReactApplicationContext(ApplicationProvider.getApplicationContext())
@@ -312,6 +319,60 @@ class BlobCourierModuleTests {
     }
   }
 
+  @Test // This is the faster, and less thorough version of the Instrumented test with the same name
+  fun uploading_a_file_from_outside_app_data_directory_resolves_promise() {
+    val someFileThatIsAlwaysAvailable = "file:///system/etc/fonts.xml"
+
+    val ctx = ReactApplicationContext(ApplicationProvider.getApplicationContext())
+
+    var result = Pair(false, "Unknown")
+
+    val pool = Executors.newSingleThreadExecutor()
+
+    val threadLock = Object()
+    val finishThread = { succeeded: Boolean, message: String ->
+      synchronized(threadLock) {
+        threadLock.notify()
+        result = Pair(succeeded, message)
+      }
+    }
+
+    pool.execute {
+      synchronized(threadLock) {
+        Shadows.shadowOf(ctx.contentResolver)
+          .registerInputStream(Uri.parse(someFileThatIsAlwaysAvailable), "".byteInputStream())
+
+        val uploadParametersMap =
+          createValidUploadTestParameterMap(
+            UUID.randomUUID().toString(),
+            someFileThatIsAlwaysAvailable
+          ).toReactMap()
+
+        runUploadBlob(
+          ctx,
+          uploadParametersMap,
+          Fixtures.EitherPromise(
+            { m1 -> finishThread(false, "Failed upload: $m1") },
+            { finishThread(true, "Success") }
+          )
+        )
+        threadLock.wait()
+      }
+    }
+
+    pool.shutdown()
+
+    if (!pool.awaitTermination(DEFAULT_PROMISE_TIMEOUT_MILLISECONDS * 1L, TimeUnit.MILLISECONDS)) {
+      pool.shutdownNow()
+      assertTrue(
+        "Test execution exceeded $DEFAULT_PROMISE_TIMEOUT_MILLISECONDS milliseconds", false
+      )
+      return
+    }
+
+    assertTrue(result.second, result.first)
+  }
+
   private fun assert_missing_required_fetch_parameter_rejects_promise(
     availableParameters: Map<Any?, Any?>,
     allValuesMapping: Map<String, String>
@@ -359,6 +420,9 @@ class BlobCourierModuleTests {
             { r0 ->
               val taskId = allFetchParametersMap["taskId"] ?: ""
               val absoluteFilePath = r0?.getMap("data")?.getString("absoluteFilePath") ?: ""
+
+              Shadows.shadowOf(ctx.contentResolver)
+                .registerInputStream(Uri.parse(absoluteFilePath), "".byteInputStream())
 
               val uploadParametersMap =
                 createValidUploadTestParameterMap(taskId, absoluteFilePath).toReactMap()

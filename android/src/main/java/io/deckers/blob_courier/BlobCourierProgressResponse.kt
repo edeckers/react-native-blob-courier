@@ -52,7 +52,7 @@ class BlobCourierProgressResponse(
       return numberOfBytesRead
     }
 
-    override fun timeout(): Timeout? = Timeout.NONE
+    override fun timeout(): Timeout = Timeout.NONE
 
     @Throws(IOException::class)
     override fun close() = Unit

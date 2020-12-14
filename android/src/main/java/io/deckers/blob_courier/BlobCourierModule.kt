@@ -26,7 +26,6 @@ import okhttp3.Interceptor
 import okhttp3.MediaType
 import okhttp3.MultipartBody
 import okhttp3.Request
-import okhttp3.RequestBody
 import okhttp3.Response
 import okio.Okio
 import okio.Source
@@ -63,7 +62,7 @@ private val REQUIRED_PARAMETER_PROCESSORS = ImmutableMap.of(
 
 private val AVAILABLE_PARAMETER_PROCESSORS = REQUIRED_PARAMETER_PROCESSORS.keys.joinToString(", ")
 
-private val DEFAULT_OK_HTTP_CLIENT = OkHttpClientProvider.getOkHttpClient()
+private fun createHttpClient() = OkHttpClientProvider.getOkHttpClient()
 
 private fun processUnexpectedError(promise: Promise, e: Error) = promise.reject(
   ERROR_UNEXPECTED_ERROR,
@@ -210,17 +209,25 @@ private fun startBlobUpload(
         "file" -> {
           val payload = this.getMap(PARAMETER_PART_PAYLOAD)!!
 
-          val file = File(payload.getString(PARAMETER_ABSOLUTE_FILE_PATH)!!)
+          val fileUrl = Uri.parse(payload.getString(PARAMETER_ABSOLUTE_FILE_PATH)!!)
+          val fileUrlWithScheme =
+            if (fileUrl.scheme == null) Uri.parse("file://$fileUrl") else fileUrl
+
           val filename =
             if (payload.hasKey(PARAMETER_FILENAME)) (
               payload.getString(PARAMETER_FILENAME)
-                ?: file.name
-              ) else file.name
+                ?: fileUrl.lastPathSegment
+              ) else fileUrl.lastPathSegment
 
           mpb.addFormDataPart(
             multipartName,
             filename,
-            RequestBody.create(MediaType.parse(payload.getString(PARAMETER_MIME_TYPE)!!), file)
+            InputStreamRequestBody(
+              payload.getString(PARAMETER_MIME_TYPE)?.let { MediaType.parse(it) }
+                ?: MediaType.get(DEFAULT_MIME_TYPE),
+              reactContext.contentResolver,
+              fileUrlWithScheme
+            )
           )
         }
         else -> mpb.addFormDataPart(multipartName, this.getString(PARAMETER_PART_PAYLOAD)!!)
@@ -249,7 +256,7 @@ private fun startBlobUpload(
 
   thread {
     try {
-      val response = DEFAULT_OK_HTTP_CLIENT.newCall(
+      val response = createHttpClient().newCall(
         requestBuilder
       ).execute()
 
@@ -426,7 +433,7 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
       .build()
 
     val httpClient =
-      DEFAULT_OK_HTTP_CLIENT.newBuilder()
+      createHttpClient().newBuilder()
         .addInterceptor(createDownloadProgressInterceptor(reactContext, taskId, progressInterval))
         .build()
 
@@ -444,7 +451,7 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
             mapOf(
               "type" to DOWNLOAD_TYPE_UNMANAGED,
               "data" to mapOf(
-                "absoluteFilePath" to absoluteFilePath,
+                "absoluteFilePath" to Uri.fromFile(absoluteFilePath),
                 "response" to mapOf(
                   "code" to response.code(),
                   "headers" to mapHeadersToMap(response.headers())
