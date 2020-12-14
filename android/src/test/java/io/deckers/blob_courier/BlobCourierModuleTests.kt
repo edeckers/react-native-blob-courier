@@ -91,7 +91,7 @@ class BlobCourierModuleTests {
     }
   }
 
-  @Test
+  @Test(timeout = DEFAULT_PROMISE_TIMEOUT_MILLISECONDS)
   fun all_required_fetch_parameters_provided_resolves_promise() {
     val allRequiredParametersMap = createValidTestFetchParameterMap().toReactMap()
 
@@ -125,7 +125,6 @@ class BlobCourierModuleTests {
 
     pool.shutdown()
 
-    println("result=$result")
     if (!pool.awaitTermination(DEFAULT_PROMISE_TIMEOUT_MILLISECONDS * 1L, TimeUnit.MILLISECONDS)) {
       pool.shutdownNow()
       assertTrue(
@@ -137,7 +136,7 @@ class BlobCourierModuleTests {
     assertTrue(result.second, result.first)
   }
 
-  @Test
+  @Test(timeout = DEFAULT_PROMISE_TIMEOUT_MILLISECONDS)
   fun unreachable_fetch_server_rejects_promise() {
     val allRequiredParametersMap = createValidTestFetchParameterMap()
     val requestWithNonExistentUrl =
@@ -184,7 +183,7 @@ class BlobCourierModuleTests {
     assertTrue(result.second, result.first)
   }
 
-  @Test
+  @Test(timeout = DEFAULT_PROMISE_TIMEOUT_MILLISECONDS)
   fun all_required_parameters_provided_resolves_upload_promise() {
     val allRequiredParametersMap = createValidTestFetchParameterMap().toReactMap()
 
@@ -247,7 +246,7 @@ class BlobCourierModuleTests {
     assertTrue(result.second, result.first)
   }
 
-  @Test
+  @Test(timeout = DEFAULT_PROMISE_TIMEOUT_MILLISECONDS)
   fun unreachable_server_rejects_upload_promise() {
     val allRequiredParametersMap = createValidTestFetchParameterMap().toReactMap()
 
@@ -320,7 +319,7 @@ class BlobCourierModuleTests {
     }
   }
 
-  @Test
+  @Test // This is the faster, and less thorough version of the Instrumented test with the same name
   fun uploading_a_file_from_outside_app_data_directory_resolves_promise() {
     val someFileThatIsAlwaysAvailable = "file:///system/etc/fonts.xml"
 
