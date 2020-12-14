@@ -12,7 +12,7 @@ import java.io.IOException
 import okhttp3.MediaType
 import okhttp3.RequestBody
 import okio.BufferedSink
-import okio.source
+import okio.Okio
 
 // Credit:
 // [1] https://commonsware.com/blog/2020/07/05/multipart-upload-okttp-uri.html
@@ -30,7 +30,7 @@ class InputStreamRequestBody(
   override fun writeTo(sink: BufferedSink) {
     val input = contentResolver.openInputStream(uri)
 
-    input?.use { sink.writeAll(it.source()) }
+    input?.use { sink.writeAll(Okio.source(it)) }
       ?: throw IOException("Could not open $uri")
   }
 }

@@ -111,7 +111,8 @@ class BlobCourierModuleTests {
     pool.execute {
       synchronized(threadLock) {
         runFetchBlob(
-          ctx, allRequiredParametersMap,
+          ctx,
+          allRequiredParametersMap,
           Fixtures.EitherPromise(
             { m0 -> finishThread(false, "Failed fetch: $m0") },
             { finishThread(true, "Success") }
@@ -123,6 +124,7 @@ class BlobCourierModuleTests {
 
     pool.shutdown()
 
+    println("result=$result")
     if (!pool.awaitTermination(DEFAULT_PROMISE_TIMEOUT_MILLISECONDS * 1L, TimeUnit.MILLISECONDS)) {
       pool.shutdownNow()
       assertTrue(

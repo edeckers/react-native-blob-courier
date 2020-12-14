@@ -13,8 +13,8 @@ import okhttp3.RequestBody
 import okio.Buffer
 import okio.BufferedSink
 import okio.ForwardingSink
+import okio.Okio
 import okio.Sink
-import okio.buffer
 
 class BlobCourierProgressRequest(
   private val context: ReactApplicationContext,
@@ -30,7 +30,7 @@ class BlobCourierProgressRequest(
 
   @Throws(IOException::class)
   override fun writeTo(sink: BufferedSink) =
-    CountingSink(sink).buffer().use(requestBody::writeTo)
+    Okio.buffer(CountingSink(sink)).use(requestBody::writeTo)
 
   private inner class CountingSink(delegate: Sink) : ForwardingSink(delegate) {
     private val progressNotifier =
