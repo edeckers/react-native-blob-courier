@@ -63,7 +63,7 @@ private val REQUIRED_PARAMETER_PROCESSORS = ImmutableMap.of(
 
 private val AVAILABLE_PARAMETER_PROCESSORS = REQUIRED_PARAMETER_PROCESSORS.keys.joinToString(", ")
 
-private val DEFAULT_OK_HTTP_CLIENT = OkHttpClientProvider.getOkHttpClient()
+private fun createHttpClient() = OkHttpClientProvider.getOkHttpClient()
 
 private fun processUnexpectedError(promise: Promise, e: Error) = promise.reject(
   ERROR_UNEXPECTED_ERROR,
@@ -256,7 +256,7 @@ private fun startBlobUpload(
 
   thread {
     try {
-      val response = DEFAULT_OK_HTTP_CLIENT.newCall(
+      val response = createHttpClient().newCall(
         requestBuilder
       ).execute()
 
@@ -433,7 +433,7 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
       .build()
 
     val httpClient =
-      DEFAULT_OK_HTTP_CLIENT.newBuilder()
+      createHttpClient().newBuilder()
         .addInterceptor(createDownloadProgressInterceptor(reactContext, taskId, progressInterval))
         .build()
 
