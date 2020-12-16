@@ -21,6 +21,8 @@ import io.mockk.mockkStatic
 import java.util.UUID
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
+import okhttp3.MediaType
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -29,6 +31,8 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows
 import org.robolectric.annotation.Config
+
+const val SOME_FILE_THAT_IS_ALWAYS_AVAILABLE = "file:///system/etc/fonts.xml"
 
 private fun retrieveMissingKeys(
   expected: Map<*, *>,
@@ -309,6 +313,27 @@ class BlobCourierModuleTests {
   }
 
   @Test
+  fun total_number_of_bytes_estimate_is_returned_by_input_stream_request_body() {
+    val ctx = ReactApplicationContext(ApplicationProvider.getApplicationContext())
+
+    val fileUri = Uri.parse(SOME_FILE_THAT_IS_ALWAYS_AVAILABLE)
+
+    val someFileContent = "THESE_ARE_SOME_BYTES"
+
+    Shadows.shadowOf(ctx.contentResolver)
+      .registerInputStream(fileUri, someFileContent.byteInputStream())
+
+    val requestBody =
+      InputStreamRequestBody(MediaType.get("text/plain"), ctx.contentResolver, fileUri)
+
+    assertEquals(
+      "Returned length differs from expected length",
+      someFileContent.length.toLong(),
+      requestBody.contentLength()
+    )
+  }
+
+  @Test
   fun missing_required_upload_parameters_rejects_fetch_promise() {
     val allValuesMapping = createValidUploadTestParameterMap("some-task-id", "/tmp")
 
@@ -321,7 +346,6 @@ class BlobCourierModuleTests {
 
   @Test // This is the faster, and less thorough version of the Instrumented test with the same name
   fun uploading_a_file_from_outside_app_data_directory_resolves_promise() {
-    val someFileThatIsAlwaysAvailable = "file:///system/etc/fonts.xml"
 
     val ctx = ReactApplicationContext(ApplicationProvider.getApplicationContext())
 
@@ -340,12 +364,12 @@ class BlobCourierModuleTests {
     pool.execute {
       synchronized(threadLock) {
         Shadows.shadowOf(ctx.contentResolver)
-          .registerInputStream(Uri.parse(someFileThatIsAlwaysAvailable), "".byteInputStream())
+          .registerInputStream(Uri.parse(SOME_FILE_THAT_IS_ALWAYS_AVAILABLE), "".byteInputStream())
 
         val uploadParametersMap =
           createValidUploadTestParameterMap(
             UUID.randomUUID().toString(),
-            someFileThatIsAlwaysAvailable
+            SOME_FILE_THAT_IS_ALWAYS_AVAILABLE
           ).toReactMap()
 
         runUploadBlob(
