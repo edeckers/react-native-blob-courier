@@ -1,6 +1,6 @@
 {
   "name": "react-native-blob-courier",
-  "version": "1.0.1-beta.0",
+  "version": "1.0.1",
   "description": "Use this library to efficiently download and upload blobs in React Native",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
