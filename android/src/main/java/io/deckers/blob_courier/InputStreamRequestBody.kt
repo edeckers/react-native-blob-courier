@@ -22,9 +22,13 @@ class InputStreamRequestBody(
   private val contentResolver: ContentResolver,
   private val uri: Uri
 ) : RequestBody() {
+  private val inputStream = contentResolver.openInputStream(uri)
+
+  private val estimateContentLength = inputStream?.available()?.toLong() ?: -1L
+
   override fun contentType() = contentType
 
-  override fun contentLength(): Long = -1
+  override fun contentLength(): Long = estimateContentLength
 
   @Throws(IOException::class)
   override fun writeTo(sink: BufferedSink) {
