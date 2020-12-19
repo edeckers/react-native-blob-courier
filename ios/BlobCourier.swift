@@ -13,18 +13,24 @@ open class BlobCourier: NSObject {
   static let parameterFilename = "filename"
   static let parameterAbsoluteFilePath = "absoluteFilePath"
   static let parameterHeaders = "headers"
+  static let parameterIOSSettings = "ios"
   static let parameterMethod = "method"
   static let parameterMimeType = "mimeType"
   static let parameterPartPayload = "payload"
   static let parameterParts = "parts"
   static let parameterProgressInterval = "progressIntervalMilliseconds"
   static let parameterReturnResponse = "returnResponse"
+  static let parameterTarget = "target"
   static let parameterTaskId = "taskId"
   static let parameterUrl = "url"
+
+  static let targetData = "data"
+  static let targetCache = "cache"
 
   static let defaultMethod = "GET"
   static let defaultMimeType = "application/octet-stream"
   static let defaultProgressIntervalMilliseconds = 500
+  static let defaultTarget = targetCache
 
   func assertRequiredParameter(input: NSDictionary, type: String, parameterName: String) throws {
     let maybeValue = input[parameterName]
@@ -48,6 +54,14 @@ open class BlobCourier: NSObject {
   ) throws {
     let taskId = (input[BlobCourier.parameterTaskId] as? String) ?? ""
 
+    let iosSettings =
+      (input[BlobCourier.parameterIOSSettings] as? NSDictionary) ??
+      NSDictionary()
+
+    let target =
+      (iosSettings[BlobCourier.parameterTarget] as? String) ??
+      BlobCourier.defaultTarget
+
     let progressIntervalMilliseconds =
       (input[BlobCourier.parameterProgressInterval] as? Int) ??
         BlobCourier.defaultProgressIntervalMilliseconds
@@ -61,13 +75,13 @@ open class BlobCourier: NSObject {
         (input[BlobCourier.parameterHeaders] as? NSDictionary) ??
         NSDictionary())
 
-    let documentsUrl: URL =
+    let targetUrl: URL =
       try FileManager.default.url(
-        for: .documentDirectory,
+        for: target == BlobCourier.targetData ? .documentDirectory : .cachesDirectory,
         in: .userDomainMask,
         appropriateFor: nil,
         create: false)
-    let destinationFileUrl = documentsUrl.appendingPathComponent(filename)
+    let destinationFileUrl = targetUrl.appendingPathComponent(filename)
 
     let fileURL = URL(string: url)
     let sessionConfig = URLSessionConfiguration.default
@@ -79,10 +93,25 @@ open class BlobCourier: NSObject {
         resolve: resolve,
         reject: reject)
 
-    let session =
-     URLSession(configuration: sessionConfig, delegate: downloaderDelegate, delegateQueue: nil)
+    startFetchBlob(
+      sessionConfig: sessionConfig,
+      delegate: downloaderDelegate,
+      fileURL: fileURL!,
+      headers: headers)
+  }
 
-    var request = URLRequest(url: fileURL!)
+  func startFetchBlob(
+    sessionConfig: URLSessionConfiguration,
+    delegate: DownloaderDelegate,
+    fileURL: URL,
+    headers: NSDictionary) {
+    let session =
+     URLSession(
+       configuration: sessionConfig,
+       delegate: delegate,
+       delegateQueue: nil)
+
+    var request = URLRequest(url: fileURL)
     for (key, value) in headers {
       if let headerKey = key as? String, let headerValue = value as? String {
         request.setValue(
