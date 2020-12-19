@@ -11,6 +11,7 @@ import {
   BLOB_FETCH_FALLBACK_PARAMETERS,
   BLOB_MULTIPART_UPLOAD_FALLBACK_PARAMETERS,
   BLOB_UPLOAD_FALLBACK_PARAMETERS,
+  DEFAULT_FETCH_TARGET,
   DEFAULT_FILE_MULTIPART_FIELD_NAME,
   DEFAULT_PROGRESS_UPDATE_INTERVAL_MILLISECONDS,
 } from '../Consts';
@@ -142,9 +143,13 @@ describe('Given fallback parameters are provided through a constant', () => {
     expect(BLOB_FETCH_FALLBACK_PARAMETERS).toStrictEqual({
       android: {
         downloadManager: ANDROID_DOWNLOAD_MANAGER_FALLBACK_PARAMETERS,
+        target: DEFAULT_FETCH_TARGET,
         useDownloadManager: false,
       },
       headers: {},
+      ios: {
+        target: DEFAULT_FETCH_TARGET,
+      },
       method: 'GET',
       progressIntervalMilliseconds: DEFAULT_PROGRESS_UPDATE_INTERVAL_MILLISECONDS,
     });
@@ -313,8 +318,9 @@ describe('Given a fluent fetch request', () => {
           const expectedParameters = {
             ...DEFAULT_FETCH_REQUEST,
             android: {
-              useDownloadManager: true,
               downloadManager,
+              target: DEFAULT_FETCH_TARGET,
+              useDownloadManager: true,
             },
           };
 
@@ -351,8 +357,9 @@ describe('Given a fluent fetch request', () => {
         const expectedParameters = {
           ...DEFAULT_FETCH_REQUEST,
           android: {
-            useDownloadManager: true,
             downloadManager,
+            target: DEFAULT_FETCH_TARGET,
+            useDownloadManager: true,
           },
         };
 
@@ -611,6 +618,7 @@ describe('Given a fluent upload request', () => {
             android: {
               useDownloadManager: true,
               downloadManager,
+              target: DEFAULT_FETCH_TARGET,
             },
           };
 

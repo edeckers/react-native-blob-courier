@@ -22,13 +22,17 @@ import type {
   AndroidDownloadManagerSettings,
   BlobProgressEvent,
   BlobRequestOnProgress,
-  AndroidSettings,
+  AndroidFetchSettings,
   BlobMultipartUploadRequest as BlobUploadMultipartRequest,
+  IOSFetchSettings,
 } from './ExposedTypes';
 import { uuid } from './Utils';
 import { dict } from './Extensions';
 
-type BlobFetchInput = BlobFetchRequest & BlobRequestSettings & AndroidSettings;
+type BlobFetchInput = BlobFetchRequest &
+  BlobRequestSettings &
+  AndroidFetchSettings &
+  IOSFetchSettings;
 
 type BlobFetchNativeInput = BlobFetchInput & BlobRequestTask;
 
@@ -83,7 +87,16 @@ const sanitizeSettingsData = <T extends BlobRequestSettings>(
 const sanitizeFetchData = <T extends BlobFetchNativeInput>(
   input: Readonly<T>
 ): BlobFetchNativeInput => {
-  const { android, filename, headers, method, mimeType, taskId, url } = input;
+  const {
+    android,
+    filename,
+    headers,
+    ios,
+    method,
+    mimeType,
+    taskId,
+    url,
+  } = input;
 
   const settings = sanitizeSettingsData(input);
 
@@ -97,6 +110,7 @@ const sanitizeFetchData = <T extends BlobFetchNativeInput>(
     ...settings,
     android,
     headers,
+    ios,
     method,
   }).fallback(BLOB_FETCH_FALLBACK_PARAMETERS);
 

@@ -36,7 +36,9 @@ export declare interface BlobBaseRequest
 export declare interface BlobFetchRequest
   extends BlobBaseRequest,
     BlobRequestMimeType,
-    BlobRequestMethod {
+    BlobRequestMethod,
+    AndroidFetchSettings,
+    IOSFetchSettings {
   readonly filename: string;
 }
 
@@ -54,8 +56,18 @@ export declare interface AndroidDownloadManager {
   readonly downloadManager?: AndroidDownloadManagerSettings;
 }
 
-export declare interface AndroidSettings {
-  readonly android?: AndroidDownloadManagerToggle & AndroidDownloadManager;
+export type TargetType = 'cache' | 'data';
+export declare interface TargetSettings {
+  target?: TargetType;
+}
+export declare interface AndroidFetchSettings {
+  readonly android?: AndroidDownloadManagerToggle &
+    AndroidDownloadManager &
+    TargetSettings;
+}
+
+export declare interface IOSFetchSettings {
+  readonly ios?: TargetSettings;
 }
 
 export declare interface BlobProgressEvent {
