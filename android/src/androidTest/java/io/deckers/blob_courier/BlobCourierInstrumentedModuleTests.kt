@@ -22,11 +22,25 @@ import io.mockk.mockkStatic
 import java.util.UUID
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
+import org.junit.After
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
 
+private fun enableNetworking(enable: Boolean) {
+  val word = if (enable) "enable" else "disable"
+
+  InstrumentationRegistry.getInstrumentation().uiAutomation.executeShellCommand("svc wifi $word")
+  InstrumentationRegistry.getInstrumentation().uiAutomation.executeShellCommand("svc data $word")
+}
+
 class BlobCourierInstrumentedModuleTests {
+  @After
+  fun restoreExpectedState() {
+    enableNetworking(true)
+    Thread.sleep(1_000)
+  }
+
   @Before
   fun mockSomeNativeOnlyMethods() {
     circumventHiddenApiExemptionsForMockk()
@@ -143,6 +157,56 @@ class BlobCourierInstrumentedModuleTests {
         threadLock.wait()
       }
     }
+
+    pool.shutdown()
+
+    if (!pool.awaitTermination(DEFAULT_PROMISE_TIMEOUT_MILLISECONDS * 1L, TimeUnit.MILLISECONDS)) {
+      pool.shutdownNow()
+      Assert.assertTrue(
+        "Test execution exceeded $DEFAULT_PROMISE_TIMEOUT_MILLISECONDS milliseconds", false
+      )
+      return
+    }
+
+    Assert.assertTrue(result.second, result.first)
+  }
+
+  @Test(timeout = DEFAULT_PROMISE_TIMEOUT_MILLISECONDS)
+  fun no_network_connection_rejects_promise() {
+    val allRequiredParametersMap = createValidTestFetchParameterMap().toReactMap()
+
+    val ctx = ReactApplicationContext(ApplicationProvider.getApplicationContext())
+
+    var result = Pair(false, "Unknown")
+
+    val pool = Executors.newSingleThreadScheduledExecutor()
+
+    val threadLock = Object()
+    val finishThread = { succeeded: Boolean, message: String ->
+      synchronized(threadLock) {
+        threadLock.notify()
+        result = Pair(succeeded, message)
+      }
+    }
+
+    enableNetworking(false)
+
+    pool.schedule(
+      {
+        synchronized(threadLock) {
+          runFetchBlob(
+            ctx,
+            allRequiredParametersMap,
+            Fixtures.EitherPromise(
+              { m0 -> finishThread(true, "Success: $m0") },
+              { m0 -> finishThread(false, "Resolved but expected reject: $m0") }
+            )
+          )
+          threadLock.wait()
+        }
+      },
+      1_000, TimeUnit.MILLISECONDS
+    )
 
     pool.shutdown()
 
