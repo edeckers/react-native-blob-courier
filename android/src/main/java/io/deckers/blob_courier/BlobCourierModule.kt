@@ -20,6 +20,7 @@ import com.facebook.react.modules.network.OkHttpClientProvider
 import java.io.File
 import java.lang.reflect.Type
 import java.net.URL
+import java.util.Locale
 import kotlin.concurrent.thread
 import okhttp3.Headers
 import okhttp3.Interceptor
@@ -43,6 +44,7 @@ private const val PARAMETER_PART_PAYLOAD = "payload"
 private const val PARAMETER_PARTS = "parts"
 private const val PARAMETER_RETURN_RESPONSE = "returnResponse"
 private const val PARAMETER_SETTINGS_PROGRESS_INTERVAL = "progressIntervalMilliseconds"
+private const val PARAMETER_TARGET = "target"
 private const val PARAMETER_TASK_ID = "taskId"
 private const val PARAMETER_URL = "url"
 private const val PARAMETER_USE_DOWNLOAD_MANAGER = "useDownloadManager"
@@ -50,6 +52,11 @@ private const val PARAMETER_USE_DOWNLOAD_MANAGER = "useDownloadManager"
 private const val DOWNLOAD_MANAGER_PARAMETER_DESCRIPTION = "description"
 private const val DOWNLOAD_MANAGER_PARAMETER_ENABLE_NOTIFICATIONS = "enableNotifications"
 private const val DOWNLOAD_MANAGER_PARAMETER_TITLE = "title"
+
+private enum class TargetDirectoryEnum {
+  Cache,
+  Data
+}
 
 private val REQUIRED_PARAMETER_PROCESSORS = ImmutableMap.of(
   Boolean::class.java.toString(),
@@ -78,6 +85,17 @@ private fun processUnexpectedEmptyValue(promise: Promise, parameterName: String)
   ERROR_UNEXPECTED_EMPTY_VALUE,
   "Parameter `$parameterName` cannot be empty."
 )
+
+@Suppress("SameParameterValue")
+private fun processInvalidValue(
+  promise: Promise,
+  parameterName: String,
+  invalidValue: String
+) =
+  promise.reject(
+    ERROR_INVALID_VALUE,
+    "Parameter `$parameterName` has an invalid value (value=$invalidValue)."
+  )
 
 private fun mapHeadersToMap(headers: Headers): Map<String, String> =
   headers
@@ -254,28 +272,26 @@ private fun startBlobUpload(
     }
     .build()
 
-  thread {
-    try {
-      val response = createHttpClient().newCall(
-        requestBuilder
-      ).execute()
+  try {
+    val response = createHttpClient().newCall(
+      requestBuilder
+    ).execute()
 
-      val b = response.body()?.string().orEmpty()
+    val b = response.body()?.string().orEmpty()
 
-      promise.resolve(
-        mapOf(
-          "response" to mapOf(
-            "code" to response.code(),
-            "data" to if (returnResponse) b else "",
-            "headers" to mapHeadersToMap(response.headers())
-          )
-        ).toReactMap()
-      )
-    } catch (e: Exception) {
-      promise.reject(ERROR_UNEXPECTED_EXCEPTION, e.message)
-    } catch (e: Error) {
-      promise.reject(ERROR_UNEXPECTED_ERROR, e.message)
-    }
+    promise.resolve(
+      mapOf(
+        "response" to mapOf(
+          "code" to response.code(),
+          "data" to if (returnResponse) b else "",
+          "headers" to mapHeadersToMap(response.headers())
+        )
+      ).toReactMap()
+    )
+  } catch (e: Exception) {
+    promise.reject(ERROR_UNEXPECTED_EXCEPTION, e.message)
+  } catch (e: Error) {
+    promise.reject(ERROR_UNEXPECTED_ERROR, e.message)
   }
 }
 
@@ -294,7 +310,16 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
 
   override fun getName(): String = LIBRARY_NAME
 
-  private fun createAbsoluteFilePath(filename: String) = File(reactContext.cacheDir, filename)
+  private fun createAbsoluteFilePath(
+    filename: String,
+    targetDirectory: TargetDirectoryEnum
+  ) =
+    File(
+      reactContext.let {
+        if (targetDirectory == TargetDirectoryEnum.Data) it.filesDir else it.cacheDir
+      },
+      filename
+    )
 
   private fun uploadBlobFromValidatedParameters(input: ReadableMap, promise: Promise) {
     val maybeTaskId = input.getString(PARAMETER_TASK_ID)
@@ -352,13 +377,14 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
     taskId: String,
     downloadManagerSettings: Map<String, Any>,
     uri: Uri,
+    targetDirectory: TargetDirectoryEnum,
     filename: String,
     headers: Map<String, String>,
     mimeType: String,
     progressInterval: Int,
     promise: Promise
   ) {
-    val absoluteFilePath = createAbsoluteFilePath(filename)
+    val absoluteFilePath = createAbsoluteFilePath(filename, targetDirectory)
 
     val request =
       DownloadManager.Request(uri)
@@ -414,13 +440,14 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
   private fun fetchBlobWithoutDownloadManager(
     taskId: String,
     uri: Uri,
+    targetDirectory: TargetDirectoryEnum,
     filename: String,
     headers: Map<String, String>,
     method: String,
     progressInterval: Int,
     promise: Promise
   ) {
-    val absoluteFilePath = createAbsoluteFilePath(filename)
+    val absoluteFilePath = createAbsoluteFilePath(filename, targetDirectory)
 
     val request = Request.Builder()
       .method(method, null)
@@ -437,34 +464,32 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
         .addInterceptor(createDownloadProgressInterceptor(reactContext, taskId, progressInterval))
         .build()
 
-    thread {
-      try {
-        httpClient.newCall(request).execute().use { response ->
-          response.body()?.source().use { source ->
-            Okio.buffer(Okio.sink(absoluteFilePath)).use { sink ->
+    try {
+      httpClient.newCall(request).execute().use { response ->
+        response.body()?.source().use { source ->
+          Okio.buffer(Okio.sink(absoluteFilePath)).use { sink ->
 
-              sink.writeAll(source as Source)
-            }
+            sink.writeAll(source as Source)
           }
-
-          promise.resolve(
-            mapOf(
-              "type" to DOWNLOAD_TYPE_UNMANAGED,
-              "data" to mapOf(
-                "absoluteFilePath" to Uri.fromFile(absoluteFilePath),
-                "response" to mapOf(
-                  "code" to response.code(),
-                  "headers" to mapHeadersToMap(response.headers())
-                )
-              )
-            ).toReactMap()
-          )
         }
-      } catch (e0: Exception) {
-        promise.reject(ERROR_UNEXPECTED_EXCEPTION, e0.message)
-      } catch (e0: Error) {
-        promise.reject(ERROR_UNEXPECTED_ERROR, e0.message)
+
+        promise.resolve(
+          mapOf(
+            "type" to DOWNLOAD_TYPE_UNMANAGED,
+            "data" to mapOf(
+              "absoluteFilePath" to Uri.fromFile(absoluteFilePath),
+              "response" to mapOf(
+                "code" to response.code(),
+                "headers" to mapHeadersToMap(response.headers())
+              )
+            )
+          ).toReactMap()
+        )
       }
+    } catch (e0: Exception) {
+      promise.reject(ERROR_UNEXPECTED_EXCEPTION, e0.message)
+    } catch (e0: Error) {
+      promise.reject(ERROR_UNEXPECTED_ERROR, e0.message)
     }
   }
 
@@ -482,12 +507,24 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
 
     val maybeAndroidSettings = input.getMap(PARAMETER_ANDROID_SETTINGS)
 
-    val downloadManagerSettings = maybeAndroidSettings?.let {
-      it.getMap(PARAMETER_DOWNLOAD_MANAGER_SETTINGS)?.toHashMap()
-    } ?: emptyMap<String, Any>()
+    val targetDirectoryOrFallback = (
+      maybeAndroidSettings?.getString(PARAMETER_TARGET)
+        ?: TargetDirectoryEnum.Cache.toString()
+      )
+
+    val maybeTargetDirectory =
+      TargetDirectoryEnum
+        .values()
+        .firstOrNull {
+          it.name.toLowerCase(Locale.getDefault()) ==
+            targetDirectoryOrFallback.toLowerCase(Locale.getDefault())
+        }
+
+    val downloadManagerSettings =
+      maybeAndroidSettings?.getMap(PARAMETER_DOWNLOAD_MANAGER_SETTINGS)?.toHashMap().orEmpty()
 
     val useDownloadManager =
-      maybeAndroidSettings?.getBoolean(PARAMETER_USE_DOWNLOAD_MANAGER) ?: false
+      maybeAndroidSettings?.hasKey(PARAMETER_USE_DOWNLOAD_MANAGER) ?: false
 
     val unfilteredHeaders =
       input.getMap(PARAMETER_HEADERS)?.toHashMap() ?: emptyMap<String, Any>()
@@ -513,11 +550,18 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
       return
     }
 
+    if (maybeTargetDirectory == null) {
+      processInvalidValue(promise, PARAMETER_TARGET, targetDirectoryOrFallback)
+
+      return
+    }
+
     startBlobFetch(
       maybeTaskId,
       Uri.parse(maybeUrl),
       useDownloadManager,
       downloadManagerSettings,
+      maybeTargetDirectory,
       maybeFilename,
       mimeType,
       promise,
@@ -532,6 +576,7 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
     uri: Uri,
     useDownloadManager: Boolean,
     downloadManagerSettings: Map<String, Any>,
+    targetDirectory: TargetDirectoryEnum,
     filename: String,
     mimeType: String,
     promise: Promise,
@@ -544,6 +589,7 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
         taskId,
         downloadManagerSettings,
         uri,
+        targetDirectory,
         filename,
         headers,
         mimeType,
@@ -553,6 +599,7 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
     else fetchBlobWithoutDownloadManager(
       taskId,
       uri,
+      targetDirectory,
       filename,
       headers,
       method,
@@ -562,35 +609,39 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
 
   @ReactMethod
   fun fetchBlob(input: ReadableMap, promise: Promise) {
-    try {
-      assertRequiredParameter(input, String::class.java, PARAMETER_TASK_ID)
-      assertRequiredParameter(input, String::class.java, PARAMETER_FILENAME)
-      assertRequiredParameter(input, String::class.java, PARAMETER_URL)
+    thread {
+      try {
+        assertRequiredParameter(input, String::class.java, PARAMETER_TASK_ID)
+        assertRequiredParameter(input, String::class.java, PARAMETER_FILENAME)
+        assertRequiredParameter(input, String::class.java, PARAMETER_URL)
 
-      fetchBlobFromValidatedParameters(input, promise)
-    } catch (e: BlobCourierError) {
-      promise.reject(e.code, e.message)
-    } catch (e: Exception) {
-      processUnexpectedException(promise, e)
-    } catch (e: Error) {
-      processUnexpectedError(promise, e)
+        fetchBlobFromValidatedParameters(input, promise)
+      } catch (e: BlobCourierError) {
+        promise.reject(e.code, e.message)
+      } catch (e: Exception) {
+        processUnexpectedException(promise, e)
+      } catch (e: Error) {
+        processUnexpectedError(promise, e)
+      }
     }
   }
 
   @ReactMethod
   fun uploadBlob(input: ReadableMap, promise: Promise) {
-    try {
-      assertRequiredParameter(input, String::class.java, PARAMETER_TASK_ID)
-      assertRequiredParameter(input, ReadableMap::class.java, PARAMETER_PARTS)
-      assertRequiredParameter(input, String::class.java, PARAMETER_URL)
+    thread {
+      try {
+        assertRequiredParameter(input, String::class.java, PARAMETER_TASK_ID)
+        assertRequiredParameter(input, ReadableMap::class.java, PARAMETER_PARTS)
+        assertRequiredParameter(input, String::class.java, PARAMETER_URL)
 
-      uploadBlobFromValidatedParameters(input, promise)
-    } catch (e: BlobCourierError) {
-      promise.reject(e.code, e.message)
-    } catch (e: Exception) {
-      processUnexpectedException(promise, e)
-    } catch (e: Error) {
-      processUnexpectedError(promise, e)
+        uploadBlobFromValidatedParameters(input, promise)
+      } catch (e: BlobCourierError) {
+        promise.reject(e.code, e.message)
+      } catch (e: Exception) {
+        processUnexpectedException(promise, e)
+      } catch (e: Error) {
+        processUnexpectedError(promise, e)
+      }
     }
   }
 }

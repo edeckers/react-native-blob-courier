@@ -397,6 +397,114 @@ class BlobCourierModuleTests {
     assertTrue(result.second, result.first)
   }
 
+  @Test
+  fun correct_target_parameters_resolve_promise() {
+    listOf("cache", "data").forEach { assert_correct_target_parameter_resolves_promise(it) }
+  }
+
+  @Test
+  fun incorrect_target_parameter_rejects_promise() {
+    val allRequiredParametersMap = createValidTestFetchParameterMap()
+
+    val android = mapOf("target" to "SOME_UNKNOWN_TARGET")
+
+    val requestWithInvalidTargetDirectory =
+      allRequiredParametersMap.plus(Pair("android", android)).toReactMap()
+
+    val ctx = ReactApplicationContext(ApplicationProvider.getApplicationContext())
+
+    var result = Pair(false, "Unknown")
+
+    val pool = Executors.newSingleThreadExecutor()
+
+    val threadLock = Object()
+    val finishThread = { succeeded: Boolean, message: String ->
+      synchronized(threadLock) {
+        threadLock.notify()
+        result = Pair(succeeded, message)
+      }
+    }
+
+    pool.execute {
+      synchronized(threadLock) {
+        runFetchBlob(
+          ctx,
+          requestWithInvalidTargetDirectory,
+          Fixtures.EitherPromise(
+            { m0 ->
+              finishThread(true, "Success: $m0")
+            },
+            { m0 ->
+              finishThread(false, "Resolved but expected reject: $m0")
+            }
+          )
+        )
+        threadLock.wait()
+      }
+    }
+
+    pool.shutdown()
+
+    if (!pool.awaitTermination(DEFAULT_PROMISE_TIMEOUT_MILLISECONDS * 1L, TimeUnit.MILLISECONDS)) {
+      pool.shutdownNow()
+      assertTrue(
+        "Test execution exceeded $DEFAULT_PROMISE_TIMEOUT_MILLISECONDS milliseconds", false
+      )
+      return
+    }
+
+    assertTrue(result.second, result.first)
+  }
+
+  fun assert_correct_target_parameter_resolves_promise(correctTarget: String) {
+    val allRequiredParametersMap = createValidTestFetchParameterMap()
+
+    val android = mapOf("target" to correctTarget)
+
+    val requestWithInvalidTargetDirectory =
+      allRequiredParametersMap.plus(Pair("android", android)).toReactMap()
+
+    val ctx = ReactApplicationContext(ApplicationProvider.getApplicationContext())
+
+    var result = Pair(false, "Unknown")
+
+    val pool = Executors.newSingleThreadExecutor()
+
+    val threadLock = Object()
+    val finishThread = { succeeded: Boolean, message: String ->
+      synchronized(threadLock) {
+        threadLock.notify()
+        result = Pair(succeeded, message)
+      }
+    }
+
+    pool.execute {
+      synchronized(threadLock) {
+        runFetchBlob(
+          ctx,
+          requestWithInvalidTargetDirectory,
+          Fixtures.EitherPromise(
+            { m0 -> finishThread(false, "Rejected but expected resolve: $m0") },
+            { m0 -> finishThread(true, "Success: $m0") }
+          )
+        )
+        threadLock.wait()
+      }
+    }
+
+    pool.shutdown()
+
+    if (!pool.awaitTermination(DEFAULT_PROMISE_TIMEOUT_MILLISECONDS * 1L, TimeUnit.MILLISECONDS)) {
+      pool.shutdownNow()
+      assertTrue(
+        "Test execution exceeded $DEFAULT_PROMISE_TIMEOUT_MILLISECONDS milliseconds", false
+      )
+      return
+    }
+
+    assertTrue(result.second, result.first)
+  }
+
   private fun assert_missing_required_fetch_parameter_rejects_promise(
     availableParameters: Map<Any?, Any?>,
     allValuesMapping: Map<String, String>

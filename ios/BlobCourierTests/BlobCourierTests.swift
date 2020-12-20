@@ -112,4 +112,42 @@ class BlobCourierTests: XCTestCase {
 
         sleep(BlobCourierTests.defaultPromiseTimeoutSeconds)
     }
+
+    func testValidTargetParametersResolvesPromise() throws {
+        for target in ["cache", "data"] {
+          let input: NSDictionary = [
+            "filename": "some-filename.png",
+            "ios": [
+              "target": target
+            ],
+            "taskId": "some-task-id",
+            "url": "https://github.com/edeckers/react-native-blob-courier"
+          ]
+          let resolve: RCTPromiseResolveBlock = { (_: Any?) -> Void in XCTAssertTrue(true) }
+          let reject: RCTPromiseRejectBlock = { (_: String?, _: String?, _: Error?) -> Void in XCTAssertTrue(false) }
+
+          sut?.fetchBlob(input: input, resolve: resolve, reject: reject)
+
+          sleep(BlobCourierTests.defaultPromiseTimeoutSeconds)
+        }
+    }
+
+    func testInvalidTargetParametersRejectsPromise() throws {
+        let target = "SOME_INVALID_VALUE"
+
+        let input: NSDictionary = [
+          "filename": "some-filename.png",
+          "ios": [
+            "target": target
+          ],
+          "taskId": "some-task-id",
+          "url": "https://github.com/edeckers/react-native-blob-courier"
+        ]
+        let resolve: RCTPromiseResolveBlock = { (_: Any?) -> Void in XCTAssertTrue(false) }
+        let reject: RCTPromiseRejectBlock = { (_: String?, _: String?, _: Error?) -> Void in XCTAssertTrue(true) }
+
+        sut?.fetchBlob(input: input, resolve: resolve, reject: reject)
+
+        sleep(BlobCourierTests.defaultPromiseTimeoutSeconds)
+    }
 }

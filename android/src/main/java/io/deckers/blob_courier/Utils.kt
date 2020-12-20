@@ -40,13 +40,19 @@ fun createDownloadManager(context: Context) =
 fun Map<*, *>.toReactMap(): WritableMap {
   val thisMap = this
 
-  return Arguments.createMap().apply {
+  val x = Arguments.createMap().apply {
     thisMap.forEach { (k, v) ->
       when {
-        (v is String) -> putString(k.toString(), v)
-        (v is Map<*, *>) -> putMap(k.toString(), v.toReactMap())
-        else -> putString(k.toString(), v.toString())
+        (v is String) ->
+          putString(k.toString(), v)
+        (v is Map<*, *>) -> {
+          putMap(k.toString(), v.toReactMap())
+        }
+        else ->
+          putString(k.toString(), v.toString())
       }
     }
   }
+
+  return x
 }

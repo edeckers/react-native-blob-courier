@@ -1,3 +1,5 @@
+import type { TargetType } from './ExposedTypes';
+
 /**
  * Copyright (c) Ely Deckers.
  *
@@ -10,15 +12,20 @@ export const ANDROID_DOWNLOAD_MANAGER_FALLBACK_PARAMETERS = {
   title: undefined,
 };
 
+export const DEFAULT_FETCH_TARGET: TargetType = 'cache';
 export const DEFAULT_PROGRESS_UPDATE_INTERVAL_MILLISECONDS = 200;
 export const DEFAULT_FILE_MULTIPART_FIELD_NAME = 'file';
 
 export const BLOB_FETCH_FALLBACK_PARAMETERS = {
   android: {
     downloadManager: ANDROID_DOWNLOAD_MANAGER_FALLBACK_PARAMETERS,
+    target: DEFAULT_FETCH_TARGET,
     useDownloadManager: false,
   },
   headers: {},
+  ios: {
+    target: DEFAULT_FETCH_TARGET,
+  },
   method: 'GET',
   progressIntervalMilliseconds: DEFAULT_PROGRESS_UPDATE_INTERVAL_MILLISECONDS,
 };

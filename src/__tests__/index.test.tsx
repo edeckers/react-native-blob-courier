@@ -11,13 +11,14 @@ import {
   BLOB_FETCH_FALLBACK_PARAMETERS,
   BLOB_MULTIPART_UPLOAD_FALLBACK_PARAMETERS,
   BLOB_UPLOAD_FALLBACK_PARAMETERS,
+  DEFAULT_FETCH_TARGET,
   DEFAULT_FILE_MULTIPART_FIELD_NAME,
   DEFAULT_PROGRESS_UPDATE_INTERVAL_MILLISECONDS,
 } from '../Consts';
 import { dict } from '../Extensions';
 import { NativeEventEmitter, NativeModules } from 'react-native';
 import BlobCourier from '../index';
-import type { BlobMultipartUploadRequest } from 'src/ExposedTypes';
+import type { BlobMultipartUploadRequest, TargetType } from 'src/ExposedTypes';
 
 const {
   BlobCourier: BlobCourierNative,
@@ -142,9 +143,13 @@ describe('Given fallback parameters are provided through a constant', () => {
     expect(BLOB_FETCH_FALLBACK_PARAMETERS).toStrictEqual({
       android: {
         downloadManager: ANDROID_DOWNLOAD_MANAGER_FALLBACK_PARAMETERS,
+        target: DEFAULT_FETCH_TARGET,
         useDownloadManager: false,
       },
       headers: {},
+      ios: {
+        target: DEFAULT_FETCH_TARGET,
+      },
       method: 'GET',
       progressIntervalMilliseconds: DEFAULT_PROGRESS_UPDATE_INTERVAL_MILLISECONDS,
     });
@@ -278,6 +283,67 @@ describe('Given a fluent fetch request', () => {
     );
   });
 
+  describe('And a target is provided', () => {
+    const targets = ['cache', 'data'] as TargetType[];
+    for (const target of targets) {
+      testAsync(
+        `The native module is called with the provided target '${target}'`,
+        async () => {
+          const android = { target };
+          const ios = { target };
+          const expectedParameters = {
+            ...DEFAULT_FETCH_REQUEST,
+            android,
+            ios,
+          };
+
+          await BlobCourier.fetchBlob(expectedParameters);
+
+          const calledWithParameters = getLastMockCallFirstParameter(
+            BlobCourierNative.fetchBlob
+          );
+
+          expect(calledWithParameters.android.target).toEqual(
+            expectedParameters.android.target
+          );
+          expect(calledWithParameters.ios.target).toEqual(
+            expectedParameters.ios.target
+          );
+        }
+      );
+    }
+  });
+
+  describe('And no target is provided', () => {
+    testAsync(
+      `The native module is called with fallback '${DEFAULT_FETCH_TARGET}'`,
+      async () => {
+        const expectedParameters = {
+          ...DEFAULT_FETCH_REQUEST,
+          android: {
+            target: DEFAULT_FETCH_TARGET,
+          },
+          ios: {
+            target: DEFAULT_FETCH_TARGET,
+          },
+        };
+
+        await BlobCourier.fetchBlob(DEFAULT_FETCH_REQUEST);
+
+        const calledWithParameters = getLastMockCallFirstParameter(
+          BlobCourierNative.fetchBlob
+        );
+
+        expect(calledWithParameters.android.target).toEqual(
+          expectedParameters.android.target
+        );
+        expect(calledWithParameters.ios.target).toEqual(
+          expectedParameters.ios.target
+        );
+      }
+    );
+  });
+
   describe('And a progress updater callback is provided', () => {
     testAsync(
       'The native module is called with all required values and the provided callback',
@@ -313,8 +379,9 @@ describe('Given a fluent fetch request', () => {
           const expectedParameters = {
             ...DEFAULT_FETCH_REQUEST,
             android: {
-              useDownloadManager: true,
               downloadManager,
+              target: DEFAULT_FETCH_TARGET,
+              useDownloadManager: true,
             },
           };
 
@@ -351,8 +418,9 @@ describe('Given a fluent fetch request', () => {
         const expectedParameters = {
           ...DEFAULT_FETCH_REQUEST,
           android: {
-            useDownloadManager: true,
             downloadManager,
+            target: DEFAULT_FETCH_TARGET,
+            useDownloadManager: true,
           },
         };
 
@@ -611,6 +679,7 @@ describe('Given a fluent upload request', () => {
             android: {
               useDownloadManager: true,
               downloadManager,
+              target: DEFAULT_FETCH_TARGET,
             },
           };
 
