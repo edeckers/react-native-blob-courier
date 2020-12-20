@@ -248,7 +248,9 @@ Optional
 
 | **Field**    | **Type**                         | **Description**                           | **Default** |
 | ------------ | -------------------------------- | ----------------------------------------- | ---------------------------------------------------- |
-| `android`    | `AndroidSettings`                | Settings to be used on Android            | `{ useDownloadManager: false, downloadManager: {} }` |
+| `android`    | `AndroidSettings`                | Settings to be used on Android            | `{ downloadManager: {}, target: 'cache', useDownloadManager: false }` |
+| `headers`    | `{ [key: string]: string }`      | Map of headers to send with the request   | `{}`                                                 |
+| `ios`        | `IOSSettings`                    | Settings to be used on iOS                | `{ target: 'cache' }` |
 | `headers`    | `{ [key: string]: string }`      | Map of headers to send with the request   | `{}`                                                 |
 | `method`     | `string`                         | Representing the HTTP method              | `GET`                                                |
 | `onProgress` | `(e: BlobProgressEvent) => void` | Function handling progress updates        | `() => { }`                                          |
@@ -267,7 +269,7 @@ Alias for:
 ```tsx
 const someResult =
   await BlobCourier
-   (...)
+   // ...
    .uploadParts({
      headers,
      method,
@@ -342,6 +344,7 @@ Response
 | **Field**            | **Type**                         | **Description**                         |
 | -------------------- | -------------------------------- | --------------------------------------- |
 | `downloadManager`    | `AndroidDownloadManagerSettings` | Settings to be used on download manager |
+| `target`             | `"cache" \| "data"`              | Where will the file be stored?          |
 | `useDownloadManager` | `boolean`                        | Enable download manager on Android?     |
 
 #### `BlobManagedData`
@@ -399,6 +402,12 @@ Optional
 | --------- | --------------------------- | --------------------- |
 | `code`    | `number`                    | HTTP status code      |
 | `headers` | `{ [key: string]: string }` | HTTP response headers |
+
+#### `IOSSettings`
+
+| **Field**            | **Type**                         | **Description**                         |
+| -------------------- | -------------------------------- | --------------------------------------- |
+| `target`             | `"cache" \| "data"`              | Where will the file be stored?          |
 
 ## Example app
 
@@ -475,7 +484,7 @@ To enable the download manager, simply set the request's `useDownloadManager` pr
 
 ## Shared directories
 
-As this library is focussed on transferring files, it only supports storage to the app's _cache_ directory. To move files from the _cache_ directory to the _Downloads_, or _Documents_ directory, use another library like [@react-native-community/cameraroll](https://github.com/react-native-community/react-native-cameraroll), e.g.:
+As this library is focussed on transferring files, it only supports storage to the app's _cache_ and _data_ directories. To move files from these app specific directories to other locations on the filesystem, use another library like [@react-native-community/cameraroll](https://github.com/react-native-community/react-native-cameraroll), e.g.:
 
 ```tsx
 import BlobCourier from 'react-native-blob-courier';
