@@ -24,8 +24,9 @@ open class BlobCourier: NSObject {
   static let parameterTaskId = "taskId"
   static let parameterUrl = "url"
 
-  static let targetData = "data"
   static let targetCache = "cache"
+  static let targetData = "data"
+  static let targetValues = [targetCache, targetData]
 
   static let defaultMethod = "GET"
   static let defaultMimeType = "application/octet-stream"
@@ -47,6 +48,7 @@ open class BlobCourier: NSObject {
       .mapValues { $0! } as NSDictionary
   }
 
+  // swiftlint:disable function_body_length
   func fetchBlobFromValidatedParameters(
     input: NSDictionary,
     resolve: @escaping RCTPromiseResolveBlock,
@@ -61,6 +63,15 @@ open class BlobCourier: NSObject {
     let target =
       (iosSettings[BlobCourier.parameterTarget] as? String) ??
       BlobCourier.defaultTarget
+
+    if !isValidTargetValue(target) {
+      BlobCourierErrors.processInvalidValue(
+        reject: reject,
+        parameterName: BlobCourier.parameterTarget,
+        value: target)
+
+      return
+    }
 
     let progressIntervalMilliseconds =
       (input[BlobCourier.parameterProgressInterval] as? Int) ??
@@ -99,6 +110,7 @@ open class BlobCourier: NSObject {
       fileURL: fileURL!,
       headers: headers)
   }
+  // swiftlint:enable function_body_length
 
   func startFetchBlob(
     sessionConfig: URLSessionConfiguration,
@@ -121,6 +133,10 @@ open class BlobCourier: NSObject {
     }
 
     session.downloadTask(with: request).resume()
+  }
+
+  func isValidTargetValue(_ value: String) -> Bool {
+    return BlobCourier.targetValues.contains(value)
   }
 
   func buildRequestDataForFileUpload(url: URL, parts: NSDictionary, headers: NSDictionary) -> (URLRequest, Data) {
@@ -182,7 +198,6 @@ open class BlobCourier: NSObject {
   func uploadBlobFromValidatedParameters(
     input: NSDictionary, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock
   ) throws {
-    print("Start uploadBlobFromValidatedParameters")
     let taskId = (input[BlobCourier.parameterTaskId] as? String) ?? ""
 
     let progressIntervalMilliseconds =
@@ -244,7 +259,6 @@ open class BlobCourier: NSObject {
     resolve: @escaping RCTPromiseResolveBlock,
     reject: @escaping RCTPromiseRejectBlock
   ) {
-    print("Start uploadBlob")
     do {
       try assertRequiredParameter(
         input: input, type: "NSDictionary", parameterName: BlobCourier.parameterParts)

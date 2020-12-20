@@ -9,6 +9,7 @@ open class BlobCourierErrors: NSObject {
   static let errorMissingRequiredParameter = "ERROR_MISSING_REQUIRED_PARAMETER"
   static let errorUnexpectedException = "ERROR_UNEXPECTED_EXCEPTION"
   static let errorUnexpectedValue = "ERROR_UNEXPECTED_VALUE"
+  static let errorInvalidValue = "ERROR_INVALID_VALUE"
 
   enum BlobCourierError: Error {
     case requiredParameter(parameter: String)
@@ -27,5 +28,11 @@ open class BlobCourierErrors: NSObject {
     reject: @escaping RCTPromiseRejectBlock, parameterName: String
   ) {
     reject(BlobCourierErrors.errorUnexpectedValue, "Parameter `\(parameterName)` cannot be empty.", nil)
+  }
+
+  static func processInvalidValue(
+    reject: @escaping RCTPromiseRejectBlock, parameterName: String, value: String
+  ) {
+    reject(BlobCourierErrors.errorInvalidValue, "Parameter `\(parameterName)` cannot be `\(value)`.", nil)
   }
 }
