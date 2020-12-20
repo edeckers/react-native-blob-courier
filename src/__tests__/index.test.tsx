@@ -18,7 +18,7 @@ import {
 import { dict } from '../Extensions';
 import { NativeEventEmitter, NativeModules } from 'react-native';
 import BlobCourier from '../index';
-import type { BlobMultipartUploadRequest } from 'src/ExposedTypes';
+import type { BlobMultipartUploadRequest, TargetType } from 'src/ExposedTypes';
 
 const {
   BlobCourier: BlobCourierNative,
@@ -279,6 +279,56 @@ describe('Given a fluent fetch request', () => {
           dict(calledWithParameters).intersect(expectedParameters)
         );
         verifyPropertyExistsAndIsDefined(calledWithParameters, 'taskId');
+      }
+    );
+  });
+
+  describe('And a target is provided', () => {
+    const targets = ['cache', 'data'] as TargetType[];
+    for (const target of targets) {
+      testAsync(
+        `The native module is called with the provided target '${target}'`,
+        async () => {
+          const ios = { target };
+          const expectedParameters = {
+            ...DEFAULT_FETCH_REQUEST,
+            ios,
+          };
+
+          await BlobCourier.fetchBlob(expectedParameters);
+
+          const calledWithParameters = getLastMockCallFirstParameter(
+            BlobCourierNative.fetchBlob
+          );
+
+          expect(expectedParameters).toMatchObject(
+            dict(calledWithParameters).intersect(expectedParameters)
+          );
+        }
+      );
+    }
+  });
+
+  describe('And no target is provided', () => {
+    testAsync(
+      `The native module is called with fallback '${DEFAULT_FETCH_TARGET}'`,
+      async () => {
+        const expectedParameters = {
+          ...DEFAULT_FETCH_REQUEST,
+          ios: {
+            target: DEFAULT_FETCH_TARGET,
+          },
+        };
+
+        await BlobCourier.fetchBlob(expectedParameters);
+
+        const calledWithParameters = getLastMockCallFirstParameter(
+          BlobCourierNative.fetchBlob
+        );
+
+        expect(expectedParameters).toMatchObject(
+          dict(calledWithParameters).intersect(expectedParameters)
+        );
       }
     );
   });
