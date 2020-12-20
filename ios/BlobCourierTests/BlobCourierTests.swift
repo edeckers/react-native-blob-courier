@@ -185,4 +185,51 @@ class BlobCourierTests: XCTestCase {
 
         sleep(BlobCourierTests.defaultPromiseTimeoutSeconds)
     }
-}
+
+    func testNonExistingFetchUrlResolvesPromise() throws {
+        let input: NSDictionary = [
+          "filename": "some-filename.png",
+          "taskId": "some-task-id",
+          "url": "https://github.com/edeckers/this-does-not-exist"
+        ]
+        let resolve: RCTPromiseResolveBlock = { (_: Any?) -> Void in XCTAssertTrue(true) }
+        let reject: RCTPromiseRejectBlock = { (_: String?, _: String?, _: Error?) -> Void in
+          XCTAssertTrue(false) }
+
+        sut?.fetchBlob(input: input, resolve: resolve, reject: reject)
+
+        sleep(BlobCourierTests.defaultPromiseTimeoutSeconds)
+    }
+
+    func testNonExistingUploadUrlResolvesPromise() throws {
+        let input: NSDictionary = [
+          "filename": "some-filename.png",
+          "taskId": "some-task-id",
+          "url": "https://github.com/edeckers/react-native-blob-courier"
+        ]
+        let reject: RCTPromiseRejectBlock = { (_: String?, _: String?, _: Error?) -> Void in XCTAssertTrue(false) }
+        let resolveUpload: RCTPromiseResolveBlock = { (_: Any?) -> Void in XCTAssertTrue(true) }
+        let resolve: RCTPromiseResolveBlock = { (response: Any?) -> Void in
+            let dict = response as? NSDictionary ?? [:]
+            let data = dict["data"] as? NSDictionary ?? [:]
+
+            self.sut?.uploadBlob(input: [
+             "parts": [
+               "file": [
+                 "payload": [
+                    "absoluteFilePath": data["absoluteFilePath"] ?? "",
+                    "mimeType": "image/png"
+                 ],
+                 "type": "file"
+               ]
+             ],
+             "taskId": data["taskId"] ?? "",
+             "url": "https://github.com/edeckers/this-does-not-exist"
+           ], resolve: resolveUpload, reject: reject)
+        }
+
+        sut?.fetchBlob(input: input, resolve: resolve, reject: reject)
+
+        sleep(BlobCourierTests.defaultPromiseTimeoutSeconds)
+    }
+ }
