@@ -456,7 +456,55 @@ class BlobCourierModuleTests {
     assertTrue(result.second, result.first)
   }
 
-  fun assert_correct_target_parameter_resolves_promise(correctTarget: String) {
+  @Test // This is the faster, and less thorough version of the Instrumented test with the same name
+  fun non_existing_uploadable_file_rejects_promise() {
+    val irrelevantTaskId = UUID.randomUUID().toString()
+    val someNonExistentPath = "file:///this/path/does/not/exist.png"
+    val allRequiredParametersMap =
+      createValidUploadTestParameterMap(irrelevantTaskId, someNonExistentPath)
+
+    val ctx = ReactApplicationContext(ApplicationProvider.getApplicationContext())
+
+    var result = Pair(false, "Unknown")
+
+    val pool = Executors.newSingleThreadExecutor()
+
+    val threadLock = Object()
+    val finishThread = { succeeded: Boolean, message: String ->
+      synchronized(threadLock) {
+        threadLock.notify()
+        result = Pair(succeeded, message)
+      }
+    }
+
+    pool.execute {
+      synchronized(threadLock) {
+        runUploadBlob(
+          ctx,
+          allRequiredParametersMap.toReactMap(),
+          Fixtures.EitherPromise(
+            { m0 -> finishThread(true, "Success: $m0") },
+            { m0 -> finishThread(false, "Resolved but expected reject: $m0") }
+          )
+        )
+        threadLock.wait()
+      }
+    }
+
+    pool.shutdown()
+
+    if (!pool.awaitTermination(DEFAULT_PROMISE_TIMEOUT_MILLISECONDS * 1L, TimeUnit.MILLISECONDS)) {
+      pool.shutdownNow()
+      assertTrue(
+        "Test execution exceeded $DEFAULT_PROMISE_TIMEOUT_MILLISECONDS milliseconds", false
+      )
+      return
+    }
+
+    assertTrue(result.second, result.first)
+  }
+
+  private fun assert_correct_target_parameter_resolves_promise(correctTarget: String) {
     val allRequiredParametersMap = createValidTestFetchParameterMap()
 
     val android = mapOf("target" to correctTarget)

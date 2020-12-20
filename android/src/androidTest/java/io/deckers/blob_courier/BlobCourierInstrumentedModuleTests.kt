@@ -108,4 +108,52 @@ class BlobCourierInstrumentedModuleTests {
 
     Assert.assertTrue(result.second, result.first)
   }
+
+  @Test // This is the faster, and less thorough version of the Instrumented test with the same name
+  fun non_existing_uploadable_file_rejects_promise() {
+    val irrelevantTaskId = UUID.randomUUID().toString()
+    val someNonExistentPath = "file:///this/path/does/not/exist.png"
+    val allRequiredParametersMap =
+      Fixtures.createValidUploadTestParameterMap(irrelevantTaskId, someNonExistentPath)
+
+    val ctx = ReactApplicationContext(ApplicationProvider.getApplicationContext())
+
+    var result = Pair(false, "Unknown")
+
+    val pool = Executors.newSingleThreadExecutor()
+
+    val threadLock = Object()
+    val finishThread = { succeeded: Boolean, message: String ->
+      synchronized(threadLock) {
+        threadLock.notify()
+        result = Pair(succeeded, message)
+      }
+    }
+
+    pool.execute {
+      synchronized(threadLock) {
+        Fixtures.runUploadBlob(
+          ctx,
+          allRequiredParametersMap.toReactMap(),
+          Fixtures.EitherPromise(
+            { m0 -> finishThread(true, "Success: $m0") },
+            { m0 -> finishThread(false, "Resolved but expected reject: $m0") }
+          )
+        )
+        threadLock.wait()
+      }
+    }
+
+    pool.shutdown()
+
+    if (!pool.awaitTermination(DEFAULT_PROMISE_TIMEOUT_MILLISECONDS * 1L, TimeUnit.MILLISECONDS)) {
+      pool.shutdownNow()
+      Assert.assertTrue(
+        "Test execution exceeded $DEFAULT_PROMISE_TIMEOUT_MILLISECONDS milliseconds", false
+      )
+      return
+    }
+
+    Assert.assertTrue(result.second, result.first)
+  }
 }
