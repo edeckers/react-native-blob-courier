@@ -289,9 +289,11 @@ describe('Given a fluent fetch request', () => {
       testAsync(
         `The native module is called with the provided target '${target}'`,
         async () => {
+          const android = { target };
           const ios = { target };
           const expectedParameters = {
             ...DEFAULT_FETCH_REQUEST,
+            android,
             ios,
           };
 
@@ -301,8 +303,11 @@ describe('Given a fluent fetch request', () => {
             BlobCourierNative.fetchBlob
           );
 
-          expect(expectedParameters).toMatchObject(
-            dict(calledWithParameters).intersect(expectedParameters)
+          expect(calledWithParameters.android.target).toEqual(
+            expectedParameters.android.target
+          );
+          expect(calledWithParameters.ios.target).toEqual(
+            expectedParameters.ios.target
           );
         }
       );
@@ -315,19 +320,25 @@ describe('Given a fluent fetch request', () => {
       async () => {
         const expectedParameters = {
           ...DEFAULT_FETCH_REQUEST,
+          android: {
+            target: DEFAULT_FETCH_TARGET,
+          },
           ios: {
             target: DEFAULT_FETCH_TARGET,
           },
         };
 
-        await BlobCourier.fetchBlob(expectedParameters);
+        await BlobCourier.fetchBlob(DEFAULT_FETCH_REQUEST);
 
         const calledWithParameters = getLastMockCallFirstParameter(
           BlobCourierNative.fetchBlob
         );
 
-        expect(expectedParameters).toMatchObject(
-          dict(calledWithParameters).intersect(expectedParameters)
+        expect(calledWithParameters.android.target).toEqual(
+          expectedParameters.android.target
+        );
+        expect(calledWithParameters.ios.target).toEqual(
+          expectedParameters.ios.target
         );
       }
     );
