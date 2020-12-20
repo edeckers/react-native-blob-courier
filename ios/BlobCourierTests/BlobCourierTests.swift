@@ -164,4 +164,25 @@ class BlobCourierTests: XCTestCase {
 
         sleep(BlobCourierTests.defaultPromiseTimeoutSeconds)
     }
+
+    func testUploadOfNonExistentFileRejectsPromise() throws {
+        let resolve: RCTPromiseResolveBlock = { (_: Any?) -> Void in XCTAssertTrue(false) }
+        let reject: RCTPromiseRejectBlock = { (_, _, _) -> Void in XCTAssertTrue(true) }
+
+        self.sut?.uploadBlob(input: [
+         "parts": [
+           "file": [
+             "payload": [
+                "absoluteFilePath": "/this/path/does/not/exist.png",
+                "mimeType": "image/png"
+             ],
+             "type": "file"
+           ]
+         ],
+         "taskId": "SOME_TASK_ID",
+         "url": "https://file.io"
+        ], resolve: resolve, reject: reject)
+
+        sleep(BlobCourierTests.defaultPromiseTimeoutSeconds)
+    }
 }

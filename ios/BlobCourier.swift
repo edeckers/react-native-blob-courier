@@ -146,7 +146,10 @@ open class BlobCourier: NSObject {
     return BlobCourier.targetValues.contains(value)
   }
 
-  func buildRequestDataForFileUpload(url: URL, parts: NSDictionary, headers: NSDictionary) -> (URLRequest, Data) {
+  func buildRequestDataForFileUpload(
+    url: URL,
+    parts: NSDictionary,
+    headers: NSDictionary) throws -> (URLRequest, Data) {
     let boundary = UUID().uuidString
 
     var request = URLRequest(url: url)
@@ -174,7 +177,7 @@ open class BlobCourier: NSObject {
           let filename = payload[BlobCourier.parameterFilename] ?? fileUrl.lastPathComponent
           let mimeType = payload[BlobCourier.parameterMimeType] ?? BlobCourier.defaultMimeType
 
-          data.addfilePart(
+          try data.addFilePart(
             part: FilePart(
               boundary: boundary,
               paramName: paramName,
@@ -203,7 +206,9 @@ open class BlobCourier: NSObject {
   }
 
   func uploadBlobFromValidatedParameters(
-    input: NSDictionary, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock
+    input: NSDictionary,
+    resolve: @escaping RCTPromiseResolveBlock,
+    reject: @escaping RCTPromiseRejectBlock
   ) throws {
     let taskId = (input[BlobCourier.parameterTaskId] as? String) ?? ""
 
@@ -234,9 +239,13 @@ open class BlobCourier: NSObject {
         (input[BlobCourier.parameterHeaders] as? NSDictionary) ??
         NSDictionary())
 
-    let (request, fileData) = buildRequestDataForFileUpload(url: urlObject, parts: parts, headers: headers)
+    let (request, fileData) = try buildRequestDataForFileUpload(url: urlObject, parts: parts, headers: headers)
 
-    session.uploadTask(with: request, from: fileData).resume()
+    session.uploadTask(with: request, from: fileData) { (_, _, maybeError: Error?) in
+      if maybeError != nil {
+        reject("A", "B", maybeError)
+      }
+    }.resume()
   }
 
   @objc(fetchBlob:withResolver:withRejecter:)
@@ -315,9 +324,9 @@ extension Data {
     append(string: "\r\n--\(part.boundary)\(isLastPart ? "--" : "")\r\n")
   }
 
-  mutating func addfilePart(part: FilePart, isLastPart: Bool) {
+  mutating func addFilePart(part: FilePart, isLastPart: Bool) throws {
     let fileUrl = URL(string: part.absoluteFilePath)!
-    let fileData = try? Data(contentsOf: fileUrl)
+    let fileData = try Data(contentsOf: fileUrl)
 
     let maybeFileAttributes = try? FileManager.default.attributesOfItem(atPath: part.absoluteFilePath)
 
@@ -332,7 +341,7 @@ extension Data {
     }
 
     append(string: "\r\n")
-    append(fileData!)
+    append(fileData)
     append(string: "\r\n--\(part.boundary)\(isLastPart ? "--" : "")\r\n")
   }
 }

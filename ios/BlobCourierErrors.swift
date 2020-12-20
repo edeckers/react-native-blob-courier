@@ -21,7 +21,8 @@ open class BlobCourierErrors: NSObject {
   ) {
     reject(
       BlobCourierErrors.errorUnexpectedException,
-      "An unexpected exception occurred: \(error.localizedDescription)", error)
+      "An unexpected exception occurred: \(error.localizedDescription)",
+      error)
   }
 
   static func processUnexpectedEmptyValue(
