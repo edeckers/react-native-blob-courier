@@ -150,4 +150,18 @@ class BlobCourierTests: XCTestCase {
 
         sleep(BlobCourierTests.defaultPromiseTimeoutSeconds)
     }
+
+    func testUnreachableFetchServerRejectsPromise() throws {
+        let input: NSDictionary = [
+          "filename": "some-filename.png",
+          "taskId": "some-task-id",
+          "url": "http://127.0.0.1:12345"
+        ]
+        let resolve: RCTPromiseResolveBlock = { (_: Any?) -> Void in XCTAssertTrue(false) }
+        let reject: RCTPromiseRejectBlock = { (_, _, _) -> Void in XCTAssertTrue(true) }
+
+        sut?.fetchBlob(input: input, resolve: resolve, reject: reject)
+
+        sleep(BlobCourierTests.defaultPromiseTimeoutSeconds)
+    }
 }

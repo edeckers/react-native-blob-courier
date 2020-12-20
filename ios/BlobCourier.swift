@@ -4,6 +4,7 @@
 //  LICENSE file in the root directory of this source tree.
 import Foundation
 
+// swiftlint:disable type_body_length
 @objc(BlobCourier)
 open class BlobCourier: NSObject {
   static let downloadTypeUnmanaged  = "Unmanaged"
@@ -107,6 +108,7 @@ open class BlobCourier: NSObject {
     startFetchBlob(
       sessionConfig: sessionConfig,
       delegate: downloaderDelegate,
+      reject: reject,
       fileURL: fileURL!,
       headers: headers)
   }
@@ -115,6 +117,7 @@ open class BlobCourier: NSObject {
   func startFetchBlob(
     sessionConfig: URLSessionConfiguration,
     delegate: DownloaderDelegate,
+    reject: @escaping RCTPromiseRejectBlock,
     fileURL: URL,
     headers: NSDictionary) {
     let session =
@@ -132,7 +135,11 @@ open class BlobCourier: NSObject {
       }
     }
 
-    session.downloadTask(with: request).resume()
+    session.downloadTask(with: request) { (_, _, maybeError: Error?) in
+      if maybeError != nil {
+        reject("A", "B", maybeError)
+      }
+    }.resume()
   }
 
   func isValidTargetValue(_ value: String) -> Bool {
