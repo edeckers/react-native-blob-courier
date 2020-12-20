@@ -135,11 +135,7 @@ open class BlobCourier: NSObject {
       }
     }
 
-    session.downloadTask(with: request) { (_, _, maybeError: Error?) in
-      if maybeError != nil {
-        reject("A", "B", maybeError)
-      }
-    }.resume()
+    session.downloadTask(with: request).resume()
   }
 
   func isValidTargetValue(_ value: String) -> Bool {
@@ -240,12 +236,7 @@ open class BlobCourier: NSObject {
         NSDictionary())
 
     let (request, fileData) = try buildRequestDataForFileUpload(url: urlObject, parts: parts, headers: headers)
-
-    session.uploadTask(with: request, from: fileData) { (_, _, maybeError: Error?) in
-      if maybeError != nil {
-        reject("A", "B", maybeError)
-      }
-    }.resume()
+    session.uploadTask(with: request, from: fileData).resume()
   }
 
   @objc(fetchBlob:withResolver:withRejecter:)
