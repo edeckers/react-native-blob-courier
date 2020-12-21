@@ -50,6 +50,24 @@ fun assertRequiredParameter(input: ReadableMap, type: Type, parameterName: Strin
   )
 }
 
+fun tryRetrieveBoolean(input: ReadableMap, parameterName: String): Boolean {
+  assertRequiredParameter(input, Boolean::class.java, parameterName)
+
+  return input.getBoolean(parameterName)
+}
+
+fun tryRetrieveMap(input: ReadableMap, parameterName: String): ReadableMap? {
+  assertRequiredParameter(input, ReadableMap::class.java, parameterName)
+
+  return input.getMap(parameterName)
+}
+
+fun tryRetrieveString(input: ReadableMap, parameterName: String): String? {
+  assertRequiredParameter(input, String::class.java, parameterName)
+
+  return input.getString(parameterName)
+}
+
 @Suppress("SameParameterValue")
 fun getMapInt(input: ReadableMap, field: String, fallback: Int): Int =
   if (input.hasKey(field)) input.getInt(field) else fallback

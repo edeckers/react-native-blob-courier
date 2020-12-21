@@ -21,10 +21,11 @@ import io.deckers.blob_courier.common.PARAMETER_PART_PAYLOAD
 import io.deckers.blob_courier.common.PARAMETER_SETTINGS_PROGRESS_INTERVAL
 import io.deckers.blob_courier.common.PARAMETER_TASK_ID
 import io.deckers.blob_courier.common.PARAMETER_URL
-import io.deckers.blob_courier.common.assertRequiredParameter
 import io.deckers.blob_courier.common.filterHeaders
 import io.deckers.blob_courier.common.getMapInt
 import io.deckers.blob_courier.common.processUnexpectedEmptyValue
+import io.deckers.blob_courier.common.tryRetrieveMap
+import io.deckers.blob_courier.common.tryRetrieveString
 import java.net.URL
 
 private const val PARAMETER_PARTS = "parts"
@@ -173,58 +174,79 @@ private fun createParts(maybeParts: ReadableMap, promise: Promise): Map<String, 
     }
   )
 
+private fun retrieveRequiredParametersOrThrow(input: ReadableMap):
+  Triple<ReadableMap?, String?, String?> {
+    val rawParts = tryRetrieveMap(input, PARAMETER_PARTS)
+    val taskId = tryRetrieveString(input, PARAMETER_TASK_ID)
+    val url = tryRetrieveString(input, PARAMETER_URL)
+
+    return Triple(rawParts, taskId, url)
+  }
+
+private fun validateRequiredParameters(
+  parameters: Triple<ReadableMap?, String?, String?>,
+  promise: Promise
+): Triple<ReadableMap, String, String>? {
+  val (rawParts, taskId, url) = parameters
+
+  if (taskId == null) {
+    processUnexpectedEmptyValue(promise, PARAMETER_TASK_ID)
+
+    return null
+  }
+
+  if (rawParts == null) {
+    processUnexpectedEmptyValue(promise, PARAMETER_PARTS)
+
+    return null
+  }
+
+  if (url == null) {
+    processUnexpectedEmptyValue(promise, PARAMETER_URL)
+
+    return null
+  }
+
+  return Triple(rawParts, taskId, url)
+}
+
 class UploaderParameterFactory {
   fun fromInput(input: ReadableMap, promise: Promise): UploaderParameters? {
-    assertRequiredParameter(input, String::class.java, PARAMETER_TASK_ID)
-    assertRequiredParameter(input, ReadableMap::class.java, PARAMETER_PARTS)
-    assertRequiredParameter(input, String::class.java, PARAMETER_URL)
+    val requiredParameters = retrieveRequiredParametersOrThrow(input)
 
-    val maybeTaskId = input.getString(PARAMETER_TASK_ID)
-    val maybeUrl = input.getString(PARAMETER_URL)
-    val method = input.getString(PARAMETER_METHOD) ?: DEFAULT_UPLOAD_METHOD
-    val maybeParts = input.getMap(PARAMETER_PARTS)
+    return validateRequiredParameters(requiredParameters, promise)?.let {
+      val (rawParts, taskId, url) = it
 
-    val unfilteredHeaders =
-      input.getMap(PARAMETER_HEADERS)?.toHashMap() ?: emptyMap<String, Any>()
+      val method = input.getString(PARAMETER_METHOD) ?: DEFAULT_UPLOAD_METHOD
 
-    val headers = filterHeaders(unfilteredHeaders)
+      val unfilteredHeaders =
+        input.getMap(PARAMETER_HEADERS)?.toHashMap() ?: emptyMap<String, Any>()
 
-    val returnResponse =
-      input.hasKey(PARAMETER_RETURN_RESPONSE) && input.getBoolean(PARAMETER_RETURN_RESPONSE)
+      val headers = filterHeaders(unfilteredHeaders)
 
-    val progressInterval =
-      getMapInt(input, PARAMETER_SETTINGS_PROGRESS_INTERVAL, DEFAULT_PROGRESS_TIMEOUT_MILLISECONDS)
+      val returnResponse =
+        input.hasKey(PARAMETER_RETURN_RESPONSE) && input.getBoolean(PARAMETER_RETURN_RESPONSE)
 
-    if (maybeTaskId.isNullOrEmpty()) {
-      processUnexpectedEmptyValue(promise, PARAMETER_TASK_ID)
+      val progressInterval =
+        getMapInt(
+          input,
+          PARAMETER_SETTINGS_PROGRESS_INTERVAL,
+          DEFAULT_PROGRESS_TIMEOUT_MILLISECONDS
+        )
 
-      return null
+      val parts = createParts(rawParts, promise)
+
+      val uri = URL(url)
+
+      UploaderParameters(
+        taskId,
+        parts,
+        uri,
+        method,
+        headers,
+        returnResponse,
+        progressInterval
+      )
     }
-
-    if (maybeParts == null) {
-      processUnexpectedEmptyValue(promise, PARAMETER_PARTS)
-
-      return null
-    }
-
-    if (maybeUrl.isNullOrEmpty()) {
-      processUnexpectedEmptyValue(promise, PARAMETER_URL)
-
-      return null
-    }
-
-    val parts = createParts(maybeParts, promise)
-
-    val uri = URL(maybeUrl)
-
-    return UploaderParameters(
-      maybeTaskId,
-      parts,
-      uri,
-      method,
-      headers,
-      returnResponse,
-      progressInterval
-    )
   }
 }
