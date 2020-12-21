@@ -23,32 +23,13 @@ import java.net.URL
 import java.net.UnknownHostException
 import java.util.Locale
 import kotlin.concurrent.thread
-import okhttp3.Headers
 import okhttp3.Interceptor
-import okhttp3.MediaType
-import okhttp3.MultipartBody
 import okhttp3.Request
 import okhttp3.Response
 import okio.Okio
 import okio.Source
 
 private const val ERROR_MISSING_REQUIRED_PARAMETER = "ERROR_MISSING_REQUIRED_PARAMETER"
-
-private const val PARAMETER_ABSOLUTE_FILE_PATH = "absoluteFilePath"
-private const val PARAMETER_ANDROID_SETTINGS = "android"
-private const val PARAMETER_DOWNLOAD_MANAGER_SETTINGS = "downloadManager"
-private const val PARAMETER_FILENAME = "filename"
-private const val PARAMETER_HEADERS = "headers"
-private const val PARAMETER_METHOD = "method"
-private const val PARAMETER_MIME_TYPE = "mimeType"
-private const val PARAMETER_PART_PAYLOAD = "payload"
-private const val PARAMETER_PARTS = "parts"
-private const val PARAMETER_RETURN_RESPONSE = "returnResponse"
-private const val PARAMETER_SETTINGS_PROGRESS_INTERVAL = "progressIntervalMilliseconds"
-private const val PARAMETER_TARGET = "target"
-private const val PARAMETER_TASK_ID = "taskId"
-private const val PARAMETER_URL = "url"
-private const val PARAMETER_USE_DOWNLOAD_MANAGER = "useDownloadManager"
 
 private const val DOWNLOAD_MANAGER_PARAMETER_DESCRIPTION = "description"
 private const val DOWNLOAD_MANAGER_PARAMETER_ENABLE_NOTIFICATIONS = "enableNotifications"
@@ -97,12 +78,6 @@ private fun processInvalidValue(
     ERROR_INVALID_VALUE,
     "Parameter `$parameterName` has an invalid value (value=$invalidValue)."
   )
-
-private fun mapHeadersToMap(headers: Headers): Map<String, String> =
-  headers
-    .toMultimap()
-    .map { entry -> Pair(entry.key, entry.value.joinToString()) }
-    .toMap()
 
 private fun assertRequiredParameter(input: ReadableMap, type: Type, parameterName: String) {
   val defaultFallback =
@@ -206,96 +181,6 @@ private fun verifyParts(parts: ReadableMap, promise: Promise): Boolean =
     { p, c -> verifyPart(parts.getMap(c), promise) && p }
   )
 
-private fun startBlobUpload(
-  reactContext: ReactApplicationContext,
-  taskId: String,
-  verifiedParts: ReadableMap,
-  uri: URL,
-  method: String,
-  headers: Map<String, String>,
-  returnResponse: Boolean,
-  progressInterval: Int,
-  promise: Promise,
-) {
-  val mpb = MultipartBody.Builder()
-    .setType(MultipartBody.FORM)
-
-  verifiedParts.toHashMap().keys.forEach { multipartName ->
-    val maybePart = verifiedParts.getMap(multipartName)
-
-    maybePart?.run {
-      when (this.getString("type")) {
-        "file" -> {
-          val payload = this.getMap(PARAMETER_PART_PAYLOAD)!!
-
-          val fileUrl = Uri.parse(payload.getString(PARAMETER_ABSOLUTE_FILE_PATH)!!)
-          val fileUrlWithScheme =
-            if (fileUrl.scheme == null) Uri.parse("file://$fileUrl") else fileUrl
-
-          val filename =
-            if (payload.hasKey(PARAMETER_FILENAME)) (
-              payload.getString(PARAMETER_FILENAME)
-                ?: fileUrl.lastPathSegment
-              ) else fileUrl.lastPathSegment
-
-          mpb.addFormDataPart(
-            multipartName,
-            filename,
-            InputStreamRequestBody(
-              payload.getString(PARAMETER_MIME_TYPE)?.let { MediaType.parse(it) }
-                ?: MediaType.get(DEFAULT_MIME_TYPE),
-              reactContext.contentResolver,
-              fileUrlWithScheme
-            )
-          )
-        }
-        else -> mpb.addFormDataPart(multipartName, this.getString(PARAMETER_PART_PAYLOAD)!!)
-      }
-    }
-  }
-
-  val multipartBody = mpb.build()
-
-  val requestBody = BlobCourierProgressRequest(
-    reactContext,
-    taskId,
-    multipartBody,
-    progressInterval
-  )
-
-  val requestBuilder = Request.Builder()
-    .url(uri)
-    .method(method, requestBody)
-    .apply {
-      headers.forEach { e: Map.Entry<String, String> ->
-        addHeader(e.key, e.value)
-      }
-    }
-    .build()
-
-  try {
-    val response = createHttpClient().newCall(
-      requestBuilder
-    ).execute()
-
-    val b = response.body()?.string().orEmpty()
-
-    promise.resolve(
-      mapOf(
-        "response" to mapOf(
-          "code" to response.code(),
-          "data" to if (returnResponse) b else "",
-          "headers" to mapHeadersToMap(response.headers())
-        )
-      ).toReactMap()
-    )
-  } catch (e: Exception) {
-    promise.reject(ERROR_UNEXPECTED_EXCEPTION, e.message)
-  } catch (e: Error) {
-    promise.reject(ERROR_UNEXPECTED_ERROR, e.message)
-  }
-}
-
 private fun filterHeaders(unfilteredHeaders: Map<String, Any>): Map<String, String> =
   unfilteredHeaders
     .mapValues { (_, v) -> v as? String }
@@ -362,8 +247,9 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
     val uri = URL(maybeUrl)
 
     try {
-      startBlobUpload(
-        reactContext,
+      val uploader = BlobUploader(reactContext, createHttpClient())
+
+      uploader.upload(
         maybeTaskId,
         maybeParts,
         uri,

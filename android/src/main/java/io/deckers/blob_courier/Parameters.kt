@@ -1,0 +1,17 @@
+package io.deckers.blob_courier
+
+const val PARAMETER_ABSOLUTE_FILE_PATH = "absoluteFilePath"
+const val PARAMETER_ANDROID_SETTINGS = "android"
+const val PARAMETER_DOWNLOAD_MANAGER_SETTINGS = "downloadManager"
+const val PARAMETER_FILENAME = "filename"
+const val PARAMETER_HEADERS = "headers"
+const val PARAMETER_METHOD = "method"
+const val PARAMETER_MIME_TYPE = "mimeType"
+const val PARAMETER_PART_PAYLOAD = "payload"
+const val PARAMETER_PARTS = "parts"
+const val PARAMETER_RETURN_RESPONSE = "returnResponse"
+const val PARAMETER_SETTINGS_PROGRESS_INTERVAL = "progressIntervalMilliseconds"
+const val PARAMETER_TARGET = "target"
+const val PARAMETER_TASK_ID = "taskId"
+const val PARAMETER_URL = "url"
+const val PARAMETER_USE_DOWNLOAD_MANAGER = "useDownloadManager"
