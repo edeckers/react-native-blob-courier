@@ -6,6 +6,6 @@ data class DownloaderParameters(val a: String)
 
 class DownloaderParameterFactory() {
   fun fromInput(input: ReadableMap): DownloaderParameters {
-    return DownloaderParameters()
+    return DownloaderParameters(input.getString("a")!!)
   }
 }
