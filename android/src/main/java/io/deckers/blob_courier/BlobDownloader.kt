@@ -66,38 +66,29 @@ class BlobDownloader(
     )
 
   fun startBlobFetch(
-    taskId: String,
-    uri: Uri,
-    useDownloadManager: Boolean,
-    downloadManagerSettings: Map<String, Any>,
-    targetDirectory: TargetDirectoryEnum,
-    filename: String,
-    mimeType: String,
-    promise: Promise,
-    method: String,
-    headers: Map<String, String>,
-    progressInterval: Int
+    ps: DownloaderParameters,
+    promise: Promise
   ) =
-    if (useDownloadManager)
+    if (ps.useDownloadManager)
       fetchBlobUsingDownloadManager(
-        taskId,
-        downloadManagerSettings,
-        uri,
-        targetDirectory,
-        filename,
-        headers,
-        mimeType,
-        progressInterval,
+        ps.taskId,
+        ps.downloadManagerSettings,
+        ps.uri,
+        ps.targetDirectory,
+        ps.filename,
+        ps.headers,
+        ps.mimeType,
+        ps.progressInterval,
         promise
       )
     else fetchBlobWithoutDownloadManager(
-      taskId,
-      uri,
-      targetDirectory,
-      filename,
-      headers,
-      method,
-      progressInterval,
+      ps.taskId,
+      ps.uri,
+      ps.targetDirectory,
+      ps.filename,
+      ps.headers,
+      ps.method,
+      ps.progressInterval,
       promise
     )
 

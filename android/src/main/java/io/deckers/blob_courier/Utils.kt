@@ -63,3 +63,10 @@ fun mapHeadersToMap(headers: Headers): Map<String, String> =
     .toMultimap()
     .map { entry -> Pair(entry.key, entry.value.joinToString()) }
     .toMap()
+
+fun filterHeaders(unfilteredHeaders: Map<String, Any>): Map<String, String> =
+  unfilteredHeaders
+    .mapValues { (_, v) -> v as? String }
+    .filter { true }
+    .mapNotNull { (k, v) -> v?.let { k to it } }
+    .toMap()

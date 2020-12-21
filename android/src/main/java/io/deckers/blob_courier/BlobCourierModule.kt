@@ -6,7 +6,6 @@
  */
 package io.deckers.blob_courier
 
-import android.net.Uri
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactContextBaseJavaModule
@@ -15,36 +14,9 @@ import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.modules.network.OkHttpClientProvider
 import java.net.URL
 import java.net.UnknownHostException
-import java.util.Locale
 import kotlin.concurrent.thread
 
 private fun createHttpClient() = OkHttpClientProvider.getOkHttpClient()
-
-private fun processUnexpectedError(promise: Promise, e: Error) = promise.reject(
-  ERROR_UNEXPECTED_ERROR,
-  "An unexpected error occurred: ${e.message}"
-)
-
-private fun processUnexpectedException(promise: Promise, e: Exception) = promise.reject(
-  ERROR_UNEXPECTED_EXCEPTION,
-  "An unexpected exception occurred: ${e.message}"
-)
-
-private fun processUnexpectedEmptyValue(promise: Promise, parameterName: String) = promise.reject(
-  ERROR_UNEXPECTED_EMPTY_VALUE,
-  "Parameter `$parameterName` cannot be empty."
-)
-
-@Suppress("SameParameterValue")
-private fun processInvalidValue(
-  promise: Promise,
-  parameterName: String,
-  invalidValue: String
-) =
-  promise.reject(
-    ERROR_INVALID_VALUE,
-    "Parameter `$parameterName` has an invalid value (value=$invalidValue)."
-  )
 
 private fun verifyFilePart(part: ReadableMap, promise: Promise): Boolean {
   if (!part.hasKey(PARAMETER_PART_PAYLOAD)) {
@@ -109,13 +81,6 @@ private fun verifyParts(parts: ReadableMap, promise: Promise): Boolean =
     { p, c -> verifyPart(parts.getMap(c), promise) && p }
   )
 
-private fun filterHeaders(unfilteredHeaders: Map<String, Any>): Map<String, String> =
-  unfilteredHeaders
-    .mapValues { (_, v) -> v as? String }
-    .filter { true }
-    .mapNotNull { (k, v) -> v?.let { k to it } }
-    .toMap()
-
 class BlobCourierModule(private val reactContext: ReactApplicationContext) :
   ReactContextBaseJavaModule(reactContext) {
 
@@ -178,84 +143,10 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
     }
   }
 
-  @Suppress("SameParameterValue")
-  private fun getMapInt(input: ReadableMap, field: String, fallback: Int): Int =
-    if (input.hasKey(field)) input.getInt(field) else fallback
-
-  private fun fetchBlobFromValidatedParameters(input: ReadableMap, promise: Promise) {
-    val maybeTaskId = input.getString(PARAMETER_TASK_ID)
-    val maybeFilename = input.getString(PARAMETER_FILENAME)
-    val maybeUrl = input.getString(PARAMETER_URL)
-
-    val method = input.getString(PARAMETER_METHOD) ?: DEFAULT_FETCH_METHOD
-    val mimeType = input.getString(PARAMETER_MIME_TYPE) ?: DEFAULT_MIME_TYPE
-
-    val maybeAndroidSettings = input.getMap(PARAMETER_ANDROID_SETTINGS)
-
-    val targetDirectoryOrFallback = (
-      maybeAndroidSettings?.getString(PARAMETER_TARGET)
-        ?: BlobDownloader.TargetDirectoryEnum.Cache.toString()
-      )
-
-    val maybeTargetDirectory =
-      BlobDownloader.TargetDirectoryEnum
-        .values()
-        .firstOrNull {
-          it.name.toLowerCase(Locale.getDefault()) ==
-            targetDirectoryOrFallback.toLowerCase(Locale.getDefault())
-        }
-
-    val downloadManagerSettings =
-      maybeAndroidSettings?.getMap(PARAMETER_DOWNLOAD_MANAGER_SETTINGS)?.toHashMap().orEmpty()
-
-    val useDownloadManager =
-      maybeAndroidSettings?.hasKey(PARAMETER_USE_DOWNLOAD_MANAGER) ?: false
-
-    val unfilteredHeaders =
-      input.getMap(PARAMETER_HEADERS)?.toHashMap() ?: emptyMap<String, Any>()
-
-    val headers = filterHeaders(unfilteredHeaders)
-
-    val progressInterval =
-      getMapInt(input, PARAMETER_SETTINGS_PROGRESS_INTERVAL, DEFAULT_PROGRESS_TIMEOUT_MILLISECONDS)
-
-    if (maybeTaskId.isNullOrEmpty()) {
-      processUnexpectedEmptyValue(promise, PARAMETER_TASK_ID)
-      return
-    }
-
-    if (maybeFilename.isNullOrEmpty()) {
-      processUnexpectedEmptyValue(promise, PARAMETER_FILENAME)
-      return
-    }
-
-    if (maybeUrl.isNullOrEmpty()) {
-      processUnexpectedEmptyValue(promise, PARAMETER_URL)
-
-      return
-    }
-
-    if (maybeTargetDirectory == null) {
-      processInvalidValue(promise, PARAMETER_TARGET, targetDirectoryOrFallback)
-
-      return
-    }
-
+  private fun fetchBlobFromValidatedParameters(ps: DownloaderParameters, promise: Promise) {
     try {
       BlobDownloader(reactContext, createHttpClient())
-        .startBlobFetch(
-          maybeTaskId,
-          Uri.parse(maybeUrl),
-          useDownloadManager,
-          downloadManagerSettings,
-          maybeTargetDirectory,
-          maybeFilename,
-          mimeType,
-          promise,
-          method,
-          headers,
-          progressInterval
-        )
+        .startBlobFetch(ps, promise)
     } catch (e: UnknownHostException) {
       promise.reject(ERROR_UNKNOWN_HOST, e)
     }
@@ -265,11 +156,9 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
   fun fetchBlob(input: ReadableMap, promise: Promise) {
     thread {
       try {
-        assertRequiredParameter(input, String::class.java, PARAMETER_TASK_ID)
-        assertRequiredParameter(input, String::class.java, PARAMETER_FILENAME)
-        assertRequiredParameter(input, String::class.java, PARAMETER_URL)
+        val ps = DownloaderParameterFactory().fromInput(input, promise)
 
-        fetchBlobFromValidatedParameters(input, promise)
+        ps?.run { fetchBlobFromValidatedParameters(ps, promise) }
       } catch (e: BlobCourierError) {
         promise.reject(e.code, e.message)
       } catch (e: Exception) {
