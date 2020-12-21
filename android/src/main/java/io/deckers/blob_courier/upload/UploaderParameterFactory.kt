@@ -15,16 +15,18 @@ import io.deckers.blob_courier.common.PARAMETER_ABSOLUTE_FILE_PATH
 import io.deckers.blob_courier.common.PARAMETER_HEADERS
 import io.deckers.blob_courier.common.PARAMETER_METHOD
 import io.deckers.blob_courier.common.PARAMETER_MIME_TYPE
-import io.deckers.blob_courier.common.PARAMETER_PARTS
 import io.deckers.blob_courier.common.PARAMETER_PART_PAYLOAD
-import io.deckers.blob_courier.common.PARAMETER_RETURN_RESPONSE
 import io.deckers.blob_courier.common.PARAMETER_SETTINGS_PROGRESS_INTERVAL
 import io.deckers.blob_courier.common.PARAMETER_TASK_ID
 import io.deckers.blob_courier.common.PARAMETER_URL
+import io.deckers.blob_courier.common.assertRequiredParameter
 import io.deckers.blob_courier.common.filterHeaders
 import io.deckers.blob_courier.common.getMapInt
 import io.deckers.blob_courier.common.processUnexpectedEmptyValue
 import java.net.URL
+
+private const val PARAMETER_PARTS = "parts"
+private const val PARAMETER_RETURN_RESPONSE = "returnResponse"
 
 private fun verifyFilePart(part: ReadableMap, promise: Promise): Boolean {
   if (!part.hasKey(PARAMETER_PART_PAYLOAD)) {
@@ -101,6 +103,10 @@ data class UploaderParameters(
 
 class UploaderParameterFactory {
   fun fromInput(input: ReadableMap, promise: Promise): UploaderParameters? {
+    assertRequiredParameter(input, String::class.java, PARAMETER_TASK_ID)
+    assertRequiredParameter(input, ReadableMap::class.java, PARAMETER_PARTS)
+    assertRequiredParameter(input, String::class.java, PARAMETER_URL)
+
     val maybeTaskId = input.getString(PARAMETER_TASK_ID)
     val maybeUrl = input.getString(PARAMETER_URL)
     val method = input.getString(PARAMETER_METHOD) ?: DEFAULT_UPLOAD_METHOD

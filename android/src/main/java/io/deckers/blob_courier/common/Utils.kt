@@ -41,7 +41,7 @@ fun createDownloadManager(context: Context) =
 fun Map<*, *>.toReactMap(): WritableMap {
   val thisMap = this
 
-  val x = Arguments.createMap().apply {
+  return Arguments.createMap().apply {
     thisMap.forEach { (k, v) ->
       when {
         (v is String) ->
@@ -54,8 +54,6 @@ fun Map<*, *>.toReactMap(): WritableMap {
       }
     }
   }
-
-  return x
 }
 
 fun mapHeadersToMap(headers: Headers): Map<String, String> =
