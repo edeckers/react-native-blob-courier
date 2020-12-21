@@ -7,31 +7,16 @@
 package io.deckers.blob_courier
 
 import android.net.Uri
-import com.facebook.common.internal.ImmutableMap
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReactMethod
 import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.modules.network.OkHttpClientProvider
-import java.lang.reflect.Type
 import java.net.URL
 import java.net.UnknownHostException
 import java.util.Locale
 import kotlin.concurrent.thread
-
-private const val ERROR_MISSING_REQUIRED_PARAMETER = "ERROR_MISSING_REQUIRED_PARAMETER"
-
-private val REQUIRED_PARAMETER_PROCESSORS = ImmutableMap.of(
-  Boolean::class.java.toString(),
-  { input: ReadableMap, parameterName: String -> input.getBoolean(parameterName) },
-  ReadableMap::class.java.toString(),
-  { input: ReadableMap, parameterName: String -> input.getMap(parameterName) },
-  String::class.java.toString(),
-  { input: ReadableMap, parameterName: String -> input.getString(parameterName) }
-)
-
-private val AVAILABLE_PARAMETER_PROCESSORS = REQUIRED_PARAMETER_PROCESSORS.keys.joinToString(", ")
 
 private fun createHttpClient() = OkHttpClientProvider.getOkHttpClient()
 
@@ -60,22 +45,6 @@ private fun processInvalidValue(
     ERROR_INVALID_VALUE,
     "Parameter `$parameterName` has an invalid value (value=$invalidValue)."
   )
-
-private fun assertRequiredParameter(input: ReadableMap, type: Type, parameterName: String) {
-  val defaultFallback =
-    "No processor defined for type `$type`, valid options: $AVAILABLE_PARAMETER_PROCESSORS"
-  val unknownProcessor = { _: ReadableMap, _: String -> throw Exception(defaultFallback) }
-
-  val maybeValue =
-    REQUIRED_PARAMETER_PROCESSORS.getOrElse(
-      type.toString(), { unknownProcessor }
-    )(input, parameterName)
-
-  maybeValue ?: throw BlobCourierError(
-    ERROR_MISSING_REQUIRED_PARAMETER,
-    "`$parameterName` is a required parameter of type `$type`"
-  )
-}
 
 private fun verifyFilePart(part: ReadableMap, promise: Promise): Boolean {
   if (!part.hasKey(PARAMETER_PART_PAYLOAD)) {

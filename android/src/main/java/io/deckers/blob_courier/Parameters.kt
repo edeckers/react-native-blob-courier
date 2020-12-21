@@ -1,5 +1,11 @@
 package io.deckers.blob_courier
 
+import com.facebook.common.internal.ImmutableMap
+import com.facebook.react.bridge.ReadableMap
+import java.lang.reflect.Type
+
+const val ERROR_MISSING_REQUIRED_PARAMETER = "ERROR_MISSING_REQUIRED_PARAMETER"
+
 const val PARAMETER_ABSOLUTE_FILE_PATH = "absoluteFilePath"
 const val PARAMETER_ANDROID_SETTINGS = "android"
 const val PARAMETER_DOWNLOAD_MANAGER_SETTINGS = "downloadManager"
@@ -15,3 +21,30 @@ const val PARAMETER_TARGET = "target"
 const val PARAMETER_TASK_ID = "taskId"
 const val PARAMETER_URL = "url"
 const val PARAMETER_USE_DOWNLOAD_MANAGER = "useDownloadManager"
+
+private val REQUIRED_PARAMETER_PROCESSORS = ImmutableMap.of(
+  Boolean::class.java.toString(),
+  { input: ReadableMap, parameterName: String -> input.getBoolean(parameterName) },
+  ReadableMap::class.java.toString(),
+  { input: ReadableMap, parameterName: String -> input.getMap(parameterName) },
+  String::class.java.toString(),
+  { input: ReadableMap, parameterName: String -> input.getString(parameterName) }
+)
+
+private val AVAILABLE_PARAMETER_PROCESSORS = REQUIRED_PARAMETER_PROCESSORS.keys.joinToString(", ")
+
+fun assertRequiredParameter(input: ReadableMap, type: Type, parameterName: String) {
+  val defaultFallback =
+    "No processor defined for type `$type`, valid options: $AVAILABLE_PARAMETER_PROCESSORS"
+  val unknownProcessor = { _: ReadableMap, _: String -> throw Exception(defaultFallback) }
+
+  val maybeValue =
+    REQUIRED_PARAMETER_PROCESSORS.getOrElse(
+      type.toString(), { unknownProcessor }
+    )(input, parameterName)
+
+  maybeValue ?: throw BlobCourierError(
+    ERROR_MISSING_REQUIRED_PARAMETER,
+    "`$parameterName` is a required parameter of type `$type`"
+  )
+}
