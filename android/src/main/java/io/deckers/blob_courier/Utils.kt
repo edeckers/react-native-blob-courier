@@ -12,6 +12,7 @@ import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.WritableMap
 import com.facebook.react.modules.core.DeviceEventManagerModule
+import okhttp3.Headers
 
 fun notifyBridgeOfProgress(
   context: ReactApplicationContext,
@@ -56,3 +57,16 @@ fun Map<*, *>.toReactMap(): WritableMap {
 
   return x
 }
+
+fun mapHeadersToMap(headers: Headers): Map<String, String> =
+  headers
+    .toMultimap()
+    .map { entry -> Pair(entry.key, entry.value.joinToString()) }
+    .toMap()
+
+fun filterHeaders(unfilteredHeaders: Map<String, Any>): Map<String, String> =
+  unfilteredHeaders
+    .mapValues { (_, v) -> v as? String }
+    .filter { true }
+    .mapNotNull { (k, v) -> v?.let { k to it } }
+    .toMap()
