@@ -279,7 +279,6 @@ open class BlobCourier: NSObject {
       BlobCourierErrors.processUnexpectedEmptyValue(reject: reject, parameterName: parameterName)
     } catch {
       BlobCourierErrors.processUnexpectedException(reject: reject, error: error)
-      print("\(error)")
     }
   }
 }
