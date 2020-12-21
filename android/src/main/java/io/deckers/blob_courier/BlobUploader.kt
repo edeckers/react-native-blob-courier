@@ -3,8 +3,6 @@ package io.deckers.blob_courier
 import android.net.Uri
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
-import com.facebook.react.bridge.ReadableMap
-import java.net.URL
 import okhttp3.MediaType
 import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
@@ -16,20 +14,14 @@ class BlobUploader(
 ) {
 
   fun upload(
-    taskId: String,
-    verifiedParts: ReadableMap,
-    uri: URL,
-    method: String,
-    headers: Map<String, String>,
-    returnResponse: Boolean,
-    progressInterval: Int,
+    ps: UploaderParameters,
     promise: Promise,
   ) {
     val mpb = MultipartBody.Builder()
       .setType(MultipartBody.FORM)
 
-    verifiedParts.toHashMap().keys.forEach { multipartName ->
-      val maybePart = verifiedParts.getMap(multipartName)
+    ps.verifiedParts.toHashMap().keys.forEach { multipartName ->
+      val maybePart = ps.verifiedParts.getMap(multipartName)
 
       maybePart?.run {
         when (this.getString("type")) {
@@ -66,16 +58,16 @@ class BlobUploader(
 
     val requestBody = BlobCourierProgressRequest(
       reactContext,
-      taskId,
+      ps.taskId,
       multipartBody,
-      progressInterval
+      ps.progressInterval
     )
 
     val requestBuilder = Request.Builder()
-      .url(uri)
-      .method(method, requestBody)
+      .url(ps.uri)
+      .method(ps.method, requestBody)
       .apply {
-        headers.forEach { e: Map.Entry<String, String> ->
+        ps.headers.forEach { e: Map.Entry<String, String> ->
           addHeader(e.key, e.value)
         }
       }
@@ -92,7 +84,7 @@ class BlobUploader(
         mapOf(
           "response" to mapOf(
             "code" to response.code(),
-            "data" to if (returnResponse) b else "",
+            "data" to if (ps.returnResponse) b else "",
             "headers" to mapHeadersToMap(response.headers())
           )
         ).toReactMap()
