@@ -4,10 +4,26 @@
  * This source code is licensed under the MPL-2.0 license found in the
  * LICENSE file in the root directory of this source tree.
  */
-package io.deckers.blob_courier
+package io.deckers.blob_courier.upload
 
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReadableMap
+import io.deckers.blob_courier.common.DEFAULT_PROGRESS_TIMEOUT_MILLISECONDS
+import io.deckers.blob_courier.common.DEFAULT_UPLOAD_METHOD
+import io.deckers.blob_courier.common.ERROR_MISSING_REQUIRED_PARAMETER
+import io.deckers.blob_courier.common.PARAMETER_ABSOLUTE_FILE_PATH
+import io.deckers.blob_courier.common.PARAMETER_HEADERS
+import io.deckers.blob_courier.common.PARAMETER_METHOD
+import io.deckers.blob_courier.common.PARAMETER_MIME_TYPE
+import io.deckers.blob_courier.common.PARAMETER_PARTS
+import io.deckers.blob_courier.common.PARAMETER_PART_PAYLOAD
+import io.deckers.blob_courier.common.PARAMETER_RETURN_RESPONSE
+import io.deckers.blob_courier.common.PARAMETER_SETTINGS_PROGRESS_INTERVAL
+import io.deckers.blob_courier.common.PARAMETER_TASK_ID
+import io.deckers.blob_courier.common.PARAMETER_URL
+import io.deckers.blob_courier.common.filterHeaders
+import io.deckers.blob_courier.common.getMapInt
+import io.deckers.blob_courier.common.processUnexpectedEmptyValue
 import java.net.URL
 
 private fun verifyFilePart(part: ReadableMap, promise: Promise): Boolean {

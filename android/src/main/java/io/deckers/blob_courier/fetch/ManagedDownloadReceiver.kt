@@ -4,7 +4,7 @@
  * This source code is licensed under the MPL-2.0 license found in the
  * LICENSE file in the root directory of this source tree.
  */
-package io.deckers.blob_courier
+package io.deckers.blob_courier.fetch
 
 import android.app.DownloadManager
 import android.content.BroadcastReceiver
@@ -13,6 +13,13 @@ import android.content.Intent
 import android.database.Cursor
 import android.net.Uri
 import com.facebook.react.bridge.Promise
+import io.deckers.blob_courier.common.DOWNLOAD_TYPE_MANAGED
+import io.deckers.blob_courier.common.ERROR_UNEXPECTED_EXCEPTION
+import io.deckers.blob_courier.common.MANAGED_DOWNLOAD_FAILURE
+import io.deckers.blob_courier.common.MANAGED_DOWNLOAD_SUCCESS
+import io.deckers.blob_courier.common.createDownloadManager
+import io.deckers.blob_courier.common.toReactMap
+import io.deckers.blob_courier.progress.ManagedProgressUpdater
 import java.io.Closeable
 import java.io.File
 import java.io.FileOutputStream

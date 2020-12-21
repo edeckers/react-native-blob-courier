@@ -10,13 +10,13 @@ import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.JavaOnlyMap
 import com.facebook.react.bridge.ReactApplicationContext
 import io.deckers.blob_courier.DEFAULT_PROMISE_TIMEOUT_MILLISECONDS
-import io.deckers.blob_courier.DOWNLOAD_TYPE_MANAGED
 import io.deckers.blob_courier.Fixtures
 import io.deckers.blob_courier.Fixtures.createValidTestFetchParameterMap
 import io.deckers.blob_courier.Fixtures.runFetchBlob
-import io.deckers.blob_courier.MANAGED_DOWNLOAD_SUCCESS
 import io.deckers.blob_courier.TestUtils.circumventHiddenApiExemptionsForMockk
-import io.deckers.blob_courier.toReactMap
+import io.deckers.blob_courier.common.DOWNLOAD_TYPE_MANAGED
+import io.deckers.blob_courier.common.MANAGED_DOWNLOAD_SUCCESS
+import io.deckers.blob_courier.common.toReactMap
 import io.mockk.every
 import io.mockk.mockkStatic
 import java.util.UUID
