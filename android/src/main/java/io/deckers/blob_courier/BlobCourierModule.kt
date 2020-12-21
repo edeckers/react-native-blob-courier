@@ -39,7 +39,7 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
           DownloaderParameterFactory().fromInput(input, promise)
 
         fetchParameters?.run {
-          BlobDownloader(reactContext, createHttpClient()).startBlobFetch(fetchParameters, promise)
+          BlobDownloader(reactContext, createHttpClient()).download(fetchParameters, promise)
         }
       } catch (e: BlobCourierError) {
         promise.reject(e.code, e.message)

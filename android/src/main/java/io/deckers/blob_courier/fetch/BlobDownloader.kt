@@ -76,50 +76,30 @@ class BlobDownloader(
       filename
     )
 
-  fun startBlobFetch(
-    ps: DownloaderParameters,
+  fun download(
+    downloaderParameters: DownloaderParameters,
     promise: Promise
   ) =
-    if (ps.useDownloadManager)
+    if (downloaderParameters.useDownloadManager)
       fetchBlobUsingDownloadManager(
-        ps.taskId,
-        ps.downloadManagerSettings,
-        ps.uri,
-        ps.targetDirectory,
-        ps.filename,
-        ps.headers,
-        ps.mimeType,
-        ps.progressInterval,
+        downloaderParameters,
+        downloaderParameters.downloadManagerSettings,
         promise
       )
-    else fetchBlobWithoutDownloadManager(
-      ps.taskId,
-      ps.uri,
-      ps.targetDirectory,
-      ps.filename,
-      ps.headers,
-      ps.method,
-      ps.progressInterval,
-      promise
-    )
+    else fetchBlobWithoutDownloadManager(downloaderParameters, promise)
 
   private fun fetchBlobUsingDownloadManager(
-    taskId: String,
+    downloaderParameters: DownloaderParameters,
     downloadManagerSettings: Map<String, Any>,
-    uri: Uri,
-    targetDirectory: TargetDirectoryEnum,
-    filename: String,
-    headers: Map<String, String>,
-    mimeType: String,
-    progressInterval: Int,
     promise: Promise
   ) {
-    val absoluteFilePath = createAbsoluteFilePath(filename, targetDirectory)
+    val absoluteFilePath =
+      createAbsoluteFilePath(downloaderParameters.filename, downloaderParameters.targetDirectory)
 
     val request =
-      DownloadManager.Request(uri)
+      DownloadManager.Request(downloaderParameters.uri)
         .setAllowedOverRoaming(true)
-        .setMimeType(mimeType)
+        .setMimeType(downloaderParameters.mimeType)
         .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
 
     if (downloadManagerSettings.containsKey(DOWNLOAD_MANAGER_PARAMETER_DESCRIPTION)) {
@@ -144,7 +124,7 @@ class BlobDownloader(
       .let { requestBuilder
         ->
         requestBuilder.apply {
-          headers.forEach { e: Map.Entry<String, String> ->
+          downloaderParameters.headers.forEach { e: Map.Entry<String, String> ->
             addRequestHeader(e.key, e.value)
           }
         }
@@ -155,7 +135,12 @@ class BlobDownloader(
       }
 
     val progressUpdater =
-      ManagedProgressUpdater(reactContext, taskId, downloadId, progressInterval.toLong())
+      ManagedProgressUpdater(
+        reactContext,
+        downloaderParameters.taskId,
+        downloadId,
+        downloaderParameters.progressInterval.toLong()
+      )
 
     progressUpdater.start()
 
@@ -168,30 +153,30 @@ class BlobDownloader(
   }
 
   private fun fetchBlobWithoutDownloadManager(
-    taskId: String,
-    uri: Uri,
-    targetDirectory: TargetDirectoryEnum,
-    filename: String,
-    headers: Map<String, String>,
-    method: String,
-    progressInterval: Int,
+    downloaderParameters: DownloaderParameters,
     promise: Promise
   ) {
-    val absoluteFilePath = createAbsoluteFilePath(filename, targetDirectory)
+    val absoluteFilePath =
+      createAbsoluteFilePath(downloaderParameters.filename, downloaderParameters.targetDirectory)
 
     val request = Request.Builder()
-      .method(method, null)
-      .url(uri.toString())
+      .method(downloaderParameters.method, null)
+      .url(downloaderParameters.uri.toString())
       .apply {
-        headers.forEach { e: Map.Entry<String, String> ->
+        downloaderParameters.headers.forEach { e: Map.Entry<String, String> ->
           addHeader(e.key, e.value)
         }
       }
       .build()
 
+    val progressInterceptor =
+      createDownloadProgressInterceptor(
+        reactContext, downloaderParameters.taskId, downloaderParameters.progressInterval
+      )
+
     val httpClient =
       httpClient.newBuilder()
-        .addInterceptor(createDownloadProgressInterceptor(reactContext, taskId, progressInterval))
+        .addInterceptor(progressInterceptor)
         .build()
 
     httpClient.newCall(request).execute().use { response ->
