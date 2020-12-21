@@ -6,16 +6,11 @@
  */
 package io.deckers.blob_courier.upload
 
-import android.net.Uri
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import io.deckers.blob_courier.common.DEFAULT_MIME_TYPE
 import io.deckers.blob_courier.common.ERROR_UNEXPECTED_ERROR
 import io.deckers.blob_courier.common.ERROR_UNEXPECTED_EXCEPTION
-import io.deckers.blob_courier.common.PARAMETER_ABSOLUTE_FILE_PATH
-import io.deckers.blob_courier.common.PARAMETER_FILENAME
-import io.deckers.blob_courier.common.PARAMETER_MIME_TYPE
-import io.deckers.blob_courier.common.PARAMETER_PART_PAYLOAD
 import io.deckers.blob_courier.common.mapHeadersToMap
 import io.deckers.blob_courier.common.toReactMap
 import io.deckers.blob_courier.progress.BlobCourierProgressRequest
@@ -30,42 +25,38 @@ class BlobUploader(
 ) {
 
   fun upload(
-    ps: UploaderParameters,
+    uploaderParameters: UploaderParameters,
     promise: Promise,
   ) {
     val mpb = MultipartBody.Builder()
       .setType(MultipartBody.FORM)
 
-    ps.verifiedParts.toHashMap().keys.forEach { multipartName ->
-      val maybePart = ps.verifiedParts.getMap(multipartName)
+    uploaderParameters.parts.keys.forEach { multipartName ->
+      if (uploaderParameters.parts[multipartName]?.payload is FilePart) {
+        val payload = uploaderParameters.parts[multipartName]?.payload as FilePart
 
-      maybePart?.run {
-        when (this.getString("type")) {
-          "file" -> {
-            val payload = this.getMap(PARAMETER_PART_PAYLOAD)!!
-
-            val fileUrl = Uri.parse(payload.getString(PARAMETER_ABSOLUTE_FILE_PATH)!!)
-            val fileUrlWithScheme =
-              if (fileUrl.scheme == null) Uri.parse("file://$fileUrl") else fileUrl
-
-            val filename =
-              if (payload.hasKey(PARAMETER_FILENAME)) (
-                payload.getString(PARAMETER_FILENAME)
-                  ?: fileUrl.lastPathSegment
-                ) else fileUrl.lastPathSegment
-
-            mpb.addFormDataPart(
-              multipartName,
-              filename,
-              InputStreamRequestBody(
-                payload.getString(PARAMETER_MIME_TYPE)?.let { MediaType.parse(it) }
-                  ?: MediaType.get(DEFAULT_MIME_TYPE),
-                reactContext.contentResolver,
-                fileUrlWithScheme
-              )
+        payload.run {
+          mpb.addFormDataPart(
+            multipartName,
+            payload.filename,
+            InputStreamRequestBody(
+              payload.mimeType.let { MediaType.parse(it) }
+                ?: MediaType.get(DEFAULT_MIME_TYPE),
+              reactContext.contentResolver,
+              payload.absoluteFilePath
             )
-          }
-          else -> mpb.addFormDataPart(multipartName, this.getString(PARAMETER_PART_PAYLOAD)!!)
+          )
+        }
+      }
+
+      if (uploaderParameters.parts[multipartName]?.payload is DataPart) {
+        val payload = uploaderParameters.parts[multipartName]?.payload as DataPart
+
+        payload.run {
+          mpb.addFormDataPart(
+            multipartName,
+            payload.value
+          )
         }
       }
     }
@@ -74,16 +65,16 @@ class BlobUploader(
 
     val requestBody = BlobCourierProgressRequest(
       reactContext,
-      ps.taskId,
+      uploaderParameters.taskId,
       multipartBody,
-      ps.progressInterval
+      uploaderParameters.progressInterval
     )
 
     val requestBuilder = Request.Builder()
-      .url(ps.uri)
-      .method(ps.method, requestBody)
+      .url(uploaderParameters.uri)
+      .method(uploaderParameters.method, requestBody)
       .apply {
-        ps.headers.forEach { e: Map.Entry<String, String> ->
+        uploaderParameters.headers.forEach { e: Map.Entry<String, String> ->
           addHeader(e.key, e.value)
         }
       }
@@ -100,7 +91,7 @@ class BlobUploader(
         mapOf(
           "response" to mapOf(
             "code" to response.code(),
-            "data" to if (ps.returnResponse) b else "",
+            "data" to if (uploaderParameters.returnResponse) b else "",
             "headers" to mapHeadersToMap(response.headers())
           )
         ).toReactMap()
