@@ -35,6 +35,15 @@ open class DownloaderDelegate: NSObject, URLSessionDownloadDelegate {
   public func urlSessionDidFinishEvents(forBackgroundURLSession session: URLSession) {
   }
 
+  public func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
+      if let theError = error {
+        print("session: didCompleteWithError: \(theError.localizedDescription)")
+        BlobCourierErrors.processUnexpectedException(reject: self.reject, error: theError)
+
+        session.finishTasksAndInvalidate()
+      }
+  }
+
   public func urlSession(
     _ session: URLSession,
     downloadTask: URLSessionDownloadTask,

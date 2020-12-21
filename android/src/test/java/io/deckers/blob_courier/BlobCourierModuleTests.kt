@@ -188,6 +188,55 @@ class BlobCourierModuleTests {
   }
 
   @Test(timeout = DEFAULT_PROMISE_TIMEOUT_MILLISECONDS)
+  fun non_ok_http_fetch_response_resolves_promise() {
+    val allRequiredParametersMap = createValidTestFetchParameterMap()
+    val requestWithNonExistentUrl =
+      allRequiredParametersMap.plus(
+        Pair("url", "https://github.com/edeckers/this-does-not-exist")
+      ).toReactMap()
+
+    val ctx = ReactApplicationContext(ApplicationProvider.getApplicationContext())
+
+    var result = Pair(false, "Unknown")
+
+    val pool = Executors.newSingleThreadExecutor()
+
+    val threadLock = Object()
+    val finishThread = { succeeded: Boolean, message: String ->
+      synchronized(threadLock) {
+        threadLock.notify()
+        result = Pair(succeeded, message)
+      }
+    }
+
+    pool.execute {
+      synchronized(threadLock) {
+        runFetchBlob(
+          ctx,
+          requestWithNonExistentUrl,
+          Fixtures.EitherPromise(
+            { m0 -> finishThread(false, "Rejected but expected resolve: $m0") },
+            { m0 -> finishThread(true, "Success: $m0") }
+          )
+        )
+        threadLock.wait()
+      }
+    }
+
+    pool.shutdown()
+
+    if (!pool.awaitTermination(DEFAULT_PROMISE_TIMEOUT_MILLISECONDS * 1L, TimeUnit.MILLISECONDS)) {
+      pool.shutdownNow()
+      assertTrue(
+        "Test execution exceeded $DEFAULT_PROMISE_TIMEOUT_MILLISECONDS milliseconds", false
+      )
+      return
+    }
+
+    assertTrue(result.second, result.first)
+  }
+
+  @Test(timeout = DEFAULT_PROMISE_TIMEOUT_MILLISECONDS)
   fun all_required_parameters_provided_resolves_upload_promise() {
     val allRequiredParametersMap = createValidTestFetchParameterMap().toReactMap()
 
@@ -228,6 +277,71 @@ class BlobCourierModuleTests {
                 Fixtures.EitherPromise(
                   { m1 -> finishThread(false, "Failed upload: $m1") },
                   { finishThread(true, "Success") }
+                )
+              )
+            }
+          )
+        )
+        threadLock.wait()
+      }
+    }
+
+    pool.shutdown()
+
+    if (!pool.awaitTermination(DEFAULT_PROMISE_TIMEOUT_MILLISECONDS * 1L, TimeUnit.MILLISECONDS)) {
+      pool.shutdownNow()
+      assertTrue(
+        "Test execution exceeded $DEFAULT_PROMISE_TIMEOUT_MILLISECONDS milliseconds", false
+      )
+      return
+    }
+
+    assertTrue(result.second, result.first)
+  }
+
+  @Test(timeout = DEFAULT_PROMISE_TIMEOUT_MILLISECONDS)
+  fun non_ok_http_response_resolves_upload_promise() {
+    val allRequiredParametersMap = createValidTestFetchParameterMap().toReactMap()
+
+    val ctx = ReactApplicationContext(ApplicationProvider.getApplicationContext())
+
+    var result = Pair(false, "Unknown")
+
+    val pool = Executors.newSingleThreadExecutor()
+
+    val threadLock = Object()
+    val finishThread = { succeeded: Boolean, message: String ->
+      synchronized(threadLock) {
+        threadLock.notify()
+        result = Pair(succeeded, message)
+      }
+    }
+
+    pool.execute {
+      synchronized(threadLock) {
+        runFetchBlob(
+          ctx,
+          allRequiredParametersMap,
+          Fixtures.EitherPromise(
+            { m0 -> finishThread(false, "Failed fetch step: $m0") },
+            { r0 ->
+              val taskId = allRequiredParametersMap.getString("taskId") ?: ""
+              val absoluteFilePath = r0?.getMap("data")?.getString("absoluteFilePath") ?: ""
+
+              Shadows.shadowOf(ctx.contentResolver)
+                .registerInputStream(Uri.parse(absoluteFilePath), "".byteInputStream())
+
+              val uploadParametersMap =
+                createValidUploadTestParameterMap(taskId, absoluteFilePath)
+                  .plus(Pair("url", "https://github.com/edeckers/this-does-not-exist"))
+                  .toReactMap()
+
+              runUploadBlob(
+                ctx,
+                uploadParametersMap,
+                Fixtures.EitherPromise(
+                  { m1 -> finishThread(false, "Failed upload: $m1") },
+                  { m1 -> finishThread(true, "Success: $m1") }
                 )
               )
             }
@@ -456,7 +570,55 @@ class BlobCourierModuleTests {
     assertTrue(result.second, result.first)
   }
 
-  fun assert_correct_target_parameter_resolves_promise(correctTarget: String) {
+  @Test // This is the faster, and less thorough version of the Instrumented test with the same name
+  fun non_existing_uploadable_file_rejects_promise() {
+    val irrelevantTaskId = UUID.randomUUID().toString()
+    val someNonExistentPath = "file:///this/path/does/not/exist.png"
+    val allRequiredParametersMap =
+      createValidUploadTestParameterMap(irrelevantTaskId, someNonExistentPath)
+
+    val ctx = ReactApplicationContext(ApplicationProvider.getApplicationContext())
+
+    var result = Pair(false, "Unknown")
+
+    val pool = Executors.newSingleThreadExecutor()
+
+    val threadLock = Object()
+    val finishThread = { succeeded: Boolean, message: String ->
+      synchronized(threadLock) {
+        threadLock.notify()
+        result = Pair(succeeded, message)
+      }
+    }
+
+    pool.execute {
+      synchronized(threadLock) {
+        runUploadBlob(
+          ctx,
+          allRequiredParametersMap.toReactMap(),
+          Fixtures.EitherPromise(
+            { m0 -> finishThread(true, "Success: $m0") },
+            { m0 -> finishThread(false, "Resolved but expected reject: $m0") }
+          )
+        )
+        threadLock.wait()
+      }
+    }
+
+    pool.shutdown()
+
+    if (!pool.awaitTermination(DEFAULT_PROMISE_TIMEOUT_MILLISECONDS * 1L, TimeUnit.MILLISECONDS)) {
+      pool.shutdownNow()
+      assertTrue(
+        "Test execution exceeded $DEFAULT_PROMISE_TIMEOUT_MILLISECONDS milliseconds", false
+      )
+      return
+    }
+
+    assertTrue(result.second, result.first)
+  }
+
+  private fun assert_correct_target_parameter_resolves_promise(correctTarget: String) {
     val allRequiredParametersMap = createValidTestFetchParameterMap()
 
     val android = mapOf("target" to correctTarget)

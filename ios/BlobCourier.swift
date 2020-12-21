@@ -4,6 +4,7 @@
 //  LICENSE file in the root directory of this source tree.
 import Foundation
 
+// swiftlint:disable type_body_length
 @objc(BlobCourier)
 open class BlobCourier: NSObject {
   static let downloadTypeUnmanaged  = "Unmanaged"
@@ -107,6 +108,7 @@ open class BlobCourier: NSObject {
     startFetchBlob(
       sessionConfig: sessionConfig,
       delegate: downloaderDelegate,
+      reject: reject,
       fileURL: fileURL!,
       headers: headers)
   }
@@ -115,6 +117,7 @@ open class BlobCourier: NSObject {
   func startFetchBlob(
     sessionConfig: URLSessionConfiguration,
     delegate: DownloaderDelegate,
+    reject: @escaping RCTPromiseRejectBlock,
     fileURL: URL,
     headers: NSDictionary) {
     let session =
@@ -139,7 +142,10 @@ open class BlobCourier: NSObject {
     return BlobCourier.targetValues.contains(value)
   }
 
-  func buildRequestDataForFileUpload(url: URL, parts: NSDictionary, headers: NSDictionary) -> (URLRequest, Data) {
+  func buildRequestDataForFileUpload(
+    url: URL,
+    parts: NSDictionary,
+    headers: NSDictionary) throws -> (URLRequest, Data) {
     let boundary = UUID().uuidString
 
     var request = URLRequest(url: url)
@@ -167,7 +173,7 @@ open class BlobCourier: NSObject {
           let filename = payload[BlobCourier.parameterFilename] ?? fileUrl.lastPathComponent
           let mimeType = payload[BlobCourier.parameterMimeType] ?? BlobCourier.defaultMimeType
 
-          data.addfilePart(
+          try data.addFilePart(
             part: FilePart(
               boundary: boundary,
               paramName: paramName,
@@ -196,7 +202,9 @@ open class BlobCourier: NSObject {
   }
 
   func uploadBlobFromValidatedParameters(
-    input: NSDictionary, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock
+    input: NSDictionary,
+    resolve: @escaping RCTPromiseResolveBlock,
+    reject: @escaping RCTPromiseRejectBlock
   ) throws {
     let taskId = (input[BlobCourier.parameterTaskId] as? String) ?? ""
 
@@ -227,8 +235,7 @@ open class BlobCourier: NSObject {
         (input[BlobCourier.parameterHeaders] as? NSDictionary) ??
         NSDictionary())
 
-    let (request, fileData) = buildRequestDataForFileUpload(url: urlObject, parts: parts, headers: headers)
-
+    let (request, fileData) = try buildRequestDataForFileUpload(url: urlObject, parts: parts, headers: headers)
     session.uploadTask(with: request, from: fileData).resume()
   }
 
@@ -272,7 +279,6 @@ open class BlobCourier: NSObject {
       BlobCourierErrors.processUnexpectedEmptyValue(reject: reject, parameterName: parameterName)
     } catch {
       BlobCourierErrors.processUnexpectedException(reject: reject, error: error)
-      print("\(error)")
     }
   }
 }
@@ -308,9 +314,9 @@ extension Data {
     append(string: "\r\n--\(part.boundary)\(isLastPart ? "--" : "")\r\n")
   }
 
-  mutating func addfilePart(part: FilePart, isLastPart: Bool) {
+  mutating func addFilePart(part: FilePart, isLastPart: Bool) throws {
     let fileUrl = URL(string: part.absoluteFilePath)!
-    let fileData = try? Data(contentsOf: fileUrl)
+    let fileData = try Data(contentsOf: fileUrl)
 
     let maybeFileAttributes = try? FileManager.default.attributesOfItem(atPath: part.absoluteFilePath)
 
@@ -325,7 +331,7 @@ extension Data {
     }
 
     append(string: "\r\n")
-    append(fileData!)
+    append(fileData)
     append(string: "\r\n--\(part.boundary)\(isLastPart ? "--" : "")\r\n")
   }
 }

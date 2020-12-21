@@ -39,12 +39,12 @@ open class UploaderDelegate: NSObject, URLSessionDataDelegate, URLSessionTaskDel
   public func urlSessionDidFinishEvents(forBackgroundURLSession session: URLSession) {
   }
 
-  public func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive data: Data) {
-      self.receivedData.append(data)
+  public func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
+      processCompletedUpload(data: self.receivedData, response: task.response, error: error)
   }
 
-  public func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
-    self.processCompletedUpload(data: self.receivedData, response: task.response, error: error)
+  public func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive data: Data) {
+      self.receivedData.append(data)
   }
 
   public func urlSession(

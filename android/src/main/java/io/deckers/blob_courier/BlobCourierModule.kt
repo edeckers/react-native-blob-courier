@@ -20,6 +20,7 @@ import com.facebook.react.modules.network.OkHttpClientProvider
 import java.io.File
 import java.lang.reflect.Type
 import java.net.URL
+import java.net.UnknownHostException
 import java.util.Locale
 import kotlin.concurrent.thread
 import okhttp3.Headers
@@ -360,17 +361,21 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
 
     val uri = URL(maybeUrl)
 
-    startBlobUpload(
-      reactContext,
-      maybeTaskId,
-      maybeParts,
-      uri,
-      method,
-      headers,
-      returnResponse,
-      progressInterval,
-      promise
-    )
+    try {
+      startBlobUpload(
+        reactContext,
+        maybeTaskId,
+        maybeParts,
+        uri,
+        method,
+        headers,
+        returnResponse,
+        progressInterval,
+        promise
+      )
+    } catch (e: UnknownHostException) {
+      promise.reject(ERROR_UNKNOWN_HOST, e)
+    }
   }
 
   private fun fetchBlobUsingDownloadManager(
@@ -464,32 +469,26 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
         .addInterceptor(createDownloadProgressInterceptor(reactContext, taskId, progressInterval))
         .build()
 
-    try {
-      httpClient.newCall(request).execute().use { response ->
-        response.body()?.source().use { source ->
-          Okio.buffer(Okio.sink(absoluteFilePath)).use { sink ->
+    httpClient.newCall(request).execute().use { response ->
+      response.body()?.source().use { source ->
+        Okio.buffer(Okio.sink(absoluteFilePath)).use { sink ->
 
-            sink.writeAll(source as Source)
-          }
+          sink.writeAll(source as Source)
         }
-
-        promise.resolve(
-          mapOf(
-            "type" to DOWNLOAD_TYPE_UNMANAGED,
-            "data" to mapOf(
-              "absoluteFilePath" to Uri.fromFile(absoluteFilePath),
-              "response" to mapOf(
-                "code" to response.code(),
-                "headers" to mapHeadersToMap(response.headers())
-              )
-            )
-          ).toReactMap()
-        )
       }
-    } catch (e0: Exception) {
-      promise.reject(ERROR_UNEXPECTED_EXCEPTION, e0.message)
-    } catch (e0: Error) {
-      promise.reject(ERROR_UNEXPECTED_ERROR, e0.message)
+
+      promise.resolve(
+        mapOf(
+          "type" to DOWNLOAD_TYPE_UNMANAGED,
+          "data" to mapOf(
+            "absoluteFilePath" to Uri.fromFile(absoluteFilePath),
+            "response" to mapOf(
+              "code" to response.code(),
+              "headers" to mapHeadersToMap(response.headers())
+            )
+          )
+        ).toReactMap()
+      )
     }
   }
 
@@ -556,19 +555,23 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
       return
     }
 
-    startBlobFetch(
-      maybeTaskId,
-      Uri.parse(maybeUrl),
-      useDownloadManager,
-      downloadManagerSettings,
-      maybeTargetDirectory,
-      maybeFilename,
-      mimeType,
-      promise,
-      method,
-      headers,
-      progressInterval
-    )
+    try {
+      startBlobFetch(
+        maybeTaskId,
+        Uri.parse(maybeUrl),
+        useDownloadManager,
+        downloadManagerSettings,
+        maybeTargetDirectory,
+        maybeFilename,
+        mimeType,
+        promise,
+        method,
+        headers,
+        progressInterval
+      )
+    } catch (e: UnknownHostException) {
+      promise.reject(ERROR_UNKNOWN_HOST, e)
+    }
   }
 
   private fun startBlobFetch(
