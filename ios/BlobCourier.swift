@@ -184,6 +184,7 @@ open class BlobCourier: NSObject {
         }
 
         let formDataValue = part[BlobCourier.parameterPartPayload] as? String ?? ""
+
         data.addFormDataPart(
           part: StringPart(
               boundary: boundary,
@@ -309,6 +310,7 @@ extension Data {
     append(string: "Content-Length: \(part.value.count)\r\n")
     append(string: "\r\n")
     append(string: part.value)
+    append(string: "\r\n--\(part.boundary)\r\n")
   }
 
   mutating func addFilePart(part: FilePart) throws {
@@ -329,5 +331,6 @@ extension Data {
 
     append(string: "\r\n")
     append(fileData)
+    append(string: "\r\n--\(part.boundary)\r\n")
   }
 }

@@ -38,10 +38,12 @@ target 'BlobCourier' do
 
   use_native_modules!
 
-
   target 'BlobCourierTests' do
       # inherit! :search_paths
       inherit! :complete
       # Pods for testing
+      pod 'Embassy', '~> 4.1'
+      pod 'EnvoyAmbassador', '~> 4.0'
+      pod 'MimeParser', '~> 0.2'
   end
 end
