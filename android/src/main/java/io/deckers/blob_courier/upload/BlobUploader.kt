@@ -4,11 +4,21 @@
  * This source code is licensed under the MPL-2.0 license found in the
  * LICENSE file in the root directory of this source tree.
  */
-package io.deckers.blob_courier
+package io.deckers.blob_courier.upload
 
 import android.net.Uri
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
+import io.deckers.blob_courier.common.DEFAULT_MIME_TYPE
+import io.deckers.blob_courier.common.ERROR_UNEXPECTED_ERROR
+import io.deckers.blob_courier.common.ERROR_UNEXPECTED_EXCEPTION
+import io.deckers.blob_courier.common.PARAMETER_ABSOLUTE_FILE_PATH
+import io.deckers.blob_courier.common.PARAMETER_FILENAME
+import io.deckers.blob_courier.common.PARAMETER_MIME_TYPE
+import io.deckers.blob_courier.common.PARAMETER_PART_PAYLOAD
+import io.deckers.blob_courier.common.mapHeadersToMap
+import io.deckers.blob_courier.common.toReactMap
+import io.deckers.blob_courier.progress.BlobCourierProgressRequest
 import okhttp3.MediaType
 import okhttp3.MultipartBody
 import okhttp3.OkHttpClient

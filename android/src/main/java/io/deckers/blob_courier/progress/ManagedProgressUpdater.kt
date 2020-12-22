@@ -4,10 +4,12 @@
  * This source code is licensed under the MPL-2.0 license found in the
  * LICENSE file in the root directory of this source tree.
  */
-package io.deckers.blob_courier
+package io.deckers.blob_courier.progress
 
 import android.app.DownloadManager
 import com.facebook.react.bridge.ReactApplicationContext
+import io.deckers.blob_courier.common.createDownloadManager
+import io.deckers.blob_courier.common.notifyBridgeOfProgress
 import java.io.Closeable
 import java.util.Timer
 import kotlin.concurrent.timerTask

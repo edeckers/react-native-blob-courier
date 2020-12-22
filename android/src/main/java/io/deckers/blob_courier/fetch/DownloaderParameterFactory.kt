@@ -4,11 +4,30 @@
  * This source code is licensed under the MPL-2.0 license found in the
  * LICENSE file in the root directory of this source tree.
  */
-package io.deckers.blob_courier
+package io.deckers.blob_courier.fetch
 
 import android.net.Uri
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReadableMap
+import io.deckers.blob_courier.common.DEFAULT_FETCH_METHOD
+import io.deckers.blob_courier.common.DEFAULT_MIME_TYPE
+import io.deckers.blob_courier.common.DEFAULT_PROGRESS_TIMEOUT_MILLISECONDS
+import io.deckers.blob_courier.common.ERROR_INVALID_VALUE
+import io.deckers.blob_courier.common.PARAMETER_ANDROID_SETTINGS
+import io.deckers.blob_courier.common.PARAMETER_DOWNLOAD_MANAGER_SETTINGS
+import io.deckers.blob_courier.common.PARAMETER_FILENAME
+import io.deckers.blob_courier.common.PARAMETER_HEADERS
+import io.deckers.blob_courier.common.PARAMETER_METHOD
+import io.deckers.blob_courier.common.PARAMETER_MIME_TYPE
+import io.deckers.blob_courier.common.PARAMETER_SETTINGS_PROGRESS_INTERVAL
+import io.deckers.blob_courier.common.PARAMETER_TARGET
+import io.deckers.blob_courier.common.PARAMETER_TASK_ID
+import io.deckers.blob_courier.common.PARAMETER_URL
+import io.deckers.blob_courier.common.PARAMETER_USE_DOWNLOAD_MANAGER
+import io.deckers.blob_courier.common.assertRequiredParameter
+import io.deckers.blob_courier.common.filterHeaders
+import io.deckers.blob_courier.common.getMapInt
+import io.deckers.blob_courier.common.processUnexpectedEmptyValue
 import java.util.Locale
 
 @Suppress("SameParameterValue")

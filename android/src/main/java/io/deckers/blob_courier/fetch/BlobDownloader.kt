@@ -4,7 +4,7 @@
  * This source code is licensed under the MPL-2.0 license found in the
  * LICENSE file in the root directory of this source tree.
  */
-package io.deckers.blob_courier
+package io.deckers.blob_courier.fetch
 
 import android.app.DownloadManager
 import android.content.Context
@@ -12,6 +12,11 @@ import android.content.IntentFilter
 import android.net.Uri
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
+import io.deckers.blob_courier.common.DOWNLOAD_TYPE_UNMANAGED
+import io.deckers.blob_courier.common.mapHeadersToMap
+import io.deckers.blob_courier.common.toReactMap
+import io.deckers.blob_courier.progress.BlobCourierProgressResponse
+import io.deckers.blob_courier.progress.ManagedProgressUpdater
 import java.io.File
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
