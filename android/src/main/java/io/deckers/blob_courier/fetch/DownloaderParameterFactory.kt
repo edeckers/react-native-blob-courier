@@ -20,10 +20,10 @@ import io.deckers.blob_courier.common.PARAMETER_MIME_TYPE
 import io.deckers.blob_courier.common.PARAMETER_SETTINGS_PROGRESS_INTERVAL
 import io.deckers.blob_courier.common.PARAMETER_TASK_ID
 import io.deckers.blob_courier.common.PARAMETER_URL
-import io.deckers.blob_courier.common.assertRequiredParameter
 import io.deckers.blob_courier.common.filterHeaders
 import io.deckers.blob_courier.common.getMapInt
 import io.deckers.blob_courier.common.processUnexpectedEmptyValue
+import io.deckers.blob_courier.common.tryRetrieveString
 import java.util.Locale
 
 private const val PARAMETER_ANDROID_SETTINGS = "android"
@@ -42,6 +42,42 @@ private fun processInvalidValue(
     "Parameter `$parameterName` has an invalid value (value=$invalidValue)."
   )
 
+private fun retrieveRequiredParametersOrThrow(input: ReadableMap):
+  Triple<String?, String?, String?> {
+    val filename = tryRetrieveString(input, PARAMETER_FILENAME)
+    val taskId = tryRetrieveString(input, PARAMETER_TASK_ID)
+    val url = tryRetrieveString(input, PARAMETER_URL)
+
+    return Triple(filename, taskId, url)
+  }
+
+private fun validateRequiredParameters(
+  parameters: Triple<String?, String?, String?>,
+  promise: Promise
+): Triple<String, String, String>? {
+  val (filename, taskId, url) = parameters
+
+  if (filename == null) {
+    processUnexpectedEmptyValue(promise, PARAMETER_FILENAME)
+
+    return null
+  }
+
+  if (taskId == null) {
+    processUnexpectedEmptyValue(promise, PARAMETER_TASK_ID)
+
+    return null
+  }
+
+  if (url == null) {
+    processUnexpectedEmptyValue(promise, PARAMETER_URL)
+
+    return null
+  }
+
+  return Triple(filename, taskId, url)
+}
+
 data class DownloaderParameters(
   val taskId: String,
   val useDownloadManager: Boolean,
@@ -57,81 +93,65 @@ data class DownloaderParameters(
 
 class DownloaderParameterFactory {
   fun fromInput(input: ReadableMap, promise: Promise): DownloaderParameters? {
-    assertRequiredParameter(input, String::class.java, PARAMETER_TASK_ID)
-    assertRequiredParameter(input, String::class.java, PARAMETER_FILENAME)
-    assertRequiredParameter(input, String::class.java, PARAMETER_URL)
+    val requiredParameters = retrieveRequiredParametersOrThrow(input)
 
-    val maybeTaskId = input.getString(PARAMETER_TASK_ID)
-    val maybeFilename = input.getString(PARAMETER_FILENAME)
-    val maybeUrl = input.getString(PARAMETER_URL)
+    return validateRequiredParameters(requiredParameters, promise)?.let {
+      val (filename, taskId, url) = it
 
-    val method = input.getString(PARAMETER_METHOD) ?: DEFAULT_FETCH_METHOD
-    val mimeType = input.getString(PARAMETER_MIME_TYPE) ?: DEFAULT_MIME_TYPE
+      val method = input.getString(PARAMETER_METHOD) ?: DEFAULT_FETCH_METHOD
+      val mimeType = input.getString(PARAMETER_MIME_TYPE) ?: DEFAULT_MIME_TYPE
 
-    val maybeAndroidSettings = input.getMap(PARAMETER_ANDROID_SETTINGS)
+      val maybeAndroidSettings = input.getMap(PARAMETER_ANDROID_SETTINGS)
 
-    val targetDirectoryOrFallback = (
-      maybeAndroidSettings?.getString(PARAMETER_TARGET)
-        ?: BlobDownloader.TargetDirectoryEnum.Cache.toString()
+      val targetDirectoryOrFallback = (
+        maybeAndroidSettings?.getString(PARAMETER_TARGET)
+          ?: BlobDownloader.TargetDirectoryEnum.Cache.toString()
+        )
+
+      val maybeTargetDirectory =
+        BlobDownloader.TargetDirectoryEnum
+          .values()
+          .firstOrNull { t ->
+            t.name.toLowerCase(Locale.getDefault()) ==
+              targetDirectoryOrFallback.toLowerCase(Locale.getDefault())
+          }
+
+      val downloadManagerSettings =
+        maybeAndroidSettings?.getMap(PARAMETER_DOWNLOAD_MANAGER_SETTINGS)?.toHashMap().orEmpty()
+
+      val useDownloadManager =
+        maybeAndroidSettings?.hasKey(PARAMETER_USE_DOWNLOAD_MANAGER) ?: false
+
+      val unfilteredHeaders =
+        input.getMap(PARAMETER_HEADERS)?.toHashMap() ?: emptyMap<String, Any>()
+
+      val headers = filterHeaders(unfilteredHeaders)
+
+      val progressInterval =
+        getMapInt(
+          input,
+          PARAMETER_SETTINGS_PROGRESS_INTERVAL,
+          DEFAULT_PROGRESS_TIMEOUT_MILLISECONDS
+        )
+
+      if (maybeTargetDirectory == null) {
+        processInvalidValue(promise, PARAMETER_TARGET, targetDirectoryOrFallback)
+
+        return null
+      }
+
+      return DownloaderParameters(
+        taskId,
+        useDownloadManager,
+        downloadManagerSettings,
+        Uri.parse(url),
+        maybeTargetDirectory,
+        filename,
+        headers,
+        method,
+        mimeType,
+        progressInterval
       )
-
-    val maybeTargetDirectory =
-      BlobDownloader.TargetDirectoryEnum
-        .values()
-        .firstOrNull {
-          it.name.toLowerCase(Locale.getDefault()) ==
-            targetDirectoryOrFallback.toLowerCase(Locale.getDefault())
-        }
-
-    val downloadManagerSettings =
-      maybeAndroidSettings?.getMap(PARAMETER_DOWNLOAD_MANAGER_SETTINGS)?.toHashMap().orEmpty()
-
-    val useDownloadManager =
-      maybeAndroidSettings?.hasKey(PARAMETER_USE_DOWNLOAD_MANAGER) ?: false
-
-    val unfilteredHeaders =
-      input.getMap(PARAMETER_HEADERS)?.toHashMap() ?: emptyMap<String, Any>()
-
-    val headers = filterHeaders(unfilteredHeaders)
-
-    val progressInterval =
-      getMapInt(input, PARAMETER_SETTINGS_PROGRESS_INTERVAL, DEFAULT_PROGRESS_TIMEOUT_MILLISECONDS)
-
-    if (maybeTaskId.isNullOrEmpty()) {
-      processUnexpectedEmptyValue(promise, PARAMETER_TASK_ID)
-
-      return null
     }
-
-    if (maybeFilename.isNullOrEmpty()) {
-      processUnexpectedEmptyValue(promise, PARAMETER_FILENAME)
-
-      return null
-    }
-
-    if (maybeUrl.isNullOrEmpty()) {
-      processUnexpectedEmptyValue(promise, PARAMETER_URL)
-
-      return null
-    }
-
-    if (maybeTargetDirectory == null) {
-      processInvalidValue(promise, PARAMETER_TARGET, targetDirectoryOrFallback)
-
-      return null
-    }
-
-    return DownloaderParameters(
-      maybeTaskId,
-      useDownloadManager,
-      downloadManagerSettings,
-      Uri.parse(maybeUrl),
-      maybeTargetDirectory,
-      maybeFilename,
-      headers,
-      method,
-      mimeType,
-      progressInterval
-    )
   }
 }
