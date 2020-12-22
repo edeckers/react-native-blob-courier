@@ -196,8 +196,6 @@ open class BlobCourier: NSObject {
       data.append(string: "\r\n--\(boundary)--\r\n")
     }
 
-    request.setValue(String(data.count), forHTTPHeaderField: "Content-Length")
-
     return (request, data)
   }
 
