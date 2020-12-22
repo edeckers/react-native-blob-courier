@@ -22,10 +22,9 @@ class ManagedDownloader(private val reactContext: ReactApplicationContext) {
   private val defaultDownloadManager =
     reactContext.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
 
-  fun fetchBlobUsingDownloadManager(
+  fun fetch(
     downloaderParameters: DownloaderParameters,
     toAbsoluteFilePath: File,
-    downloadManagerSettings: Map<String, Any>,
     promise: Promise
   ) {
     val request =
@@ -34,6 +33,7 @@ class ManagedDownloader(private val reactContext: ReactApplicationContext) {
         .setMimeType(downloaderParameters.mimeType)
         .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
 
+    val downloadManagerSettings = downloaderParameters.downloadManagerSettings
     if (downloadManagerSettings.containsKey(DOWNLOAD_MANAGER_PARAMETER_DESCRIPTION)) {
       request.setDescription(
         downloadManagerSettings[DOWNLOAD_MANAGER_PARAMETER_DESCRIPTION] as String
