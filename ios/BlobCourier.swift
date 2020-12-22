@@ -179,9 +179,7 @@ open class BlobCourier: NSObject {
               paramName: paramName,
               absoluteFilePath: absoluteFilePath,
               filename: filename,
-              mimeType: mimeType),
-            isLastPart: index + 1 == parts.count)
-          index += 1
+              mimeType: mimeType))
           continue
         }
 
@@ -190,10 +188,12 @@ open class BlobCourier: NSObject {
           part: StringPart(
               boundary: boundary,
               paramName: paramName,
-              value: formDataValue),
-          isLastPart: index + 1 == parts.count)
-        index += 1
+              value: formDataValue))
       }
+    }
+
+    if parts.count > 0 {
+      data.append(string: "\r\n--\(boundary)--\r\n")
     }
 
     request.setValue(String(data.count), forHTTPHeaderField: "Content-Length")
@@ -304,17 +304,16 @@ extension Data {
     }
   }
 
-  mutating func addFormDataPart(part: StringPart, isLastPart: Bool) {
+  mutating func addFormDataPart(part: StringPart) {
     append(string: "\r\n--\(part.boundary)\r\n")
     append(
       string: "Content-Disposition: form-data; name=\"\(part.paramName)\"\r\n")
     append(string: "Content-Length: \(part.value.count)\r\n")
     append(string: "\r\n")
     append(string: part.value)
-    append(string: "\r\n--\(part.boundary)\(isLastPart ? "--" : "")\r\n")
   }
 
-  mutating func addFilePart(part: FilePart, isLastPart: Bool) throws {
+  mutating func addFilePart(part: FilePart) throws {
     let fileUrl = URL(string: part.absoluteFilePath)!
     let fileData = try Data(contentsOf: fileUrl)
 
@@ -332,6 +331,5 @@ extension Data {
 
     append(string: "\r\n")
     append(fileData)
-    append(string: "\r\n--\(part.boundary)\(isLastPart ? "--" : "")\r\n")
   }
 }
