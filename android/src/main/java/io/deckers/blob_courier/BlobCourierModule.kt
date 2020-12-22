@@ -39,7 +39,7 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
           DownloaderParameterFactory().fromInput(input, promise)
 
         fetchParameters?.run {
-          BlobDownloader(reactContext, createHttpClient()).startBlobFetch(fetchParameters, promise)
+          BlobDownloader(reactContext, createHttpClient()).download(fetchParameters, promise)
         }
       } catch (e: BlobCourierError) {
         promise.reject(e.code, e.message)
@@ -62,10 +62,10 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
         uploadParameters?.run {
           BlobUploader(reactContext, createHttpClient()).upload(uploadParameters, promise)
         }
-      } catch (e: UnknownHostException) {
-        promise.reject(ERROR_UNKNOWN_HOST, e)
       } catch (e: BlobCourierError) {
         promise.reject(e.code, e.message)
+      } catch (e: UnknownHostException) {
+        promise.reject(ERROR_UNKNOWN_HOST, e)
       } catch (e: Exception) {
         processUnexpectedException(promise, e)
       } catch (e: Error) {

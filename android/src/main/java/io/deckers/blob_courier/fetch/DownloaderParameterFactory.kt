@@ -13,22 +13,23 @@ import io.deckers.blob_courier.common.DEFAULT_FETCH_METHOD
 import io.deckers.blob_courier.common.DEFAULT_MIME_TYPE
 import io.deckers.blob_courier.common.DEFAULT_PROGRESS_TIMEOUT_MILLISECONDS
 import io.deckers.blob_courier.common.ERROR_INVALID_VALUE
-import io.deckers.blob_courier.common.PARAMETER_ANDROID_SETTINGS
-import io.deckers.blob_courier.common.PARAMETER_DOWNLOAD_MANAGER_SETTINGS
 import io.deckers.blob_courier.common.PARAMETER_FILENAME
 import io.deckers.blob_courier.common.PARAMETER_HEADERS
 import io.deckers.blob_courier.common.PARAMETER_METHOD
 import io.deckers.blob_courier.common.PARAMETER_MIME_TYPE
 import io.deckers.blob_courier.common.PARAMETER_SETTINGS_PROGRESS_INTERVAL
-import io.deckers.blob_courier.common.PARAMETER_TARGET
 import io.deckers.blob_courier.common.PARAMETER_TASK_ID
 import io.deckers.blob_courier.common.PARAMETER_URL
-import io.deckers.blob_courier.common.PARAMETER_USE_DOWNLOAD_MANAGER
 import io.deckers.blob_courier.common.assertRequiredParameter
 import io.deckers.blob_courier.common.filterHeaders
 import io.deckers.blob_courier.common.getMapInt
 import io.deckers.blob_courier.common.processUnexpectedEmptyValue
 import java.util.Locale
+
+private const val PARAMETER_ANDROID_SETTINGS = "android"
+private const val PARAMETER_DOWNLOAD_MANAGER_SETTINGS = "downloadManager"
+private const val PARAMETER_TARGET = "target"
+private const val PARAMETER_USE_DOWNLOAD_MANAGER = "useDownloadManager"
 
 @Suppress("SameParameterValue")
 private fun processInvalidValue(
@@ -59,6 +60,7 @@ class DownloaderParameterFactory {
     assertRequiredParameter(input, String::class.java, PARAMETER_TASK_ID)
     assertRequiredParameter(input, String::class.java, PARAMETER_FILENAME)
     assertRequiredParameter(input, String::class.java, PARAMETER_URL)
+
     val maybeTaskId = input.getString(PARAMETER_TASK_ID)
     val maybeFilename = input.getString(PARAMETER_FILENAME)
     val maybeUrl = input.getString(PARAMETER_URL)

@@ -14,20 +14,14 @@ import java.lang.reflect.Type
 const val ERROR_MISSING_REQUIRED_PARAMETER = "ERROR_MISSING_REQUIRED_PARAMETER"
 
 const val PARAMETER_ABSOLUTE_FILE_PATH = "absoluteFilePath"
-const val PARAMETER_ANDROID_SETTINGS = "android"
-const val PARAMETER_DOWNLOAD_MANAGER_SETTINGS = "downloadManager"
 const val PARAMETER_FILENAME = "filename"
 const val PARAMETER_HEADERS = "headers"
 const val PARAMETER_METHOD = "method"
 const val PARAMETER_MIME_TYPE = "mimeType"
 const val PARAMETER_PART_PAYLOAD = "payload"
-const val PARAMETER_PARTS = "parts"
-const val PARAMETER_RETURN_RESPONSE = "returnResponse"
 const val PARAMETER_SETTINGS_PROGRESS_INTERVAL = "progressIntervalMilliseconds"
-const val PARAMETER_TARGET = "target"
 const val PARAMETER_TASK_ID = "taskId"
 const val PARAMETER_URL = "url"
-const val PARAMETER_USE_DOWNLOAD_MANAGER = "useDownloadManager"
 
 private val REQUIRED_PARAMETER_PROCESSORS = ImmutableMap.of(
   Boolean::class.java.toString(),
@@ -56,19 +50,27 @@ fun assertRequiredParameter(input: ReadableMap, type: Type, parameterName: Strin
   )
 }
 
+fun tryRetrieveBoolean(input: ReadableMap, parameterName: String): Boolean {
+  assertRequiredParameter(input, Boolean::class.java, parameterName)
+
+  return input.getBoolean(parameterName)
+}
+
+fun tryRetrieveMap(input: ReadableMap, parameterName: String): ReadableMap? {
+  assertRequiredParameter(input, ReadableMap::class.java, parameterName)
+
+  return input.getMap(parameterName)
+}
+
+fun tryRetrieveString(input: ReadableMap, parameterName: String): String? {
+  assertRequiredParameter(input, String::class.java, parameterName)
+
+  return input.getString(parameterName)
+}
+
 @Suppress("SameParameterValue")
 fun getMapInt(input: ReadableMap, field: String, fallback: Int): Int =
   if (input.hasKey(field)) input.getInt(field) else fallback
-
-fun processUnexpectedError(promise: Promise, e: Error) = promise.reject(
-  ERROR_UNEXPECTED_ERROR,
-  "An unexpected error occurred: ${e.message}"
-)
-
-fun processUnexpectedException(promise: Promise, e: Exception) = promise.reject(
-  ERROR_UNEXPECTED_EXCEPTION,
-  "An unexpected exception occurred: ${e.message}"
-)
 
 fun processUnexpectedEmptyValue(promise: Promise, parameterName: String) = promise.reject(
   ERROR_UNEXPECTED_EMPTY_VALUE,
