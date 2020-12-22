@@ -302,6 +302,80 @@ class BlobCourierModuleTests {
   }
 
   @Test(timeout = DEFAULT_PROMISE_TIMEOUT_MILLISECONDS)
+  fun using_a_string_payload_resolves_upload_promise() {
+    val allRequiredParametersMap = createValidTestFetchParameterMap().toReactMap()
+
+    val ctx = ReactApplicationContext(ApplicationProvider.getApplicationContext())
+
+    var result = Pair(false, "Unknown")
+
+    val pool = Executors.newSingleThreadExecutor()
+
+    val threadLock = Object()
+    val finishThread = { succeeded: Boolean, message: String ->
+      synchronized(threadLock) {
+        threadLock.notify()
+        result = Pair(succeeded, message)
+      }
+    }
+
+    pool.execute {
+      synchronized(threadLock) {
+        runFetchBlob(
+          ctx,
+          allRequiredParametersMap,
+          Fixtures.EitherPromise(
+            { m0 -> finishThread(false, "Failed fetch step: $m0") },
+            { r0 ->
+              val taskId = allRequiredParametersMap.getString("taskId") ?: ""
+              val absoluteFilePath = r0?.getMap("data")?.getString("absoluteFilePath") ?: ""
+
+              Shadows.shadowOf(ctx.contentResolver)
+                .registerInputStream(Uri.parse(absoluteFilePath), "".byteInputStream())
+
+              val uploadParametersMap =
+                createValidUploadTestParameterMap(taskId, absoluteFilePath)
+
+              val defaultParts = (uploadParametersMap["parts"] as Map<*, *>)
+              val partsPlusStringPayload = defaultParts.plus(
+                "test" to mapOf(
+                  "type" to "string",
+                  "payload" to "THIS_IS_A_STRING_PAYLOAD"
+                )
+              )
+
+              val uploadParametersWithStringPayloadMap =
+                uploadParametersMap.plus("parts" to partsPlusStringPayload)
+
+              runUploadBlob(
+                ctx,
+                uploadParametersWithStringPayloadMap.toReactMap(),
+                Fixtures.EitherPromise(
+                  { m1 -> finishThread(false, "Failed upload: $m1") },
+                  { finishThread(true, "Success") }
+                )
+              )
+            }
+          )
+        )
+        threadLock.wait()
+      }
+    }
+
+    pool.shutdown()
+
+    if (!pool.awaitTermination(DEFAULT_PROMISE_TIMEOUT_MILLISECONDS * 1L, TimeUnit.MILLISECONDS)) {
+      pool.shutdownNow()
+      assertTrue(
+        "Test execution exceeded $DEFAULT_PROMISE_TIMEOUT_MILLISECONDS milliseconds", false
+      )
+      return
+    }
+
+    assertTrue(result.second, result.first)
+  }
+
+  @Test(timeout = DEFAULT_PROMISE_TIMEOUT_MILLISECONDS)
   fun non_ok_http_response_resolves_upload_promise() {
     val allRequiredParametersMap = createValidTestFetchParameterMap().toReactMap()
 
