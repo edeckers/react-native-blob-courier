@@ -152,10 +152,8 @@ private fun createPart(part: ReadableMap, promise: Promise): Part? {
     return null
   }
 
-  val payloadData = part.getMap(PARAMETER_PART_PAYLOAD) ?: return null
-
   val maybePayload = when (part.getString("type")) {
-    "file" -> createFilePayload(payloadData, promise)
+    "file" -> part.getMap(PARAMETER_PART_PAYLOAD)?.let { createFilePayload(it, promise) }
     else -> DataPart(part.getString(PARAMETER_PART_PAYLOAD) ?: "")
   }
 
