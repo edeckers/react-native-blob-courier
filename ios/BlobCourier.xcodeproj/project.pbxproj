@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		4FE57FA32AB062D2C02046FC /* Pods_BlobCourier.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3E7061D9BB42686E43B842F1 /* Pods_BlobCourier.framework */; };
 		9E7ACE2A91119EDFBE772FAC /* Pods_BlobCourier_BlobCourierTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 664603EE079B6D1526FE70F8 /* Pods_BlobCourier_BlobCourierTests.framework */; };
+		B92C3A1025935C2700630464 /* EmbeddedHttpServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = B92C3A0F25935C2700630464 /* EmbeddedHttpServer.swift */; };
 		B96829D7254EC721002B4B04 /* BlobCourierDelayedEventEmitter.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9229D282540E153000175D8 /* BlobCourierDelayedEventEmitter.swift */; };
 		B96829D9254EC727002B4B04 /* UploaderDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9409539253E1F5800A58583 /* UploaderDelegate.swift */; };
 		B96829DB254EC72C002B4B04 /* BlobCourierErrors.swift in Sources */ = {isa = PBXBuildFile; fileRef = B940950E253E1BEF00A58583 /* BlobCourierErrors.swift */; };
@@ -52,6 +53,7 @@
 		B3E7B5891CC2AC0600A0062D /* BlobCourier.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BlobCourier.m; sourceTree = "<group>"; };
 		B9229D282540E153000175D8 /* BlobCourierDelayedEventEmitter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlobCourierDelayedEventEmitter.swift; sourceTree = "<group>"; };
 		B9229D292540E153000175D8 /* BlobCourierDelayedEventEmitter.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BlobCourierDelayedEventEmitter.m; sourceTree = "<group>"; };
+		B92C3A0F25935C2700630464 /* EmbeddedHttpServer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EmbeddedHttpServer.swift; sourceTree = "<group>"; };
 		B940948F253DFC0800A58583 /* DownloaderDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloaderDelegate.swift; sourceTree = "<group>"; };
 		B94094E2253E0C2900A58583 /* DownloaderDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DownloaderDelegate.m; sourceTree = "<group>"; };
 		B94094E3253E107400A58583 /* BlobCourierEventEmitter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlobCourierEventEmitter.swift; sourceTree = "<group>"; };
@@ -147,6 +149,7 @@
 		B96829E6254EC872002B4B04 /* BlobCourierTests */ = {
 			isa = PBXGroup;
 			children = (
+				B92C3A0F25935C2700630464 /* EmbeddedHttpServer.swift */,
 				B96829E7254EC872002B4B04 /* BlobCourierTests.swift */,
 				B96829E9254EC872002B4B04 /* Info.plist */,
 			);
@@ -271,6 +274,9 @@
 				"${BUILT_PRODUCTS_DIR}/ReactCommon/ReactCommon.framework",
 				"${BUILT_PRODUCTS_DIR}/Yoga/yoga.framework",
 				"${BUILT_PRODUCTS_DIR}/glog/glog.framework",
+				"${BUILT_PRODUCTS_DIR}/Embassy/Embassy.framework",
+				"${BUILT_PRODUCTS_DIR}/EnvoyAmbassador/EnvoyAmbassador.framework",
+				"${BUILT_PRODUCTS_DIR}/MimeParser/MimeParser.framework",
 			);
 			name = "[CP] Embed Pods Frameworks";
 			outputPaths = (
@@ -295,6 +301,9 @@
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/ReactCommon.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/yoga.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/glog.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Embassy.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/EnvoyAmbassador.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/MimeParser.framework",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -366,6 +375,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				B96829E8254EC872002B4B04 /* BlobCourierTests.swift in Sources */,
+				B92C3A1025935C2700630464 /* EmbeddedHttpServer.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -530,7 +540,7 @@
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				INFOPLIST_FILE = BlobCourierTests/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 10.3;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
@@ -562,7 +572,7 @@
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				INFOPLIST_FILE = BlobCourierTests/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 10.3;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = io.deckers.BlobCourierTests;

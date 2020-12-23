@@ -5,8 +5,14 @@
 
 import XCTest
 
+import Embassy
+import EnvoyAmbassador
+
+import MimeParser
+
 @testable import BlobCourier
 
+// swiftlint:disable type_body_length
 class BlobCourierTests: XCTestCase {
     static let defaultPromiseTimeoutSeconds: UInt32 = 10
 
@@ -21,6 +27,95 @@ class BlobCourierTests: XCTestCase {
         sut = nil
         try super.tearDownWithError()
     }
+
+    // swiftlint:disable function_body_length
+    func testUploadMultipartMessageIsValid() throws {
+        var result = (false, "Unknown")
+        let input: NSDictionary = [
+          "filename": "some-filename.png",
+          "taskId": "some-task-id",
+          "url": "https://github.com/edeckers/react-native-blob-courier"
+        ]
+
+        let expectedParts = ["file", "test"]
+
+        let router = Router()
+        router["/api/v2/users"] =
+          DelayResponse(DataResponse(
+            statusCode: 201,
+            statusMessage: "Created",
+            contentType: "text/plain",
+            headers: []) { response -> Data in
+
+            if let input = response["swsgi.input"] as? SWSGIInput {
+              let contentType = response["CONTENT_TYPE"]
+
+              DataReader.read(input) { data in
+                let body = String(data: data, encoding: .utf8) ?? ""
+
+                let httpMessage = "Content-Type: \(contentType!)\r\n\(body)"
+                do {
+                  let parsedMessage = try MimeParser().parse(httpMessage)
+                  if case .mixed(let mimes) = parsedMessage.content {
+                    let actualParts: [String] = mimes.reduce(into: []) { acc, mime in
+                      if let value = mime.header.contentDisposition?.parameters["name"] {
+                        acc.append(value)
+                      }
+                    }.sorted()
+
+                    if actualParts != expectedParts {
+                      result = (false, "Did not receive all expected parts")
+                    } else {
+                      result = (true, "Success")
+                    }
+                  }
+                } catch {
+                  result = (false, error.localizedDescription ?? "Unspecified error message")
+                }
+              }
+            }
+
+            return Data("".utf8)
+          })
+
+        let httpServer = EmbeddedHttpServer(withRouter: router)
+
+        let reject: RCTPromiseRejectBlock = { (_: String?, _: String?, error: Error?) -> Void in
+          result = (false, error?.localizedDescription ?? "") }
+        let resolveUpload: RCTPromiseResolveBlock = { (_: Any?) -> Void in print("")  }
+        let resolve: RCTPromiseResolveBlock = { (response: Any?) -> Void in
+            let dict = response as? NSDictionary ?? [:]
+            let data = dict["data"] as? NSDictionary ?? [:]
+
+            try? httpServer.start()
+
+            self.sut?.uploadBlob(input: [
+             "parts": [
+               "file": [
+                 "payload": [
+                    "absoluteFilePath": data["absoluteFilePath"] ?? "",
+                    "mimeType": "image/png"
+                 ],
+                 "type": "file"
+               ],
+               "test": [
+                 "payload": "SOME_TEST_STRING",
+                 "type": "string"
+               ]
+             ],
+             "taskId": data["taskId"] ?? "",
+             "url": "http://localhost:12345/api/v2/users"
+           ], resolve: resolveUpload, reject: reject)
+        }
+
+        sut?.fetchBlob(input: input, resolve: resolve, reject: reject)
+
+        sleep(BlobCourierTests.defaultPromiseTimeoutSeconds)
+        httpServer.stop()
+
+        XCTAssertTrue(result.0)
+    }
+    // swiftlint:enable function_body_length
 
     func testAllRequiredFetchParametersProvidedResolvesPromise() throws {
         var result = (false, "Unknown")
