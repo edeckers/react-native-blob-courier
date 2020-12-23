@@ -1,2 +1,4 @@
+excluded:
+  - Pods
 line_length: 
     ignores_comments: true
