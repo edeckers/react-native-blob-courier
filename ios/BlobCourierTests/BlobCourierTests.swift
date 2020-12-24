@@ -91,14 +91,16 @@ class BlobCourierTests: XCTestCase {
 
             self.sut?.uploadBlob(input: [
              "parts": [
-               "file": [
+               [
+                 "name": "file",
                  "payload": [
                     "absoluteFilePath": data["absoluteFilePath"] ?? "",
                     "mimeType": "image/png"
                  ],
                  "type": "file"
                ],
-               "test": [
+               [
+                 "name": "test",
                  "payload": "SOME_TEST_STRING",
                  "type": "string"
                ]
@@ -292,7 +294,8 @@ class BlobCourierTests: XCTestCase {
 
         self.sut?.uploadBlob(input: [
          "parts": [
-           "file": [
+           [
+             "name": "file",
              "payload": [
                 "absoluteFilePath": "/this/path/does/not/exist.png",
                 "mimeType": "image/png"
