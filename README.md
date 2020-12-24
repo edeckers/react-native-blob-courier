@@ -209,6 +209,48 @@ console.log(fetchedResult);
 // }
 ```
 
+## Multipart upload
+
+Sometimes order of multipart fields matters, and Blob Courier respects the order in which parts are provided. There is a catch though: when object keys are regular strings they are kept in the order they were added _unless_ the keys are strings containing numbers, e.g.:
+
+```tsx
+Object.keys({
+  "b": "some_value1",
+  "c": "some_value2",
+  "a": "some_value3",
+})
+
+// ['b', 'c', 'a']
+
+Object.keys({
+  "b": "some_value1",
+  "c": "some_value2",
+  "a": "some_value3",
+  "3": "some_value4",
+  "2": "some_value5",
+  "1": "some_value6",
+});
+
+// ['1', '2', '3', 'b', 'c', 'a']
+```
+
+The way to work around this, is to wrap _all_ keys in a `Symbol`, by using `Symbol.for`. Do not use `Symbol(<value>)`, this will not work, e.g.:
+
+```tsx
+Object.getOwnPropertySymbols({
+  [Symbol.for("b")]: "some_value1",
+  [Symbol.for("c")]: "some_value2",
+  [Symbol.for("a")]: "some_value3",
+  [Symbol.for("3")]: "some_value4",
+  [Symbol.for("2")]: "some_value5",
+  [Symbol.for("1")]: "some_value6",
+});
+
+// [Symbol('b'), Symbol('c'), Symbol('a'), Symbol('3'), Symbol('2'), Symbol('1')]
+
+```
+
+
 ## Fluent interface
 
 Blob Courier provides a fluent interface, that both protects you from using impossible setting combinations and arguably improves readability.
