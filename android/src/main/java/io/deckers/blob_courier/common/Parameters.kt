@@ -8,6 +8,7 @@ package io.deckers.blob_courier.common
 
 import com.facebook.common.internal.ImmutableMap
 import com.facebook.react.bridge.Promise
+import com.facebook.react.bridge.ReadableArray
 import com.facebook.react.bridge.ReadableMap
 import java.lang.reflect.Type
 
@@ -18,16 +19,16 @@ const val PARAMETER_FILENAME = "filename"
 const val PARAMETER_HEADERS = "headers"
 const val PARAMETER_METHOD = "method"
 const val PARAMETER_MIME_TYPE = "mimeType"
+const val PARAMETER_PART_NAME = "name"
 const val PARAMETER_PART_PAYLOAD = "payload"
+const val PARAMETER_PART_TYPE = "type"
 const val PARAMETER_SETTINGS_PROGRESS_INTERVAL = "progressIntervalMilliseconds"
 const val PARAMETER_TASK_ID = "taskId"
 const val PARAMETER_URL = "url"
 
 private val REQUIRED_PARAMETER_PROCESSORS = ImmutableMap.of(
-  Boolean::class.java.toString(),
-  { input: ReadableMap, parameterName: String -> input.getBoolean(parameterName) },
-  ReadableMap::class.java.toString(),
-  { input: ReadableMap, parameterName: String -> input.getMap(parameterName) },
+  Array::class.java.toString(),
+  { input: ReadableMap, parameterName: String -> input.getArray(parameterName) },
   String::class.java.toString(),
   { input: ReadableMap, parameterName: String -> input.getString(parameterName) }
 )
@@ -50,16 +51,10 @@ fun assertRequiredParameter(input: ReadableMap, type: Type, parameterName: Strin
   )
 }
 
-fun tryRetrieveBoolean(input: ReadableMap, parameterName: String): Boolean {
-  assertRequiredParameter(input, Boolean::class.java, parameterName)
+fun tryRetrieveArray(input: ReadableMap, parameterName: String): ReadableArray? {
+  assertRequiredParameter(input, Array::class.java, parameterName)
 
-  return input.getBoolean(parameterName)
-}
-
-fun tryRetrieveMap(input: ReadableMap, parameterName: String): ReadableMap? {
-  assertRequiredParameter(input, ReadableMap::class.java, parameterName)
-
-  return input.getMap(parameterName)
+  return input.getArray(parameterName)
 }
 
 fun tryRetrieveString(input: ReadableMap, parameterName: String): String? {

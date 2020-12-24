@@ -11,7 +11,7 @@ import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.bridge.WritableMap
 
-const val DEFAULT_PROMISE_TIMEOUT_MILLISECONDS = 10_000L
+const val DEFAULT_PROMISE_TIMEOUT_MILLISECONDS = 50_000L
 
 object Fixtures {
 
@@ -24,10 +24,11 @@ object Fixtures {
   fun createValidUploadTestParameterMap(
     taskId: String,
     localPath: String
-  ): Map<String, Any> = mapOf(
-    "taskId" to taskId,
-    "parts" to mapOf(
-      "file" to mapOf(
+  ) = TestUploadParameterMap(
+    taskId,
+    arrayOf(
+      mapOf(
+        "name" to "file",
         "payload" to mapOf(
           "absoluteFilePath" to localPath,
           "mimeType" to "text/html"
@@ -35,7 +36,7 @@ object Fixtures {
         "type" to "file"
       )
     ),
-    "url" to "https://file.io"
+    "https://file.io"
   )
 
   fun runFetchBlob(

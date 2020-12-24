@@ -9,6 +9,7 @@ package io.deckers.blob_courier
 import android.net.Uri
 import androidx.test.core.app.ApplicationProvider
 import com.facebook.react.bridge.Arguments
+import com.facebook.react.bridge.JavaOnlyArray
 import com.facebook.react.bridge.JavaOnlyMap
 import com.facebook.react.bridge.ReactApplicationContext
 import io.deckers.blob_courier.Fixtures.BooleanPromise
@@ -84,6 +85,7 @@ class BlobCourierModuleTests {
     mockkStatic(Arguments::class)
 
     every { Arguments.createMap() } answers { JavaOnlyMap() }
+    every { Arguments.createArray() } answers { JavaOnlyArray() }
   }
 
   @Test
@@ -336,16 +338,17 @@ class BlobCourierModuleTests {
               val uploadParametersMap =
                 createValidUploadTestParameterMap(taskId, absoluteFilePath)
 
-              val defaultParts = (uploadParametersMap["parts"] as Map<*, *>)
+              val defaultParts = uploadParametersMap.parts
               val partsPlusStringPayload = defaultParts.plus(
-                "test" to mapOf(
+                mapOf(
+                  "name" to "test",
+                  "payload" to "THIS_IS_A_STRING_PAYLOAD",
                   "type" to "string",
-                  "payload" to "THIS_IS_A_STRING_PAYLOAD"
                 )
               )
 
               val uploadParametersWithStringPayloadMap =
-                uploadParametersMap.plus("parts" to partsPlusStringPayload)
+                uploadParametersMap.toMap().plus("parts" to partsPlusStringPayload)
 
               runUploadBlob(
                 ctx,
@@ -409,7 +412,8 @@ class BlobCourierModuleTests {
 
               val uploadParametersMap =
                 createValidUploadTestParameterMap(taskId, absoluteFilePath)
-                  .plus(Pair("url", "https://github.com/edeckers/this-does-not-exist"))
+                  .toMap()
+                  .plus("url" to "https://github.com/edeckers/this-does-not-exist")
                   .toReactMap()
 
               runUploadBlob(
@@ -472,7 +476,10 @@ class BlobCourierModuleTests {
               val uploadParametersMap =
                 createValidUploadTestParameterMap(taskId, absoluteFilePath)
               val requestWithUnreachableUrl =
-                uploadParametersMap.plus(Pair("url", "http://127.0.0.1:12345")).toReactMap()
+                uploadParametersMap
+                  .toMap()
+                  .plus("url" to "http://127.0.0.1:12345")
+                  .toReactMap()
 
               runUploadBlob(
                 ctx,
@@ -525,7 +532,8 @@ class BlobCourierModuleTests {
 
   @Test
   fun missing_required_upload_parameters_rejects_fetch_promise() {
-    val allValuesMapping = createValidUploadTestParameterMap("some-task-id", "/tmp")
+    val allValuesMapping =
+      createValidUploadTestParameterMap("some-task-id", "/tmp").toMap()
 
     val missingKeyCombinations = createAllSingleMissingKeyCombinations(allValuesMapping)
 

@@ -31,13 +31,13 @@ class BlobUploader(
     val mpb = MultipartBody.Builder()
       .setType(MultipartBody.FORM)
 
-    uploaderParameters.parts.keys.forEach { multipartName ->
-      if (uploaderParameters.parts[multipartName]?.payload is FilePart) {
-        val payload = uploaderParameters.parts[multipartName]?.payload as FilePart
+    uploaderParameters.parts.forEach { part ->
+      if (part.payload is FilePart) {
+        val payload = part.payload
 
         payload.run {
           mpb.addFormDataPart(
-            multipartName,
+            part.name,
             payload.filename,
             InputStreamRequestBody(
               payload.mimeType.let { MediaType.parse(it) }
@@ -49,14 +49,11 @@ class BlobUploader(
         }
       }
 
-      if (uploaderParameters.parts[multipartName]?.payload is DataPart) {
-        val payload = uploaderParameters.parts[multipartName]?.payload as DataPart
+      if (part.payload is DataPart) {
+        val payload = part.payload
 
         payload.run {
-          mpb.addFormDataPart(
-            multipartName,
-            payload.value
-          )
+          mpb.addFormDataPart(part.name, payload.value)
         }
       }
     }
