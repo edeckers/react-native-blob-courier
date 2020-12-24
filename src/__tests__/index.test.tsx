@@ -482,7 +482,38 @@ describe('Given a regular upload request', () => {
     verifyPropertyExistsAndIsDefined(calledWithParameters.parts, multipartName);
   });
 
-  testAsync('JSON multi-part payloads are serialized', async () => {
+  testAsync(
+    'Multipart fields are sent to native code in the order they were provided',
+    async () => {
+      const multipartName1 = 'bbbbb';
+      const multipartName2 = 'aaaaa';
+
+      await BlobCourier.uploadParts({
+        ...DEFAULT_UPLOAD_REQUEST,
+        parts: {
+          [multipartName1]: {
+            payload: 'part1',
+            type: 'string',
+          },
+          [multipartName2]: {
+            payload: 'part2',
+            type: 'string',
+          },
+        },
+      });
+
+      const calledWithParameters = getLastMockCallFirstParameter(
+        BlobCourierNative.uploadBlob
+      );
+
+      expect(Object.keys(calledWithParameters.parts)).toEqual([
+        multipartName1,
+        multipartName2,
+      ]);
+    }
+  );
+
+  testAsync('JSON multipart payloads are serialized', async () => {
     await BlobCourier.uploadParts({
       ...DEFAULT_UPLOAD_REQUEST,
       parts: {
@@ -503,7 +534,7 @@ describe('Given a regular upload request', () => {
   });
 
   testAsync(
-    'The native module is called with all required multi part-values',
+    'The native module is called with all required multipart-values',
     async () => {
       const progressIntervalMilliseconds = Math.random();
       await BlobCourier.uploadParts(DEFAULT_MULTIPART_UPLOAD_REQUEST);
@@ -601,7 +632,7 @@ describe('Given a fluent upload request', () => {
       }
     );
 
-    describe('And a progress updater is provided provided', () => {
+    describe('And a progress updater is provided', () => {
       testAsync(
         'The native module is called with all required multi part-values and the provided settings',
         async () => {
@@ -629,7 +660,7 @@ describe('Given a fluent upload request', () => {
     });
 
     testAsync(
-      'The native module is called with all required multi part-values and the provided settings',
+      'The native module is called with all required multipart-values and the provided settings',
       async () => {
         const progressIntervalMilliseconds = Math.random();
         await BlobCourier.settings({
