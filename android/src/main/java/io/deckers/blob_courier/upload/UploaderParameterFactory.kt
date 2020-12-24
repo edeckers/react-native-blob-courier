@@ -6,11 +6,13 @@
  */
 package io.deckers.blob_courier.upload
 
+import android.content.ContentResolver
 import android.net.Uri
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReadableArray
 import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.bridge.ReadableType
+import io.deckers.blob_courier.common.DEFAULT_MIME_TYPE
 import io.deckers.blob_courier.common.DEFAULT_PROGRESS_TIMEOUT_MILLISECONDS
 import io.deckers.blob_courier.common.DEFAULT_UPLOAD_METHOD
 import io.deckers.blob_courier.common.ERROR_INVALID_VALUE
@@ -33,6 +35,8 @@ import io.deckers.blob_courier.common.processUnexpectedEmptyValue
 import io.deckers.blob_courier.common.tryRetrieveArray
 import io.deckers.blob_courier.common.tryRetrieveString
 import java.net.URL
+import okhttp3.MediaType
+import okhttp3.MultipartBody
 
 private const val PARAMETER_PARTS = "parts"
 private const val PARAMETER_RETURN_RESPONSE = "returnResponse"
@@ -103,6 +107,40 @@ data class UploaderParameters(
   val returnResponse: Boolean,
   val progressInterval: Int
 )
+
+fun UploaderParameters.toMultipartBody(contentResolver: ContentResolver): MultipartBody =
+  MultipartBody.Builder()
+    .setType(MultipartBody.FORM).let {
+
+      parts.forEach { part ->
+        if (part.payload is FilePart) {
+          val payload = part.payload
+
+          payload.run {
+            it.addFormDataPart(
+              part.name,
+              payload.filename,
+              InputStreamRequestBody(
+                payload.mimeType.let(MediaType::parse)
+                  ?: MediaType.get(DEFAULT_MIME_TYPE),
+                contentResolver,
+                payload.absoluteFilePath
+              )
+            )
+          }
+        }
+
+        if (part.payload is DataPart) {
+          val payload = part.payload
+
+          payload.run {
+            it.addFormDataPart(part.name, payload.value)
+          }
+        }
+      }
+
+      it
+    }.build()
 
 private fun filterReadableMapsFromReadableArray(parts: ReadableArray): Array<ReadableMap> =
   (0 until parts.size()).fold(

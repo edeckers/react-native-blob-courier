@@ -8,14 +8,11 @@ package io.deckers.blob_courier.upload
 
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
-import io.deckers.blob_courier.common.DEFAULT_MIME_TYPE
 import io.deckers.blob_courier.common.ERROR_UNEXPECTED_ERROR
 import io.deckers.blob_courier.common.ERROR_UNEXPECTED_EXCEPTION
 import io.deckers.blob_courier.common.mapHeadersToMap
 import io.deckers.blob_courier.common.toReactMap
 import io.deckers.blob_courier.progress.BlobCourierProgressRequest
-import okhttp3.MediaType
-import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
 
@@ -28,42 +25,11 @@ class BlobUploader(
     uploaderParameters: UploaderParameters,
     promise: Promise,
   ) {
-    val mpb = MultipartBody.Builder()
-      .setType(MultipartBody.FORM)
-
-    uploaderParameters.parts.forEach { part ->
-      if (part.payload is FilePart) {
-        val payload = part.payload
-
-        payload.run {
-          mpb.addFormDataPart(
-            part.name,
-            payload.filename,
-            InputStreamRequestBody(
-              payload.mimeType.let { MediaType.parse(it) }
-                ?: MediaType.get(DEFAULT_MIME_TYPE),
-              reactContext.contentResolver,
-              payload.absoluteFilePath
-            )
-          )
-        }
-      }
-
-      if (part.payload is DataPart) {
-        val payload = part.payload
-
-        payload.run {
-          mpb.addFormDataPart(part.name, payload.value)
-        }
-      }
-    }
-
-    val multipartBody = mpb.build()
 
     val requestBody = BlobCourierProgressRequest(
       reactContext,
       uploaderParameters.taskId,
-      multipartBody,
+      uploaderParameters.toMultipartBody(reactContext.contentResolver),
       uploaderParameters.progressInterval
     )
 
