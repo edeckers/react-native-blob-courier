@@ -7,6 +7,7 @@
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.platform.app.InstrumentationRegistry
 import com.facebook.react.bridge.Arguments
+import com.facebook.react.bridge.JavaOnlyArray
 import com.facebook.react.bridge.JavaOnlyMap
 import com.facebook.react.bridge.ReactApplicationContext
 import io.deckers.blob_courier.DEFAULT_PROMISE_TIMEOUT_MILLISECONDS
@@ -48,6 +49,7 @@ class BlobCourierInstrumentedModuleTests {
     mockkStatic(Arguments::class)
 
     every { Arguments.createMap() } answers { JavaOnlyMap() }
+    every { Arguments.createArray() } answers { JavaOnlyArray() }
   }
 
   @Test

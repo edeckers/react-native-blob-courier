@@ -9,6 +9,7 @@ package io.deckers.blob_courier
 import android.net.Uri
 import androidx.test.core.app.ApplicationProvider
 import com.facebook.react.bridge.Arguments
+import com.facebook.react.bridge.JavaOnlyArray
 import com.facebook.react.bridge.JavaOnlyMap
 import com.facebook.react.bridge.ReactApplicationContext
 import io.deckers.blob_courier.Fixtures.BooleanPromise
@@ -18,12 +19,16 @@ import io.deckers.blob_courier.Fixtures.runFetchBlob
 import io.deckers.blob_courier.Fixtures.runUploadBlob
 import io.deckers.blob_courier.common.toReactMap
 import io.deckers.blob_courier.upload.InputStreamRequestBody
+import io.deckers.blob_courier.upload.UploaderParameterFactory
+import io.deckers.blob_courier.upload.toMultipartBody
 import io.mockk.every
 import io.mockk.mockkStatic
 import java.util.UUID
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import okhttp3.MediaType
+import okhttp3.MultipartBody
+import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -35,6 +40,20 @@ import org.robolectric.Shadows
 import org.robolectric.annotation.Config
 
 const val SOME_FILE_THAT_IS_ALWAYS_AVAILABLE = "file:///system/etc/fonts.xml"
+
+private fun mapMultipartsToNames(parts: List<MultipartBody.Part>) =
+  parts.fold(
+    emptyArray(),
+    { names: Array<String>, part: MultipartBody.Part ->
+      val contentDisposition = part.headers()?.get("Content-Disposition")
+
+      val matches = contentDisposition?.let(Regex("name=\"(\\w+)\"")::find)
+
+      val fieldName = matches?.destructured?.toList()?.first()
+
+      fieldName?.let(names::plus) ?: names
+    }
+  )
 
 private fun retrieveMissingKeys(
   expected: Map<*, *>,
@@ -84,6 +103,7 @@ class BlobCourierModuleTests {
     mockkStatic(Arguments::class)
 
     every { Arguments.createMap() } answers { JavaOnlyMap() }
+    every { Arguments.createArray() } answers { JavaOnlyArray() }
   }
 
   @Test
@@ -336,16 +356,17 @@ class BlobCourierModuleTests {
               val uploadParametersMap =
                 createValidUploadTestParameterMap(taskId, absoluteFilePath)
 
-              val defaultParts = (uploadParametersMap["parts"] as Map<*, *>)
+              val defaultParts = uploadParametersMap.parts
               val partsPlusStringPayload = defaultParts.plus(
-                "test" to mapOf(
+                mapOf(
+                  "name" to "test",
+                  "payload" to "THIS_IS_A_STRING_PAYLOAD",
                   "type" to "string",
-                  "payload" to "THIS_IS_A_STRING_PAYLOAD"
                 )
               )
 
               val uploadParametersWithStringPayloadMap =
-                uploadParametersMap.plus("parts" to partsPlusStringPayload)
+                uploadParametersMap.toMap().plus("parts" to partsPlusStringPayload)
 
               runUploadBlob(
                 ctx,
@@ -409,7 +430,8 @@ class BlobCourierModuleTests {
 
               val uploadParametersMap =
                 createValidUploadTestParameterMap(taskId, absoluteFilePath)
-                  .plus(Pair("url", "https://github.com/edeckers/this-does-not-exist"))
+                  .toMap()
+                  .plus("url" to "https://github.com/edeckers/this-does-not-exist")
                   .toReactMap()
 
               runUploadBlob(
@@ -472,7 +494,10 @@ class BlobCourierModuleTests {
               val uploadParametersMap =
                 createValidUploadTestParameterMap(taskId, absoluteFilePath)
               val requestWithUnreachableUrl =
-                uploadParametersMap.plus(Pair("url", "http://127.0.0.1:12345")).toReactMap()
+                uploadParametersMap
+                  .toMap()
+                  .plus("url" to "http://127.0.0.1:12345")
+                  .toReactMap()
 
               runUploadBlob(
                 ctx,
@@ -525,7 +550,8 @@ class BlobCourierModuleTests {
 
   @Test
   fun missing_required_upload_parameters_rejects_fetch_promise() {
-    val allValuesMapping = createValidUploadTestParameterMap("some-task-id", "/tmp")
+    val allValuesMapping =
+      createValidUploadTestParameterMap("some-task-id", "/tmp").toMap()
 
     val missingKeyCombinations = createAllSingleMissingKeyCombinations(allValuesMapping)
 
@@ -644,6 +670,47 @@ class BlobCourierModuleTests {
     }
 
     assertTrue(result.second, result.first)
+  }
+
+  @Test
+  fun multipart_parameters_must_be_sent_to_the_server_in_the_order_they_were_provided() {
+    val uploadParameterReadableMap =
+      createValidUploadTestParameterMap("taskId", "/some/local/path")
+        .toMap()
+        .plus(
+          "parts" to arrayOf(
+            mapOf("name" to "bbbbb", "type" to "string", "payload" to "something0"),
+            mapOf("name" to "ccccc", "type" to "string", "payload" to "something1"),
+            mapOf("name" to "aaaaa", "type" to "string", "payload" to "something2")
+          )
+        )
+        .toReactMap()
+
+    val uploaderParameters =
+      UploaderParameterFactory().fromInput(
+        uploadParameterReadableMap,
+        Fixtures.EitherPromise(
+          { /* noop */ },
+          { /* noop */ }
+        )
+      )
+
+    val ctx = ReactApplicationContext(ApplicationProvider.getApplicationContext())
+
+    if (uploaderParameters == null) {
+      assertTrue("Invalid uploader parameters", false)
+      return
+    }
+
+    val uploaderMultipartBody = uploaderParameters.toMultipartBody(ctx.contentResolver)
+
+    val names = mapMultipartsToNames(uploaderMultipartBody.parts())
+
+    assertArrayEquals(
+      "Sent array of upload part names differs from provided part names",
+      arrayOf("bbbbb", "ccccc", "aaaaa"),
+      names
+    )
   }
 
   @Test // This is the faster, and less thorough version of the Instrumented test with the same name

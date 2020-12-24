@@ -6,4 +6,4 @@
  */
 package io.deckers.blob_courier.upload
 
-data class Part(val payload: PartPayload)
+data class Part(val name: String, val payload: PartPayload)

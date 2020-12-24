@@ -6,91 +6,101 @@
  */
 package io.deckers.blob_courier.upload
 
+import android.content.ContentResolver
 import android.net.Uri
 import com.facebook.react.bridge.Promise
+import com.facebook.react.bridge.ReadableArray
 import com.facebook.react.bridge.ReadableMap
+import com.facebook.react.bridge.ReadableType
+import io.deckers.blob_courier.common.DEFAULT_MIME_TYPE
 import io.deckers.blob_courier.common.DEFAULT_PROGRESS_TIMEOUT_MILLISECONDS
 import io.deckers.blob_courier.common.DEFAULT_UPLOAD_METHOD
+import io.deckers.blob_courier.common.ERROR_INVALID_VALUE
 import io.deckers.blob_courier.common.ERROR_MISSING_REQUIRED_PARAMETER
+import io.deckers.blob_courier.common.ERROR_UNEXPECTED_EMPTY_VALUE
 import io.deckers.blob_courier.common.PARAMETER_ABSOLUTE_FILE_PATH
 import io.deckers.blob_courier.common.PARAMETER_FILENAME
 import io.deckers.blob_courier.common.PARAMETER_HEADERS
 import io.deckers.blob_courier.common.PARAMETER_METHOD
 import io.deckers.blob_courier.common.PARAMETER_MIME_TYPE
+import io.deckers.blob_courier.common.PARAMETER_PART_NAME
 import io.deckers.blob_courier.common.PARAMETER_PART_PAYLOAD
+import io.deckers.blob_courier.common.PARAMETER_PART_TYPE
 import io.deckers.blob_courier.common.PARAMETER_SETTINGS_PROGRESS_INTERVAL
 import io.deckers.blob_courier.common.PARAMETER_TASK_ID
 import io.deckers.blob_courier.common.PARAMETER_URL
 import io.deckers.blob_courier.common.filterHeaders
 import io.deckers.blob_courier.common.getMapInt
 import io.deckers.blob_courier.common.processUnexpectedEmptyValue
-import io.deckers.blob_courier.common.tryRetrieveMap
+import io.deckers.blob_courier.common.tryRetrieveArray
 import io.deckers.blob_courier.common.tryRetrieveString
 import java.net.URL
+import okhttp3.MediaType
+import okhttp3.MultipartBody
 
 private const val PARAMETER_PARTS = "parts"
 private const val PARAMETER_RETURN_RESPONSE = "returnResponse"
 
-private fun verifyFilePart(part: ReadableMap, promise: Promise): Boolean {
+private fun verifyFilePart(part: ReadableMap): Triple<Boolean, String, String> {
   if (!part.hasKey(PARAMETER_PART_PAYLOAD)) {
-    promise.reject(ERROR_MISSING_REQUIRED_PARAMETER, "part.$PARAMETER_PART_PAYLOAD")
-    return false
+    return Triple(false, ERROR_MISSING_REQUIRED_PARAMETER, "part.$PARAMETER_PART_PAYLOAD")
   }
 
   val payload = part.getMap(PARAMETER_PART_PAYLOAD)!!
   if (!payload.hasKey(PARAMETER_ABSOLUTE_FILE_PATH)) {
-    promise.reject(ERROR_MISSING_REQUIRED_PARAMETER, "part.$PARAMETER_ABSOLUTE_FILE_PATH")
-    return false
+    return Triple(false, ERROR_MISSING_REQUIRED_PARAMETER, "part.$PARAMETER_ABSOLUTE_FILE_PATH")
   }
 
   if (!payload.hasKey(PARAMETER_MIME_TYPE)) {
-    promise.reject(ERROR_MISSING_REQUIRED_PARAMETER, "part.$PARAMETER_MIME_TYPE")
-    return false
+    return Triple(false, ERROR_MISSING_REQUIRED_PARAMETER, "part.$PARAMETER_MIME_TYPE")
   }
 
   if (payload.getString(PARAMETER_ABSOLUTE_FILE_PATH).isNullOrEmpty()) {
-    processUnexpectedEmptyValue(promise, PARAMETER_ABSOLUTE_FILE_PATH)
-    return false
+    return Triple(false, ERROR_UNEXPECTED_EMPTY_VALUE, "part.$PARAMETER_ABSOLUTE_FILE_PATH")
   }
 
   if (payload.getString(PARAMETER_MIME_TYPE).isNullOrEmpty()) {
-    processUnexpectedEmptyValue(promise, PARAMETER_MIME_TYPE)
-    return false
+    return Triple(false, ERROR_UNEXPECTED_EMPTY_VALUE, "part.$PARAMETER_MIME_TYPE")
   }
 
-  return true
+  return Triple(true, "", "")
 }
 
-private fun verifyStringPart(part: ReadableMap, promise: Promise): Boolean {
+private fun verifyStringPart(part: ReadableMap): Triple<Boolean, String, String> {
   if (part.hasKey(PARAMETER_PART_PAYLOAD)) {
-    return true
+    return Triple(true, "", "")
   }
 
-  promise.reject(ERROR_MISSING_REQUIRED_PARAMETER, "part.$PARAMETER_PART_PAYLOAD")
-  return false
+  return Triple(false, ERROR_MISSING_REQUIRED_PARAMETER, "part.$PARAMETER_PART_PAYLOAD")
 }
 
-private fun verifyPart(part: ReadableMap?, promise: Promise): Boolean {
+private fun verifyPart(part: ReadableMap?): Triple<Boolean, String, String> {
   if (part == null) {
-    processUnexpectedEmptyValue(promise, "part")
-    return false
+    return Triple(false, ERROR_UNEXPECTED_EMPTY_VALUE, "part")
   }
 
-  if (!part.hasKey("type")) {
-    promise.reject(ERROR_MISSING_REQUIRED_PARAMETER, "part.type")
-    return false
+  if (!part.hasKey(PARAMETER_PART_NAME)) {
+    return Triple(false, ERROR_MISSING_REQUIRED_PARAMETER, "part.$PARAMETER_PART_NAME")
   }
 
-  if (part.getString("type") == "file") {
-    return verifyFilePart(part, promise)
+  if (!part.hasKey(PARAMETER_PART_PAYLOAD)) {
+    return Triple(false, ERROR_MISSING_REQUIRED_PARAMETER, "part.$PARAMETER_PART_PAYLOAD")
   }
 
-  return verifyStringPart(part, promise)
+  if (!part.hasKey(PARAMETER_PART_TYPE)) {
+    return Triple(false, ERROR_MISSING_REQUIRED_PARAMETER, "part.$PARAMETER_PART_TYPE")
+  }
+
+  if (part.getString(PARAMETER_PART_TYPE) == "file") {
+    return verifyFilePart(part)
+  }
+
+  return verifyStringPart(part)
 }
 
 data class UploaderParameters(
   val taskId: String,
-  val parts: Map<String, Part>,
+  val parts: List<Part>,
   val uri: URL,
   val method: String,
   val headers: Map<String, String>,
@@ -98,29 +108,71 @@ data class UploaderParameters(
   val progressInterval: Int
 )
 
-private fun createFilePayload(payload: ReadableMap, promise: Promise): FilePart? {
-  if (!payload.hasKey(PARAMETER_ABSOLUTE_FILE_PATH)) {
-    promise.reject(ERROR_MISSING_REQUIRED_PARAMETER, "payload.$PARAMETER_ABSOLUTE_FILE_PATH")
-    return null
+fun UploaderParameters.toMultipartBody(contentResolver: ContentResolver): MultipartBody =
+  MultipartBody.Builder()
+    .setType(MultipartBody.FORM).let {
+
+      parts.forEach { part ->
+        if (part.payload is FilePart) {
+          val payload = part.payload
+
+          payload.run {
+            it.addFormDataPart(
+              part.name,
+              payload.filename,
+              InputStreamRequestBody(
+                payload.mimeType.let(MediaType::parse)
+                  ?: MediaType.get(DEFAULT_MIME_TYPE),
+                contentResolver,
+                payload.absoluteFilePath
+              )
+            )
+          }
+        }
+
+        if (part.payload is DataPart) {
+          val payload = part.payload
+
+          payload.run {
+            it.addFormDataPart(part.name, payload.value)
+          }
+        }
+      }
+
+      it
+    }.build()
+
+private fun filterReadableMapsFromReadableArray(parts: ReadableArray): Array<ReadableMap> =
+  (0 until parts.size()).fold(
+    emptyArray(),
+    { p, i ->
+      if (parts.getType(i) == ReadableType.Map)
+        p.plus(parts.getMap(i)!!)
+      else p
+    }
+  )
+
+private fun verifyParts(parts: ReadableArray, promise: Promise): Boolean {
+  val mapParts = filterReadableMapsFromReadableArray(parts)
+
+  val diff = parts.size() - mapParts.size
+  if (diff > 0) {
+    promise.reject(ERROR_INVALID_VALUE, "$diff provided part(s) are not ReadableMap objects")
+    return false
   }
 
-  if (!payload.hasKey(PARAMETER_MIME_TYPE)) {
-    promise.reject(ERROR_MISSING_REQUIRED_PARAMETER, "payload.$PARAMETER_MIME_TYPE")
-    return null
+  val failedPartVerifications =
+    mapParts.map(::verifyPart).filter { verification -> !verification.first }
+  if (failedPartVerifications.isNotEmpty()) {
+    val firstFailure = failedPartVerifications.first()
+    promise.reject(firstFailure.second, firstFailure.third)
+    return false
   }
 
-  val absoluteFilePath = payload.getString(PARAMETER_ABSOLUTE_FILE_PATH)
-  if (absoluteFilePath.isNullOrEmpty()) {
-    processUnexpectedEmptyValue(promise, PARAMETER_ABSOLUTE_FILE_PATH)
-    return null
-  }
+  return true
+}
 
-  val mimeType = payload.getString(PARAMETER_MIME_TYPE)
-  if (mimeType.isNullOrEmpty()) {
-    processUnexpectedEmptyValue(promise, PARAMETER_MIME_TYPE)
-    return null
-  }
-
+private fun createFilePayload(payload: ReadableMap): FilePart? {
   val fileUrl = Uri.parse(payload.getString(PARAMETER_ABSOLUTE_FILE_PATH)!!)
   val fileUrlWithScheme =
     if (fileUrl.scheme == null) Uri.parse("file://$fileUrl") else fileUrl
@@ -130,6 +182,7 @@ private fun createFilePayload(payload: ReadableMap, promise: Promise): FilePart?
       payload.getString(PARAMETER_FILENAME)
         ?: fileUrl.lastPathSegment
       ) else fileUrl.lastPathSegment
+  val mimeType = payload.getString(PARAMETER_MIME_TYPE)!!
 
   if (fileUrlWithScheme == null) {
     return null
@@ -142,39 +195,23 @@ private fun createFilePayload(payload: ReadableMap, promise: Promise): FilePart?
   return FilePart(fileUrlWithScheme, filename, mimeType)
 }
 
-private fun createPart(part: ReadableMap, promise: Promise): Part? {
-  if (!verifyPart(part, promise)) {
-    return null
-  }
+private fun createPart(part: ReadableMap): Part {
+  val name = part.getString(PARAMETER_PART_NAME)!!
 
-  if (!part.hasKey(PARAMETER_PART_PAYLOAD)) {
-    promise.reject(ERROR_MISSING_REQUIRED_PARAMETER, "part.$PARAMETER_PART_PAYLOAD")
-    return null
-  }
-
-  val maybePayload = when (part.getString("type")) {
-    "file" -> part.getMap(PARAMETER_PART_PAYLOAD)?.let { createFilePayload(it, promise) }
+  val payload = when (part.getString(PARAMETER_PART_TYPE)) {
+    "file" -> part.getMap(PARAMETER_PART_PAYLOAD)?.let(::createFilePayload)
     else -> DataPart(part.getString(PARAMETER_PART_PAYLOAD) ?: "")
-  }
+  }!!
 
-  return maybePayload?.let { it -> Part(it) }
+  return Part(name, payload)
 }
 
-private fun createParts(maybeParts: ReadableMap, promise: Promise): Map<String, Part> =
-  maybeParts.toHashMap().keys.fold(
-    emptyMap(),
-    { p, multipartName ->
-      val maybePart = maybeParts.getMap(multipartName)
-
-      val px = maybePart?.let { createPart(maybePart, promise) }
-
-      px?.let { p.plus(multipartName to it) } ?: p
-    }
-  )
+private fun createParts(parts: ReadableArray): List<Part> =
+  filterReadableMapsFromReadableArray(parts).map(::createPart)
 
 private fun retrieveRequiredParametersOrThrow(input: ReadableMap):
-  Triple<ReadableMap?, String?, String?> {
-    val rawParts = tryRetrieveMap(input, PARAMETER_PARTS)
+  Triple<ReadableArray?, String?, String?> {
+    val rawParts = tryRetrieveArray(input, PARAMETER_PARTS)
     val taskId = tryRetrieveString(input, PARAMETER_TASK_ID)
     val url = tryRetrieveString(input, PARAMETER_URL)
 
@@ -182,9 +219,9 @@ private fun retrieveRequiredParametersOrThrow(input: ReadableMap):
   }
 
 private fun validateRequiredParameters(
-  parameters: Triple<ReadableMap?, String?, String?>,
+  parameters: Triple<ReadableArray?, String?, String?>,
   promise: Promise
-): Triple<ReadableMap, String, String>? {
+): Triple<ReadableArray, String, String>? {
   val (rawParts, taskId, url) = parameters
 
   if (taskId == null) {
@@ -232,7 +269,11 @@ class UploaderParameterFactory {
           DEFAULT_PROGRESS_TIMEOUT_MILLISECONDS
         )
 
-      val parts = createParts(rawParts, promise)
+      if (!verifyParts(rawParts, promise)) {
+        return null
+      }
+
+      val parts = createParts(rawParts)
 
       val uri = URL(url)
 

@@ -10,6 +10,7 @@ import android.app.DownloadManager
 import android.content.Context
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.ReactApplicationContext
+import com.facebook.react.bridge.WritableArray
 import com.facebook.react.bridge.WritableMap
 import com.facebook.react.modules.core.DeviceEventManagerModule
 import okhttp3.Headers
@@ -38,12 +39,36 @@ fun notifyBridgeOfProgress(
 fun createDownloadManager(context: Context) =
   context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
 
+fun Array<*>.toReactArray(): WritableArray {
+  val thisMap = this
+
+  return Arguments.createArray().apply {
+    thisMap.forEach { v ->
+      when {
+        (v is Array<*>) -> {
+          pushArray(v.toReactArray())
+        }
+        (v is String) ->
+          pushString(v)
+        (v is Map<*, *>) -> {
+          pushMap(v.toReactMap())
+        }
+        else ->
+          pushString(v.toString())
+      }
+    }
+  }
+}
+
 fun Map<*, *>.toReactMap(): WritableMap {
   val thisMap = this
 
   return Arguments.createMap().apply {
     thisMap.forEach { (k, v) ->
       when {
+        (v is Array<*>) -> {
+          putArray(k.toString(), v.toReactArray())
+        }
         (v is String) ->
           putString(k.toString(), v)
         (v is Map<*, *>) -> {

@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import type { BlobNamedMultipartArray, BlobMultipart } from './ExposedTypes';
+
 // Taken from https://github.com/joltup/rn-fetch-blob/blob/master/utils/uuid.js
 const createUuidPart = () => Math.random().toString(36).substring(2, 15);
 
@@ -69,4 +71,49 @@ export const fallbackObjects = (
       [c]: primary[c] !== undefined ? primary[c] : fallback[c],
     };
   }, {});
+};
+
+export const convertMappedMultipartsWithSymbolizedKeysToArray = (mappedParts: {
+  [key: string]: BlobMultipart;
+}): BlobNamedMultipartArray => {
+  const symbolKeys = Object.getOwnPropertySymbols(mappedParts);
+
+  return symbolKeys.map((symbolName: any) => ({
+    ...mappedParts[symbolName],
+    name: Symbol.keyFor(symbolName) ?? '',
+  }));
+};
+
+export const sanitizeMappedMultiparts = (mapped: {
+  [key: string]: BlobMultipart;
+}) => {
+  const regularKeys = Object.keys(mapped);
+  const symbolKeys = Object.getOwnPropertySymbols(mapped);
+
+  const receivedRegularKeys = regularKeys.length > 0;
+  const receivedSymbolKeys = symbolKeys.length > 0;
+
+  const receivedMixedKeys = receivedRegularKeys && receivedSymbolKeys;
+
+  const receivedInvalidSymbols =
+    receivedSymbolKeys &&
+    symbolKeys.map(Symbol.keyFor).filter((_) => _ === undefined).length > 0;
+
+  if (receivedMixedKeys) {
+    throw new Error('Either use all Symbols or all Strings as multipart keys');
+  }
+
+  if (receivedInvalidSymbols) {
+    throw new Error('Use Symbol.for when using Symbols as key for multiparts');
+  }
+
+  return regularKeys.length > 0
+    ? regularKeys.reduce(
+        (p, c) => ({
+          ...p,
+          [Symbol.for(c)]: mapped[c],
+        }),
+        {}
+      )
+    : mapped;
 };

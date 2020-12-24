@@ -4,7 +4,6 @@
 //  LICENSE file in the root directory of this source tree.
 import Foundation
 
-// swiftlint:disable type_body_length
 @objc(BlobCourier)
 open class BlobCourier: NSObject {
   static let downloadTypeUnmanaged  = "Unmanaged"
@@ -144,7 +143,7 @@ open class BlobCourier: NSObject {
 
   func buildRequestDataForFileUpload(
     url: URL,
-    parts: NSDictionary,
+    parts: NSArray,
     headers: NSDictionary) throws -> (URLRequest, Data) {
     let boundary = UUID().uuidString
 
@@ -162,9 +161,9 @@ open class BlobCourier: NSObject {
 
     var data = Data()
 
-    var index = 0
-    for (key, value) in parts {
-      if let paramName = key as? String, let part = value as? [String: Any] {
+    for value in parts {
+      if let part = value as? [String: Any], let paramName = part["name"] as? String {
+
         if part["type"] as? String == "file" {
           let payload = part[BlobCourier.parameterPartPayload] as? [String: String] ?? [:]
           let absoluteFilePath = payload[BlobCourier.parameterAbsoluteFilePath]!
@@ -215,7 +214,7 @@ open class BlobCourier: NSObject {
 
     let urlObject = URL(string: url)!
 
-    let parts = (input[BlobCourier.parameterParts] as? NSDictionary) ?? NSDictionary()
+    let parts = (input[BlobCourier.parameterParts] as? NSArray) ?? NSArray()
 
     let returnResponse = (input[BlobCourier.parameterReturnResponse] as? Bool) ?? false
 
@@ -267,7 +266,7 @@ open class BlobCourier: NSObject {
   ) {
     do {
       try assertRequiredParameter(
-        input: input, type: "NSDictionary", parameterName: BlobCourier.parameterParts)
+        input: input, type: "NSArray", parameterName: BlobCourier.parameterParts)
       try assertRequiredParameter(
         input: input, type: "String", parameterName: BlobCourier.parameterTaskId)
       try assertRequiredParameter(

@@ -4,7 +4,11 @@
  * This source code is licensed under the MPL-2.0 license found in the
  * LICENSE file in the root directory of this source tree.
  */
-import { uuid } from '../Utils';
+import {
+  convertMappedMultipartsWithSymbolizedKeysToArray,
+  sanitizeMappedMultiparts,
+  uuid,
+} from '../Utils';
 import {
   ANDROID_DOWNLOAD_MANAGER_FALLBACK_PARAMETERS,
   BLOB_COURIER_PROGRESS_EVENT_NAME,
@@ -18,7 +22,11 @@ import {
 import { dict } from '../Extensions';
 import { NativeEventEmitter, NativeModules } from 'react-native';
 import BlobCourier from '../index';
-import type { BlobMultipartUploadRequest, TargetType } from 'src/ExposedTypes';
+import type {
+  BlobMultipartArrayUploadRequest,
+  BlobMultipartMapUploadRequest,
+  TargetType,
+} from 'src/ExposedTypes';
 
 const {
   BlobCourier: BlobCourierNative,
@@ -41,7 +49,7 @@ const DEFAULT_UPLOAD_REQUEST = {
   url: 'https://github.com/edeckers/react-native-blob-courier',
 };
 
-const DEFAULT_MULTIPART_UPLOAD_REQUEST: BlobMultipartUploadRequest = {
+const DEFAULT_MULTIPART_UPLOAD_REQUEST: BlobMultipartMapUploadRequest = {
   parts: {
     file: {
       payload: {
@@ -53,6 +61,13 @@ const DEFAULT_MULTIPART_UPLOAD_REQUEST: BlobMultipartUploadRequest = {
     },
   },
   url: 'https://github.com/edeckers/react-native-blob-courier',
+};
+
+const DEFAULT_MULTIPART_ARRAY_UPLOAD_REQUEST: BlobMultipartArrayUploadRequest = {
+  ...DEFAULT_MULTIPART_UPLOAD_REQUEST,
+  parts: convertMappedMultipartsWithSymbolizedKeysToArray(
+    sanitizeMappedMultiparts(DEFAULT_MULTIPART_UPLOAD_REQUEST.parts)
+  ),
 };
 
 const RANDOM_VALUE_GENERATORS: { [key: string]: () => any } = {
@@ -449,7 +464,9 @@ describe('Given a regular upload request', () => {
         DEFAULT_MULTIPART_UPLOAD_REQUEST
       );
 
-      expect(parameterIntersection).toEqual(DEFAULT_MULTIPART_UPLOAD_REQUEST);
+      expect(parameterIntersection).toEqual(
+        DEFAULT_MULTIPART_ARRAY_UPLOAD_REQUEST
+      );
       verifyPropertyExistsAndIsDefined(calledWithParameters, 'taskId');
     }
   );
@@ -461,13 +478,12 @@ describe('Given a regular upload request', () => {
       BlobCourierNative.uploadBlob
     );
 
-    verifyPropertyExistsAndIsDefined(
-      calledWithParameters.parts,
-      DEFAULT_FILE_MULTIPART_FIELD_NAME
-    );
+    expect(calledWithParameters.parts.map((p: any) => p.name)).toEqual([
+      DEFAULT_FILE_MULTIPART_FIELD_NAME,
+    ]);
   });
 
-  testAsync('Provided multipartNames are used', async () => {
+  testAsync('Provided multipart names are used', async () => {
     const multipartName = RANDOM_VALUE_GENERATORS.string();
 
     await BlobCourier.uploadBlob({
@@ -479,14 +495,207 @@ describe('Given a regular upload request', () => {
       BlobCourierNative.uploadBlob
     );
 
-    verifyPropertyExistsAndIsDefined(calledWithParameters.parts, multipartName);
+    expect(
+      calledWithParameters.parts.find((p: any) => p.name === multipartName)
+    ).toBeDefined();
   });
 
-  testAsync('JSON multi-part payloads are serialized', async () => {
+  describe('And multipart fields are sent to native code', () => {
+    describe('And they are strings', () => {
+      testAsync('they arrive in the order they were provided', async () => {
+        const multipartName1 = 'bbbbb';
+        const multipartName2 = 'ccccc';
+        const multipartName3 = 'aaaaa';
+
+        await BlobCourier.uploadParts({
+          ...DEFAULT_UPLOAD_REQUEST,
+          parts: {
+            [multipartName1]: {
+              payload: 'part1',
+              type: 'string',
+            },
+            [multipartName2]: {
+              payload: 'part2',
+              type: 'string',
+            },
+            [multipartName3]: {
+              payload: 'part3',
+              type: 'string',
+            },
+          },
+        });
+
+        const calledWithParameters = getLastMockCallFirstParameter(
+          BlobCourierNative.uploadBlob
+        );
+
+        expect(calledWithParameters.parts.map((p: any) => p.name)).toEqual([
+          multipartName1,
+          multipartName2,
+          multipartName3,
+        ]);
+      });
+    });
+
+    describe('And they are numbers', () => {
+      testAsync(
+        'they are reordered due to the nature of JavaScript',
+        async () => {
+          const multipartName1 = '3';
+          const multipartName2 = '1';
+          const multipartName3 = '2';
+
+          await BlobCourier.uploadParts({
+            ...DEFAULT_UPLOAD_REQUEST,
+            parts: {
+              [multipartName1]: {
+                payload: 'part1',
+                type: 'string',
+              },
+              [multipartName2]: {
+                payload: 'part2',
+                type: 'string',
+              },
+              [multipartName3]: {
+                payload: 'part3',
+                type: 'string',
+              },
+            },
+          });
+
+          const calledWithParameters = getLastMockCallFirstParameter(
+            BlobCourierNative.uploadBlob
+          );
+
+          expect(calledWithParameters.parts.map((p: any) => p.name)).toEqual([
+            multipartName2,
+            multipartName3,
+            multipartName1,
+          ]);
+        }
+      );
+
+      testAsync(
+        'they are not reordered when they are contained in symbols',
+        async () => {
+          const multipartName1 = '3';
+          const multipartName2 = '1';
+          const multipartName3 = '2';
+
+          const multipartSymbol1 = Symbol.for(multipartName1);
+          const multipartSymbol2 = Symbol.for(multipartName2);
+          const multipartSymbol3 = Symbol.for(multipartName3);
+
+          await BlobCourier.uploadParts({
+            ...DEFAULT_UPLOAD_REQUEST,
+            parts: {
+              [multipartSymbol1]: {
+                payload: 'part1',
+                type: 'string',
+              },
+              [multipartSymbol2]: {
+                payload: 'part2',
+                type: 'string',
+              },
+              [multipartSymbol3]: {
+                payload: 'part3',
+                type: 'string',
+              },
+            },
+          });
+
+          const calledWithParameters = getLastMockCallFirstParameter(
+            BlobCourierNative.uploadBlob
+          );
+
+          expect(calledWithParameters.parts.map((p: any) => p.name)).toEqual([
+            multipartName1,
+            multipartName2,
+            multipartName3,
+          ]);
+        }
+      );
+    });
+
+    testAsync(
+      'And they are mixed Symbols and Strings, the upload rejects',
+      async () => {
+        const multipartName1 = '3';
+        const multipartName2 = '1';
+        const multipartName3 = '2';
+
+        const multipartSymbol1 = Symbol.for(multipartName1);
+        const multipartSymbol2 = Symbol.for(multipartName2);
+
+        try {
+          await BlobCourier.uploadParts({
+            ...DEFAULT_UPLOAD_REQUEST,
+            parts: {
+              [multipartSymbol1]: {
+                payload: 'part1',
+                type: 'string',
+              },
+              [multipartSymbol2]: {
+                payload: 'part2',
+                type: 'string',
+              },
+              [multipartName3]: {
+                payload: 'part3',
+                type: 'string',
+              },
+            },
+          });
+        } catch (e) {
+          expect(e.message).toBeDefined();
+          expect(e.message.length).toBeGreaterThan(0);
+          return;
+        }
+
+        expect(false).toBeTruthy();
+      }
+    );
+
+    testAsync(
+      'And they are Symbols not generated with Symbol.for, the upload rejects',
+      async () => {
+        const multipartName1 = '3';
+        const multipartName2 = '1';
+
+        const multipartSymbol1 = Symbol(multipartName1);
+        const multipartSymbol2 = Symbol(multipartName2);
+
+        try {
+          await BlobCourier.uploadParts({
+            ...DEFAULT_UPLOAD_REQUEST,
+            parts: {
+              [multipartSymbol1]: {
+                payload: 'part1',
+                type: 'string',
+              },
+              [multipartSymbol2]: {
+                payload: 'part2',
+                type: 'string',
+              },
+            },
+          });
+        } catch (e) {
+          expect(e.message).toBeDefined();
+          expect(e.message.length).toBeGreaterThan(0);
+          return;
+        }
+
+        expect(false).toBeTruthy();
+      }
+    );
+  });
+
+  testAsync('JSON multipart payloads are serialized', async () => {
+    const multiPartName = RANDOM_VALUE_GENERATORS.string();
+
     await BlobCourier.uploadParts({
       ...DEFAULT_UPLOAD_REQUEST,
       parts: {
-        some_json_part: {
+        [multiPartName]: {
           type: 'string',
           payload: { a: 1 },
         },
@@ -497,13 +706,15 @@ describe('Given a regular upload request', () => {
       BlobCourierNative.uploadBlob
     );
 
-    expect(typeof calledWithParameters.parts.some_json_part.payload).toEqual(
-      'string'
-    );
+    expect(
+      typeof calledWithParameters.parts.find(
+        (p: any) => p.name === multiPartName
+      ).payload
+    ).toEqual('string');
   });
 
   testAsync(
-    'The native module is called with all required multi part-values',
+    'The native module is called with all required multipart-values',
     async () => {
       const progressIntervalMilliseconds = Math.random();
       await BlobCourier.uploadParts(DEFAULT_MULTIPART_UPLOAD_REQUEST);
@@ -513,7 +724,7 @@ describe('Given a regular upload request', () => {
       );
 
       const expectedParameters = {
-        ...DEFAULT_MULTIPART_UPLOAD_REQUEST,
+        ...DEFAULT_MULTIPART_ARRAY_UPLOAD_REQUEST,
         progressIntervalMilliseconds,
       };
 
@@ -589,7 +800,7 @@ describe('Given a fluent upload request', () => {
         );
 
         const expectedParameters = {
-          ...DEFAULT_MULTIPART_UPLOAD_REQUEST,
+          ...DEFAULT_MULTIPART_ARRAY_UPLOAD_REQUEST,
           progressIntervalMilliseconds,
         };
 
@@ -601,7 +812,7 @@ describe('Given a fluent upload request', () => {
       }
     );
 
-    describe('And a progress updater is provided provided', () => {
+    describe('And a progress updater is provided', () => {
       testAsync(
         'The native module is called with all required multi part-values and the provided settings',
         async () => {
@@ -615,7 +826,7 @@ describe('Given a fluent upload request', () => {
           );
 
           const expectedParameters = {
-            ...DEFAULT_MULTIPART_UPLOAD_REQUEST,
+            ...DEFAULT_MULTIPART_ARRAY_UPLOAD_REQUEST,
             progressIntervalMilliseconds,
           };
 
@@ -629,7 +840,7 @@ describe('Given a fluent upload request', () => {
     });
 
     testAsync(
-      'The native module is called with all required multi part-values and the provided settings',
+      'The native module is called with all required multipart-values and the provided settings',
       async () => {
         const progressIntervalMilliseconds = Math.random();
         await BlobCourier.settings({
@@ -641,7 +852,7 @@ describe('Given a fluent upload request', () => {
         );
 
         const expectedParameters = {
-          ...DEFAULT_MULTIPART_UPLOAD_REQUEST,
+          ...DEFAULT_MULTIPART_ARRAY_UPLOAD_REQUEST,
           progressIntervalMilliseconds,
         };
 
