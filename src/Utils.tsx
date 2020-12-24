@@ -73,10 +73,49 @@ export const fallbackObjects = (
   }, {});
 };
 
-export const convertMappedMultipartsToArray = (mappedParts: {
+export const convertMappedMultipartsWithSymbolizedKeysToArray = (mappedParts: {
   [key: string]: BlobMultipart;
-}): BlobNamedMultipartArray =>
-  Object.entries(mappedParts).map(([name, part]) => ({
-    ...part,
-    name,
+}): BlobNamedMultipartArray => {
+  const symbolKeys = Object.getOwnPropertySymbols(mappedParts);
+
+  return symbolKeys.map((symbolName: any) => ({
+    ...mappedParts[symbolName],
+    name: Symbol.keyFor(symbolName) ?? '',
   }));
+};
+
+export const sanitizeMappedMultiparts = (mapped: {
+  [key: string]: BlobMultipart;
+}) => {
+  const regularKeys = Object.keys(mapped);
+  const symbolKeys = Object.getOwnPropertySymbols(mapped);
+
+  const receivedRegularKeys = regularKeys.length > 0;
+  const receivedSymbolKeys = symbolKeys.length > 0;
+
+  const receivedMixedKeys = receivedRegularKeys && receivedSymbolKeys;
+
+  const receivedInvalidSymbols =
+    receivedSymbolKeys &&
+    symbolKeys.map(Symbol.keyFor).filter((_) => _ === undefined).length > 0;
+
+  if (receivedMixedKeys) {
+    throw new Error('Either use all Symbols or all Strings as multipart keys');
+  }
+
+  if (receivedInvalidSymbols) {
+    throw new Error(
+      'Use Symbol.forKey when using Symbols as key for multiparts'
+    );
+  }
+
+  return regularKeys.length > 0
+    ? regularKeys.reduce(
+        (p, c) => ({
+          ...p,
+          [Symbol.for(c)]: mapped[c],
+        }),
+        {}
+      )
+    : mapped;
+};

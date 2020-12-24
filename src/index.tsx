@@ -29,7 +29,11 @@ import type {
   BlobNamedMultipartArray,
   BlobMultipartWithName,
 } from './ExposedTypes';
-import { convertMappedMultipartsToArray, uuid } from './Utils';
+import {
+  convertMappedMultipartsWithSymbolizedKeysToArray,
+  sanitizeMappedMultiparts,
+  uuid,
+} from './Utils';
 import { dict } from './Extensions';
 
 type BlobFetchInput = BlobFetchRequest &
@@ -195,13 +199,20 @@ const uploadParts = <T extends BlobUploadMultipartInputWithTask>(
 ) =>
   wrapEmitter(
     input.taskId,
-    () =>
-      (BlobCourier as BlobCourierType).uploadBlob(
-        sanitizeMultipartUploadData({
-          ...input,
-          parts: convertMappedMultipartsToArray(input.parts),
-        })
-      ),
+    () => {
+      try {
+        const sanitized = sanitizeMappedMultiparts(input.parts);
+
+        return (BlobCourier as BlobCourierType).uploadBlob(
+          sanitizeMultipartUploadData({
+            ...input,
+            parts: convertMappedMultipartsWithSymbolizedKeysToArray(sanitized),
+          })
+        );
+      } catch (e) {
+        return Promise.reject(e);
+      }
+    },
     input.onProgress
   );
 
