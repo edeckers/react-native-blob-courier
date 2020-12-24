@@ -501,9 +501,8 @@ describe('Given a regular upload request', () => {
   });
 
   describe('And multipart fields are sent to native code', () => {
-    testAsync(
-      'they arrive in the order they were provided, when they are strings',
-      async () => {
+    describe('And they are strings', () => {
+      testAsync('they arrive in the order they were provided', async () => {
         const multipartName1 = 'bbbbb';
         const multipartName2 = 'ccccc';
         const multipartName3 = 'aaaaa';
@@ -535,48 +534,91 @@ describe('Given a regular upload request', () => {
           multipartName2,
           multipartName3,
         ]);
-      }
-    );
+      });
+    });
+
+    describe('And they are numbers', () => {
+      testAsync(
+        'they are reordered due to the nature of JavaScript',
+        async () => {
+          const multipartName1 = '3';
+          const multipartName2 = '1';
+          const multipartName3 = '2';
+
+          await BlobCourier.uploadParts({
+            ...DEFAULT_UPLOAD_REQUEST,
+            parts: {
+              [multipartName1]: {
+                payload: 'part1',
+                type: 'string',
+              },
+              [multipartName2]: {
+                payload: 'part2',
+                type: 'string',
+              },
+              [multipartName3]: {
+                payload: 'part3',
+                type: 'string',
+              },
+            },
+          });
+
+          const calledWithParameters = getLastMockCallFirstParameter(
+            BlobCourierNative.uploadBlob
+          );
+
+          expect(calledWithParameters.parts.map((p: any) => p.name)).toEqual([
+            multipartName2,
+            multipartName3,
+            multipartName1,
+          ]);
+        }
+      );
+
+      testAsync(
+        'they are not reordered when they are contained in symbols',
+        async () => {
+          const multipartName1 = '3';
+          const multipartName2 = '1';
+          const multipartName3 = '2';
+
+          const multipartSymbol1 = Symbol.for(multipartName1);
+          const multipartSymbol2 = Symbol.for(multipartName2);
+          const multipartSymbol3 = Symbol.for(multipartName3);
+
+          await BlobCourier.uploadParts({
+            ...DEFAULT_UPLOAD_REQUEST,
+            parts: {
+              [multipartSymbol1]: {
+                payload: 'part1',
+                type: 'string',
+              },
+              [multipartSymbol2]: {
+                payload: 'part2',
+                type: 'string',
+              },
+              [multipartSymbol3]: {
+                payload: 'part3',
+                type: 'string',
+              },
+            },
+          });
+
+          const calledWithParameters = getLastMockCallFirstParameter(
+            BlobCourierNative.uploadBlob
+          );
+
+          expect(calledWithParameters.parts.map((p: any) => p.name)).toEqual([
+            multipartName1,
+            multipartName2,
+            multipartName3,
+          ]);
+        }
+      );
+    });
 
     testAsync(
-      'they are reordered due to the nature of JavaScript when they are numbers',
-      async () => {
-        const multipartName1 = '3';
-        const multipartName2 = '1';
-        const multipartName3 = '2';
-
-        await BlobCourier.uploadParts({
-          ...DEFAULT_UPLOAD_REQUEST,
-          parts: {
-            [multipartName1]: {
-              payload: 'part1',
-              type: 'string',
-            },
-            [multipartName2]: {
-              payload: 'part2',
-              type: 'string',
-            },
-            [multipartName3]: {
-              payload: 'part3',
-              type: 'string',
-            },
-          },
-        });
-
-        const calledWithParameters = getLastMockCallFirstParameter(
-          BlobCourierNative.uploadBlob
-        );
-
-        expect(calledWithParameters.parts.map((p: any) => p.name)).toEqual([
-          multipartName2,
-          multipartName3,
-          multipartName1,
-        ]);
-      }
-    );
-
-    testAsync(
-      'they numbers are not reordered when they are contained in symbols',
+      'And they are mixed Symbols and Strings, the upload rejects',
       async () => {
         const multipartName1 = '3';
         const multipartName2 = '1';
@@ -584,35 +626,65 @@ describe('Given a regular upload request', () => {
 
         const multipartSymbol1 = Symbol.for(multipartName1);
         const multipartSymbol2 = Symbol.for(multipartName2);
-        const multipartSymbol3 = Symbol.for(multipartName3);
 
-        await BlobCourier.uploadParts({
-          ...DEFAULT_UPLOAD_REQUEST,
-          parts: {
-            [multipartSymbol1]: {
-              payload: 'part1',
-              type: 'string',
+        try {
+          await BlobCourier.uploadParts({
+            ...DEFAULT_UPLOAD_REQUEST,
+            parts: {
+              [multipartSymbol1]: {
+                payload: 'part1',
+                type: 'string',
+              },
+              [multipartSymbol2]: {
+                payload: 'part2',
+                type: 'string',
+              },
+              [multipartName3]: {
+                payload: 'part3',
+                type: 'string',
+              },
             },
-            [multipartSymbol2]: {
-              payload: 'part2',
-              type: 'string',
-            },
-            [multipartSymbol3]: {
-              payload: 'part3',
-              type: 'string',
-            },
-          },
-        });
+          });
+        } catch (e) {
+          expect(e.message).toBeDefined();
+          expect(e.message.length).toBeGreaterThan(0);
+          return;
+        }
 
-        const calledWithParameters = getLastMockCallFirstParameter(
-          BlobCourierNative.uploadBlob
-        );
+        expect(false).toBeTruthy();
+      }
+    );
 
-        expect(calledWithParameters.parts.map((p: any) => p.name)).toEqual([
-          multipartName1,
-          multipartName2,
-          multipartName3,
-        ]);
+    testAsync(
+      'And they are Symbols not generated with Symbol.forKey, the upload rejects',
+      async () => {
+        const multipartName1 = '3';
+        const multipartName2 = '1';
+
+        const multipartSymbol1 = Symbol(multipartName1);
+        const multipartSymbol2 = Symbol(multipartName2);
+
+        try {
+          await BlobCourier.uploadParts({
+            ...DEFAULT_UPLOAD_REQUEST,
+            parts: {
+              [multipartSymbol1]: {
+                payload: 'part1',
+                type: 'string',
+              },
+              [multipartSymbol2]: {
+                payload: 'part2',
+                type: 'string',
+              },
+            },
+          });
+        } catch (e) {
+          expect(e.message).toBeDefined();
+          expect(e.message.length).toBeGreaterThan(0);
+          return;
+        }
+
+        expect(false).toBeTruthy();
       }
     );
   });
