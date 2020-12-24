@@ -37,7 +37,7 @@ class BlobCourierTests: XCTestCase {
           "url": "https://github.com/edeckers/react-native-blob-courier"
         ]
 
-        let expectedParts = ["file", "test"]
+        let expectedParts = ["test", "file"]
 
         let router = Router()
         router["/api/v2/users"] =
@@ -61,10 +61,12 @@ class BlobCourierTests: XCTestCase {
                       if let value = mime.header.contentDisposition?.parameters["name"] {
                         acc.append(value)
                       }
-                    }.sorted()
+                    }
 
-                    if actualParts != expectedParts {
+                    if actualParts.sorted() != expectedParts.sorted() {
                       result = (false, "Did not receive all expected parts")
+                    } else if actualParts != expectedParts {
+                      result = (false, "Received parts order differs from provided order")
                     } else {
                       result = (true, "Success")
                     }
@@ -92,17 +94,17 @@ class BlobCourierTests: XCTestCase {
             self.sut?.uploadBlob(input: [
              "parts": [
                [
+                 "name": "test",
+                 "payload": "SOME_TEST_STRING",
+                 "type": "string"
+               ],
+               [
                  "name": "file",
                  "payload": [
                     "absoluteFilePath": data["absoluteFilePath"] ?? "",
                     "mimeType": "image/png"
                  ],
                  "type": "file"
-               ],
-               [
-                 "name": "test",
-                 "payload": "SOME_TEST_STRING",
-                 "type": "string"
                ]
              ],
              "taskId": data["taskId"] ?? "",
