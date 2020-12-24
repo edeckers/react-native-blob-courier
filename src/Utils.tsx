@@ -104,9 +104,7 @@ export const sanitizeMappedMultiparts = (mapped: {
   }
 
   if (receivedInvalidSymbols) {
-    throw new Error(
-      'Use Symbol.forKey when using Symbols as key for multiparts'
-    );
+    throw new Error('Use Symbol.for when using Symbols as key for multiparts');
   }
 
   return regularKeys.length > 0

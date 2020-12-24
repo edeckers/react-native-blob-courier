@@ -656,7 +656,7 @@ describe('Given a regular upload request', () => {
     );
 
     testAsync(
-      'And they are Symbols not generated with Symbol.forKey, the upload rejects',
+      'And they are Symbols not generated with Symbol.for, the upload rejects',
       async () => {
         const multipartName1 = '3';
         const multipartName2 = '1';
