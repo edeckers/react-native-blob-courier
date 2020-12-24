@@ -82,6 +82,12 @@ export declare type BlobMultipart = {
   type: BlobMultipartType;
 };
 
+export declare type BlobMultipartWithName = BlobMultipart & {
+  name: string;
+};
+
+export declare type BlobNamedMultipartArray = BlobMultipartWithName[];
+
 export declare interface BlobMultipartFormDataFile {
   readonly absoluteFilePath: string;
   readonly filename?: string;
@@ -98,13 +104,19 @@ export declare interface BlobUploadRequest
   readonly multipartName?: string;
 }
 
-export declare interface BlobMultipartUploadRequest
+export declare interface BlobMultipartBaseRequest
   extends BlobBaseRequest,
     BlobRequestMethod,
-    BlobRequestReturnResponse {
-  readonly parts: {
-    [key: string]: BlobMultipart;
-  };
+    BlobRequestReturnResponse {}
+
+export declare interface BlobMultipartArrayUploadRequest
+  extends BlobMultipartBaseRequest {
+  readonly parts: BlobNamedMultipartArray;
+}
+
+export declare interface BlobMultipartMapUploadRequest
+  extends BlobMultipartBaseRequest {
+  readonly parts: { [key: string]: BlobMultipart };
 }
 
 export declare interface BlobRequestTask {

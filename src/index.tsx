@@ -23,10 +23,13 @@ import type {
   BlobProgressEvent,
   BlobRequestOnProgress,
   AndroidFetchSettings,
-  BlobMultipartUploadRequest as BlobUploadMultipartRequest,
   IOSFetchSettings,
+  BlobMultipartMapUploadRequest,
+  BlobMultipartArrayUploadRequest,
+  BlobNamedMultipartArray,
+  BlobMultipartWithName,
 } from './ExposedTypes';
-import { uuid } from './Utils';
+import { convertMappedMultipartsToArray, uuid } from './Utils';
 import { dict } from './Extensions';
 
 type BlobFetchInput = BlobFetchRequest &
@@ -40,10 +43,15 @@ type BlobUploadInput = BlobUploadRequest & BlobRequestSettings;
 
 type BlobUploadNativeInput = BlobUploadInput & BlobRequestTask;
 
-type BlobUploadMultipartInput = BlobUploadMultipartRequest &
+type BlobUploadMultipartInput = BlobMultipartMapUploadRequest &
   BlobRequestSettings;
 
-type BlobUploadMultipartNativeInput = BlobUploadMultipartInput &
+type BlobUploadMultipartInputWithTask = BlobMultipartMapUploadRequest &
+  BlobRequestSettings &
+  BlobRequestTask;
+
+type BlobUploadMultipartNativeInput = BlobMultipartArrayUploadRequest &
+  BlobRequestSettings &
   BlobRequestTask;
 
 type BlobCourierType = {
@@ -121,19 +129,13 @@ const sanitizeFetchData = <T extends BlobFetchNativeInput>(
   };
 };
 
-const stringifyPartsValues = (parts: { [key: string]: any }) => {
-  const stringify = (part: { [key: string]: any }) =>
+const stringifyPartsValues = (parts: BlobNamedMultipartArray) => {
+  const stringify = (part: BlobMultipartWithName) =>
     part.type === 'string' && typeof part.payload === 'object'
       ? { ...part, payload: JSON.stringify(part.payload) }
       : part;
 
-  return Object.keys(parts).reduce(
-    (p, c) => ({
-      ...p,
-      [c]: stringify(parts[c]),
-    }),
-    {}
-  );
+  return parts.map(stringify);
 };
 
 const sanitizeMultipartUploadData = <T extends BlobUploadMultipartNativeInput>(
@@ -188,14 +190,17 @@ const fetchBlob = <T extends BlobFetchNativeInput>(input: Readonly<T>) =>
     input.onProgress
   );
 
-const uploadParts = <T extends BlobUploadMultipartNativeInput>(
+const uploadParts = <T extends BlobUploadMultipartInputWithTask>(
   input: Readonly<T>
 ) =>
   wrapEmitter(
     input.taskId,
     () =>
       (BlobCourier as BlobCourierType).uploadBlob(
-        sanitizeMultipartUploadData(input)
+        sanitizeMultipartUploadData({
+          ...input,
+          parts: convertMappedMultipartsToArray(input.parts),
+        })
       ),
     input.onProgress
   );
@@ -237,7 +242,7 @@ const onProgress = (
       onProgress: fn,
       taskId,
     }),
-  uploadParts: (input: BlobUploadMultipartRequest) =>
+  uploadParts: (input: BlobUploadMultipartInput) =>
     uploadParts({
       ...input,
       ...requestSettings,

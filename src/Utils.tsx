@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import type { BlobNamedMultipartArray, BlobMultipart } from './ExposedTypes';
+
 // Taken from https://github.com/joltup/rn-fetch-blob/blob/master/utils/uuid.js
 const createUuidPart = () => Math.random().toString(36).substring(2, 15);
 
@@ -70,3 +72,11 @@ export const fallbackObjects = (
     };
   }, {});
 };
+
+export const convertMappedMultipartsToArray = (mappedParts: {
+  [key: string]: BlobMultipart;
+}): BlobNamedMultipartArray =>
+  Object.entries(mappedParts).map(([name, part]) => ({
+    ...part,
+    name,
+  }));

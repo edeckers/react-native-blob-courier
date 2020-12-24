@@ -4,7 +4,7 @@
  * This source code is licensed under the MPL-2.0 license found in the
  * LICENSE file in the root directory of this source tree.
  */
-import { uuid } from '../Utils';
+import { convertMappedMultipartsToArray, uuid } from '../Utils';
 import {
   ANDROID_DOWNLOAD_MANAGER_FALLBACK_PARAMETERS,
   BLOB_COURIER_PROGRESS_EVENT_NAME,
@@ -18,7 +18,11 @@ import {
 import { dict } from '../Extensions';
 import { NativeEventEmitter, NativeModules } from 'react-native';
 import BlobCourier from '../index';
-import type { BlobMultipartUploadRequest, TargetType } from 'src/ExposedTypes';
+import type {
+  BlobMultipartArrayUploadRequest,
+  BlobMultipartMapUploadRequest,
+  TargetType,
+} from 'src/ExposedTypes';
 
 const {
   BlobCourier: BlobCourierNative,
@@ -41,7 +45,7 @@ const DEFAULT_UPLOAD_REQUEST = {
   url: 'https://github.com/edeckers/react-native-blob-courier',
 };
 
-const DEFAULT_MULTIPART_UPLOAD_REQUEST: BlobMultipartUploadRequest = {
+const DEFAULT_MULTIPART_UPLOAD_REQUEST: BlobMultipartMapUploadRequest = {
   parts: {
     file: {
       payload: {
@@ -53,6 +57,11 @@ const DEFAULT_MULTIPART_UPLOAD_REQUEST: BlobMultipartUploadRequest = {
     },
   },
   url: 'https://github.com/edeckers/react-native-blob-courier',
+};
+
+const DEFAULT_MULTIPART_ARRAY_UPLOAD_REQUEST: BlobMultipartArrayUploadRequest = {
+  ...DEFAULT_MULTIPART_UPLOAD_REQUEST,
+  parts: convertMappedMultipartsToArray(DEFAULT_MULTIPART_UPLOAD_REQUEST.parts),
 };
 
 const RANDOM_VALUE_GENERATORS: { [key: string]: () => any } = {
@@ -449,7 +458,9 @@ describe('Given a regular upload request', () => {
         DEFAULT_MULTIPART_UPLOAD_REQUEST
       );
 
-      expect(parameterIntersection).toEqual(DEFAULT_MULTIPART_UPLOAD_REQUEST);
+      expect(parameterIntersection).toEqual(
+        DEFAULT_MULTIPART_ARRAY_UPLOAD_REQUEST
+      );
       verifyPropertyExistsAndIsDefined(calledWithParameters, 'taskId');
     }
   );
@@ -461,13 +472,12 @@ describe('Given a regular upload request', () => {
       BlobCourierNative.uploadBlob
     );
 
-    verifyPropertyExistsAndIsDefined(
-      calledWithParameters.parts,
-      DEFAULT_FILE_MULTIPART_FIELD_NAME
-    );
+    expect(calledWithParameters.parts.map((p: any) => p.name)).toEqual([
+      DEFAULT_FILE_MULTIPART_FIELD_NAME,
+    ]);
   });
 
-  testAsync('Provided multipartNames are used', async () => {
+  testAsync('Provided multipart names are used', async () => {
     const multipartName = RANDOM_VALUE_GENERATORS.string();
 
     await BlobCourier.uploadBlob({
@@ -479,7 +489,9 @@ describe('Given a regular upload request', () => {
       BlobCourierNative.uploadBlob
     );
 
-    verifyPropertyExistsAndIsDefined(calledWithParameters.parts, multipartName);
+    expect(
+      calledWithParameters.parts.find((p: any) => p.name === multipartName)
+    ).toBeDefined();
   });
 
   testAsync(
@@ -506,7 +518,7 @@ describe('Given a regular upload request', () => {
         BlobCourierNative.uploadBlob
       );
 
-      expect(Object.keys(calledWithParameters.parts)).toEqual([
+      expect(calledWithParameters.parts.map((p: any) => p.name)).toEqual([
         multipartName1,
         multipartName2,
       ]);
@@ -514,10 +526,12 @@ describe('Given a regular upload request', () => {
   );
 
   testAsync('JSON multipart payloads are serialized', async () => {
+    const multiPartName = RANDOM_VALUE_GENERATORS.string();
+
     await BlobCourier.uploadParts({
       ...DEFAULT_UPLOAD_REQUEST,
       parts: {
-        some_json_part: {
+        [multiPartName]: {
           type: 'string',
           payload: { a: 1 },
         },
@@ -528,9 +542,11 @@ describe('Given a regular upload request', () => {
       BlobCourierNative.uploadBlob
     );
 
-    expect(typeof calledWithParameters.parts.some_json_part.payload).toEqual(
-      'string'
-    );
+    expect(
+      typeof calledWithParameters.parts.find(
+        (p: any) => p.name === multiPartName
+      ).payload
+    ).toEqual('string');
   });
 
   testAsync(
@@ -544,7 +560,7 @@ describe('Given a regular upload request', () => {
       );
 
       const expectedParameters = {
-        ...DEFAULT_MULTIPART_UPLOAD_REQUEST,
+        ...DEFAULT_MULTIPART_ARRAY_UPLOAD_REQUEST,
         progressIntervalMilliseconds,
       };
 
@@ -620,7 +636,7 @@ describe('Given a fluent upload request', () => {
         );
 
         const expectedParameters = {
-          ...DEFAULT_MULTIPART_UPLOAD_REQUEST,
+          ...DEFAULT_MULTIPART_ARRAY_UPLOAD_REQUEST,
           progressIntervalMilliseconds,
         };
 
@@ -646,7 +662,7 @@ describe('Given a fluent upload request', () => {
           );
 
           const expectedParameters = {
-            ...DEFAULT_MULTIPART_UPLOAD_REQUEST,
+            ...DEFAULT_MULTIPART_ARRAY_UPLOAD_REQUEST,
             progressIntervalMilliseconds,
           };
 
@@ -672,7 +688,7 @@ describe('Given a fluent upload request', () => {
         );
 
         const expectedParameters = {
-          ...DEFAULT_MULTIPART_UPLOAD_REQUEST,
+          ...DEFAULT_MULTIPART_ARRAY_UPLOAD_REQUEST,
           progressIntervalMilliseconds,
         };
 
