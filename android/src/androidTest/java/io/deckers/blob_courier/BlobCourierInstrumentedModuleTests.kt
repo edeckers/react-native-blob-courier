@@ -28,6 +28,8 @@ import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
 
+private const val ADB_COMMAND_DELAY_MILLISECONDS = 5_000L
+
 private fun enableNetworking(enable: Boolean) {
   val word = if (enable) "enable" else "disable"
 
@@ -39,7 +41,7 @@ class BlobCourierInstrumentedModuleTests {
   @After
   fun restoreExpectedState() {
     enableNetworking(true)
-    Thread.sleep(1_000)
+    Thread.sleep(ADB_COMMAND_DELAY_MILLISECONDS)
   }
 
   @Before
@@ -207,7 +209,7 @@ class BlobCourierInstrumentedModuleTests {
           threadLock.wait()
         }
       },
-      1_000, TimeUnit.MILLISECONDS
+      ADB_COMMAND_DELAY_MILLISECONDS, TimeUnit.MILLISECONDS
     )
 
     pool.shutdown()

@@ -1,8 +1,18 @@
-name: Build Android and iOS
+name: Build and test
 on: push
 
 jobs:
-  install-and-test:
+  build-typescript:
+    runs-on: ubuntu-latest
+    steps: 
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2-beta
+        with:
+          node-version: '12'
+      - run: cd example && yarn
+      - run: yarn
+  run-typescript-tests:
+    needs: build-typescript
     runs-on: ubuntu-latest
     steps: 
       - uses: actions/checkout@v2
@@ -12,23 +22,15 @@ jobs:
       - run: cd example && yarn
       - run: yarn
       - run: yarn test
-      - uses: EnricoMi/publish-unit-test-result-action@v1.4
+      - uses: actions/upload-artifact@v2
         with:
-          check_name: "Tests: TypeScript"
-          comment_title: TypeScript Test Report
-          deduplicate_classes_by_file_name: false
-          files: output/typescript-test-output.xml
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          hide_comments: all but latest
-          report_individual_runs: true
-  build-android:
-    needs: install-and-test
+          name: ts-test-results
+          path: output/typescript-test-output.xml
+  run-android-unit-tests:
+    needs: build-typescript
     runs-on: ubuntu-latest
     steps: 
       - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2-beta
-        with:
-          node-version: '12'
       - name: set up JDK 1.8
         uses: actions/setup-java@v1
         with:
@@ -40,23 +42,34 @@ jobs:
           build-root-directory: android
           wrapper-directory: android
           arguments: testDebugUnitTest
-      # - uses: reactivecircus/android-emulator-runner@v2
-      #   with:
-      #     api-level: 29
-      #     working-directory: './android' 
-      #     script: ./gradlew connectedAndroidTest
-      - uses: EnricoMi/publish-unit-test-result-action@v1.4
+      - uses: actions/upload-artifact@v2
         with:
-          check_name: "Tests: Android"
-          comment_title: Android Test Report
-          deduplicate_classes_by_file_name: false
-          files: android/build/test-results/**/*.xml
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          hide_comments: all but latest
-          report_individual_runs: true
-  build-ios:
-    needs: install-and-test
-    runs-on: macOS-latest
+          name: android-unit-test-results
+          path: android/build/test-results/**/*.xml
+  run-android-instrumented-tests:
+    needs: build-typescript
+    runs-on: macos-latest
+    steps: 
+      - uses: actions/checkout@v2
+      - name: set up JDK 1.8
+        uses: actions/setup-java@v1
+        with:
+          java-version: 1.8
+      - run: cd example && yarn
+      - run: yarn
+      - uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 30
+          script: ./gradlew connectedAndroidTest
+          target: google_apis
+          working-directory: './android' 
+      - uses: actions/upload-artifact@v2
+        with:
+          name: android-instrumented-test-results
+          path: android/build/outputs/androidTest-results/connected/flavors/debugAndroidTest/*.xml
+  run-ios-tests:
+    needs: build-typescript
+    runs-on: macos-latest
     steps: 
       - uses: actions/checkout@v2
       - run: xcrun simctl boot "iPhone 11"
@@ -73,3 +86,53 @@ jobs:
           scheme: BlobCourierTests
           destination: 'platform=iOS Simulator,name=iPhone 11'
           action: test
+  publish-typescript-test-results:
+    needs:
+      - run-typescript-tests
+    runs-on: ubuntu-latest
+    steps: 
+      - uses: actions/download-artifact@v2
+        with:
+          name: ts-test-results
+          path: report-ts
+      - uses: EnricoMi/publish-unit-test-result-action@v1.6
+        with:
+          check_name: "Tests: TypeScript"
+          comment_title: TypeScript Test Report
+          deduplicate_classes_by_file_name: false
+          files: report-ts/**/*.xml
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          hide_comments: all but latest
+          report_individual_runs: true
+  publish-android-test-results:
+    needs:
+      - run-android-unit-tests
+      - run-android-instrumented-tests
+    runs-on: ubuntu-latest
+    steps: 
+      - uses: actions/download-artifact@v2
+        with:
+          name: android-unit-test-results
+          path: report-android-unit
+      - uses: actions/download-artifact@v2
+        with:
+          name: android-instrumented-test-results
+          path: report-android-instrument
+      - uses: EnricoMi/publish-unit-test-result-action@v1.6
+        with:
+          check_name: "Tests: Android - Unit"
+          comment_title: Android Unit Test Report
+          deduplicate_classes_by_file_name: false
+          files: report-android-unit/**/*.xml
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          hide_comments: all but latest
+          report_individual_runs: true
+      - uses: EnricoMi/publish-unit-test-result-action@v1.6
+        with:
+          check_name: "Tests: Android - Instrumented"
+          comment_title: Android Instrumented Test Report
+          deduplicate_classes_by_file_name: false
+          files: report-android-instrument/**/*.xml
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          hide_comments: all but latest
+          report_individual_runs: true
