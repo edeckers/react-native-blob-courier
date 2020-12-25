@@ -80,12 +80,11 @@ jobs:
       - run: yarn
       - run: cd ios && pod install
       - run: cd example/ios && pod install
-      - uses: sersoft-gmbh/xcodebuild-action@v1
+      - run: xcodebuild test -scheme BlobCourierTests -destination 'platform=iOS Simulator,name=iPhone 11' -workspace 'ios/BlobCourier.xcworkspace' | xcpretty --report junit
+      - uses: actions/upload-artifact@v2
         with:
-          workspace: ios/BlobCourier.xcworkspace
-          scheme: BlobCourierTests
-          destination: 'platform=iOS Simulator,name=iPhone 11'
-          action: test
+          name: ios-test-results
+          path: build/reports/**/*.xml
   publish-typescript-test-results:
     needs:
       - run-typescript-tests
@@ -133,6 +132,24 @@ jobs:
           comment_title: Android Instrumented Test Report
           deduplicate_classes_by_file_name: false
           files: report-android-instrument/**/*.xml
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          hide_comments: all but latest
+          report_individual_runs: true
+  publish-ios-test-results:
+    needs:
+      - run-ios-tests
+    runs-on: ubuntu-latest
+    steps: 
+      - uses: actions/download-artifact@v2
+        with:
+          name: ios-test-results
+          path: report-ios
+      - uses: EnricoMi/publish-unit-test-result-action@v1.6
+        with:
+          check_name: "Tests: iOS"
+          comment_title: iOS Test Report
+          deduplicate_classes_by_file_name: false
+          files: report-ios/**/*.xml
           github_token: ${{ secrets.GITHUB_TOKEN }}
           hide_comments: all but latest
           report_individual_runs: true
