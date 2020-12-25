@@ -7,11 +7,9 @@
 package io.deckers.blob_courier.fetch
 
 import android.net.Uri
-import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import io.deckers.blob_courier.common.DOWNLOAD_TYPE_UNMANAGED
 import io.deckers.blob_courier.common.mapHeadersToMap
-import io.deckers.blob_courier.common.toReactMap
 import io.deckers.blob_courier.progress.BlobCourierProgressResponse
 import java.io.File
 import okhttp3.Interceptor
@@ -51,30 +49,31 @@ class UnmanagedDownloader(
   fun fetch(
     downloaderParameters: DownloaderParameters,
     toAbsoluteFilePath: File,
-    promise: Promise
-  ) {
-    val request = Request.Builder()
-      .method(downloaderParameters.method, null)
-      .url(downloaderParameters.uri.toString())
-      .apply {
-        downloaderParameters.headers.forEach { e: Map.Entry<String, String> ->
-          addHeader(e.key, e.value)
+  ): Pair<Throwable?, Map<String, Any>?> {
+    try {
+      val request = Request.Builder()
+        .method(downloaderParameters.method, null)
+        .url(downloaderParameters.uri.toString())
+        .apply {
+          downloaderParameters.headers.forEach { e: Map.Entry<String, String> ->
+            addHeader(e.key, e.value)
+          }
         }
-      }
-      .build()
-
-    val progressInterceptor =
-      createDownloadProgressInterceptor(
-        downloaderParameters.taskId,
-        downloaderParameters.progressInterval
-      )
-
-    val httpClientWithInterceptor =
-      httpClient.newBuilder()
-        .addInterceptor(progressInterceptor)
         .build()
 
-    httpClientWithInterceptor.newCall(request).execute().use { response ->
+      val progressInterceptor =
+        createDownloadProgressInterceptor(
+          downloaderParameters.taskId,
+          downloaderParameters.progressInterval
+        )
+
+      val httpClientWithInterceptor =
+        httpClient.newBuilder()
+          .addInterceptor(progressInterceptor)
+          .build()
+
+      val response = httpClientWithInterceptor.newCall(request).execute()
+
       response.body()?.source().use { source ->
         Okio.buffer(Okio.sink(toAbsoluteFilePath)).use { sink ->
 
@@ -82,7 +81,8 @@ class UnmanagedDownloader(
         }
       }
 
-      promise.resolve(
+      return Pair(
+        null,
         mapOf(
           "type" to DOWNLOAD_TYPE_UNMANAGED,
           "data" to mapOf(
@@ -92,8 +92,10 @@ class UnmanagedDownloader(
               "headers" to mapHeadersToMap(response.headers())
             )
           )
-        ).toReactMap()
+        )
       )
+    } catch (e: Throwable) {
+      return Pair(e, null)
     }
   }
 }

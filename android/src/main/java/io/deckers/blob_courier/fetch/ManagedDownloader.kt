@@ -8,8 +8,6 @@ package io.deckers.blob_courier.fetch
 
 import android.app.DownloadManager
 import android.content.Context
-import android.content.IntentFilter
-import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import io.deckers.blob_courier.progress.ManagedProgressUpdater
 import java.io.File
@@ -25,62 +23,66 @@ class ManagedDownloader(private val reactContext: ReactApplicationContext) {
   fun fetch(
     downloaderParameters: DownloaderParameters,
     toAbsoluteFilePath: File,
-    promise: Promise
-  ) {
-    val request =
-      DownloadManager.Request(downloaderParameters.uri)
-        .setAllowedOverRoaming(true)
-        .setMimeType(downloaderParameters.mimeType)
-        .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+  ): Pair<Throwable?, Map<String, Any>?> {
+    try {
+      val request =
+        DownloadManager.Request(downloaderParameters.uri)
+          .setAllowedOverRoaming(true)
+          .setMimeType(downloaderParameters.mimeType)
+          .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
 
-    val downloadManagerSettings = downloaderParameters.downloadManagerSettings
-    if (downloadManagerSettings.containsKey(DOWNLOAD_MANAGER_PARAMETER_DESCRIPTION)) {
-      request.setDescription(
-        downloadManagerSettings[DOWNLOAD_MANAGER_PARAMETER_DESCRIPTION] as String
-      )
-    }
-
-    if (downloadManagerSettings.containsKey(DOWNLOAD_MANAGER_PARAMETER_TITLE)) {
-      request.setTitle(
-        downloadManagerSettings[DOWNLOAD_MANAGER_PARAMETER_TITLE] as String
-      )
-    }
-
-    val enableNotifications =
-      downloadManagerSettings.containsKey(DOWNLOAD_MANAGER_PARAMETER_ENABLE_NOTIFICATIONS) &&
-        downloadManagerSettings[DOWNLOAD_MANAGER_PARAMETER_ENABLE_NOTIFICATIONS] == true
-
-    request.setNotificationVisibility(if (enableNotifications) 1 else 0)
-
-    val downloadId = request
-      .let { requestBuilder
-        ->
-        requestBuilder.apply {
-          downloaderParameters.headers.forEach { e: Map.Entry<String, String> ->
-            addRequestHeader(e.key, e.value)
-          }
-        }
-
-        defaultDownloadManager.enqueue(
-          requestBuilder
+      val downloadManagerSettings = downloaderParameters.downloadManagerSettings
+      if (downloadManagerSettings.containsKey(DOWNLOAD_MANAGER_PARAMETER_DESCRIPTION)) {
+        request.setDescription(
+          downloadManagerSettings[DOWNLOAD_MANAGER_PARAMETER_DESCRIPTION] as String
         )
       }
 
-    val progressUpdater =
-      ManagedProgressUpdater(
-        reactContext,
-        downloaderParameters.taskId,
-        downloadId,
-        downloaderParameters.progressInterval.toLong()
-      )
+      if (downloadManagerSettings.containsKey(DOWNLOAD_MANAGER_PARAMETER_TITLE)) {
+        request.setTitle(
+          downloadManagerSettings[DOWNLOAD_MANAGER_PARAMETER_TITLE] as String
+        )
+      }
 
-    progressUpdater.start()
+      val enableNotifications =
+        downloadManagerSettings.containsKey(DOWNLOAD_MANAGER_PARAMETER_ENABLE_NOTIFICATIONS) &&
+          downloadManagerSettings[DOWNLOAD_MANAGER_PARAMETER_ENABLE_NOTIFICATIONS] == true
 
-    reactContext.registerReceiver(
-      ManagedDownloadReceiver(downloadId, toAbsoluteFilePath, progressUpdater, promise),
-      IntentFilter(
-        DownloadManager.ACTION_DOWNLOAD_COMPLETE,
-      )
-    )
+      request.setNotificationVisibility(if (enableNotifications) 1 else 0)
+
+      val downloadId = request
+        .let { requestBuilder
+          ->
+          requestBuilder.apply {
+            downloaderParameters.headers.forEach { e: Map.Entry<String, String> ->
+              addRequestHeader(e.key, e.value)
+            }
+          }
+
+          defaultDownloadManager.enqueue(
+            requestBuilder
+          )
+        }
+
+      val progressUpdater =
+        ManagedProgressUpdater(
+          reactContext,
+          downloaderParameters.taskId,
+          downloadId,
+          downloaderParameters.progressInterval.toLong()
+        )
+
+      progressUpdater.start()
+
+      // reactContext.registerReceiver(
+      //   ManagedDownloadReceiver(downloadId, toAbsoluteFilePath, progressUpdater, promise),
+      //   IntentFilter(
+      //     DownloadManager.ACTION_DOWNLOAD_COMPLETE,
+      //   )
+      // )
+      return Pair(null, null)
+    } catch (e: Throwable) {
+      return Pair(e, null)
+    }
   }
 }

@@ -6,7 +6,6 @@
  */
 package io.deckers.blob_courier.fetch
 
-import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import java.io.File
 import okhttp3.OkHttpClient
@@ -33,17 +32,16 @@ class BlobDownloader(
 
   fun download(
     downloaderParameters: DownloaderParameters,
-    promise: Promise
-  ) {
+  ): Pair<Throwable?, Map<String, Any>?> {
     val absoluteFilePath = createAbsoluteFilePath(
       downloaderParameters.filename,
       downloaderParameters.targetDirectory
     )
 
-    if (downloaderParameters.useDownloadManager)
+    return if (downloaderParameters.useDownloadManager)
       ManagedDownloader(reactContext)
-        .fetch(downloaderParameters, absoluteFilePath, promise)
+        .fetch(downloaderParameters, absoluteFilePath)
     else UnmanagedDownloader(reactContext, httpClient)
-      .fetch(downloaderParameters, absoluteFilePath, promise)
+      .fetch(downloaderParameters, absoluteFilePath)
   }
 }

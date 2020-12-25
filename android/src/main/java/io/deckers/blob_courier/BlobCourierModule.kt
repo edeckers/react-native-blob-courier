@@ -38,9 +38,16 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
         val fetchParameters =
           DownloaderParameterFactory().fromInput(input, promise)
 
-        fetchParameters?.run {
-          BlobDownloader(reactContext, createHttpClient()).download(fetchParameters, promise)
+        val (error, response) = fetchParameters?.let {
+          BlobDownloader(reactContext, createHttpClient()).download(fetchParameters)
+        } ?: Pair(null, null)
+
+        if (error != null) {
+          promise.reject(error)
+          return@thread
         }
+
+        promise.resolve(response)
       } catch (e: BlobCourierError) {
         promise.reject(e.code, e.message)
       } catch (e: UnknownHostException) {
