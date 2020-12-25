@@ -66,9 +66,16 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
       try {
         val uploadParameters = UploaderParameterFactory().fromInput(input, promise)
 
-        uploadParameters?.run {
-          BlobUploader(reactContext, createHttpClient()).upload(uploadParameters, promise)
+        val (error, response) = uploadParameters?.run {
+          BlobUploader(reactContext, createHttpClient()).upload(uploadParameters)
+        } ?: Pair(null, null)
+
+        if (error != null) {
+          promise.reject(error)
+          return@thread
         }
+
+        promise.resolve(response)
       } catch (e: BlobCourierError) {
         promise.reject(e.code, e.message)
       } catch (e: UnknownHostException) {

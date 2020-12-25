@@ -6,12 +6,8 @@
  */
 package io.deckers.blob_courier.upload
 
-import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
-import io.deckers.blob_courier.common.ERROR_UNEXPECTED_ERROR
-import io.deckers.blob_courier.common.ERROR_UNEXPECTED_EXCEPTION
 import io.deckers.blob_courier.common.mapHeadersToMap
-import io.deckers.blob_courier.common.toReactMap
 import io.deckers.blob_courier.progress.BlobCourierProgressRequest
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -21,10 +17,7 @@ class BlobUploader(
   private val httpClient: OkHttpClient
 ) {
 
-  fun upload(
-    uploaderParameters: UploaderParameters,
-    promise: Promise,
-  ) {
+  fun upload(uploaderParameters: UploaderParameters): Pair<Throwable?, Map<String, Any>?> {
 
     val requestBody = BlobCourierProgressRequest(
       reactContext,
@@ -50,19 +43,20 @@ class BlobUploader(
 
       val b = response.body()?.string().orEmpty()
 
-      promise.resolve(
+      return Pair(
+        null,
         mapOf(
           "response" to mapOf(
             "code" to response.code(),
             "data" to if (uploaderParameters.returnResponse) b else "",
             "headers" to mapHeadersToMap(response.headers())
           )
-        ).toReactMap()
+        )
       )
     } catch (e: Exception) {
-      promise.reject(ERROR_UNEXPECTED_EXCEPTION, e.message)
+      return Pair(e, null)
     } catch (e: Error) {
-      promise.reject(ERROR_UNEXPECTED_ERROR, e.message)
+      return Pair(e, null)
     }
   }
 }
