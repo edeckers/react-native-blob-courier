@@ -8,6 +8,7 @@ package io.deckers.blob_courier.fetch
 
 import android.app.DownloadManager
 import android.content.Context
+import android.content.IntentFilter
 import com.facebook.react.bridge.ReactApplicationContext
 import io.deckers.blob_courier.progress.ManagedProgressUpdater
 import java.io.File
@@ -74,13 +75,32 @@ class ManagedDownloader(private val reactContext: ReactApplicationContext) {
 
       progressUpdater.start()
 
-      // reactContext.registerReceiver(
-      //   ManagedDownloadReceiver(downloadId, toAbsoluteFilePath, progressUpdater, promise),
-      //   IntentFilter(
-      //     DownloadManager.ACTION_DOWNLOAD_COMPLETE,
-      //   )
-      // )
-      return Pair(null, null)
+      val waitForDownloadCompletion = Object()
+
+      var result: Pair<Throwable?, Map<String, Any>?> = Pair(null, null)
+
+      synchronized(waitForDownloadCompletion) {
+        val downloadReceiver =
+          ManagedDownloadReceiver(downloadId, toAbsoluteFilePath, progressUpdater) { (error, r) ->
+            if (error != null) {
+              result = Pair(error, null)
+              return@ManagedDownloadReceiver
+            }
+
+            result = Pair(null, r)
+
+            waitForDownloadCompletion.notify()
+          }
+
+        reactContext.registerReceiver(
+          downloadReceiver,
+          IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE)
+        )
+
+        waitForDownloadCompletion.wait()
+
+        return result
+      }
     } catch (e: Throwable) {
       return Pair(e, null)
     }

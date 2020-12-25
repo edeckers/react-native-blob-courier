@@ -12,13 +12,10 @@ import android.content.Context
 import android.content.Intent
 import android.database.Cursor
 import android.net.Uri
-import com.facebook.react.bridge.Promise
 import io.deckers.blob_courier.common.DOWNLOAD_TYPE_MANAGED
-import io.deckers.blob_courier.common.ERROR_UNEXPECTED_EXCEPTION
 import io.deckers.blob_courier.common.MANAGED_DOWNLOAD_FAILURE
 import io.deckers.blob_courier.common.MANAGED_DOWNLOAD_SUCCESS
 import io.deckers.blob_courier.common.createDownloadManager
-import io.deckers.blob_courier.common.toReactMap
 import io.deckers.blob_courier.progress.ManagedProgressUpdater
 import java.io.Closeable
 import java.io.File
@@ -29,7 +26,7 @@ class ManagedDownloadReceiver(
   private val downloadId: Long,
   private val destinationFile: File,
   private val managedProgressUpdater: ManagedProgressUpdater,
-  private val promise: Promise
+  private val processCompletedOrError: (Pair<Throwable?, Map<String, Any>?>) -> Unit
 ) :
   BroadcastReceiver(), Closeable {
   override fun onReceive(context: Context, intent: Intent) {
@@ -38,7 +35,7 @@ class ManagedDownloadReceiver(
 
       processDownloadCompleteAction(downloadManager, context)
     } catch (e: Exception) {
-      promise.reject(e)
+      processCompletedOrError(Pair(e, null))
     } finally {
       context.unregisterReceiver(this)
       close()
@@ -71,9 +68,12 @@ class ManagedDownloadReceiver(
       return
     }
 
-    promise.reject(
-      ERROR_UNEXPECTED_EXCEPTION,
-      mapOf<String, Any>("result" to MANAGED_DOWNLOAD_FAILURE).toReactMap()
+    processCompletedOrError(
+      Pair(null, mapOf<String, Any>("result" to MANAGED_DOWNLOAD_FAILURE))
+
+      // promise.reject(
+      //   ERROR_UNEXPECTED_EXCEPTION,
+      //     mapOf<String, Any>("result" to MANAGED_DOWNLOAD_FAILURE))
     )
   }
 
@@ -100,14 +100,17 @@ class ManagedDownloadReceiver(
   private fun onDownloadDone(context: Context, localFileUri: Uri) {
     moveFileToInternalStorage(context, localFileUri)
 
-    promise.resolve(
-      mapOf(
-        "type" to DOWNLOAD_TYPE_MANAGED,
-        "data" to mapOf(
-          "absoluteFilePath" to destinationFile,
-          "result" to MANAGED_DOWNLOAD_SUCCESS
+    processCompletedOrError(
+      Pair(
+        null,
+        mapOf(
+          "type" to DOWNLOAD_TYPE_MANAGED,
+          "data" to mapOf(
+            "absoluteFilePath" to destinationFile,
+            "result" to MANAGED_DOWNLOAD_SUCCESS
+          )
         )
-      ).toReactMap()
+      )
     )
   }
 

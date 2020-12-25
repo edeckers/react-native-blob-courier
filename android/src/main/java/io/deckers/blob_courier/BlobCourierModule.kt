@@ -17,6 +17,7 @@ import io.deckers.blob_courier.common.ERROR_UNKNOWN_HOST
 import io.deckers.blob_courier.common.LIBRARY_NAME
 import io.deckers.blob_courier.common.processUnexpectedError
 import io.deckers.blob_courier.common.processUnexpectedException
+import io.deckers.blob_courier.common.toReactMap
 import io.deckers.blob_courier.fetch.BlobDownloader
 import io.deckers.blob_courier.fetch.DownloaderParameterFactory
 import io.deckers.blob_courier.upload.BlobUploader
@@ -40,14 +41,14 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
 
         val (error, response) = fetchParameters?.let {
           BlobDownloader(reactContext, createHttpClient()).download(fetchParameters)
-        } ?: Pair(null, null)
+        } ?: Pair(Error("NLNLNLNLNLNLN"), null)
 
         if (error != null) {
           promise.reject(error)
           return@thread
         }
 
-        promise.resolve(response)
+        promise.resolve(response!!.toReactMap())
       } catch (e: BlobCourierError) {
         promise.reject(e.code, e.message)
       } catch (e: UnknownHostException) {
