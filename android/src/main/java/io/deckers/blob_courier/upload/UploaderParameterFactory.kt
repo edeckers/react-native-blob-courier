@@ -220,36 +220,34 @@ private fun retrieveRequiredParametersOrThrow(input: ReadableMap):
 
 private fun validateRequiredParameters(
   parameters: Triple<ReadableArray?, String?, String?>,
-  promise: Promise
-): Triple<ReadableArray, String, String>? {
+): Pair<Throwable?, Triple<ReadableArray, String, String>?> {
   val (rawParts, taskId, url) = parameters
 
   if (taskId == null) {
-    processUnexpectedEmptyValue(promise, PARAMETER_TASK_ID)
-
-    return null
+    return Pair(processUnexpectedEmptyValue(PARAMETER_TASK_ID), null)
   }
 
   if (rawParts == null) {
-    processUnexpectedEmptyValue(promise, PARAMETER_PARTS)
-
-    return null
+    return Pair(processUnexpectedEmptyValue(PARAMETER_PARTS), null)
   }
 
   if (url == null) {
-    processUnexpectedEmptyValue(promise, PARAMETER_URL)
-
-    return null
+    return Pair(processUnexpectedEmptyValue(PARAMETER_URL), null)
   }
 
-  return Triple(rawParts, taskId, url)
+  return Pair(null, Triple(rawParts, taskId, url))
 }
 
 class UploaderParameterFactory {
-  fun fromInput(input: ReadableMap, promise: Promise): UploaderParameters? {
+  fun fromInput(input: ReadableMap, promise: Promise): Pair<Throwable?, UploaderParameters?> {
     val requiredParameters = retrieveRequiredParametersOrThrow(input)
 
-    return validateRequiredParameters(requiredParameters, promise)?.let {
+    val (error, xr) = validateRequiredParameters(requiredParameters)
+    if (error != null) {
+      return Pair(error, null)
+    }
+
+    return xr?.let {
       val (rawParts, taskId, url) = it
 
       val method = input.getString(PARAMETER_METHOD) ?: DEFAULT_UPLOAD_METHOD
@@ -270,22 +268,25 @@ class UploaderParameterFactory {
         )
 
       if (!verifyParts(rawParts, promise)) {
-        return null
+        return Pair(Throwable("Something went wrong verifying parts"), null)
       }
 
       val parts = createParts(rawParts)
 
       val uri = URL(url)
 
-      UploaderParameters(
-        taskId,
-        parts,
-        uri,
-        method,
-        headers,
-        returnResponse,
-        progressInterval
+      Pair(
+        null,
+        UploaderParameters(
+          taskId,
+          parts,
+          uri,
+          method,
+          headers,
+          returnResponse,
+          progressInterval
+        )
       )
-    }
+    } ?: Pair(Throwable("Something unexpected went wrong validating upload parameters"), null)
   }
 }

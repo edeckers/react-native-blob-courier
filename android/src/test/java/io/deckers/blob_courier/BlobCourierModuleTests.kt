@@ -686,7 +686,7 @@ class BlobCourierModuleTests {
         )
         .toReactMap()
 
-    val uploaderParameters =
+    val (_, uploaderParameters) =
       UploaderParameterFactory().fromInput(
         uploadParameterReadableMap,
         Fixtures.EitherPromise(

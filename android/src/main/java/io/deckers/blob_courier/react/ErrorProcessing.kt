@@ -6,22 +6,23 @@
  */
 package io.deckers.blob_courier.react
 
-import com.facebook.react.bridge.Promise
+import io.deckers.blob_courier.common.BlobCourierError
+import io.deckers.blob_courier.common.BlobCourierErrorUnexpectedEmpty
 import io.deckers.blob_courier.common.ERROR_UNEXPECTED_EMPTY_VALUE
 import io.deckers.blob_courier.common.ERROR_UNEXPECTED_ERROR
 import io.deckers.blob_courier.common.ERROR_UNEXPECTED_EXCEPTION
 
-fun processUnexpectedError(promise: Promise, e: Error) = promise.reject(
+fun processUnexpectedError(e: Error) = BlobCourierError(
   ERROR_UNEXPECTED_ERROR,
   "An unexpected error occurred: ${e.message}"
 )
 
-fun processUnexpectedException(promise: Promise, e: Exception) = promise.reject(
+fun processUnexpectedException(e: Exception) = BlobCourierError(
   ERROR_UNEXPECTED_EXCEPTION,
   "An unexpected exception occurred: ${e.message}"
 )
 
-fun processUnexpectedEmptyValue(promise: Promise, parameterName: String) = promise.reject(
+fun processUnexpectedEmptyValue(parameterName: String) = BlobCourierErrorUnexpectedEmpty(
   ERROR_UNEXPECTED_EMPTY_VALUE,
-  "Parameter `$parameterName` cannot be empty."
+  parameterName
 )

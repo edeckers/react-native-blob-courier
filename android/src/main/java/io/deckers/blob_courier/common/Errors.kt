@@ -12,4 +12,9 @@ const val ERROR_UNEXPECTED_ERROR = "ERROR_UNEXPECTED_ERROR"
 const val ERROR_UNEXPECTED_EMPTY_VALUE = "ERROR_UNEXPECTED_EMPTY_VALUE"
 const val ERROR_UNKNOWN_HOST = "ERROR_UNKNOWN_HOST"
 
-class BlobCourierError(val code: String, message: String) : Throwable(message)
+open class BlobCourierError(val code: String, message: String) : Throwable(message)
+class BlobCourierErrorUnexpectedEmpty(
+  code: String,
+  parameterName: String
+) :
+  BlobCourierError(code, "Prameter `$parameterName` is empty")

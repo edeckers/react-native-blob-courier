@@ -14,6 +14,7 @@ import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.modules.network.OkHttpClientProvider
 import io.deckers.blob_courier.common.BlobCourierError
 import io.deckers.blob_courier.common.DEFAULT_PROGRESS_TIMEOUT_MILLISECONDS
+import io.deckers.blob_courier.common.ERROR_UNEXPECTED_EXCEPTION
 import io.deckers.blob_courier.common.ERROR_UNKNOWN_HOST
 import io.deckers.blob_courier.common.LIBRARY_NAME
 import io.deckers.blob_courier.fetch.BlobDownloader
@@ -43,8 +44,8 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
   fun fetchBlob(input: ReadableMap, promise: Promise) {
     thread {
       try {
-        val fetchParameters =
-          DownloaderParameterFactory().fromInput(input, promise)
+        val (_, fetchParameters) =
+          DownloaderParameterFactory().fromInput(input)
 
         val (error, response) = fetchParameters?.let {
           BlobDownloader(reactContext, createHttpClient(), createProgressFactory(reactContext))
@@ -62,9 +63,9 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
       } catch (e: UnknownHostException) {
         promise.reject(ERROR_UNKNOWN_HOST, e)
       } catch (e: Exception) {
-        processUnexpectedException(promise, e)
+        promise.reject(ERROR_UNEXPECTED_EXCEPTION, processUnexpectedException(e))
       } catch (e: Error) {
-        processUnexpectedError(promise, e)
+        promise.reject(ERROR_UNEXPECTED_EXCEPTION, processUnexpectedError(e))
       }
     }
   }
@@ -73,7 +74,7 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
   fun uploadBlob(input: ReadableMap, promise: Promise) {
     thread {
       try {
-        val uploadParameters = UploaderParameterFactory().fromInput(input, promise)
+        val (_, uploadParameters) = UploaderParameterFactory().fromInput(input, promise)
 
         val (error, response) = uploadParameters?.run {
           BlobUploader(reactContext, createHttpClient(), createProgressFactory(reactContext))
@@ -91,9 +92,9 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
       } catch (e: UnknownHostException) {
         promise.reject(ERROR_UNKNOWN_HOST, e)
       } catch (e: Exception) {
-        processUnexpectedException(promise, e)
+        promise.reject(ERROR_UNEXPECTED_EXCEPTION, processUnexpectedException(e))
       } catch (e: Error) {
-        processUnexpectedError(promise, e)
+        promise.reject(ERROR_UNEXPECTED_EXCEPTION, processUnexpectedError(e))
       }
     }
   }
