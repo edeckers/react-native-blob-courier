@@ -31,9 +31,9 @@ import io.deckers.blob_courier.common.PARAMETER_TASK_ID
 import io.deckers.blob_courier.common.PARAMETER_URL
 import io.deckers.blob_courier.common.filterHeaders
 import io.deckers.blob_courier.common.getMapInt
-import io.deckers.blob_courier.common.processUnexpectedEmptyValue
 import io.deckers.blob_courier.common.tryRetrieveArray
 import io.deckers.blob_courier.common.tryRetrieveString
+import io.deckers.blob_courier.react.processUnexpectedEmptyValue
 import java.net.URL
 import okhttp3.MediaType
 import okhttp3.MultipartBody

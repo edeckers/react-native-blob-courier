@@ -7,14 +7,14 @@
 package io.deckers.blob_courier.fetch
 
 import com.facebook.react.bridge.ReactApplicationContext
-import io.deckers.blob_courier.progress.ProgressNotifier
+import io.deckers.blob_courier.progress.ProgressNotifierFactory
 import java.io.File
 import okhttp3.OkHttpClient
 
 class BlobDownloader(
   private val reactContext: ReactApplicationContext,
   private val httpClient: OkHttpClient,
-  private val progressNotifier: ProgressNotifier
+  private val progressNotifierFactory: ProgressNotifierFactory
 ) {
   enum class TargetDirectoryEnum {
     Cache,
@@ -40,10 +40,13 @@ class BlobDownloader(
       downloaderParameters.targetDirectory
     )
 
+    val progressNotifier = progressNotifierFactory.create(downloaderParameters.taskId)
+
     return if (downloaderParameters.useDownloadManager)
       ManagedDownloader(reactContext, progressNotifier)
         .fetch(downloaderParameters, absoluteFilePath)
-    else UnmanagedDownloader(httpClient, progressNotifier)
-      .fetch(downloaderParameters, absoluteFilePath)
+    else
+      UnmanagedDownloader(httpClient, progressNotifier)
+        .fetch(downloaderParameters, absoluteFilePath)
   }
 }

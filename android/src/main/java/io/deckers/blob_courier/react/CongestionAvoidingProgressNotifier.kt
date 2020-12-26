@@ -15,7 +15,7 @@ class CongestionAvoidingProgressNotifier(
   private val taskId: String,
   private val progressInterval: Int
 ) : ProgressNotifier {
-  var lastProgressUpdate: Date = Date()
+  var lastProgressUpdate = Date()
 
   override fun notify(numberOfBytesUntilNow: Long, totalNumberOfBytes: Long) {
     val isDownloadFinished = numberOfBytesUntilNow == totalNumberOfBytes

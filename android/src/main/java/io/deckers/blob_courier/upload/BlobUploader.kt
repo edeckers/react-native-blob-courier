@@ -9,21 +9,21 @@ package io.deckers.blob_courier.upload
 import com.facebook.react.bridge.ReactApplicationContext
 import io.deckers.blob_courier.common.mapHeadersToMap
 import io.deckers.blob_courier.progress.BlobCourierProgressRequest
-import io.deckers.blob_courier.progress.ProgressNotifier
+import io.deckers.blob_courier.progress.ProgressNotifierFactory
 import okhttp3.OkHttpClient
 import okhttp3.Request
 
 class BlobUploader(
   private val reactContext: ReactApplicationContext,
   private val httpClient: OkHttpClient,
-  private val progressNotifier: ProgressNotifier
+  private val progressNotifierFactory: ProgressNotifierFactory
 ) {
 
   fun upload(uploaderParameters: UploaderParameters): Pair<Throwable?, Map<String, Any>?> {
 
     val requestBody = BlobCourierProgressRequest(
       uploaderParameters.toMultipartBody(reactContext.contentResolver),
-      progressNotifier
+      progressNotifierFactory.create(uploaderParameters.taskId)
     )
 
     val requestBuilder = Request.Builder()

@@ -7,7 +7,6 @@
 package io.deckers.blob_courier.common
 
 import com.facebook.common.internal.ImmutableMap
-import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReadableArray
 import com.facebook.react.bridge.ReadableMap
 import java.lang.reflect.Type
@@ -66,8 +65,3 @@ fun tryRetrieveString(input: ReadableMap, parameterName: String): String? {
 @Suppress("SameParameterValue")
 fun getMapInt(input: ReadableMap, field: String, fallback: Int): Int =
   if (input.hasKey(field)) input.getInt(field) else fallback
-
-fun processUnexpectedEmptyValue(promise: Promise, parameterName: String) = promise.reject(
-  ERROR_UNEXPECTED_EMPTY_VALUE,
-  "Parameter `$parameterName` cannot be empty."
-)

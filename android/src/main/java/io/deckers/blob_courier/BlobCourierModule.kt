@@ -18,7 +18,7 @@ import io.deckers.blob_courier.common.ERROR_UNKNOWN_HOST
 import io.deckers.blob_courier.common.LIBRARY_NAME
 import io.deckers.blob_courier.fetch.BlobDownloader
 import io.deckers.blob_courier.fetch.DownloaderParameterFactory
-import io.deckers.blob_courier.react.CongestionAvoidingProgressNotifier
+import io.deckers.blob_courier.react.CongestionAvoidingProgressNotifierFactory
 import io.deckers.blob_courier.react.processUnexpectedError
 import io.deckers.blob_courier.react.processUnexpectedException
 import io.deckers.blob_courier.react.toReactMap
@@ -28,6 +28,11 @@ import java.net.UnknownHostException
 import kotlin.concurrent.thread
 
 private fun createHttpClient() = OkHttpClientProvider.getOkHttpClient()
+private fun createProgressFactory(reactContext: ReactApplicationContext) =
+  CongestionAvoidingProgressNotifierFactory(
+    reactContext,
+    DEFAULT_PROGRESS_TIMEOUT_MILLISECONDS
+  )
 
 class BlobCourierModule(private val reactContext: ReactApplicationContext) :
   ReactContextBaseJavaModule(reactContext) {
@@ -42,18 +47,7 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
           DownloaderParameterFactory().fromInput(input, promise)
 
         val (error, response) = fetchParameters?.let {
-          val progressNotifier =
-            CongestionAvoidingProgressNotifier(
-              reactContext,
-              fetchParameters.taskId,
-              DEFAULT_PROGRESS_TIMEOUT_MILLISECONDS
-            )
-
-          BlobDownloader(
-            reactContext,
-            createHttpClient(),
-            progressNotifier
-          )
+          BlobDownloader(reactContext, createHttpClient(), createProgressFactory(reactContext))
             .download(fetchParameters)
         } ?: Pair(Error("NLNLNLNLNLNLN"), null)
 
@@ -82,15 +76,9 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
         val uploadParameters = UploaderParameterFactory().fromInput(input, promise)
 
         val (error, response) = uploadParameters?.run {
-          val progressNotifier =
-            CongestionAvoidingProgressNotifier(
-              reactContext,
-              uploadParameters.taskId,
-              DEFAULT_PROGRESS_TIMEOUT_MILLISECONDS
-            )
-
-          BlobUploader(reactContext, createHttpClient(), progressNotifier).upload(uploadParameters)
-        } ?: Pair(null, null)
+          BlobUploader(reactContext, createHttpClient(), createProgressFactory(reactContext))
+            .upload(uploadParameters)
+        } ?: Pair(Throwable("DFDSFSDFSSFDFS"), null)
 
         if (error != null) {
           promise.reject(error)
