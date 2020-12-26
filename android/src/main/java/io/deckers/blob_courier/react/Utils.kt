@@ -35,13 +35,16 @@ fun notifyBridgeOfProgress(
 }
 
 fun Array<*>.toReactArray(): WritableArray {
-  val thisMap = this
+  val thisArray = this
 
   return Arguments.createArray().apply {
-    thisMap.forEach { v ->
+    thisArray.forEach { v ->
       when {
         (v is Array<*>) -> {
           pushArray(v.toReactArray())
+        }
+        (v is Boolean) -> {
+          pushBoolean(v)
         }
         (v is String) ->
           pushString(v)
@@ -63,6 +66,9 @@ fun Map<*, *>.toReactMap(): WritableMap {
       when {
         (v is Array<*>) -> {
           putArray(k.toString(), v.toReactArray())
+        }
+        (v is Boolean) -> {
+          putBoolean(k.toString(), v)
         }
         (v is String) ->
           putString(k.toString(), v)

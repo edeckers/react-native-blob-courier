@@ -57,23 +57,170 @@ class BlobCourierInstrumentedModuleTests {
   @Test
   fun managed_download_succeeds() {
     val allRequiredParametersMap = createValidTestFetchParameterMap().toReactMap()
-
-    allRequiredParametersMap.putBoolean("useDownloadManager", true)
+    val androidSettings = mapOf(
+      "useDownloadManager" to true
+    )
+      .toReactMap()
+    allRequiredParametersMap.putMap("android", androidSettings)
 
     val ctx = InstrumentationRegistry.getInstrumentation().targetContext
     val reactContext = ReactApplicationContext(ctx)
 
-    runFetchBlob(
-      reactContext,
-      allRequiredParametersMap,
-      Fixtures.EitherPromise(
-        { message -> println(message) },
-        { result ->
-          assert(result?.getString("type") == DOWNLOAD_TYPE_MANAGED)
-          assert(result?.getMap("data")?.getString("result") == MANAGED_DOWNLOAD_SUCCESS)
-        }
+    var result = Pair(false, "Unknown")
+
+    val pool = Executors.newSingleThreadExecutor()
+
+    val threadLock = Object()
+
+    val finishThread = { succeeded: Boolean, message: String ->
+      synchronized(threadLock) {
+        threadLock.notify()
+        result = Pair(succeeded, message)
+      }
+    }
+
+    pool.execute {
+      synchronized(threadLock) {
+        runFetchBlob(
+          reactContext,
+          allRequiredParametersMap,
+          Fixtures.EitherPromise(
+            { message -> finishThread(false, message ?: "DOWNLOAD FAILED") },
+            { finishThread(true, "Success") }
+          )
+        )
+        threadLock.wait()
+      }
+    }
+
+    pool.shutdown()
+
+    if (!pool.awaitTermination(DEFAULT_PROMISE_TIMEOUT_MILLISECONDS * 1L, TimeUnit.MILLISECONDS)) {
+      pool.shutdownNow()
+      Assert.assertTrue(
+        "Test execution exceeded $DEFAULT_PROMISE_TIMEOUT_MILLISECONDS milliseconds", false
       )
+      return
+    }
+
+    Assert.assertTrue(result.second, result.first)
+  }
+
+  @Test
+  fun managed_download_returns_correct_type() {
+    val allRequiredParametersMap = createValidTestFetchParameterMap().toReactMap()
+    val androidSettings = mapOf(
+      "useDownloadManager" to true
     )
+      .toReactMap()
+
+    allRequiredParametersMap.putMap("android", androidSettings)
+
+    val ctx = InstrumentationRegistry.getInstrumentation().targetContext
+    val reactContext = ReactApplicationContext(ctx)
+
+    var result = Pair(false, "Unknown")
+
+    val pool = Executors.newSingleThreadExecutor()
+
+    val threadLock = Object()
+
+    val finishThread = { succeeded: Boolean, message: String ->
+      synchronized(threadLock) {
+        threadLock.notify()
+        result = Pair(succeeded, message)
+      }
+    }
+
+    pool.execute {
+      synchronized(threadLock) {
+        runFetchBlob(
+          reactContext,
+          allRequiredParametersMap,
+          Fixtures.EitherPromise(
+            { message -> finishThread(false, message ?: "DOWNLOAD FAILED") },
+            { result ->
+              val receivedType = result?.getString("type") ?: ""
+              val check = receivedType == DOWNLOAD_TYPE_MANAGED
+              finishThread(
+                check, if (check) "Success" else "Received incorrect type `$receivedType`"
+              )
+            }
+          )
+        )
+        threadLock.wait()
+      }
+    }
+
+    pool.shutdown()
+
+    if (!pool.awaitTermination(DEFAULT_PROMISE_TIMEOUT_MILLISECONDS * 1L, TimeUnit.MILLISECONDS)) {
+      pool.shutdownNow()
+      Assert.assertTrue(
+        "Test execution exceeded $DEFAULT_PROMISE_TIMEOUT_MILLISECONDS milliseconds", false
+      )
+      return
+    }
+
+    Assert.assertTrue(result.second, result.first)
+  }
+
+  @Test
+  fun managed_download_returns_expected_result() {
+    val allRequiredParametersMap = createValidTestFetchParameterMap().toReactMap()
+    val androidSettings = mapOf(
+      "useDownloadManager" to true
+    )
+      .toReactMap()
+    allRequiredParametersMap.putMap("android", androidSettings)
+
+    val ctx = InstrumentationRegistry.getInstrumentation().targetContext
+    val reactContext = ReactApplicationContext(ctx)
+
+    var result = Pair(false, "Unknown")
+
+    val pool = Executors.newSingleThreadExecutor()
+
+    val threadLock = Object()
+
+    val finishThread = { succeeded: Boolean, message: String ->
+      synchronized(threadLock) {
+        threadLock.notify()
+        result = Pair(succeeded, message)
+      }
+    }
+
+    pool.execute {
+      synchronized(threadLock) {
+        runFetchBlob(
+          reactContext,
+          allRequiredParametersMap,
+          Fixtures.EitherPromise(
+            { message -> finishThread(false, message ?: "DOWNLOAD FAILED") },
+            { result ->
+              val receivedResult = result?.getMap("data")?.getString("result") ?: ""
+              val check = receivedResult == MANAGED_DOWNLOAD_SUCCESS
+              finishThread(
+                check, if (check) "Success" else "Received incorrect result `$receivedResult`"
+              )
+            }
+          )
+        )
+        threadLock.wait()
+      }
+    }
+
+    pool.shutdown()
+
+    if (!pool.awaitTermination(DEFAULT_PROMISE_TIMEOUT_MILLISECONDS * 1L, TimeUnit.MILLISECONDS)) {
+      pool.shutdownNow()
+      Assert.assertTrue(
+        "Test execution exceeded $DEFAULT_PROMISE_TIMEOUT_MILLISECONDS milliseconds", false
+      )
+      return
+    }
+
+    Assert.assertTrue(result.second, result.first)
   }
 
   @Test
