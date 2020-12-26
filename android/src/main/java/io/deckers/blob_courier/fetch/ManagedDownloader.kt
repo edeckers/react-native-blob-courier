@@ -11,13 +11,17 @@ import android.content.Context
 import android.content.IntentFilter
 import com.facebook.react.bridge.ReactApplicationContext
 import io.deckers.blob_courier.progress.ManagedProgressUpdater
+import io.deckers.blob_courier.progress.ProgressNotifier
 import java.io.File
 
 private const val DOWNLOAD_MANAGER_PARAMETER_DESCRIPTION = "description"
 private const val DOWNLOAD_MANAGER_PARAMETER_ENABLE_NOTIFICATIONS = "enableNotifications"
 private const val DOWNLOAD_MANAGER_PARAMETER_TITLE = "title"
 
-class ManagedDownloader(private val reactContext: ReactApplicationContext) {
+class ManagedDownloader(
+  private val reactContext: ReactApplicationContext,
+  private val progressNotifier: ProgressNotifier
+) {
   private val defaultDownloadManager =
     reactContext.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
 
@@ -68,9 +72,9 @@ class ManagedDownloader(private val reactContext: ReactApplicationContext) {
       val progressUpdater =
         ManagedProgressUpdater(
           reactContext,
-          downloaderParameters.taskId,
           downloadId,
-          downloaderParameters.progressInterval.toLong()
+          downloaderParameters.progressInterval.toLong(),
+          progressNotifier
         )
 
       progressUpdater.start()

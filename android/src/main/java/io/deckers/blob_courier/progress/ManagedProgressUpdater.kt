@@ -9,16 +9,15 @@ package io.deckers.blob_courier.progress
 import android.app.DownloadManager
 import com.facebook.react.bridge.ReactApplicationContext
 import io.deckers.blob_courier.common.createDownloadManager
-import io.deckers.blob_courier.common.notifyBridgeOfProgress
 import java.io.Closeable
 import java.util.Timer
 import kotlin.concurrent.timerTask
 
 class ManagedProgressUpdater(
   private val context: ReactApplicationContext,
-  private val taskId: String,
   private val downloadId: Long,
-  private val progressInterval: Long
+  private val progressInterval: Long,
+  private val progressNotifier: ProgressNotifier
 ) : Closeable {
 
   private val progressUpdaterInterval = Timer()
@@ -27,20 +26,18 @@ class ManagedProgressUpdater(
     progressUpdaterInterval.scheduleAtFixedRate(
       timerTask {
         ProgressUpdateRunner(
-          context,
           createDownloadManager(context),
           downloadId,
-          taskId,
+          progressNotifier
         ).run()
       },
       0, progressInterval
     )
 
   private class ProgressUpdateRunner(
-    private val context: ReactApplicationContext,
     private val dm: DownloadManager,
     private val downloadId: Long,
-    private val taskId: String,
+    private val progressNotifier: ProgressNotifier,
   ) : Runnable {
 
     private fun updateStatus() =
@@ -62,7 +59,7 @@ class ManagedProgressUpdater(
         val totalSizeBytes =
           cursor.getLong(cursor.getColumnIndex(DownloadManager.COLUMN_TOTAL_SIZE_BYTES))
 
-        notifyBridgeOfProgress(context, taskId, numberOfBytes, totalSizeBytes)
+        progressNotifier.notify(numberOfBytes, totalSizeBytes)
       }
 
     override fun run() {

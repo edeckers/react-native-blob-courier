@@ -1,6 +1,6 @@
 package io.deckers.blob_courier
 
-import io.deckers.blob_courier.common.toReactMap
+import io.deckers.blob_courier.react.toReactMap
 
 data class TestUploadParameterMap(
   val taskId: String,

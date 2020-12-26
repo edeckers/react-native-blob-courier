@@ -6,9 +6,7 @@
  */
 package io.deckers.blob_courier.progress
 
-import com.facebook.react.bridge.ReactApplicationContext
 import java.io.IOException
-import okhttp3.MediaType
 import okhttp3.ResponseBody
 import okio.Buffer
 import okio.BufferedSource
@@ -17,30 +15,24 @@ import okio.Source
 import okio.Timeout
 
 class BlobCourierProgressResponse(
-  private val context: ReactApplicationContext,
-  private val taskId: String,
-  private val progressInterval: Int,
+  private val progressNotifier: ProgressNotifier,
   private val responseBody: ResponseBody
 ) : ResponseBody() {
-  private val totalNumberOfBytes = contentLength()
+  private val totalNumberOfBytes = responseBody.contentLength()
 
-  override fun contentType(): MediaType? = responseBody.contentType()
+  override fun contentType() = responseBody.contentType()
 
-  override fun contentLength(): Long = responseBody.contentLength()
+  override fun contentLength() = totalNumberOfBytes
 
-  override fun source(): BufferedSource =
-    Okio.buffer(ProgressReportingSource())
+  override fun source(): BufferedSource = Okio.buffer(ProgressReportingSource())
 
   private inner class ProgressReportingSource : Source {
     private var totalNumberOfBytesRead: Long = 0
 
-    private val progressNotifier =
-      CongestionAvoidingProgressNotifier(context, taskId, totalNumberOfBytes, progressInterval)
-
     private fun processNumberOfBytesRead(numberOfBytesRead: Long) {
       totalNumberOfBytesRead += if (numberOfBytesRead > 0) numberOfBytesRead else 0
 
-      progressNotifier.notify(totalNumberOfBytesRead)
+      progressNotifier.notify(totalNumberOfBytesRead, totalNumberOfBytes)
     }
 
     @Throws(IOException::class)

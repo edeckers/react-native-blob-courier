@@ -17,7 +17,7 @@ import io.deckers.blob_courier.Fixtures.createValidTestFetchParameterMap
 import io.deckers.blob_courier.Fixtures.createValidUploadTestParameterMap
 import io.deckers.blob_courier.Fixtures.runFetchBlob
 import io.deckers.blob_courier.Fixtures.runUploadBlob
-import io.deckers.blob_courier.common.toReactMap
+import io.deckers.blob_courier.react.toReactMap
 import io.deckers.blob_courier.upload.InputStreamRequestBody
 import io.deckers.blob_courier.upload.UploaderParameterFactory
 import io.deckers.blob_courier.upload.toMultipartBody

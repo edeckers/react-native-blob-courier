@@ -7,10 +7,10 @@
 package io.deckers.blob_courier.fetch
 
 import android.net.Uri
-import com.facebook.react.bridge.ReactApplicationContext
 import io.deckers.blob_courier.common.DOWNLOAD_TYPE_UNMANAGED
 import io.deckers.blob_courier.common.mapHeadersToMap
 import io.deckers.blob_courier.progress.BlobCourierProgressResponse
+import io.deckers.blob_courier.progress.ProgressNotifier
 import java.io.File
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
@@ -20,13 +20,12 @@ import okio.Okio
 import okio.Source
 
 class UnmanagedDownloader(
-  private val reactContext: ReactApplicationContext,
-  private val httpClient: OkHttpClient
+  private val httpClient: OkHttpClient,
+  private val progressNotifier: ProgressNotifier
 ) {
 
   private fun createDownloadProgressInterceptor(
-    taskId: String,
-    progressInterval: Int
+    progressNotifier: ProgressNotifier
   ): (
     Interceptor.Chain
   ) -> Response = fun(
@@ -36,12 +35,7 @@ class UnmanagedDownloader(
 
     return originalResponse.body()?.let {
       originalResponse.newBuilder().body(
-        BlobCourierProgressResponse(
-          reactContext,
-          taskId,
-          progressInterval,
-          it
-        )
+        BlobCourierProgressResponse(progressNotifier, it)
       ).build()
     } ?: originalResponse
   }
@@ -62,10 +56,7 @@ class UnmanagedDownloader(
         .build()
 
       val progressInterceptor =
-        createDownloadProgressInterceptor(
-          downloaderParameters.taskId,
-          downloaderParameters.progressInterval
-        )
+        createDownloadProgressInterceptor(progressNotifier)
 
       val httpClientWithInterceptor =
         httpClient.newBuilder()

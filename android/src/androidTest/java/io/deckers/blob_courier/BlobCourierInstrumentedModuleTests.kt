@@ -17,7 +17,7 @@ import io.deckers.blob_courier.Fixtures.runFetchBlob
 import io.deckers.blob_courier.TestUtils.circumventHiddenApiExemptionsForMockk
 import io.deckers.blob_courier.common.DOWNLOAD_TYPE_MANAGED
 import io.deckers.blob_courier.common.MANAGED_DOWNLOAD_SUCCESS
-import io.deckers.blob_courier.common.toReactMap
+import io.deckers.blob_courier.react.toReactMap
 import io.mockk.every
 import io.mockk.mockkStatic
 import java.util.UUID
