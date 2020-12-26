@@ -6,6 +6,7 @@
  */
 package io.deckers.blob_courier
 
+import android.util.Log
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactContextBaseJavaModule
@@ -46,6 +47,7 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
         val fetchParameters =
           DownloaderParameterFactory().fromInput(input, promise)
 
+        Log.e("JJJ", "Wat wat wat ${fetchParameters?.useDownloadManager}")
         val (error, response) = fetchParameters?.let {
           BlobDownloader(reactContext, createHttpClient(), createProgressFactory(reactContext))
             .download(fetchParameters)
@@ -53,17 +55,23 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
 
         if (error != null) {
           promise.reject(error)
+          Log.e("XXX", "$error")
           return@thread
         }
 
-        promise.resolve(response!!.toReactMap())
+        Log.e("YYY", "$response")
+        promise.resolve(response?.toReactMap())
       } catch (e: BlobCourierError) {
+        Log.e("AAA", "$e")
         promise.reject(e.code, e.message)
       } catch (e: UnknownHostException) {
+        Log.e("BBB", "$e")
         promise.reject(ERROR_UNKNOWN_HOST, e)
       } catch (e: Exception) {
+        Log.e("CCC", "$e")
         processUnexpectedException(promise, e)
       } catch (e: Error) {
+        Log.e("DDD", "$e")
         processUnexpectedError(promise, e)
       }
     }
@@ -85,7 +93,7 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
           return@thread
         }
 
-        promise.resolve(response)
+        promise.resolve(response?.toReactMap())
       } catch (e: BlobCourierError) {
         promise.reject(e.code, e.message)
       } catch (e: UnknownHostException) {

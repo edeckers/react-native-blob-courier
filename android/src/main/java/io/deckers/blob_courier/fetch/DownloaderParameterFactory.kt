@@ -120,7 +120,10 @@ class DownloaderParameterFactory {
         maybeAndroidSettings?.getMap(PARAMETER_DOWNLOAD_MANAGER_SETTINGS)?.toHashMap().orEmpty()
 
       val useDownloadManager =
-        maybeAndroidSettings?.hasKey(PARAMETER_USE_DOWNLOAD_MANAGER) ?: false
+        maybeAndroidSettings?.let { b ->
+          b.hasKey(PARAMETER_USE_DOWNLOAD_MANAGER) &&
+            b.getBoolean(PARAMETER_USE_DOWNLOAD_MANAGER)
+        } ?: false
 
       val unfilteredHeaders =
         input.getMap(PARAMETER_HEADERS)?.toHashMap() ?: emptyMap<String, Any>()

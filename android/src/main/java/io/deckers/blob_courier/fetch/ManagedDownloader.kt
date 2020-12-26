@@ -93,7 +93,9 @@ class ManagedDownloader(
 
             result = Pair(null, r)
 
-            waitForDownloadCompletion.notify()
+            synchronized(waitForDownloadCompletion) {
+              waitForDownloadCompletion.notify()
+            }
           }
 
         reactContext.registerReceiver(
