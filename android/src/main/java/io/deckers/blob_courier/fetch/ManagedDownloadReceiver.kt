@@ -13,7 +13,6 @@ import android.content.Intent
 import android.database.Cursor
 import android.net.Uri
 import io.deckers.blob_courier.common.DOWNLOAD_TYPE_MANAGED
-import io.deckers.blob_courier.common.MANAGED_DOWNLOAD_FAILURE
 import io.deckers.blob_courier.common.MANAGED_DOWNLOAD_SUCCESS
 import io.deckers.blob_courier.common.createDownloadManager
 import io.deckers.blob_courier.progress.ManagedProgressUpdater
@@ -69,7 +68,8 @@ class ManagedDownloadReceiver(
     }
 
     processCompletedOrError(
-      Pair(null, mapOf<String, Any>("result" to MANAGED_DOWNLOAD_FAILURE))
+      // Pair(null, mapOf<String, Any>("result" to MANAGED_DOWNLOAD_FAILURE))
+      Pair(Exception("No."), null)
 
       // promise.reject(
       //   ERROR_UNEXPECTED_EXCEPTION,
