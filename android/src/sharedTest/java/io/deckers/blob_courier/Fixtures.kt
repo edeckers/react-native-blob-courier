@@ -11,7 +11,7 @@ import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.bridge.WritableMap
 
-const val DEFAULT_PROMISE_TIMEOUT_MILLISECONDS = 50_000L
+const val DEFAULT_PROMISE_TIMEOUT_MILLISECONDS = 10_000L
 
 object Fixtures {
 

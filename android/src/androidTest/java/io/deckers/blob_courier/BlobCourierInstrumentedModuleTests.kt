@@ -81,15 +81,19 @@ class BlobCourierInstrumentedModuleTests {
 
     pool.execute {
       synchronized(threadLock) {
-        runFetchBlob(
-          reactContext,
-          allRequiredParametersMap,
-          Fixtures.EitherPromise(
-            { message -> finishThread(false, message ?: "DOWNLOAD FAILED") },
-            { finishThread(true, "Success") }
+        try {
+          runFetchBlob(
+            reactContext,
+            allRequiredParametersMap,
+            Fixtures.EitherPromise(
+              { message -> finishThread(false, message ?: "DOWNLOAD FAILED") },
+              { finishThread(true, "Success") }
+            )
           )
-        )
-        threadLock.wait()
+          threadLock.wait()
+        } catch (_: InterruptedException) {
+
+        }
       }
     }
 
@@ -134,21 +138,25 @@ class BlobCourierInstrumentedModuleTests {
 
     pool.execute {
       synchronized(threadLock) {
-        runFetchBlob(
-          reactContext,
-          allRequiredParametersMap,
-          Fixtures.EitherPromise(
-            { message -> finishThread(false, message ?: "DOWNLOAD FAILED") },
-            { result ->
-              val receivedType = result?.getString("type") ?: ""
-              val check = receivedType == DOWNLOAD_TYPE_MANAGED
-              finishThread(
-                check, if (check) "Success" else "Received incorrect type `$receivedType`"
-              )
-            }
+        try {
+          runFetchBlob(
+            reactContext,
+            allRequiredParametersMap,
+            Fixtures.EitherPromise(
+              { message -> finishThread(false, message ?: "DOWNLOAD FAILED") },
+              { result ->
+                val receivedType = result?.getString("type") ?: ""
+                val check = receivedType == DOWNLOAD_TYPE_MANAGED
+                finishThread(
+                  check, if (check) "Success" else "Received incorrect type `$receivedType`"
+                )
+              }
+            )
           )
-        )
-        threadLock.wait()
+          threadLock.wait()
+        } catch (_: InterruptedException) {
+
+        }
       }
     }
 
@@ -192,21 +200,25 @@ class BlobCourierInstrumentedModuleTests {
 
     pool.execute {
       synchronized(threadLock) {
-        runFetchBlob(
-          reactContext,
-          allRequiredParametersMap,
-          Fixtures.EitherPromise(
-            { message -> finishThread(false, message ?: "DOWNLOAD FAILED") },
-            { result ->
-              val receivedResult = result?.getMap("data")?.getString("result") ?: ""
-              val check = receivedResult == MANAGED_DOWNLOAD_SUCCESS
-              finishThread(
-                check, if (check) "Success" else "Received incorrect result `$receivedResult`"
-              )
-            }
+        try {
+          runFetchBlob(
+            reactContext,
+            allRequiredParametersMap,
+            Fixtures.EitherPromise(
+              { message -> finishThread(false, message ?: "DOWNLOAD FAILED") },
+              { result ->
+                val receivedResult = result?.getMap("data")?.getString("result") ?: ""
+                val check = receivedResult == MANAGED_DOWNLOAD_SUCCESS
+                finishThread(
+                  check, if (check) "Success" else "Received incorrect result `$receivedResult`"
+                )
+              }
+            )
           )
-        )
-        threadLock.wait()
+          threadLock.wait()
+        } catch (_: InterruptedException) {
+
+        }
       }
     }
 
@@ -243,21 +255,25 @@ class BlobCourierInstrumentedModuleTests {
 
     pool.execute {
       synchronized(threadLock) {
-        val uploadParametersMap =
-          Fixtures.createValidUploadTestParameterMap(
-            UUID.randomUUID().toString(),
-            someFileThatIsAlwaysAvailable
-          ).toReactMap()
+        try {
+          val uploadParametersMap =
+            Fixtures.createValidUploadTestParameterMap(
+              UUID.randomUUID().toString(),
+              someFileThatIsAlwaysAvailable
+            ).toReactMap()
 
-        Fixtures.runUploadBlob(
-          ctx,
-          uploadParametersMap,
-          Fixtures.EitherPromise(
-            { m1 -> finishThread(false, "Failed upload: $m1") },
-            { finishThread(true, "Success") }
+          Fixtures.runUploadBlob(
+            ctx,
+            uploadParametersMap,
+            Fixtures.EitherPromise(
+              { m1 -> finishThread(false, "Failed upload: $m1") },
+              { finishThread(true, "Success") }
+            )
           )
-        )
-        threadLock.wait()
+          threadLock.wait()
+        } catch (_: InterruptedException) {
+
+        }
       }
     }
 
@@ -297,15 +313,19 @@ class BlobCourierInstrumentedModuleTests {
 
     pool.execute {
       synchronized(threadLock) {
-        Fixtures.runUploadBlob(
-          ctx,
-          allRequiredParametersMap.toReactMap(),
-          Fixtures.EitherPromise(
-            { m0 -> finishThread(true, "Success: $m0") },
-            { m0 -> finishThread(false, "Resolved but expected reject: $m0") }
+        try {
+          Fixtures.runUploadBlob(
+            ctx,
+            allRequiredParametersMap.toReactMap(),
+            Fixtures.EitherPromise(
+              { m0 -> finishThread(true, "Success: $m0") },
+              { m0 -> finishThread(false, "Resolved but expected reject: $m0") }
+            )
           )
-        )
-        threadLock.wait()
+          threadLock.wait()
+        } catch (_: InterruptedException) {
+
+        }
       }
     }
 
@@ -345,15 +365,19 @@ class BlobCourierInstrumentedModuleTests {
     pool.schedule(
       {
         synchronized(threadLock) {
-          runFetchBlob(
-            ctx,
-            allRequiredParametersMap,
-            Fixtures.EitherPromise(
-              { m0 -> finishThread(true, "Success: $m0") },
-              { m0 -> finishThread(false, "Resolved but expected reject: $m0") }
+          try {
+            runFetchBlob(
+              ctx,
+              allRequiredParametersMap,
+              Fixtures.EitherPromise(
+                { m0 -> finishThread(true, "Success: $m0") },
+                { m0 -> finishThread(false, "Resolved but expected reject: $m0") }
+              )
             )
-          )
-          threadLock.wait()
+            threadLock.wait()
+          } catch (_: InterruptedException) {
+
+          }
         }
       },
       ADB_COMMAND_DELAY_MILLISECONDS, TimeUnit.MILLISECONDS
