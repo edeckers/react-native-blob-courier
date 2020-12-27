@@ -9,7 +9,6 @@ jobs:
       - uses: actions/setup-node@v2-beta
         with:
           node-version: '12'
-      - run: cd example && yarn
       - run: yarn
   run-typescript-tests:
     needs: build-typescript
@@ -19,7 +18,6 @@ jobs:
       - uses: actions/setup-node@v2-beta
         with:
           node-version: '12'
-      - run: cd example && yarn
       - run: yarn
       - run: yarn test
       - uses: actions/upload-artifact@v2
@@ -35,7 +33,6 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: 1.8
-      - run: cd example && yarn
       - run: yarn
       - uses: eskatos/gradle-command-action@v1
         with:
@@ -55,7 +52,6 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: 1.8
-      - run: cd example && yarn
       - run: yarn
       - uses: reactivecircus/android-emulator-runner@v2.13.0
         with:
@@ -76,10 +72,8 @@ jobs:
       - uses: actions/setup-node@v2-beta
         with:
           node-version: '12'
-      - run: cd example && yarn
       - run: yarn
       - run: cd ios && pod install
-      - run: cd example/ios && pod install
       - run: xcodebuild test -scheme BlobCourierTests -destination 'platform=iOS Simulator,name=iPhone 11' -workspace 'ios/BlobCourier.xcworkspace' | xcpretty --report junit
       - uses: actions/upload-artifact@v2
         with:
