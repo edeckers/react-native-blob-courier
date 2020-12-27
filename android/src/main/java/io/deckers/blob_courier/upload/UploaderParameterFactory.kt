@@ -8,10 +8,10 @@ package io.deckers.blob_courier.upload
 
 import android.content.ContentResolver
 import android.net.Uri
-import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReadableArray
 import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.bridge.ReadableType
+import io.deckers.blob_courier.common.BlobCourierError
 import io.deckers.blob_courier.common.DEFAULT_MIME_TYPE
 import io.deckers.blob_courier.common.DEFAULT_PROGRESS_TIMEOUT_MILLISECONDS
 import io.deckers.blob_courier.common.DEFAULT_UPLOAD_METHOD
@@ -152,24 +152,25 @@ private fun filterReadableMapsFromReadableArray(parts: ReadableArray): Array<Rea
     }
   )
 
-private fun verifyParts(parts: ReadableArray, promise: Promise): Boolean {
+private fun verifyParts(parts: ReadableArray): Pair<Boolean, Throwable?> {
   val mapParts = filterReadableMapsFromReadableArray(parts)
 
   val diff = parts.size() - mapParts.size
   if (diff > 0) {
-    promise.reject(ERROR_INVALID_VALUE, "$diff provided part(s) are not ReadableMap objects")
-    return false
+    return Pair(false, BlobCourierError(
+      ERROR_INVALID_VALUE,
+      "$diff provided part(s) are not ReadableMap objects"))
   }
 
   val failedPartVerifications =
     mapParts.map(::verifyPart).filter { verification -> !verification.first }
   if (failedPartVerifications.isNotEmpty()) {
     val firstFailure = failedPartVerifications.first()
-    promise.reject(firstFailure.second, firstFailure.third)
-    return false
+
+    return Pair(false, BlobCourierError(firstFailure.second, firstFailure.third))
   }
 
-  return true
+  return Pair(true, null)
 }
 
 private fun createFilePayload(payload: ReadableMap): FilePart? {
@@ -211,12 +212,12 @@ private fun createParts(parts: ReadableArray): List<Part> =
 
 private fun retrieveRequiredParametersOrThrow(input: ReadableMap):
   Triple<ReadableArray?, String?, String?> {
-    val rawParts = tryRetrieveArray(input, PARAMETER_PARTS)
-    val taskId = tryRetrieveString(input, PARAMETER_TASK_ID)
-    val url = tryRetrieveString(input, PARAMETER_URL)
+  val rawParts = tryRetrieveArray(input, PARAMETER_PARTS)
+  val taskId = tryRetrieveString(input, PARAMETER_TASK_ID)
+  val url = tryRetrieveString(input, PARAMETER_URL)
 
-    return Triple(rawParts, taskId, url)
-  }
+  return Triple(rawParts, taskId, url)
+}
 
 private fun validateRequiredParameters(
   parameters: Triple<ReadableArray?, String?, String?>,
@@ -239,7 +240,7 @@ private fun validateRequiredParameters(
 }
 
 class UploaderParameterFactory {
-  fun fromInput(input: ReadableMap, promise: Promise): Pair<Throwable?, UploaderParameters?> {
+  fun fromInput(input: ReadableMap): Pair<Throwable?, UploaderParameters?> {
     val requiredParameters = retrieveRequiredParametersOrThrow(input)
 
     val (error, xr) = validateRequiredParameters(requiredParameters)
@@ -267,8 +268,9 @@ class UploaderParameterFactory {
           DEFAULT_PROGRESS_TIMEOUT_MILLISECONDS
         )
 
-      if (!verifyParts(rawParts, promise)) {
-        return Pair(Throwable("Something went wrong verifying parts"), null)
+      val (partsAreVerified, partsError) = verifyParts(rawParts)
+      if (!partsAreVerified) {
+        return Pair(partsError, null)
       }
 
       val parts = createParts(rawParts)

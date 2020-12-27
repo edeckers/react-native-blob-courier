@@ -74,7 +74,7 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
   fun uploadBlob(input: ReadableMap, promise: Promise) {
     thread {
       try {
-        val (_, uploadParameters) = UploaderParameterFactory().fromInput(input, promise)
+        val (_, uploadParameters) = UploaderParameterFactory().fromInput(input)
 
         val (error, response) = uploadParameters?.run {
           BlobUploader(reactContext, createHttpClient(), createProgressFactory(reactContext))
