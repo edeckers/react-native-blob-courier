@@ -44,7 +44,7 @@ fun assertRequiredParameter(input: ReadableMap, type: Type, parameterName: Strin
       type.toString(), { unknownProcessor }
     )(input, parameterName)
 
-  maybeValue ?: throw BlobCourierError(
+  maybeValue ?: throw BlobCourierThrowabe(
     ERROR_MISSING_REQUIRED_PARAMETER,
     "`$parameterName` is a required parameter of type `$type`"
   )

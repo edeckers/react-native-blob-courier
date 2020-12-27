@@ -12,7 +12,6 @@ import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReactMethod
 import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.modules.network.OkHttpClientProvider
-import io.deckers.blob_courier.common.BlobCourierError
 import io.deckers.blob_courier.common.DEFAULT_PROGRESS_TIMEOUT_MILLISECONDS
 import io.deckers.blob_courier.common.ERROR_UNEXPECTED_EXCEPTION
 import io.deckers.blob_courier.common.ERROR_UNKNOWN_HOST
@@ -58,14 +57,12 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
         }
 
         promise.resolve(response?.toReactMap())
-      } catch (e: BlobCourierError) {
-        promise.reject(e.code, e.message)
       } catch (e: UnknownHostException) {
         promise.reject(ERROR_UNKNOWN_HOST, e)
       } catch (e: Exception) {
-        promise.reject(ERROR_UNEXPECTED_EXCEPTION, processUnexpectedException(e))
+        promise.reject(ERROR_UNEXPECTED_EXCEPTION, processUnexpectedException(e).message)
       } catch (e: Error) {
-        promise.reject(ERROR_UNEXPECTED_EXCEPTION, processUnexpectedError(e))
+        promise.reject(ERROR_UNEXPECTED_EXCEPTION, processUnexpectedError(e).message)
       }
     }
   }
@@ -87,14 +84,12 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
         }
 
         promise.resolve(response?.toReactMap())
-      } catch (e: BlobCourierError) {
-        promise.reject(e.code, e.message)
       } catch (e: UnknownHostException) {
         promise.reject(ERROR_UNKNOWN_HOST, e)
       } catch (e: Exception) {
-        promise.reject(ERROR_UNEXPECTED_EXCEPTION, processUnexpectedException(e))
+        promise.reject(ERROR_UNEXPECTED_EXCEPTION, processUnexpectedException(e).message)
       } catch (e: Error) {
-        promise.reject(ERROR_UNEXPECTED_EXCEPTION, processUnexpectedError(e))
+        promise.reject(ERROR_UNEXPECTED_EXCEPTION, processUnexpectedError(e).message)
       }
     }
   }

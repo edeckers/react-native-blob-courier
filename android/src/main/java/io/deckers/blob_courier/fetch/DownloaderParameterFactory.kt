@@ -43,16 +43,16 @@ private fun processInvalidValue(
 
 private fun retrieveRequiredParametersOrThrow(input: ReadableMap):
   Triple<String?, String?, String?> {
-    val filename = tryRetrieveString(input, PARAMETER_FILENAME)
-    val taskId = tryRetrieveString(input, PARAMETER_TASK_ID)
-    val url = tryRetrieveString(input, PARAMETER_URL)
+  val filename = tryRetrieveString(input, PARAMETER_FILENAME)
+  val taskId = tryRetrieveString(input, PARAMETER_TASK_ID)
+  val url = tryRetrieveString(input, PARAMETER_URL)
 
-    return Triple(filename, taskId, url)
-  }
+  return Triple(filename, taskId, url)
+}
 
 private fun validateRequiredParameters(
   parameters: Triple<String?, String?, String?>,
-): Pair<Throwable?, Triple<String, String, String>?> {
+): Pair<BlobCourierError?, Triple<String, String, String>?> {
   val (filename, taskId, url) = parameters
 
   if (filename == null) {
@@ -84,7 +84,7 @@ data class DownloaderParameters(
 )
 
 class DownloaderParameterFactory {
-  fun fromInput(input: ReadableMap): Pair<Throwable?, DownloaderParameters?> {
+  fun fromInput(input: ReadableMap): Pair<BlobCourierError?, DownloaderParameters?> {
     val requiredParameters = retrieveRequiredParametersOrThrow(input)
     val (error, px) = validateRequiredParameters(requiredParameters)
 

@@ -18,6 +18,7 @@ import io.deckers.blob_courier.common.DEFAULT_UPLOAD_METHOD
 import io.deckers.blob_courier.common.ERROR_INVALID_VALUE
 import io.deckers.blob_courier.common.ERROR_MISSING_REQUIRED_PARAMETER
 import io.deckers.blob_courier.common.ERROR_UNEXPECTED_EMPTY_VALUE
+import io.deckers.blob_courier.common.ERROR_UNEXPECTED_ERROR
 import io.deckers.blob_courier.common.PARAMETER_ABSOLUTE_FILE_PATH
 import io.deckers.blob_courier.common.PARAMETER_FILENAME
 import io.deckers.blob_courier.common.PARAMETER_HEADERS
@@ -152,7 +153,7 @@ private fun filterReadableMapsFromReadableArray(parts: ReadableArray): Array<Rea
     }
   )
 
-private fun verifyParts(parts: ReadableArray): Pair<Boolean, Throwable?> {
+private fun verifyParts(parts: ReadableArray): Pair<Boolean, BlobCourierError?> {
   val mapParts = filterReadableMapsFromReadableArray(parts)
 
   val diff = parts.size() - mapParts.size
@@ -221,7 +222,7 @@ private fun retrieveRequiredParametersOrThrow(input: ReadableMap):
 
 private fun validateRequiredParameters(
   parameters: Triple<ReadableArray?, String?, String?>,
-): Pair<Throwable?, Triple<ReadableArray, String, String>?> {
+): Pair<BlobCourierError?, Triple<ReadableArray, String, String>?> {
   val (rawParts, taskId, url) = parameters
 
   if (taskId == null) {
@@ -240,7 +241,7 @@ private fun validateRequiredParameters(
 }
 
 class UploaderParameterFactory {
-  fun fromInput(input: ReadableMap): Pair<Throwable?, UploaderParameters?> {
+  fun fromInput(input: ReadableMap): Pair<BlobCourierError?, UploaderParameters?> {
     val requiredParameters = retrieveRequiredParametersOrThrow(input)
 
     val (error, xr) = validateRequiredParameters(requiredParameters)
@@ -289,6 +290,7 @@ class UploaderParameterFactory {
           progressInterval
         )
       )
-    } ?: Pair(Throwable("Something unexpected went wrong validating upload parameters"), null)
+    }
+      ?: Pair(BlobCourierError(ERROR_UNEXPECTED_ERROR, "Something unexpected went wrong validating upload parameters"), null)
   }
 }

@@ -12,13 +12,16 @@ const val ERROR_UNEXPECTED_ERROR = "ERROR_UNEXPECTED_ERROR"
 const val ERROR_UNEXPECTED_EMPTY_VALUE = "ERROR_UNEXPECTED_EMPTY_VALUE"
 const val ERROR_UNKNOWN_HOST = "ERROR_UNKNOWN_HOST"
 
-open class BlobCourierError(val code: String, message: String) : Throwable(message)
+open class BlobCourierError(val code: String, val message: String)
+open class BlobCourierThrowabe(val code: String, message: String) : Throwable(message)
+
 class BlobCourierErrorInvalidValue(
   code: String,
   parameterName: String,
   value: String
 ) :
   BlobCourierError(code, "Invalid value `$value` for parameter `$parameterName`")
+
 class BlobCourierErrorUnexpectedEmpty(
   code: String,
   parameterName: String
