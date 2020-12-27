@@ -57,7 +57,7 @@ jobs:
           java-version: 1.8
       - run: cd example && yarn
       - run: yarn
-      - uses: reactivecircus/android-emulator-runner@v2
+      - uses: reactivecircus/android-emulator-runner@v2.13.0
         with:
           api-level: 30
           script: ./gradlew connectedAndroidTest
