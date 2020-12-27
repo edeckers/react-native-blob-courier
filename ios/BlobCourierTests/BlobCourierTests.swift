@@ -54,6 +54,12 @@ class BlobCourierTests: XCTestCase {
                 let body = String(data: data, encoding: .utf8) ?? ""
 
                 let httpMessage = "Content-Type: \(contentType!)\r\n\(body)"
+                let bodyStartsWithBoundary = body.hasPrefix("--")
+                if (!bodyStartsWithBoundary) {
+                  result = (false, "Body must start with boundary")
+                  return
+                }
+
                 do {
                   let parsedMessage = try MimeParser().parse(httpMessage)
                   if case .mixed(let mimes) = parsedMessage.content {
@@ -72,7 +78,7 @@ class BlobCourierTests: XCTestCase {
                     }
                   }
                 } catch {
-                  result = (false, error.localizedDescription ?? "Unspecified error message")
+                  result = (false, error.localizedDescription)
                 }
               }
             }
