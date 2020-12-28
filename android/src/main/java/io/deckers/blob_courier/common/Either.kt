@@ -43,5 +43,3 @@ fun <TLeft, TRight, TOut> Either<TLeft, TRight>.`do`(
 
 fun <TLeft, TRight> right(r: TRight): Either<TLeft, TRight> = Either.Right(r)
 fun <TLeft, TRight> left(l: TLeft): Either<TLeft, TRight> = Either.Left(l)
-
-

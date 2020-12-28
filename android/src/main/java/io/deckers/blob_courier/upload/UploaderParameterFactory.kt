@@ -16,8 +16,6 @@ import io.deckers.blob_courier.common.DEFAULT_MIME_TYPE
 import io.deckers.blob_courier.common.DEFAULT_PROGRESS_TIMEOUT_MILLISECONDS
 import io.deckers.blob_courier.common.DEFAULT_UPLOAD_METHOD
 import io.deckers.blob_courier.common.ERROR_INVALID_VALUE
-import io.deckers.blob_courier.common.ERROR_MISSING_REQUIRED_PARAMETER
-import io.deckers.blob_courier.common.ERROR_UNEXPECTED_EMPTY_VALUE
 import io.deckers.blob_courier.common.Either
 import io.deckers.blob_courier.common.Failure
 import io.deckers.blob_courier.common.PARAMETER_ABSOLUTE_FILE_PATH
@@ -33,15 +31,17 @@ import io.deckers.blob_courier.common.PARAMETER_TASK_ID
 import io.deckers.blob_courier.common.PARAMETER_URL
 import io.deckers.blob_courier.common.Result
 import io.deckers.blob_courier.common.Success
+import io.deckers.blob_courier.common.cons
 import io.deckers.blob_courier.common.filterHeaders
 import io.deckers.blob_courier.common.fold
 import io.deckers.blob_courier.common.getMapInt
+import io.deckers.blob_courier.common.isNotNull
+import io.deckers.blob_courier.common.isNotNullOrEmpty
 import io.deckers.blob_courier.common.left
-import io.deckers.blob_courier.common.maybe
-import io.deckers.blob_courier.common.read
 import io.deckers.blob_courier.common.right
 import io.deckers.blob_courier.common.tryRetrieveArray
 import io.deckers.blob_courier.common.tryRetrieveString
+import io.deckers.blob_courier.common.validateParameter
 import io.deckers.blob_courier.react.processUnexpectedEmptyValue
 import java.net.URL
 import okhttp3.MediaType
@@ -50,62 +50,62 @@ import okhttp3.MultipartBody
 private const val PARAMETER_PARTS = "parts"
 private const val PARAMETER_RETURN_RESPONSE = "returnResponse"
 
-private fun verifyFilePart(part: ReadableMap): Triple<Boolean, String, String> {
-  if (!part.hasKey(PARAMETER_PART_PAYLOAD)) {
-    return Triple(false, ERROR_MISSING_REQUIRED_PARAMETER, "part.$PARAMETER_PART_PAYLOAD")
-  }
+// private fun verifyFilePart(part: ReadableMap): Triple<Boolean, String, String> {
+//   if (!part.hasKey(PARAMETER_PART_PAYLOAD)) {
+//     return Triple(false, ERROR_MISSING_REQUIRED_PARAMETER, "part.$PARAMETER_PART_PAYLOAD")
+//   }
+//
+//   val payload = part.getMap(PARAMETER_PART_PAYLOAD)!!
+//   if (!payload.hasKey(PARAMETER_ABSOLUTE_FILE_PATH)) {
+//     return Triple(false, ERROR_MISSING_REQUIRED_PARAMETER, "part.$PARAMETER_ABSOLUTE_FILE_PATH")
+//   }
+//
+//   if (!payload.hasKey(PARAMETER_MIME_TYPE)) {
+//     return Triple(false, ERROR_MISSING_REQUIRED_PARAMETER, "part.$PARAMETER_MIME_TYPE")
+//   }
+//
+//   if (payload.getString(PARAMETER_ABSOLUTE_FILE_PATH).isNullOrEmpty()) {
+//     return Triple(false, ERROR_UNEXPECTED_EMPTY_VALUE, "part.$PARAMETER_ABSOLUTE_FILE_PATH")
+//   }
+//
+//   if (payload.getString(PARAMETER_MIME_TYPE).isNullOrEmpty()) {
+//     return Triple(false, ERROR_UNEXPECTED_EMPTY_VALUE, "part.$PARAMETER_MIME_TYPE")
+//   }
+//
+//   return Triple(true, "", "")
+// }
 
-  val payload = part.getMap(PARAMETER_PART_PAYLOAD)!!
-  if (!payload.hasKey(PARAMETER_ABSOLUTE_FILE_PATH)) {
-    return Triple(false, ERROR_MISSING_REQUIRED_PARAMETER, "part.$PARAMETER_ABSOLUTE_FILE_PATH")
-  }
+// private fun verifyStringPart(part: ReadableMap): Triple<Boolean, String, String> {
+//   if (part.hasKey(PARAMETER_PART_PAYLOAD)) {
+//     return Triple(true, "", "")
+//   }
+//
+//   return Triple(false, ERROR_MISSING_REQUIRED_PARAMETER, "part.$PARAMETER_PART_PAYLOAD")
+// }
 
-  if (!payload.hasKey(PARAMETER_MIME_TYPE)) {
-    return Triple(false, ERROR_MISSING_REQUIRED_PARAMETER, "part.$PARAMETER_MIME_TYPE")
-  }
-
-  if (payload.getString(PARAMETER_ABSOLUTE_FILE_PATH).isNullOrEmpty()) {
-    return Triple(false, ERROR_UNEXPECTED_EMPTY_VALUE, "part.$PARAMETER_ABSOLUTE_FILE_PATH")
-  }
-
-  if (payload.getString(PARAMETER_MIME_TYPE).isNullOrEmpty()) {
-    return Triple(false, ERROR_UNEXPECTED_EMPTY_VALUE, "part.$PARAMETER_MIME_TYPE")
-  }
-
-  return Triple(true, "", "")
-}
-
-private fun verifyStringPart(part: ReadableMap): Triple<Boolean, String, String> {
-  if (part.hasKey(PARAMETER_PART_PAYLOAD)) {
-    return Triple(true, "", "")
-  }
-
-  return Triple(false, ERROR_MISSING_REQUIRED_PARAMETER, "part.$PARAMETER_PART_PAYLOAD")
-}
-
-private fun verifyPart(part: ReadableMap?): Triple<Boolean, String, String> {
-  if (part == null) {
-    return Triple(false, ERROR_UNEXPECTED_EMPTY_VALUE, "part")
-  }
-
-  if (!part.hasKey(PARAMETER_PART_NAME)) {
-    return Triple(false, ERROR_MISSING_REQUIRED_PARAMETER, "part.$PARAMETER_PART_NAME")
-  }
-
-  if (!part.hasKey(PARAMETER_PART_PAYLOAD)) {
-    return Triple(false, ERROR_MISSING_REQUIRED_PARAMETER, "part.$PARAMETER_PART_PAYLOAD")
-  }
-
-  if (!part.hasKey(PARAMETER_PART_TYPE)) {
-    return Triple(false, ERROR_MISSING_REQUIRED_PARAMETER, "part.$PARAMETER_PART_TYPE")
-  }
-
-  if (part.getString(PARAMETER_PART_TYPE) == "file") {
-    return verifyFilePart(part)
-  }
-
-  return verifyStringPart(part)
-}
+// private fun verifyPart(part: ReadableMap?): Triple<Boolean, String, String> {
+//   if (part == null) {
+//     return Triple(false, ERROR_UNEXPECTED_EMPTY_VALUE, "part")
+//   }
+//
+//   if (!part.hasKey(PARAMETER_PART_NAME)) {
+//     return Triple(false, ERROR_MISSING_REQUIRED_PARAMETER, "part.$PARAMETER_PART_NAME")
+//   }
+//
+//   if (!part.hasKey(PARAMETER_PART_PAYLOAD)) {
+//     return Triple(false, ERROR_MISSING_REQUIRED_PARAMETER, "part.$PARAMETER_PART_PAYLOAD")
+//   }
+//
+//   if (!part.hasKey(PARAMETER_PART_TYPE)) {
+//     return Triple(false, ERROR_MISSING_REQUIRED_PARAMETER, "part.$PARAMETER_PART_TYPE")
+//   }
+//
+//   if (part.getString(PARAMETER_PART_TYPE) == "file") {
+//     return verifyFilePart(part)
+//   }
+//
+//   return verifyStringPart(part)
+// }
 
 data class UploaderParameters(
   val taskId: String,
@@ -175,11 +175,11 @@ private fun verifyParts(parts: ReadableArray): Either<BlobCourierError, Unit> {
   }
 
   val failedPartVerifications =
-    mapParts.map(::verifyPart).filter { verification -> !verification.first }
+    mapParts.map(::validatePartsMap).filter { verification -> verification is Either.Left }
   if (failedPartVerifications.isNotEmpty()) {
-    val firstFailure = failedPartVerifications.first()
+    val firstFailure = failedPartVerifications.first() as Either.Left
 
-    return Either.Left(BlobCourierError(firstFailure.second, firstFailure.third))
+    return Either.Left(BlobCourierError("CODE", firstFailure.v.message ?: ""))
   }
 
   return Either.Right(Unit)
@@ -224,13 +224,12 @@ private fun createParts(parts: ReadableArray): List<Part> =
 
 private fun retrieveRequiredParameters(input: ReadableMap):
   Result<RequiredParameters> {
-  val rawParts = tryRetrieveArray(input, PARAMETER_PARTS)
-  val taskId = tryRetrieveString(input, PARAMETER_TASK_ID)
-  val url = tryRetrieveString(input, PARAMETER_URL)
+    val rawParts = tryRetrieveArray(input, PARAMETER_PARTS)
+    val taskId = tryRetrieveString(input, PARAMETER_TASK_ID)
+    val url = tryRetrieveString(input, PARAMETER_URL)
 
-  return rawParts.map { RequiredParameters(it, taskId, url) }
-}
-
+    return rawParts.map { RequiredParameters(it, taskId, url) }
+  }
 
 data class RequiredParameters(val parts: ReadableArray?, val taskId: String?, val url: String?)
 data class ValidatedRequiredParameters(
@@ -239,26 +238,47 @@ data class ValidatedRequiredParameters(
   val url: String
 )
 
-private fun <H, P> validateParameter(
-  name: String, value: H?,
-  validate: (name: String, value: H?) -> Either<String, H>, prev: P) =
-  read(validate(name, value), prev)
-
-@Suppress("SameParameterValue")
-private fun <H> validateParameter(
-  name: String,
-  value: H?,
-  validate: (name: String, value: H?) -> Either<String, H>): Either<String, Pair<H, Unit>> =
-  validateParameter(name, value, validate, Unit)
-
-private fun <T> isNotNull(name: String, value: T?): Either<String, T> =
-  maybe(value).fold({ left(name) }, { v -> right(v) })
-
 private fun isValidFilePayload(key: String, map: ReadableMap?): Either<String, ReadableMap> =
-  left("")
+  validateParameter(PARAMETER_PART_PAYLOAD, map, ::hasKey)
+    .map { (part, _) -> cons(part.getMap(PARAMETER_PART_PAYLOAD), part) }
+    .fmap { (payload, part) ->
+      validateParameter(
+        PARAMETER_ABSOLUTE_FILE_PATH,
+        payload,
+        ::hasKey,
+        part
+      )
+    }
+    .fmap { (payload, part) -> validateParameter(PARAMETER_MIME_TYPE, payload, ::hasKey, part) }
+    .fmap { (payload, part) ->
+      validateParameter(
+        PARAMETER_ABSOLUTE_FILE_PATH,
+        payload.getString(PARAMETER_ABSOLUTE_FILE_PATH),
+        ::isNotNullOrEmpty,
+        cons(payload, part)
+      )
+    }
+    .fmap { (_, t) ->
+      val (payload, part) = t
+
+      validateParameter(
+        PARAMETER_MIME_TYPE,
+        payload.getString(PARAMETER_MIME_TYPE),
+        ::isNotNullOrEmpty,
+        part
+      )
+    }
+    .fold(
+      { v -> left("$key.$v") },
+      { (_, validatedMap) -> right(validatedMap) }
+    )
 
 private fun isValidStringPayload(key: String, map: ReadableMap?): Either<String, ReadableMap> =
-  left("")
+  validateParameter(PARAMETER_PART_PAYLOAD, map, ::hasKey)
+    .fold(
+      { v -> left("$key.$v") },
+      { (validatedMap) -> right(validatedMap) }
+    )
 
 private fun isValidPayload(key: String, map: ReadableMap?): Either<String, ReadableMap> =
   if (map?.getString(PARAMETER_PART_TYPE) == "file")
@@ -268,15 +288,15 @@ private fun isValidPayload(key: String, map: ReadableMap?): Either<String, Reada
 private fun hasKey(key: String, map: ReadableMap?): Either<String, ReadableMap> =
   if (map?.hasKey(key) == true) right(map) else left(key)
 
-private fun validatePartsMap(value: ReadableMap?) =
+private fun validatePartsMap(value: ReadableMap?): Result<ReadableMap> =
   validateParameter(PARAMETER_PARTS, value, ::isNotNull)
-    .fmap { prev -> validateParameter(PARAMETER_PART_NAME, prev.first, ::hasKey, prev) }
-    .fmap { prev -> validateParameter(PARAMETER_PART_PAYLOAD, prev.first, ::hasKey, prev) }
-    .fmap { prev -> validateParameter(PARAMETER_PART_TYPE, prev.first, ::hasKey, prev) }
-    .fmap { prev -> validateParameter(PARAMETER_PART_TYPE, prev.first, ::isValidPayload, prev) }
+    .fmap { prev -> validateParameter(PARAMETER_PART_NAME, prev.first, ::hasKey) }
+    .fmap { prev -> validateParameter(PARAMETER_PART_PAYLOAD, prev.first, ::hasKey) }
+    .fmap { prev -> validateParameter(PARAMETER_PART_TYPE, prev.first, ::hasKey) }
+    .fmap { prev -> validateParameter(PARAMETER_PART_TYPE, prev.first, ::isValidPayload) }
     .fold(
       { v -> Failure(Error(v)) },
-      { v -> Success(v) }
+      { v -> Success(v.first) }
     )
 
 private fun validateRequiredParameters(

@@ -29,3 +29,25 @@ fun filterHeaders(unfilteredHeaders: Map<String, Any>): Map<String, String> =
 fun <H, TT> cons(head: H, tail: TT) = Pair(head, tail)
 fun <H, TT> read(v: Either<String, H>, acc: TT) =
   v.map { cons(it, acc) }
+
+fun <H, P> validateParameter(
+  name: String,
+  value: H?,
+  validate: (name: String, value: H?) -> Either<String, H>,
+  prev: P
+) =
+  read(validate(name, value), prev)
+
+@Suppress("SameParameterValue")
+fun <H> validateParameter(
+  name: String,
+  value: H?,
+  validate: (name: String, value: H?) -> Either<String, H>
+): Either<String, Pair<H, Unit>> =
+  validateParameter(name, value, validate, Unit)
+
+fun <T> isNotNullOrEmpty(name: String, value: T?): Either<String, T> =
+  maybe(value).fold({ left(name) }, { v -> if (v == "") left(name) else right(v) })
+
+fun <T> isNotNull(name: String, value: T?): Either<String, T> =
+  maybe(value).fold({ left(name) }, { v -> right(v) })
