@@ -36,7 +36,10 @@ import io.deckers.blob_courier.common.Success
 import io.deckers.blob_courier.common.filterHeaders
 import io.deckers.blob_courier.common.fold
 import io.deckers.blob_courier.common.getMapInt
+import io.deckers.blob_courier.common.left
 import io.deckers.blob_courier.common.maybe
+import io.deckers.blob_courier.common.read
+import io.deckers.blob_courier.common.right
 import io.deckers.blob_courier.common.tryRetrieveArray
 import io.deckers.blob_courier.common.tryRetrieveString
 import io.deckers.blob_courier.react.processUnexpectedEmptyValue
@@ -221,18 +224,13 @@ private fun createParts(parts: ReadableArray): List<Part> =
 
 private fun retrieveRequiredParameters(input: ReadableMap):
   Result<RequiredParameters> {
-    val rawParts = tryRetrieveArray(input, PARAMETER_PARTS)
-    val taskId = tryRetrieveString(input, PARAMETER_TASK_ID)
-    val url = tryRetrieveString(input, PARAMETER_URL)
+  val rawParts = tryRetrieveArray(input, PARAMETER_PARTS)
+  val taskId = tryRetrieveString(input, PARAMETER_TASK_ID)
+  val url = tryRetrieveString(input, PARAMETER_URL)
 
-    return rawParts.map { RequiredParameters(it, taskId, url) }
-  }
+  return rawParts.map { RequiredParameters(it, taskId, url) }
+}
 
-private fun <T> testParameterNotNull(name: String, value: T?): Either<String, T> =
-  maybe(value).fold(
-    { Either.Left(name) },
-    { v -> Either.Right(v) }
-  )
 
 data class RequiredParameters(val parts: ReadableArray?, val taskId: String?, val url: String?)
 data class ValidatedRequiredParameters(
@@ -241,23 +239,62 @@ data class ValidatedRequiredParameters(
   val url: String
 )
 
+private fun <H, P> validateParameter(
+  name: String, value: H?,
+  validate: (name: String, value: H?) -> Either<String, H>, prev: P) =
+  read(validate(name, value), prev)
+
+@Suppress("SameParameterValue")
+private fun <H> validateParameter(
+  name: String,
+  value: H?,
+  validate: (name: String, value: H?) -> Either<String, H>): Either<String, Pair<H, Unit>> =
+  validateParameter(name, value, validate, Unit)
+
+private fun <T> isNotNull(name: String, value: T?): Either<String, T> =
+  maybe(value).fold({ left(name) }, { v -> right(v) })
+
+private fun isValidFilePayload(key: String, map: ReadableMap?): Either<String, ReadableMap> =
+  left("")
+
+private fun isValidStringPayload(key: String, map: ReadableMap?): Either<String, ReadableMap> =
+  left("")
+
+private fun isValidPayload(key: String, map: ReadableMap?): Either<String, ReadableMap> =
+  if (map?.getString(PARAMETER_PART_TYPE) == "file")
+    isValidFilePayload(key, map)
+  else isValidStringPayload(key, map)
+
+private fun hasKey(key: String, map: ReadableMap?): Either<String, ReadableMap> =
+  if (map?.hasKey(key) == true) right(map) else left(key)
+
+private fun validatePartsMap(value: ReadableMap?) =
+  validateParameter(PARAMETER_PARTS, value, ::isNotNull)
+    .fmap { prev -> validateParameter(PARAMETER_PART_NAME, prev.first, ::hasKey, prev) }
+    .fmap { prev -> validateParameter(PARAMETER_PART_PAYLOAD, prev.first, ::hasKey, prev) }
+    .fmap { prev -> validateParameter(PARAMETER_PART_TYPE, prev.first, ::hasKey, prev) }
+    .fmap { prev -> validateParameter(PARAMETER_PART_TYPE, prev.first, ::isValidPayload, prev) }
+    .fold(
+      { v -> Failure(Error(v)) },
+      { v -> Success(v) }
+    )
+
 private fun validateRequiredParameters(
   parameters: RequiredParameters,
 ): Result<ValidatedRequiredParameters> =
-  parameters.let {
-    testParameterNotNull(PARAMETER_PARTS, it.parts)
-      .fmap { v -> testParameterNotNull(PARAMETER_TASK_ID, it.taskId).map { r -> Pair(v, r) } }
-      .fmap { v -> testParameterNotNull(PARAMETER_URL, it.url).map { r -> Pair(v, r) } }
-      .fold(
-        { v -> Failure(processUnexpectedEmptyValue(v)) },
-        { validatedParameters ->
-          val (rest, url) = validatedParameters
-          val (parts, taskId) = rest
+  validateParameter(PARAMETER_PARTS, parameters.parts, ::isNotNull)
+    .fmap { prev -> validateParameter(PARAMETER_TASK_ID, parameters.taskId, ::isNotNull, prev) }
+    .fmap { prev -> validateParameter(PARAMETER_URL, parameters.url, ::isNotNull, prev) }
+    .fold(
+      { v -> Failure(processUnexpectedEmptyValue(v)) },
+      { validatedParameters ->
+        val (url, rest) = validatedParameters
+        val (taskId, rest2) = rest
+        val (parts, _) = rest2
 
-          Success(ValidatedRequiredParameters(parts, taskId, url))
-        },
-      )
-  }
+        Success(ValidatedRequiredParameters(parts, taskId, url))
+      }
+    )
 
 class UploaderParameterFactory {
   fun fromInput(input: ReadableMap): Result<UploaderParameters> =

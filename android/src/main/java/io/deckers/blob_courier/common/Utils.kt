@@ -25,3 +25,7 @@ fun filterHeaders(unfilteredHeaders: Map<String, Any>): Map<String, String> =
     .filter { true }
     .mapNotNull { (k, v) -> v?.let { k to it } }
     .toMap()
+
+fun <H, TT> cons(head: H, tail: TT) = Pair(head, tail)
+fun <H, TT> read(v: Either<String, H>, acc: TT) =
+  v.map { cons(it, acc) }
