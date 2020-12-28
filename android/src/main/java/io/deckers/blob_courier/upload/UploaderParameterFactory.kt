@@ -34,7 +34,9 @@ import io.deckers.blob_courier.common.PARAMETER_URL
 import io.deckers.blob_courier.common.Result
 import io.deckers.blob_courier.common.Success
 import io.deckers.blob_courier.common.filterHeaders
+import io.deckers.blob_courier.common.fold
 import io.deckers.blob_courier.common.getMapInt
+import io.deckers.blob_courier.common.maybe
 import io.deckers.blob_courier.common.tryRetrieveArray
 import io.deckers.blob_courier.common.tryRetrieveString
 import io.deckers.blob_courier.react.processUnexpectedEmptyValue
@@ -217,40 +219,50 @@ private fun createPart(part: ReadableMap): Part {
 private fun createParts(parts: ReadableArray): List<Part> =
   filterReadableMapsFromReadableArray(parts).map(::createPart)
 
-private fun retrieveRequiredParametersOrThrow(input: ReadableMap):
-  Triple<ReadableArray?, String?, String?> {
+private fun retrieveRequiredParameters(input: ReadableMap):
+  Result<RequiredParameters> {
     val rawParts = tryRetrieveArray(input, PARAMETER_PARTS)
     val taskId = tryRetrieveString(input, PARAMETER_TASK_ID)
     val url = tryRetrieveString(input, PARAMETER_URL)
 
-    return Triple(rawParts, taskId, url)
+    return rawParts.map { RequiredParameters(it, taskId, url) }
   }
+
+private fun <T> testParameterNotNull(name: String, value: T?): Either<String, T> =
+  maybe(value).fold(
+    { Either.Left(name) },
+    { v -> Either.Right(v) }
+  )
+
+data class RequiredParameters(val parts: ReadableArray?, val taskId: String?, val url: String?)
+data class ValidatedRequiredParameters(
+  val parts: ReadableArray,
+  val taskId: String,
+  val url: String
+)
 
 private fun validateRequiredParameters(
-  parameters: Triple<ReadableArray?, String?, String?>,
-): Result<Triple<ReadableArray, String, String>> {
-  val (rawParts, taskId, url) = parameters
+  parameters: RequiredParameters,
+): Result<ValidatedRequiredParameters> =
+  parameters.let {
+    testParameterNotNull(PARAMETER_PARTS, it.parts)
+      .fmap { v -> testParameterNotNull(PARAMETER_TASK_ID, it.taskId).map { r -> Pair(v, r) } }
+      .fmap { v -> testParameterNotNull(PARAMETER_URL, it.url).map { r -> Pair(v, r) } }
+      .fold(
+        { v -> Failure(processUnexpectedEmptyValue(v)) },
+        { validatedParameters ->
+          val (rest, url) = validatedParameters
+          val (parts, taskId) = rest
 
-  if (taskId == null) {
-    return Failure(processUnexpectedEmptyValue(PARAMETER_TASK_ID))
+          Success(ValidatedRequiredParameters(parts, taskId, url))
+        },
+      )
   }
-
-  if (rawParts == null) {
-    return Failure(processUnexpectedEmptyValue(PARAMETER_PARTS))
-  }
-
-  if (url == null) {
-    return Failure(processUnexpectedEmptyValue(PARAMETER_URL))
-  }
-
-  return Success(Triple(rawParts, taskId, url))
-}
 
 class UploaderParameterFactory {
-  fun fromInput(input: ReadableMap): Result<UploaderParameters> {
-    val requiredParameters = retrieveRequiredParametersOrThrow(input)
-
-    return validateRequiredParameters(requiredParameters)
+  fun fromInput(input: ReadableMap): Result<UploaderParameters> =
+    retrieveRequiredParameters(input)
+      .fmap(::validateRequiredParameters)
       .fmap {
         val (rawParts, taskId, url) = it
 
@@ -292,5 +304,4 @@ class UploaderParameterFactory {
           )
         )
       }
-  }
 }

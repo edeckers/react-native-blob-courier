@@ -34,7 +34,7 @@ private val REQUIRED_PARAMETER_PROCESSORS = ImmutableMap.of(
 
 private val AVAILABLE_PARAMETER_PROCESSORS = REQUIRED_PARAMETER_PROCESSORS.keys.joinToString(", ")
 
-fun assertRequiredParameter(input: ReadableMap, type: Type, parameterName: String) {
+fun assertRequiredParameter(input: ReadableMap, type: Type, parameterName: String): Result<Any?> {
   val defaultFallback =
     "No processor defined for type `$type`, valid options: $AVAILABLE_PARAMETER_PROCESSORS"
   val unknownProcessor = { _: ReadableMap, _: String -> throw Exception(defaultFallback) }
@@ -44,17 +44,25 @@ fun assertRequiredParameter(input: ReadableMap, type: Type, parameterName: Strin
       type.toString(), { unknownProcessor }
     )(input, parameterName)
 
-  maybeValue ?: throw BlobCourierThrowabe(
-    ERROR_MISSING_REQUIRED_PARAMETER,
-    "`$parameterName` is a required parameter of type `$type`"
-  )
+  return maybe(maybeValue)
+    .toEither()
+    .fold(
+      {
+        Failure(
+          BlobCourierThrowabe(
+            ERROR_MISSING_REQUIRED_PARAMETER,
+            "`$parameterName` is a required parameter of type `$type`"
+          )
+        )
+      },
+      ::Success
+    )
 }
 
-fun tryRetrieveArray(input: ReadableMap, parameterName: String): ReadableArray? {
-  assertRequiredParameter(input, Array::class.java, parameterName)
-
-  return input.getArray(parameterName)
-}
+fun tryRetrieveArray(input: ReadableMap, parameterName: String): Either<Throwable, ReadableArray?> =
+  assertRequiredParameter(input, Array::class.java, parameterName).map {
+    input.getArray(parameterName)
+  }
 
 fun tryRetrieveString(input: ReadableMap, parameterName: String): String? {
   assertRequiredParameter(input, String::class.java, parameterName)
