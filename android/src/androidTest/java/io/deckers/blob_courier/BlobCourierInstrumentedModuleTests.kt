@@ -92,7 +92,6 @@ class BlobCourierInstrumentedModuleTests {
           )
           threadLock.wait()
         } catch (_: InterruptedException) {
-
         }
       }
     }
@@ -155,7 +154,6 @@ class BlobCourierInstrumentedModuleTests {
           )
           threadLock.wait()
         } catch (_: InterruptedException) {
-
         }
       }
     }
@@ -217,7 +215,6 @@ class BlobCourierInstrumentedModuleTests {
           )
           threadLock.wait()
         } catch (_: InterruptedException) {
-
         }
       }
     }
@@ -272,7 +269,6 @@ class BlobCourierInstrumentedModuleTests {
           )
           threadLock.wait()
         } catch (_: InterruptedException) {
-
         }
       }
     }
@@ -324,7 +320,6 @@ class BlobCourierInstrumentedModuleTests {
           )
           threadLock.wait()
         } catch (_: InterruptedException) {
-
         }
       }
     }
@@ -376,7 +371,6 @@ class BlobCourierInstrumentedModuleTests {
             )
             threadLock.wait()
           } catch (_: InterruptedException) {
-
           }
         }
       },

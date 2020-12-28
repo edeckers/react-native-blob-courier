@@ -8,6 +8,9 @@ package io.deckers.blob_courier.fetch
 
 import android.net.Uri
 import io.deckers.blob_courier.common.DOWNLOAD_TYPE_UNMANAGED
+import io.deckers.blob_courier.common.Failure
+import io.deckers.blob_courier.common.Result
+import io.deckers.blob_courier.common.Success
 import io.deckers.blob_courier.common.mapHeadersToMap
 import io.deckers.blob_courier.progress.BlobCourierProgressResponse
 import io.deckers.blob_courier.progress.ProgressNotifier
@@ -43,7 +46,7 @@ class UnmanagedDownloader(
   fun fetch(
     downloaderParameters: DownloaderParameters,
     toAbsoluteFilePath: File,
-  ): Pair<Throwable?, Map<String, Any>?> {
+  ): Result<Map<String, Any>> {
     try {
       val request = Request.Builder()
         .method(downloaderParameters.method, null)
@@ -72,8 +75,7 @@ class UnmanagedDownloader(
         }
       }
 
-      return Pair(
-        null,
+      return Success(
         mapOf(
           "type" to DOWNLOAD_TYPE_UNMANAGED,
           "data" to mapOf(
@@ -86,7 +88,7 @@ class UnmanagedDownloader(
         )
       )
     } catch (e: Throwable) {
-      return Pair(e, null)
+      return Failure(e)
     }
   }
 }

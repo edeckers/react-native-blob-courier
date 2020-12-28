@@ -16,6 +16,8 @@ import io.deckers.blob_courier.common.DEFAULT_PROGRESS_TIMEOUT_MILLISECONDS
 import io.deckers.blob_courier.common.ERROR_UNEXPECTED_EXCEPTION
 import io.deckers.blob_courier.common.ERROR_UNKNOWN_HOST
 import io.deckers.blob_courier.common.LIBRARY_NAME
+import io.deckers.blob_courier.common.Success
+import io.deckers.blob_courier.common.`do`
 import io.deckers.blob_courier.fetch.BlobDownloader
 import io.deckers.blob_courier.fetch.DownloaderParameterFactory
 import io.deckers.blob_courier.react.CongestionAvoidingProgressNotifierFactory
@@ -43,20 +45,21 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
   fun fetchBlob(input: ReadableMap, promise: Promise) {
     thread {
       try {
-        val (_, fetchParameters) =
-          DownloaderParameterFactory().fromInput(input)
+        val errorOrDownloadResult =
+          DownloaderParameterFactory().fromInput(input).fmap(
+            BlobDownloader(
+              reactContext,
+              createHttpClient(),
+              createProgressFactory(reactContext)
+            )::download
+          )
 
-        val (error, response) = fetchParameters?.let {
-          BlobDownloader(reactContext, createHttpClient(), createProgressFactory(reactContext))
-            .download(fetchParameters)
-        } ?: Pair(Error("An unexpected error occurred"), null)
-
-        if (error != null) {
-          promise.reject(error)
-          return@thread
-        }
-
-        promise.resolve(response?.toReactMap())
+        errorOrDownloadResult
+          .fmap { Success(it.toReactMap()) }
+          .`do`(
+            promise::reject,
+            promise::resolve
+          )
       } catch (e: UnknownHostException) {
         promise.reject(ERROR_UNKNOWN_HOST, e)
       } catch (e: Exception) {
@@ -71,19 +74,23 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
   fun uploadBlob(input: ReadableMap, promise: Promise) {
     thread {
       try {
-        val (_, uploadParameters) = UploaderParameterFactory().fromInput(input)
+        val errorOrUploadResult =
+          UploaderParameterFactory()
+            .fromInput(input)
+            .fmap(
+              BlobUploader(
+                reactContext,
+                createHttpClient(),
+                createProgressFactory(reactContext)
+              )::upload
+            )
 
-        val (error, response) = uploadParameters?.run {
-          BlobUploader(reactContext, createHttpClient(), createProgressFactory(reactContext))
-            .upload(uploadParameters)
-        } ?: Pair(Throwable("An unexpected error occurred"), null)
-
-        if (error != null) {
-          promise.reject(error)
-          return@thread
-        }
-
-        promise.resolve(response?.toReactMap())
+        errorOrUploadResult
+          .fmap { Success(it.toReactMap()) }
+          .`do`(
+            promise::reject,
+            promise::resolve
+          )
       } catch (e: UnknownHostException) {
         promise.reject(ERROR_UNKNOWN_HOST, e)
       } catch (e: Exception) {

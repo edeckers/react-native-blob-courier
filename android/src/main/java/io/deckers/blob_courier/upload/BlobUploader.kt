@@ -7,6 +7,9 @@
 package io.deckers.blob_courier.upload
 
 import com.facebook.react.bridge.ReactApplicationContext
+import io.deckers.blob_courier.common.Failure
+import io.deckers.blob_courier.common.Result
+import io.deckers.blob_courier.common.Success
 import io.deckers.blob_courier.common.mapHeadersToMap
 import io.deckers.blob_courier.progress.BlobCourierProgressRequest
 import io.deckers.blob_courier.progress.ProgressNotifierFactory
@@ -19,7 +22,7 @@ class BlobUploader(
   private val progressNotifierFactory: ProgressNotifierFactory
 ) {
 
-  fun upload(uploaderParameters: UploaderParameters): Pair<Throwable?, Map<String, Any>?> {
+  fun upload(uploaderParameters: UploaderParameters): Result<Map<String, Any>> {
 
     val requestBody = BlobCourierProgressRequest(
       uploaderParameters.toMultipartBody(reactContext.contentResolver),
@@ -43,8 +46,7 @@ class BlobUploader(
 
       val b = response.body()?.string().orEmpty()
 
-      return Pair(
-        null,
+      return Success(
         mapOf(
           "response" to mapOf(
             "code" to response.code(),
@@ -54,9 +56,9 @@ class BlobUploader(
         )
       )
     } catch (e: Exception) {
-      return Pair(e, null)
+      return Failure(e)
     } catch (e: Error) {
-      return Pair(e, null)
+      return Failure(e)
     }
   }
 }

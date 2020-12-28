@@ -18,7 +18,8 @@ import io.deckers.blob_courier.common.DEFAULT_UPLOAD_METHOD
 import io.deckers.blob_courier.common.ERROR_INVALID_VALUE
 import io.deckers.blob_courier.common.ERROR_MISSING_REQUIRED_PARAMETER
 import io.deckers.blob_courier.common.ERROR_UNEXPECTED_EMPTY_VALUE
-import io.deckers.blob_courier.common.ERROR_UNEXPECTED_ERROR
+import io.deckers.blob_courier.common.Either
+import io.deckers.blob_courier.common.Failure
 import io.deckers.blob_courier.common.PARAMETER_ABSOLUTE_FILE_PATH
 import io.deckers.blob_courier.common.PARAMETER_FILENAME
 import io.deckers.blob_courier.common.PARAMETER_HEADERS
@@ -30,6 +31,8 @@ import io.deckers.blob_courier.common.PARAMETER_PART_TYPE
 import io.deckers.blob_courier.common.PARAMETER_SETTINGS_PROGRESS_INTERVAL
 import io.deckers.blob_courier.common.PARAMETER_TASK_ID
 import io.deckers.blob_courier.common.PARAMETER_URL
+import io.deckers.blob_courier.common.Result
+import io.deckers.blob_courier.common.Success
 import io.deckers.blob_courier.common.filterHeaders
 import io.deckers.blob_courier.common.getMapInt
 import io.deckers.blob_courier.common.tryRetrieveArray
@@ -153,14 +156,17 @@ private fun filterReadableMapsFromReadableArray(parts: ReadableArray): Array<Rea
     }
   )
 
-private fun verifyParts(parts: ReadableArray): Pair<Boolean, BlobCourierError?> {
+private fun verifyParts(parts: ReadableArray): Either<BlobCourierError, Unit> {
   val mapParts = filterReadableMapsFromReadableArray(parts)
 
   val diff = parts.size() - mapParts.size
   if (diff > 0) {
-    return Pair(false, BlobCourierError(
-      ERROR_INVALID_VALUE,
-      "$diff provided part(s) are not ReadableMap objects"))
+    return Either.Left(
+      BlobCourierError(
+        ERROR_INVALID_VALUE,
+        "$diff provided part(s) are not ReadableMap objects"
+      )
+    )
   }
 
   val failedPartVerifications =
@@ -168,10 +174,10 @@ private fun verifyParts(parts: ReadableArray): Pair<Boolean, BlobCourierError?> 
   if (failedPartVerifications.isNotEmpty()) {
     val firstFailure = failedPartVerifications.first()
 
-    return Pair(false, BlobCourierError(firstFailure.second, firstFailure.third))
+    return Either.Left(BlobCourierError(firstFailure.second, firstFailure.third))
   }
 
-  return Pair(true, null)
+  return Either.Right(Unit)
 }
 
 private fun createFilePayload(payload: ReadableMap): FilePart? {
@@ -213,84 +219,78 @@ private fun createParts(parts: ReadableArray): List<Part> =
 
 private fun retrieveRequiredParametersOrThrow(input: ReadableMap):
   Triple<ReadableArray?, String?, String?> {
-  val rawParts = tryRetrieveArray(input, PARAMETER_PARTS)
-  val taskId = tryRetrieveString(input, PARAMETER_TASK_ID)
-  val url = tryRetrieveString(input, PARAMETER_URL)
+    val rawParts = tryRetrieveArray(input, PARAMETER_PARTS)
+    val taskId = tryRetrieveString(input, PARAMETER_TASK_ID)
+    val url = tryRetrieveString(input, PARAMETER_URL)
 
-  return Triple(rawParts, taskId, url)
-}
+    return Triple(rawParts, taskId, url)
+  }
 
 private fun validateRequiredParameters(
   parameters: Triple<ReadableArray?, String?, String?>,
-): Pair<BlobCourierError?, Triple<ReadableArray, String, String>?> {
+): Result<Triple<ReadableArray, String, String>> {
   val (rawParts, taskId, url) = parameters
 
   if (taskId == null) {
-    return Pair(processUnexpectedEmptyValue(PARAMETER_TASK_ID), null)
+    return Failure(processUnexpectedEmptyValue(PARAMETER_TASK_ID))
   }
 
   if (rawParts == null) {
-    return Pair(processUnexpectedEmptyValue(PARAMETER_PARTS), null)
+    return Failure(processUnexpectedEmptyValue(PARAMETER_PARTS))
   }
 
   if (url == null) {
-    return Pair(processUnexpectedEmptyValue(PARAMETER_URL), null)
+    return Failure(processUnexpectedEmptyValue(PARAMETER_URL))
   }
 
-  return Pair(null, Triple(rawParts, taskId, url))
+  return Success(Triple(rawParts, taskId, url))
 }
 
 class UploaderParameterFactory {
-  fun fromInput(input: ReadableMap): Pair<BlobCourierError?, UploaderParameters?> {
+  fun fromInput(input: ReadableMap): Result<UploaderParameters> {
     val requiredParameters = retrieveRequiredParametersOrThrow(input)
 
-    val (error, xr) = validateRequiredParameters(requiredParameters)
-    if (error != null) {
-      return Pair(error, null)
-    }
+    return validateRequiredParameters(requiredParameters)
+      .fmap {
+        val (rawParts, taskId, url) = it
 
-    return xr?.let {
-      val (rawParts, taskId, url) = it
+        val method = input.getString(PARAMETER_METHOD) ?: DEFAULT_UPLOAD_METHOD
 
-      val method = input.getString(PARAMETER_METHOD) ?: DEFAULT_UPLOAD_METHOD
+        val unfilteredHeaders =
+          input.getMap(PARAMETER_HEADERS)?.toHashMap() ?: emptyMap<String, Any>()
 
-      val unfilteredHeaders =
-        input.getMap(PARAMETER_HEADERS)?.toHashMap() ?: emptyMap<String, Any>()
+        val headers = filterHeaders(unfilteredHeaders)
 
-      val headers = filterHeaders(unfilteredHeaders)
+        val returnResponse =
+          input.hasKey(PARAMETER_RETURN_RESPONSE) && input.getBoolean(PARAMETER_RETURN_RESPONSE)
 
-      val returnResponse =
-        input.hasKey(PARAMETER_RETURN_RESPONSE) && input.getBoolean(PARAMETER_RETURN_RESPONSE)
+        val progressInterval =
+          getMapInt(
+            input,
+            PARAMETER_SETTINGS_PROGRESS_INTERVAL,
+            DEFAULT_PROGRESS_TIMEOUT_MILLISECONDS
+          )
 
-      val progressInterval =
-        getMapInt(
-          input,
-          PARAMETER_SETTINGS_PROGRESS_INTERVAL,
-          DEFAULT_PROGRESS_TIMEOUT_MILLISECONDS
+        val errorOrVerifiedUnit = verifyParts(rawParts)
+        if (errorOrVerifiedUnit is BlobCourierError) {
+          return@fmap Failure(errorOrVerifiedUnit)
+        }
+
+        val parts = createParts(rawParts)
+
+        val uri = URL(url)
+
+        Success(
+          UploaderParameters(
+            taskId,
+            parts,
+            uri,
+            method,
+            headers,
+            returnResponse,
+            progressInterval
+          )
         )
-
-      val (partsAreVerified, partsError) = verifyParts(rawParts)
-      if (!partsAreVerified) {
-        return Pair(partsError, null)
       }
-
-      val parts = createParts(rawParts)
-
-      val uri = URL(url)
-
-      Pair(
-        null,
-        UploaderParameters(
-          taskId,
-          parts,
-          uri,
-          method,
-          headers,
-          returnResponse,
-          progressInterval
-        )
-      )
-    }
-      ?: Pair(BlobCourierError(ERROR_UNEXPECTED_ERROR, "Something unexpected went wrong validating upload parameters"), null)
   }
 }

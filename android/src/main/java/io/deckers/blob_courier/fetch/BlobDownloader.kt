@@ -7,6 +7,7 @@
 package io.deckers.blob_courier.fetch
 
 import com.facebook.react.bridge.ReactApplicationContext
+import io.deckers.blob_courier.common.Result
 import io.deckers.blob_courier.progress.ProgressNotifierFactory
 import java.io.File
 import okhttp3.OkHttpClient
@@ -32,9 +33,7 @@ class BlobDownloader(
       filename
     )
 
-  fun download(
-    downloaderParameters: DownloaderParameters,
-  ): Pair<Throwable?, Map<String, Any>?> {
+  fun download(downloaderParameters: DownloaderParameters): Result<Map<String, Any>> {
     val absoluteFilePath = createAbsoluteFilePath(
       downloaderParameters.filename,
       downloaderParameters.targetDirectory

@@ -10,6 +10,10 @@ import android.app.DownloadManager
 import android.content.Context
 import android.content.IntentFilter
 import com.facebook.react.bridge.ReactApplicationContext
+import io.deckers.blob_courier.common.Failure
+import io.deckers.blob_courier.common.Result
+import io.deckers.blob_courier.common.Success
+import io.deckers.blob_courier.common.`do`
 import io.deckers.blob_courier.progress.ManagedProgressUpdater
 import io.deckers.blob_courier.progress.ProgressNotifier
 import java.io.File
@@ -28,7 +32,7 @@ class ManagedDownloader(
   fun fetch(
     downloaderParameters: DownloaderParameters,
     toAbsoluteFilePath: File,
-  ): Pair<Throwable?, Map<String, Any>?> {
+  ): Result<Map<String, Any>> {
     try {
       val request =
         DownloadManager.Request(downloaderParameters.uri)
@@ -81,17 +85,19 @@ class ManagedDownloader(
 
       val waitForDownloadCompletion = Object()
 
-      var result: Pair<Throwable?, Map<String, Any>?> = Pair(null, null)
+      var result: Result<Map<String, Any>>? = null
 
       synchronized(waitForDownloadCompletion) {
         val downloadReceiver =
-          ManagedDownloadReceiver(downloadId, toAbsoluteFilePath, progressUpdater) { (error, r) ->
-            if (error != null) {
-              result = Pair(error, null)
-              return@ManagedDownloadReceiver
-            }
-
-            result = Pair(null, r)
+          ManagedDownloadReceiver(
+            downloadId,
+            toAbsoluteFilePath,
+            progressUpdater
+          ) { errorOrResult ->
+            result = errorOrResult.`do`(
+              ::Failure,
+              ::Success
+            )
 
             synchronized(waitForDownloadCompletion) {
               waitForDownloadCompletion.notify()
@@ -105,10 +111,10 @@ class ManagedDownloader(
 
         waitForDownloadCompletion.wait()
 
-        return result
+        return result ?: Failure(Error("Result was never set"))
       }
     } catch (e: Throwable) {
-      return Pair(e, null)
+      return Failure(e)
     }
   }
 }

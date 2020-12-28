@@ -17,6 +17,7 @@ import io.deckers.blob_courier.Fixtures.createValidTestFetchParameterMap
 import io.deckers.blob_courier.Fixtures.createValidUploadTestParameterMap
 import io.deckers.blob_courier.Fixtures.runFetchBlob
 import io.deckers.blob_courier.Fixtures.runUploadBlob
+import io.deckers.blob_courier.common.Either
 import io.deckers.blob_courier.react.toReactMap
 import io.deckers.blob_courier.upload.InputStreamRequestBody
 import io.deckers.blob_courier.upload.UploaderParameterFactory
@@ -686,25 +687,25 @@ class BlobCourierModuleTests {
         )
         .toReactMap()
 
-    val (_, uploaderParameters) =
+    val errorOrUploaderParameters =
       UploaderParameterFactory().fromInput(uploadParameterReadableMap)
 
-    val ctx = ReactApplicationContext(ApplicationProvider.getApplicationContext())
+    when (errorOrUploaderParameters) {
+      is Either.Left -> assertTrue("Invalid uploader parameters", false)
+      is Either.Right -> {
+        val ctx = ReactApplicationContext(ApplicationProvider.getApplicationContext())
+        val uploaderMultipartBody =
+          errorOrUploaderParameters.v.toMultipartBody(ctx.contentResolver)
 
-    if (uploaderParameters == null) {
-      assertTrue("Invalid uploader parameters", false)
-      return
+        val names = mapMultipartsToNames(uploaderMultipartBody.parts())
+
+        assertArrayEquals(
+          "Sent array of upload part names differs from provided part names",
+          arrayOf("bbbbb", "ccccc", "aaaaa"),
+          names
+        )
+      }
     }
-
-    val uploaderMultipartBody = uploaderParameters.toMultipartBody(ctx.contentResolver)
-
-    val names = mapMultipartsToNames(uploaderMultipartBody.parts())
-
-    assertArrayEquals(
-      "Sent array of upload part names differs from provided part names",
-      arrayOf("bbbbb", "ccccc", "aaaaa"),
-      names
-    )
   }
 
   @Test // This is the faster, and less thorough version of the Instrumented test with the same name
