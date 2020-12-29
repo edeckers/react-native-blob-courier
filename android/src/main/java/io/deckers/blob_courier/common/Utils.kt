@@ -27,30 +27,30 @@ fun filterHeaders(unfilteredHeaders: Map<String, Any>): Map<String, String> =
     .toMap()
 
 fun <H, TT> cons(head: H, tail: TT) = Pair(head, tail)
-fun <H, TT> read(v: Either<ValidationError, H>, acc: TT) =
+fun <H, TT> read(v: VResult<H>, acc: TT) =
   v.map { cons(it, acc) }
 
 fun <H, P> ValidateParameter(
-  name: String,
   value: H?,
-  validate: (name: String, value: H?) -> Either<ValidationError, H>,
+  validate: (value: H?) -> VResult<H>,
   prev: P
 ) =
-  read(validate(name, value), prev)
+  read(validate(value), prev)
 
 @Suppress("SameParameterValue")
 fun <H> ValidateParameter(
-  name: String,
   value: H?,
-  validate: (name: String, value: H?) -> Either<ValidationError, H>
-): Either<ValidationError, Pair<H, Unit>> =
-  ValidateParameter(name, value, validate, Unit)
+  validate: (value: H?) -> VResult<H>
+): VResult<Pair<H, Unit>> =
+  ValidateParameter(value, validate, Unit)
 
-fun <T> isNotNullOrEmpty(name: String, value: T?): Either<ValidationError, T> =
-  maybe(value).fold(
-    { left(ValidationIsNull(name)) },
-    { v -> if (v == "") left(ValidationIsEmpty(name)) else right(v) }
-  )
+fun <T> isNotNullOrEmpty(name: String): (value: T?) -> VResult<T> =
+  { value: T? ->
+    maybe(value).fold(
+      { left(ValidationError.IsNull(name)) },
+      { v -> if (v == "") left(ValidationError.IsEmpty(name)) else right(v) }
+    )
+  }
 
-fun <T> isNotNull(name: String, value: T?): Either<ValidationError, T> =
-  maybe(value).fold({ left(ValidationIsNull(name)) }, { v -> right(v) })
+fun <T> isNotNull(name: String): (value: T?) -> VResult<T> =
+  { value: T? -> maybe(value).fold({ left(ValidationError.IsNull(name)) }, { v -> right(v) }) }

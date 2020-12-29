@@ -11,11 +11,9 @@ import android.net.Uri
 import com.facebook.react.bridge.ReadableArray
 import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.bridge.ReadableType
-import io.deckers.blob_courier.common.BlobCourierError
 import io.deckers.blob_courier.common.DEFAULT_MIME_TYPE
 import io.deckers.blob_courier.common.DEFAULT_PROGRESS_TIMEOUT_MILLISECONDS
 import io.deckers.blob_courier.common.DEFAULT_UPLOAD_METHOD
-import io.deckers.blob_courier.common.ERROR_INVALID_VALUE
 import io.deckers.blob_courier.common.Either
 import io.deckers.blob_courier.common.Failure
 import io.deckers.blob_courier.common.PARAMETER_ABSOLUTE_FILE_PATH
@@ -31,9 +29,11 @@ import io.deckers.blob_courier.common.PARAMETER_TASK_ID
 import io.deckers.blob_courier.common.PARAMETER_URL
 import io.deckers.blob_courier.common.Result
 import io.deckers.blob_courier.common.Success
+import io.deckers.blob_courier.common.VFailure
+import io.deckers.blob_courier.common.VResult
+import io.deckers.blob_courier.common.VSuccess
 import io.deckers.blob_courier.common.ValidateParameter
 import io.deckers.blob_courier.common.ValidationError
-import io.deckers.blob_courier.common.ValidationKeyDoesNotExist
 import io.deckers.blob_courier.common.cons
 import io.deckers.blob_courier.common.filterHeaders
 import io.deckers.blob_courier.common.fold
@@ -105,15 +105,16 @@ private fun filterReadableMapsFromReadableArray(parts: ReadableArray): Array<Rea
     }
   )
 
-private fun verifyParts(parts: ReadableArray): Either<BlobCourierError, Unit> {
+private fun verifyParts(parts: ReadableArray): VResult<Unit> {
   val mapParts = filterReadableMapsFromReadableArray(parts)
 
   val diff = parts.size() - mapParts.size
   if (diff > 0) {
     return Either.Left(
-      BlobCourierError(
-        ERROR_INVALID_VALUE,
-        "$diff provided part(s) are not ReadableMap objects"
+      ValidationError.InvalidType(
+        "parts",
+        "ReadableMap[]",
+        parts.toArrayList().map { it.javaClass.name }.joinToString { ";" }
       )
     )
   }
@@ -121,9 +122,9 @@ private fun verifyParts(parts: ReadableArray): Either<BlobCourierError, Unit> {
   val failedPartVerifications =
     mapParts.map(::validatePartsMap).filter { verification -> verification is Either.Left }
   if (failedPartVerifications.isNotEmpty()) {
-    val firstFailure = failedPartVerifications.first() as Either.Left
+    val firstFailure = failedPartVerifications.first().map { Unit } as Either.Left
 
-    return Either.Left(ValidationError("CODE", firstFailure.v.message ?: ""))
+    return firstFailure.map { Unit }
   }
 
   return Either.Right(Unit)
@@ -182,73 +183,71 @@ data class ValidatedRequiredParameters(
   val url: String
 )
 
-private fun isValidFilePayload(key: String, map: ReadableMap?):
-  Either<ValidationError, ReadableMap> =
-    ValidateParameter(PARAMETER_PART_PAYLOAD, map, ::hasKey)
+private fun isValidFilePayload(map: ReadableMap?):
+  VResult<ReadableMap> =
+    ValidateParameter(map, hasKey(PARAMETER_PART_PAYLOAD))
       .map { (part, _) -> cons(part.getMap(PARAMETER_PART_PAYLOAD), part) }
       .fmap { (payload, part) ->
-        ValidateParameter(
-          PARAMETER_ABSOLUTE_FILE_PATH,
-          payload,
-          ::hasKey,
-          part
-        )
+        ValidateParameter(payload, hasKey(PARAMETER_ABSOLUTE_FILE_PATH), part)
       }
-      .fmap { (payload, part) -> ValidateParameter(PARAMETER_MIME_TYPE, payload, ::hasKey, part) }
+      .fmap { (payload, part) -> ValidateParameter(payload, hasKey(PARAMETER_MIME_TYPE), part) }
       .fmap { (payload, part) ->
         ValidateParameter(
-          PARAMETER_ABSOLUTE_FILE_PATH,
           payload.getString(PARAMETER_ABSOLUTE_FILE_PATH),
-          ::isNotNullOrEmpty,
+          isNotNullOrEmpty(PARAMETER_ABSOLUTE_FILE_PATH),
           cons(payload, part)
         )
       }
-      .fmap { (_, t) ->
-        val (payload, part) = t
+      .map { (_, payloadAndPart) ->
+        val (payload, part) = payloadAndPart
 
-        ValidateParameter(
-          PARAMETER_MIME_TYPE,
-          payload.getString(PARAMETER_MIME_TYPE),
-          ::isNotNullOrEmpty,
-          part
-        )
+        cons(payload.getString(PARAMETER_MIME_TYPE), part)
+      }
+      .fmap { (payload, part) ->
+        ValidateParameter(payload, isNotNullOrEmpty(PARAMETER_MIME_TYPE), part)
       }
       .fold(
         { v -> left(v) },
-        { (_, validatedMap) -> right(validatedMap) }
+        { (_, validatedPart) -> right(validatedPart) }
       )
 
 @Suppress("SameParameterValue")
-private fun isValidStringPayload(key: String, map: ReadableMap?):
-  Either<ValidationError, ReadableMap> = ValidateParameter(key, map, ::hasKey)
+private fun isValidStringPayload(part: ReadableMap?):
+  VResult<ReadableMap> = ValidateParameter(part, hasKey(PARAMETER_PART_PAYLOAD))
+    .map { (map, _) -> cons(map.getString(PARAMETER_PART_PAYLOAD), map) }
+    .fmap { (payload, map) ->
+      ValidateParameter(payload, isNotNullOrEmpty(PARAMETER_PART_PAYLOAD), map)
+    }
     .fold(
-      ::left
-    ) { (validatedMap) -> right(validatedMap) }
+      ::left,
+    ) { (_, validatedMap) -> right(validatedMap) }
 
-private fun isValidPayload(key: String, map: ReadableMap?): Either<ValidationError, ReadableMap> =
+private fun isValidPayload(map: ReadableMap?): VResult<ReadableMap> =
   if (map?.getString(PARAMETER_PART_TYPE) == "file")
-    isValidFilePayload(key, map)
-  else isValidStringPayload(PARAMETER_PART_PAYLOAD, map)
+    isValidFilePayload(map)
+  else isValidStringPayload(map)
 
-private fun hasKey(key: String, map: ReadableMap?): Either<ValidationError, ReadableMap> =
-  if (map?.hasKey(key) == true) right(map) else left(ValidationKeyDoesNotExist(key))
+private fun hasKey(key: String): (map: ReadableMap?) -> VResult<ReadableMap> =
+  { map: ReadableMap? ->
+    if (map?.hasKey(key) == true) right(map) else left(ValidationError.KeyDoesNotExist(key))
+  }
 
-private fun validatePartsMap(value: ReadableMap?): Result<ReadableMap> =
-  ValidateParameter(PARAMETER_PARTS, value, ::isNotNull)
-    .fmap { prev -> ValidateParameter(PARAMETER_PART_NAME, prev.first, ::hasKey) }
-    .fmap { prev -> ValidateParameter(PARAMETER_PART_PAYLOAD, prev.first, ::hasKey) }
-    .fmap { prev -> ValidateParameter(PARAMETER_PART_TYPE, prev.first, ::hasKey) }
-    .fmap { prev -> ValidateParameter(PARAMETER_PART_TYPE, prev.first, ::isValidPayload) }
+private fun validatePartsMap(value: ReadableMap?): VResult<ReadableMap> =
+  ValidateParameter(value, isNotNull(PARAMETER_PARTS))
+    .fmap { (map, _) -> ValidateParameter(map, hasKey(PARAMETER_PART_NAME)) }
+    .fmap { (map, _) -> ValidateParameter(map, hasKey(PARAMETER_PART_PAYLOAD)) }
+    .fmap { (map, _) -> ValidateParameter(map, hasKey(PARAMETER_PART_TYPE)) }
+    .fmap { (map, _) -> ValidateParameter(map, ::isValidPayload) }
     .fold(
-      ::Failure
-    ) { v -> Success(v.first) }
+      ::VFailure
+    ) { (validatedPart, _) -> VSuccess(validatedPart) }
 
 private fun validateRequiredParameters(
   parameters: RequiredParameters,
 ): Result<ValidatedRequiredParameters> =
-  ValidateParameter(PARAMETER_PARTS, parameters.parts, ::isNotNull)
-    .fmap { prev -> ValidateParameter(PARAMETER_TASK_ID, parameters.taskId, ::isNotNull, prev) }
-    .fmap { prev -> ValidateParameter(PARAMETER_URL, parameters.url, ::isNotNull, prev) }
+  ValidateParameter(parameters.parts, isNotNull(PARAMETER_PARTS))
+    .fmap { p0 -> ValidateParameter(parameters.taskId, isNotNull(PARAMETER_TASK_ID), p0) }
+    .fmap { p1 -> ValidateParameter(parameters.url, isNotNull(PARAMETER_URL), p1) }
     .fold(
       ::Failure
     ) { validatedParameters ->
@@ -284,15 +283,12 @@ class UploaderParameterFactory {
           )
 
         val errorOrVerifiedUnit = verifyParts(rawParts)
-        if (errorOrVerifiedUnit is BlobCourierError) {
-          return@fmap Failure(errorOrVerifiedUnit)
-        }
 
-        val parts = createParts(rawParts)
+        errorOrVerifiedUnit.map {
+          val parts = createParts(rawParts)
 
-        val uri = URL(url)
+          val uri = URL(url)
 
-        Success(
           UploaderParameters(
             taskId,
             parts,
@@ -302,6 +298,9 @@ class UploaderParameterFactory {
             returnResponse,
             progressInterval
           )
+        }.fold(
+          ::Failure,
+          ::Success,
         )
       }
 }
