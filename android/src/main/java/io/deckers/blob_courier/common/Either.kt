@@ -6,30 +6,21 @@
  */
 package io.deckers.blob_courier.common
 
-// Credit: https://medium.com/@Robert_Chrzanow/kotlins-missing-type-either-51602db80fda
-// Robert Chrzanowski - Aug 26, 2017·3 min read
 sealed class Either<TLeft, TRight> {
   class Left<TLeft, TRight>(val v: TLeft) : Either<TLeft, TRight>() {
     override fun <B> fmap(m: (right: TRight) -> Either<TLeft, B>): Either<TLeft, B> = Left(v)
     override fun <B> map(m: (right: TRight) -> B): Either<TLeft, B> = Left(v)
-    override fun <B> pipe(
-      m: (e: Either<TLeft, TRight>)
-      -> Either<TLeft, B>
-    ): Either<TLeft, B> = m(this)
   }
 
   class Right<TLeft, TRight>(val v: TRight) : Either<TLeft, TRight>() {
     override fun <B> fmap(m: (right: TRight) -> Either<TLeft, B>): Either<TLeft, B> = m(v)
     override fun <B> map(m: (right: TRight) -> B): Either<TLeft, B> = fmap { v -> Right(m(v)) }
-    override fun <B> pipe(
-      m: (e: Either<TLeft, TRight>)
-      -> Either<TLeft, B>
-    ): Either<TLeft, B> = m(this)
   }
 
-  abstract fun <B> pipe(m: (e: Either<TLeft, TRight>) -> Either<TLeft, B>): Either<TLeft, B>
   abstract fun <B> fmap(m: (right: TRight) -> Either<TLeft, B>): Either<TLeft, B>
   abstract fun <B> map(m: (right: TRight) -> B): Either<TLeft, B>
+
+  fun <B> pipe(m: (e: Either<TLeft, TRight>) -> Either<TLeft, B>): Either<TLeft, B> = m(this)
 }
 
 fun <TLeft, TRight, R> Either<TLeft, TRight>.fold(
@@ -46,8 +37,8 @@ fun <TLeft, TRight, TOut> Either<TLeft, TRight>.`do`(
   right: (v: TRight) -> TOut
 ) =
   when (this) {
-    is Either.Left -> left(this.v)
-    is Either.Right -> right(this.v)
+    is Either.Left -> left(v)
+    is Either.Right -> right(v)
   }
 
 fun <TLeft, TRight> right(r: TRight): Either<TLeft, TRight> = Either.Right(r)

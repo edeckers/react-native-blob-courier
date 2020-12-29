@@ -19,6 +19,11 @@ sealed class ValidationError(code: String, message: String) : BlobCourierError(c
     ERROR_MISSING_REQUIRED_PARAMETER, "Key `$parameterName` does not exist"
   )
 
+  class MissingParameter(val parameterName: String, type: String) : ValidationError(
+    ERROR_MISSING_REQUIRED_PARAMETER,
+    "`$parameterName` is a required parameter of type `$type`"
+  )
+
   class InvalidType(
     val parameterName: String,
     expectedType: String,

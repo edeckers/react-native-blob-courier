@@ -25,16 +25,3 @@ fun filterHeaders(unfilteredHeaders: Map<String, Any>): Map<String, String> =
     .filter { true }
     .mapNotNull { (k, v) -> v?.let { k to it } }
     .toMap()
-
-fun <T> isNotNullOrEmpty(name: String): (value: T?) -> VResult<T> =
-  { value: T? ->
-    maybe(value).fold(
-      { left(ValidationError.IsNull(name)) },
-      { v -> if (v == "") left(ValidationError.IsEmpty(name)) else right(v) }
-    )
-  }
-
-fun <T> isNotNull(name: String): (value: T?) -> VResult<T> =
-  { value: T? -> maybe(value).fold({ left(ValidationError.IsNull(name)) }, ::right) }
-
-fun <A> test(input: A?, validate: (v: A?) -> VResult<A>) = validate(input)

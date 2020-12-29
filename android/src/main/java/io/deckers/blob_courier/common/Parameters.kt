@@ -34,7 +34,11 @@ private val REQUIRED_PARAMETER_PROCESSORS = ImmutableMap.of(
 
 private val AVAILABLE_PARAMETER_PROCESSORS = REQUIRED_PARAMETER_PROCESSORS.keys.joinToString(", ")
 
-fun assertRequiredParameter(input: ReadableMap, type: Type, parameterName: String): Result<Any?> {
+fun assertRequiredParameter(
+  input: ReadableMap,
+  type: Type,
+  parameterName: String
+): ValidationResult<Any?> {
   val defaultFallback =
     "No processor defined for type `$type`, valid options: $AVAILABLE_PARAMETER_PROCESSORS"
   val unknownProcessor = { _: ReadableMap, _: String -> throw Exception(defaultFallback) }
@@ -47,20 +51,13 @@ fun assertRequiredParameter(input: ReadableMap, type: Type, parameterName: Strin
   return maybe(maybeValue)
     .toEither()
     .fold(
-      {
-        Failure(
-          BlobCourierError(
-            ERROR_MISSING_REQUIRED_PARAMETER,
-            "`$parameterName` is a required parameter of type `$type`"
-          )
-        )
-      },
-      ::Success
+      { ValidationFailure(ValidationError.MissingParameter(parameterName, type.toString())) },
+      ::ValidationSuccess
     )
 }
 
 fun tryRetrieveArray(input: ReadableMap, parameterName: String):
-  Either<BlobCourierError, ReadableArray?> =
+  ValidationResult<ReadableArray?> =
     assertRequiredParameter(input, Array::class.java, parameterName).map {
       input.getArray(parameterName)
     }

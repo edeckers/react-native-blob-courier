@@ -15,9 +15,11 @@ import com.facebook.react.modules.network.OkHttpClientProvider
 import io.deckers.blob_courier.common.DEFAULT_PROGRESS_TIMEOUT_MILLISECONDS
 import io.deckers.blob_courier.common.ERROR_UNEXPECTED_EXCEPTION
 import io.deckers.blob_courier.common.ERROR_UNKNOWN_HOST
+import io.deckers.blob_courier.common.Failure
 import io.deckers.blob_courier.common.LIBRARY_NAME
 import io.deckers.blob_courier.common.Success
 import io.deckers.blob_courier.common.`do`
+import io.deckers.blob_courier.common.fold
 import io.deckers.blob_courier.fetch.BlobDownloader
 import io.deckers.blob_courier.fetch.DownloaderParameterFactory
 import io.deckers.blob_courier.react.CongestionAvoidingProgressNotifierFactory
@@ -46,13 +48,15 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
     thread {
       try {
         val errorOrDownloadResult =
-          DownloaderParameterFactory().fromInput(input).fmap(
-            BlobDownloader(
-              reactContext,
-              createHttpClient(),
-              createProgressFactory(reactContext)
-            )::download
-          )
+          DownloaderParameterFactory()
+            .fromInput(input)
+            .fmap(
+              BlobDownloader(
+                reactContext,
+                createHttpClient(),
+                createProgressFactory(reactContext)
+              )::download
+            )
 
         errorOrDownloadResult
           .fmap { Success(it.toReactMap()) }
@@ -74,19 +78,17 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
   fun uploadBlob(input: ReadableMap, promise: Promise) {
     thread {
       try {
-        val errorOrUploadResult =
-          UploaderParameterFactory()
-            .fromInput(input)
-            .fmap(
-              BlobUploader(
-                reactContext,
-                createHttpClient(),
-                createProgressFactory(reactContext)
-              )::upload
-            )
-
-        errorOrUploadResult
-          .fmap { Success(it.toReactMap()) }
+        UploaderParameterFactory()
+          .fromInput(input)
+          .fold(::Failure, ::Success)
+          .fmap(
+            BlobUploader(
+              reactContext,
+              createHttpClient(),
+              createProgressFactory(reactContext)
+            )::upload
+          )
+          .map { it.toReactMap() }
           .`do`(
             { f -> promise.reject(f.code, f.message) },
             promise::resolve

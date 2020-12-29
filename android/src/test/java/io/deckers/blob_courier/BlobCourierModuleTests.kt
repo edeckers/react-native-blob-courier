@@ -21,7 +21,7 @@ import io.deckers.blob_courier.common.Either
 import io.deckers.blob_courier.common.ValidationError
 import io.deckers.blob_courier.common.isNotNull
 import io.deckers.blob_courier.common.isNotNullOrEmpty
-import io.deckers.blob_courier.common.test
+import io.deckers.blob_courier.common.validate
 import io.deckers.blob_courier.react.toReactMap
 import io.deckers.blob_courier.upload.InputStreamRequestBody
 import io.deckers.blob_courier.upload.UploaderParameterFactory
@@ -766,8 +766,8 @@ class BlobCourierModuleTests {
     val someObject = Object()
     val someParameterName = "SOME_PARAMETER_NAME_0"
 
-    val leftNull = test(null, isNotNull(someParameterName))
-    val rightObject = test(someObject, isNotNull("SOME_PARAMETER_NAME_1"))
+    val leftNull = validate(null, isNotNull(someParameterName))
+    val rightObject = validate(someObject, isNotNull("SOME_PARAMETER_NAME_1"))
 
     assertTrue("Validation should fail", leftNull is Either.Left)
     assertTrue("Validation should succeed", rightObject is Either.Right)
@@ -786,9 +786,9 @@ class BlobCourierModuleTests {
     val someObject = Object()
     val someParameterName = "SOME_PARAMETER_NAME_0"
 
-    val leftEmpty = test("", isNotNullOrEmpty(someParameterName))
-    val leftNull = test(null, isNotNullOrEmpty(someParameterName))
-    val rightObject = test(someObject, isNotNull("SOME_PARAMETER_NAME_1"))
+    val leftEmpty = validate("", isNotNullOrEmpty(someParameterName))
+    val leftNull = validate(null, isNotNullOrEmpty(someParameterName))
+    val rightObject = validate(someObject, isNotNull("SOME_PARAMETER_NAME_1"))
 
     assertTrue("Validation should fail", leftNull is Either.Left)
     assertTrue("Validation should succeed", rightObject is Either.Right)
