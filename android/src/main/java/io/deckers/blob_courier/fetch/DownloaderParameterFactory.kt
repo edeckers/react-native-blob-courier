@@ -26,7 +26,9 @@ import io.deckers.blob_courier.common.Success
 import io.deckers.blob_courier.common.`do`
 import io.deckers.blob_courier.common.filterHeaders
 import io.deckers.blob_courier.common.getMapInt
+import io.deckers.blob_courier.common.ifLeft
 import io.deckers.blob_courier.common.tryRetrieveString
+import io.deckers.blob_courier.common.write
 import io.deckers.blob_courier.react.processUnexpectedEmptyValue
 import java.util.Locale
 
@@ -46,13 +48,19 @@ private fun processInvalidValue(
   )
 
 private fun retrieveRequiredParametersOrThrow(input: ReadableMap):
-  Triple<String?, String?, String?> {
-    val filename = tryRetrieveString(input, PARAMETER_FILENAME)
-    val taskId = tryRetrieveString(input, PARAMETER_TASK_ID)
-    val url = tryRetrieveString(input, PARAMETER_URL)
+  Triple<String?, String?, String?> =
+    tryRetrieveString(input, PARAMETER_FILENAME)
+      .pipe(::write)
+      .fmap { (_, w) -> w take tryRetrieveString(input, PARAMETER_TASK_ID) }
+      .fmap { (_, w) -> w take tryRetrieveString(input, PARAMETER_URL) }
+      .map { (_, w) ->
+        val (url, rest) = w
+        val (taskId, rest2) = rest
+        val (filename, _) = rest2
 
-    return Triple(filename, taskId, url)
-  }
+        Triple(filename, taskId, url)
+      }
+      .ifLeft(Triple(null, null, null))
 
 private fun validateRequiredParameters(
   parameters: Triple<String?, String?, String?>,

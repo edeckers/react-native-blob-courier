@@ -23,6 +23,11 @@ sealed class Either<TLeft, TRight> {
   fun <B> pipe(m: (e: Either<TLeft, TRight>) -> Either<TLeft, B>): Either<TLeft, B> = m(this)
 }
 
+fun <TLeft, TRight> Either<TLeft, TRight>.ifLeft(fallback: TRight) = when (this) {
+  is Either.Left -> fallback
+  is Either.Right -> this.v
+}
+
 fun <TLeft, TRight, R> Either<TLeft, TRight>.fold(
   ifLeft: (v: TLeft) -> R,
   ifRight: (v: TRight) -> R

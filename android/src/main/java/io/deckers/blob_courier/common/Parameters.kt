@@ -38,7 +38,7 @@ fun assertRequiredParameter(
   input: ReadableMap,
   type: Type,
   parameterName: String
-): ValidationResult<Any?> {
+): ValidationResult<Any> {
   val defaultFallback =
     "No processor defined for type `$type`, valid options: $AVAILABLE_PARAMETER_PROCESSORS"
   val unknownProcessor = { _: ReadableMap, _: String -> throw Exception(defaultFallback) }
@@ -48,8 +48,7 @@ fun assertRequiredParameter(
       type.toString(), { unknownProcessor }
     )(input, parameterName)
 
-  return maybe(maybeValue)
-    .toEither()
+  return validate(maybeValue, isNotNull(parameterName))
     .fold(
       { ValidationFailure(ValidationError.MissingParameter(parameterName, type.toString())) },
       ::ValidationSuccess
@@ -62,12 +61,9 @@ fun tryRetrieveArray(input: ReadableMap, parameterName: String):
       input.getArray(parameterName)
     }
 
-fun tryRetrieveString(input: ReadableMap, parameterName: String): String? {
+fun tryRetrieveString(input: ReadableMap, parameterName: String): ValidationResult<String?> =
   assertRequiredParameter(input, String::class.java, parameterName)
+    .map { input.getString(parameterName) }
 
-  return input.getString(parameterName)
-}
-
-@Suppress("SameParameterValue")
 fun getMapInt(input: ReadableMap, field: String, fallback: Int): Int =
   if (input.hasKey(field)) input.getInt(field) else fallback

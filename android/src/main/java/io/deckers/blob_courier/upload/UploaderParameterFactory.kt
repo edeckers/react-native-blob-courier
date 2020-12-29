@@ -27,13 +27,18 @@ import io.deckers.blob_courier.common.PARAMETER_SETTINGS_PROGRESS_INTERVAL
 import io.deckers.blob_courier.common.PARAMETER_TASK_ID
 import io.deckers.blob_courier.common.PARAMETER_URL
 import io.deckers.blob_courier.common.ValidationError
+import io.deckers.blob_courier.common.ValidationFailure
 import io.deckers.blob_courier.common.ValidationResult
 import io.deckers.blob_courier.common.ValidationSuccess
 import io.deckers.blob_courier.common.filterHeaders
+import io.deckers.blob_courier.common.fold
 import io.deckers.blob_courier.common.getMapInt
+import io.deckers.blob_courier.common.ifLeft
+import io.deckers.blob_courier.common.ifNone
 import io.deckers.blob_courier.common.isNotNull
 import io.deckers.blob_courier.common.isNotNullOrEmpty
 import io.deckers.blob_courier.common.left
+import io.deckers.blob_courier.common.maybe
 import io.deckers.blob_courier.common.right
 import io.deckers.blob_courier.common.testDrop
 import io.deckers.blob_courier.common.testTake
@@ -102,7 +107,27 @@ private fun filterReadableMapsFromReadableArray(parts: ReadableArray): Array<Rea
     }
   )
 
-private fun verifyParts(parts: ReadableArray): ValidationResult<Unit> {
+private fun validatedPartListToEither(validatedParts: List<ValidationResult<ReadableMap>>):
+  ValidationResult<List<ReadableMap>> =
+    validatedParts.fold(
+      right(emptyList()),
+      { listOfValidMaps, validMap ->
+        validMap.fold(
+          { listOfValidMaps },
+          { m -> listOfValidMaps.map { p0 -> p0.plus(m) } }
+        )
+      }
+    )
+
+private fun invalidatePartToEither(invalidatedPart: ValidationResult<ReadableMap>):
+  ValidationResult<List<ReadableMap>> =
+    invalidatedPart.map { emptyList<ReadableMap>() }
+      .fold(
+        ::ValidationFailure,
+        ::ValidationSuccess
+      )
+
+private fun verifyParts(parts: ReadableArray): ValidationResult<List<ReadableMap>> {
   val mapParts = filterReadableMapsFromReadableArray(parts)
 
   val diff = parts.size() - mapParts.size
@@ -116,28 +141,33 @@ private fun verifyParts(parts: ReadableArray): ValidationResult<Unit> {
     )
   }
 
-  val failedPartVerifications =
-    mapParts.map(::validatePartsMap).filter { verification -> verification is Either.Left }
-  if (failedPartVerifications.isNotEmpty()) {
-    val firstFailure = failedPartVerifications.first().map { Unit } as Either.Left
+  val validatedParts = mapParts.map(::validatePartsMap)
+  val invalidatedParts = validatedParts.firstOrNull { verification -> verification is Either.Left }
 
-    return firstFailure.map { Unit }
-  }
-
-  return Either.Right(Unit)
+  return maybe(invalidatedParts)
+    .fold(
+      { validatedPartListToEither(validatedParts) },
+      ::invalidatePartToEither
+    )
 }
 
 private fun createFilePayload(payload: ReadableMap): FilePart? {
   val fileUrl = Uri.parse(payload.getString(PARAMETER_ABSOLUTE_FILE_PATH)!!)
   val fileUrlWithScheme =
-    if (fileUrl.scheme == null) Uri.parse("file://$fileUrl") else fileUrl
+    maybe(fileUrl.scheme)
+      .map { fileUrl }
+      .ifNone(Uri.parse("file://$fileUrl"))
 
   val filename =
-    if (payload.hasKey(PARAMETER_FILENAME)) (
-      payload.getString(PARAMETER_FILENAME)
-        ?: fileUrl.lastPathSegment
-      ) else fileUrl.lastPathSegment
-  val mimeType = payload.getString(PARAMETER_MIME_TYPE)!!
+    validate(payload, hasKey(PARAMETER_FILENAME))
+      .map { m -> m.getString(PARAMETER_FILENAME) }
+      .ifLeft(fileUrl.lastPathSegment)
+
+  val mimeType =
+    validate(payload, hasKey(PARAMETER_MIME_TYPE))
+      .map { m -> m.getString(PARAMETER_MIME_TYPE) }
+      .fmap { maybeMimeType -> validate(maybeMimeType, isNotNullOrEmpty(PARAMETER_MIME_TYPE)) }
+      .ifLeft(DEFAULT_MIME_TYPE)
 
   if (fileUrlWithScheme == null) {
     return null
@@ -164,13 +194,18 @@ private fun createPart(part: ReadableMap): Part {
 private fun createParts(parts: ReadableArray): List<Part> =
   filterReadableMapsFromReadableArray(parts).map(::createPart)
 
-private fun retrieveRequiredParameters(input: ReadableMap): ValidationResult<RequiredParameters> {
-  val rawParts = tryRetrieveArray(input, PARAMETER_PARTS)
-  val taskId = tryRetrieveString(input, PARAMETER_TASK_ID)
-  val url = tryRetrieveString(input, PARAMETER_URL)
+private fun retrieveRequiredParameters(input: ReadableMap): ValidationResult<RequiredParameters> =
+  tryRetrieveArray(input, PARAMETER_PARTS)
+    .pipe(::write)
+    .fmap { (_, w) -> w take tryRetrieveString(input, PARAMETER_TASK_ID) }
+    .fmap { (_, w) -> w take tryRetrieveString(input, PARAMETER_URL) }
+    .map { (_, w) ->
+      val (url, rest) = w
+      val (taskId, rest2) = rest
+      val (rawParts, _) = rest2
 
-  return rawParts.map { RequiredParameters(it, taskId, url) }
-}
+      RequiredParameters(rawParts, taskId, url)
+    }
 
 data class RequiredParameters(val parts: ReadableArray?, val taskId: String?, val url: String?)
 data class ValidatedRequiredParameters(
