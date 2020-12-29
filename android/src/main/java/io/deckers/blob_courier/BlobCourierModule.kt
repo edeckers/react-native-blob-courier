@@ -57,7 +57,7 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
         errorOrDownloadResult
           .fmap { Success(it.toReactMap()) }
           .`do`(
-            promise::reject,
+            { f -> promise.reject(f.code, f.message) },
             promise::resolve
           )
       } catch (e: UnknownHostException) {
@@ -88,7 +88,7 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
         errorOrUploadResult
           .fmap { Success(it.toReactMap()) }
           .`do`(
-            promise::reject,
+            { f -> promise.reject(f.code, f.message) },
             promise::resolve
           )
       } catch (e: UnknownHostException) {

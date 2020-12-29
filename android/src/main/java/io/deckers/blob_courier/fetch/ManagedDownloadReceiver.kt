@@ -12,12 +12,16 @@ import android.content.Context
 import android.content.Intent
 import android.database.Cursor
 import android.net.Uri
+import io.deckers.blob_courier.common.BlobCourierError
 import io.deckers.blob_courier.common.DOWNLOAD_TYPE_MANAGED
+import io.deckers.blob_courier.common.ERROR_UNEXPECTED_EXCEPTION
 import io.deckers.blob_courier.common.Failure
+import io.deckers.blob_courier.common.MANAGED_DOWNLOAD_FAILURE
 import io.deckers.blob_courier.common.MANAGED_DOWNLOAD_SUCCESS
 import io.deckers.blob_courier.common.Result
 import io.deckers.blob_courier.common.Success
 import io.deckers.blob_courier.common.createDownloadManager
+import io.deckers.blob_courier.common.createErrorFromThrowabe
 import io.deckers.blob_courier.progress.ManagedProgressUpdater
 import java.io.Closeable
 import java.io.File
@@ -37,7 +41,7 @@ class ManagedDownloadReceiver(
 
       processDownloadCompleteAction(downloadManager, context)
     } catch (e: Exception) {
-      processCompletedOrError(Failure(e))
+      processCompletedOrError(Failure(createErrorFromThrowabe(ERROR_UNEXPECTED_EXCEPTION, e)))
     } finally {
       context.unregisterReceiver(this)
       close()
@@ -71,12 +75,12 @@ class ManagedDownloadReceiver(
     }
 
     processCompletedOrError(
-      // Pair(null, mapOf<String, Any>("result" to MANAGED_DOWNLOAD_FAILURE))
-      Failure(Exception("No."))
-
-      // promise.reject(
-      //   ERROR_UNEXPECTED_EXCEPTION,
-      //     mapOf<String, Any>("result" to MANAGED_DOWNLOAD_FAILURE))
+      Failure(
+        BlobCourierError(
+          MANAGED_DOWNLOAD_FAILURE,
+          "Something went wrong retrieving download status"
+        )
+      )
     )
   }
 

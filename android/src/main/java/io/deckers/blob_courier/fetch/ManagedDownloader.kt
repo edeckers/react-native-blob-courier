@@ -10,10 +10,14 @@ import android.app.DownloadManager
 import android.content.Context
 import android.content.IntentFilter
 import com.facebook.react.bridge.ReactApplicationContext
+import io.deckers.blob_courier.common.BlobCourierError
+import io.deckers.blob_courier.common.ERROR_UNEXPECTED_ERROR
 import io.deckers.blob_courier.common.Failure
+import io.deckers.blob_courier.common.MANAGED_DOWNLOAD_FAILURE
 import io.deckers.blob_courier.common.Result
 import io.deckers.blob_courier.common.Success
 import io.deckers.blob_courier.common.`do`
+import io.deckers.blob_courier.common.createErrorFromThrowabe
 import io.deckers.blob_courier.progress.ManagedProgressUpdater
 import io.deckers.blob_courier.progress.ProgressNotifier
 import java.io.File
@@ -111,10 +115,11 @@ class ManagedDownloader(
 
         waitForDownloadCompletion.wait()
 
-        return result ?: Failure(Error("Result was never set"))
+        return result
+          ?: Failure(BlobCourierError(MANAGED_DOWNLOAD_FAILURE, "Result was never set"))
       }
     } catch (e: Throwable) {
-      return Failure(e)
+      return Failure(createErrorFromThrowabe(ERROR_UNEXPECTED_ERROR, e))
     }
   }
 }

@@ -49,7 +49,7 @@ fun assertRequiredParameter(input: ReadableMap, type: Type, parameterName: Strin
     .fold(
       {
         Failure(
-          BlobCourierThrowabe(
+          BlobCourierError(
             ERROR_MISSING_REQUIRED_PARAMETER,
             "`$parameterName` is a required parameter of type `$type`"
           )
@@ -59,10 +59,11 @@ fun assertRequiredParameter(input: ReadableMap, type: Type, parameterName: Strin
     )
 }
 
-fun tryRetrieveArray(input: ReadableMap, parameterName: String): Either<Throwable, ReadableArray?> =
-  assertRequiredParameter(input, Array::class.java, parameterName).map {
-    input.getArray(parameterName)
-  }
+fun tryRetrieveArray(input: ReadableMap, parameterName: String):
+  Either<BlobCourierError, ReadableArray?> =
+    assertRequiredParameter(input, Array::class.java, parameterName).map {
+      input.getArray(parameterName)
+    }
 
 fun tryRetrieveString(input: ReadableMap, parameterName: String): String? {
   assertRequiredParameter(input, String::class.java, parameterName)

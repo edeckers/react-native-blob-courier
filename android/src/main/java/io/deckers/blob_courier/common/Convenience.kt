@@ -8,7 +8,7 @@ package io.deckers.blob_courier.common
 
 // Credit: https://medium.com/@Robert_Chrzanow/kotlins-missing-type-either-51602db80fda
 // Robert Chrzanowski - Aug 26, 2017·3 min read
-typealias Result<V> = Either<Throwable, V>
+typealias Result<V> = Either<BlobCourierError, V>
 
-fun <V> Failure(e: Throwable): Result<V> = Either.Left(e)
+fun <V> Failure(e: BlobCourierError): Result<V> = Either.Left(e)
 fun <V> Success(v: V): Result<V> = Either.Right(v)
