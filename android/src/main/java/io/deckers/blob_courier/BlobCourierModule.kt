@@ -50,6 +50,7 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
         val errorOrDownloadResult =
           DownloaderParameterFactory()
             .fromInput(input)
+            .fold(::Failure, ::Success)
             .fmap(
               BlobDownloader(
                 reactContext,

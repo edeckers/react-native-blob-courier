@@ -15,17 +15,25 @@ sealed class ValidationError(code: String, message: String) : BlobCourierError(c
     ERROR_PARAMETER_IS_NULL, "Unexpected empty value for `$parameterName`"
   )
 
-  class KeyDoesNotExist(val parameterName: String) : ValidationError(
+  class KeyDoesNotExist(parameterName: String) : ValidationError(
     ERROR_MISSING_REQUIRED_PARAMETER, "Key `$parameterName` does not exist"
   )
 
-  class MissingParameter(val parameterName: String, type: String) : ValidationError(
+  class MissingParameter(parameterName: String, type: String) : ValidationError(
     ERROR_MISSING_REQUIRED_PARAMETER,
     "`$parameterName` is a required parameter of type `$type`"
   )
 
+  class InvalidValue(
+    parameterName: String,
+    receivedValue: String
+  ) : ValidationError(
+    ERROR_INVALID_VALUE,
+    "$parameterName has incorrect value `$receivedValue`"
+  )
+
   class InvalidType(
-    val parameterName: String,
+    parameterName: String,
     expectedType: String,
     receivedType: String
   ) : ValidationError(
