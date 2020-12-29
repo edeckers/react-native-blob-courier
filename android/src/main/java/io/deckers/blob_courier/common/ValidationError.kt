@@ -7,20 +7,20 @@
 package io.deckers.blob_courier.common
 
 sealed class ValidationError(code: String, message: String) : BlobCourierError(code, message) {
-  class IsNull(parameterName: String) : ValidationError(
+  class IsNull(val parameterName: String) : ValidationError(
     ERROR_PARAMETER_IS_NULL, "Unexpected `null` value for `$parameterName`"
   )
 
-  class IsEmpty(parameterName: String) : ValidationError(
+  class IsEmpty(val parameterName: String) : ValidationError(
     ERROR_PARAMETER_IS_NULL, "Unexpected empty value for `$parameterName`"
   )
 
-  class KeyDoesNotExist(parameterName: String) : ValidationError(
+  class KeyDoesNotExist(val parameterName: String) : ValidationError(
     ERROR_MISSING_REQUIRED_PARAMETER, "Key `$parameterName` does not exist"
   )
 
   class InvalidType(
-    parameterName: String,
+    val parameterName: String,
     expectedType: String,
     receivedType: String
   ) : ValidationError(

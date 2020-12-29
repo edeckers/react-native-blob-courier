@@ -12,13 +12,22 @@ sealed class Either<TLeft, TRight> {
   class Left<TLeft, TRight>(val v: TLeft) : Either<TLeft, TRight>() {
     override fun <B> fmap(m: (right: TRight) -> Either<TLeft, B>): Either<TLeft, B> = Left(v)
     override fun <B> map(m: (right: TRight) -> B): Either<TLeft, B> = Left(v)
+    override fun <B> pipe(
+      m: (e: Either<TLeft, TRight>)
+      -> Either<TLeft, B>
+    ): Either<TLeft, B> = m(this)
   }
 
   class Right<TLeft, TRight>(val v: TRight) : Either<TLeft, TRight>() {
     override fun <B> fmap(m: (right: TRight) -> Either<TLeft, B>): Either<TLeft, B> = m(v)
     override fun <B> map(m: (right: TRight) -> B): Either<TLeft, B> = fmap { v -> Right(m(v)) }
+    override fun <B> pipe(
+      m: (e: Either<TLeft, TRight>)
+      -> Either<TLeft, B>
+    ): Either<TLeft, B> = m(this)
   }
 
+  abstract fun <B> pipe(m: (e: Either<TLeft, TRight>) -> Either<TLeft, B>): Either<TLeft, B>
   abstract fun <B> fmap(m: (right: TRight) -> Either<TLeft, B>): Either<TLeft, B>
   abstract fun <B> map(m: (right: TRight) -> B): Either<TLeft, B>
 }

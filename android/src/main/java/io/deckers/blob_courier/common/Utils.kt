@@ -26,24 +26,6 @@ fun filterHeaders(unfilteredHeaders: Map<String, Any>): Map<String, String> =
     .mapNotNull { (k, v) -> v?.let { k to it } }
     .toMap()
 
-fun <H, TT> cons(head: H, tail: TT) = Pair(head, tail)
-fun <H, TT> read(v: VResult<H>, acc: TT) =
-  v.map { cons(it, acc) }
-
-fun <H, P> ValidateParameter(
-  value: H?,
-  validate: (value: H?) -> VResult<H>,
-  prev: P
-) =
-  read(validate(value), prev)
-
-@Suppress("SameParameterValue")
-fun <H> ValidateParameter(
-  value: H?,
-  validate: (value: H?) -> VResult<H>
-): VResult<Pair<H, Unit>> =
-  ValidateParameter(value, validate, Unit)
-
 fun <T> isNotNullOrEmpty(name: String): (value: T?) -> VResult<T> =
   { value: T? ->
     maybe(value).fold(
@@ -53,4 +35,6 @@ fun <T> isNotNullOrEmpty(name: String): (value: T?) -> VResult<T> =
   }
 
 fun <T> isNotNull(name: String): (value: T?) -> VResult<T> =
-  { value: T? -> maybe(value).fold({ left(ValidationError.IsNull(name)) }, { v -> right(v) }) }
+  { value: T? -> maybe(value).fold({ left(ValidationError.IsNull(name)) }, ::right) }
+
+fun <A> test(input: A?, validate: (v: A?) -> VResult<A>) = validate(input)
