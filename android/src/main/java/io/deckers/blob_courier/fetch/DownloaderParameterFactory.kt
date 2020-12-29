@@ -23,13 +23,17 @@ import io.deckers.blob_courier.common.PARAMETER_TASK_ID
 import io.deckers.blob_courier.common.PARAMETER_URL
 import io.deckers.blob_courier.common.Result
 import io.deckers.blob_courier.common.Success
+import io.deckers.blob_courier.common.ValidationResult
+import io.deckers.blob_courier.common.ValidationSuccess
 import io.deckers.blob_courier.common.`do`
 import io.deckers.blob_courier.common.filterHeaders
 import io.deckers.blob_courier.common.getMapInt
 import io.deckers.blob_courier.common.ifLeft
+import io.deckers.blob_courier.common.isNotNull
+import io.deckers.blob_courier.common.testTake
 import io.deckers.blob_courier.common.tryRetrieveString
+import io.deckers.blob_courier.common.validate
 import io.deckers.blob_courier.common.write
-import io.deckers.blob_courier.react.processUnexpectedEmptyValue
 import java.util.Locale
 
 private const val PARAMETER_ANDROID_SETTINGS = "android"
@@ -47,40 +51,17 @@ private fun processInvalidValue(
     "Parameter `$parameterName` has an invalid value (value=$invalidValue)."
   )
 
-private fun retrieveRequiredParametersOrThrow(input: ReadableMap):
-  Triple<String?, String?, String?> =
-    tryRetrieveString(input, PARAMETER_FILENAME)
-      .pipe(::write)
-      .fmap { (_, w) -> w take tryRetrieveString(input, PARAMETER_TASK_ID) }
-      .fmap { (_, w) -> w take tryRetrieveString(input, PARAMETER_URL) }
-      .map { (_, w) ->
-        val (url, rest) = w
-        val (taskId, rest2) = rest
-        val (filename, _) = rest2
+data class RequiredDownloaderParameters(
+  val filename: String?,
+  val taskId: String?,
+  val url: String?,
+)
 
-        Triple(filename, taskId, url)
-      }
-      .ifLeft(Triple(null, null, null))
-
-private fun validateRequiredParameters(
-  parameters: Triple<String?, String?, String?>,
-): Result<Triple<String, String, String>> {
-  val (filename, taskId, url) = parameters
-
-  if (filename == null) {
-    return Failure(processUnexpectedEmptyValue(PARAMETER_FILENAME))
-  }
-
-  if (taskId == null) {
-    return Failure(processUnexpectedEmptyValue(PARAMETER_TASK_ID))
-  }
-
-  if (url == null) {
-    return Failure(processUnexpectedEmptyValue(PARAMETER_URL))
-  }
-
-  return Success(Triple(filename, taskId, url))
-}
+data class ValidatedRequiredDownloaderParameters(
+  val filename: String,
+  val taskId: String,
+  val url: String,
+)
 
 data class DownloaderParameters(
   val taskId: String,
@@ -95,8 +76,38 @@ data class DownloaderParameters(
   val progressInterval: Int
 )
 
+private fun retrieveRequiredParameters(input: ReadableMap):
+  RequiredDownloaderParameters =
+    tryRetrieveString(input, PARAMETER_FILENAME)
+      .pipe(::write)
+      .fmap { (_, w) -> w take tryRetrieveString(input, PARAMETER_TASK_ID) }
+      .fmap { (_, w) -> w take tryRetrieveString(input, PARAMETER_URL) }
+      .map { (_, w) ->
+        val (url, rest) = w
+        val (taskId, rest2) = rest
+        val (filename, _) = rest2
+
+        RequiredDownloaderParameters(filename, taskId, url)
+      }
+      .ifLeft(RequiredDownloaderParameters(null, null, null))
+
+private fun validateRequiredParameters(
+  parameters: RequiredDownloaderParameters,
+): ValidationResult<ValidatedRequiredDownloaderParameters> =
+  validate(parameters.filename, isNotNull(PARAMETER_FILENAME))
+    .pipe(::write)
+    .fmap(testTake(isNotNull(PARAMETER_TASK_ID), { parameters.taskId }))
+    .fmap(testTake(isNotNull(PARAMETER_URL), { parameters.url }))
+    .fmap { (_, validatedParameters) ->
+      val (url, rest) = validatedParameters
+      val (taskId, rest2) = rest
+      val (filename, _) = rest2
+
+      ValidationSuccess(ValidatedRequiredDownloaderParameters(filename, taskId, url))
+    }
+
 private fun validateParameters(
-  parameters: Triple<String, String, String>,
+  parameters: ValidatedRequiredDownloaderParameters,
   input: ReadableMap
 ): Result<DownloaderParameters> {
   val (filename, taskId, url) = parameters
@@ -164,7 +175,7 @@ private fun validateParameters(
 
 class DownloaderParameterFactory {
   fun fromInput(input: ReadableMap): Result<DownloaderParameters> {
-    val requiredParameters = retrieveRequiredParametersOrThrow(input)
+    val requiredParameters = retrieveRequiredParameters(input)
 
     return validateRequiredParameters(requiredParameters).`do`(
       ::Failure
