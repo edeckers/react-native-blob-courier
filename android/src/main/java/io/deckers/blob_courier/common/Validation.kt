@@ -8,14 +8,19 @@ package io.deckers.blob_courier.common
 
 fun <T> isNotNullOrEmpty(name: String): (value: T?) -> ValidationResult<T> =
   { value: T? ->
-    maybe(value).fold(
-      { left(ValidationError.IsNull(name)) },
-      { v -> if (v == "") left(ValidationError.IsEmpty(name)) else right(v) }
-    )
+    maybe(value)
+      .fold(
+        { left(ValidationError.IsNull(name)) },
+        { v -> if (v == "") left(ValidationError.IsEmpty(name)) else right(v) }
+      )
   }
 
 fun <T> isNotNull(name: String): (value: T?) -> ValidationResult<T> =
-  { value: T? -> maybe(value).fold({ left(ValidationError.IsNull(name)) }, ::right) }
+  { value: T? ->
+    maybe(value)
+      .map(::ValidationSuccess)
+      .ifNone(ValidationFailure(ValidationError.IsNull(name)))
+  }
 
 fun <A> validate(input: A?, test: (v: A?) -> ValidationResult<A>) = test(input)
 

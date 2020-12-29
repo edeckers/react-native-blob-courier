@@ -28,7 +28,6 @@ import io.deckers.blob_courier.common.ifNone
 import io.deckers.blob_courier.common.isNotNull
 import io.deckers.blob_courier.common.maybe
 import io.deckers.blob_courier.common.testTake
-import io.deckers.blob_courier.common.validate
 import io.deckers.blob_courier.common.write
 import java.util.Locale
 
@@ -58,7 +57,7 @@ data class DownloaderParameters(
 
 private fun validateRequiredParameters(input: ReadableMap):
   ValidationResult<RequiredDownloadParameters> =
-    validate(input, isNotNull(PARAMETER_FILENAME))
+    ValidationSuccess(input)
       .pipe(::write)
       .fmap(testTake(isNotNull(PARAMETER_FILENAME), { input.getString(PARAMETER_FILENAME) }))
       .fmap(testTake(isNotNull(PARAMETER_TASK_ID), { input.getString(PARAMETER_TASK_ID) }))

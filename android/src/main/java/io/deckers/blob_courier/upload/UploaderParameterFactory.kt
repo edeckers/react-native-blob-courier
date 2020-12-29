@@ -42,8 +42,6 @@ import io.deckers.blob_courier.common.maybe
 import io.deckers.blob_courier.common.right
 import io.deckers.blob_courier.common.testDrop
 import io.deckers.blob_courier.common.testTake
-import io.deckers.blob_courier.common.tryRetrieveArray
-import io.deckers.blob_courier.common.tryRetrieveString
 import io.deckers.blob_courier.common.validate
 import io.deckers.blob_courier.common.write
 import java.net.URL
@@ -52,6 +50,12 @@ import okhttp3.MultipartBody
 
 private const val PARAMETER_PARTS = "parts"
 private const val PARAMETER_RETURN_RESPONSE = "returnResponse"
+
+data class RequiredParameters(
+  val parts: ReadableArray,
+  val taskId: String,
+  val url: String
+)
 
 data class UploaderParameters(
   val taskId: String,
@@ -194,26 +198,6 @@ private fun createPart(part: ReadableMap): Part {
 private fun createParts(parts: ReadableArray): List<Part> =
   filterReadableMapsFromReadableArray(parts).map(::createPart)
 
-private fun retrieveRequiredParameters(input: ReadableMap): ValidationResult<RequiredParameters> =
-  tryRetrieveArray(input, PARAMETER_PARTS)
-    .pipe(::write)
-    .fmap { (_, w) -> w take tryRetrieveString(input, PARAMETER_TASK_ID) }
-    .fmap { (_, w) -> w take tryRetrieveString(input, PARAMETER_URL) }
-    .map { (_, w) ->
-      val (url, rest) = w
-      val (taskId, rest2) = rest
-      val (rawParts, _) = rest2
-
-      RequiredParameters(rawParts, taskId, url)
-    }
-
-data class RequiredParameters(val parts: ReadableArray?, val taskId: String?, val url: String?)
-data class ValidatedRequiredParameters(
-  val parts: ReadableArray,
-  val taskId: String,
-  val url: String
-)
-
 private fun isValidFilePayload(map: ReadableMap?):
   ValidationResult<ReadableMap> =
     validate(map, hasKey(PARAMETER_PART_PAYLOAD))
@@ -270,29 +254,27 @@ private fun validatePartsMap(value: ReadableMap?): ValidationResult<ReadableMap>
     .fmap(testDrop(::isValidPayload))
     .map { it.first }
 
-private fun validateRequiredParameters(
-  parameters: RequiredParameters,
-): ValidationResult<ValidatedRequiredParameters> =
-  validate(parameters.parts, isNotNull(PARAMETER_PARTS))
+private fun validateRequiredParameters(input: ReadableMap): ValidationResult<RequiredParameters> =
+  ValidationSuccess(input)
     .pipe(::write)
-    .fmap(testTake(isNotNull(PARAMETER_TASK_ID), { parameters.taskId }))
-    .fmap(testTake(isNotNull(PARAMETER_URL), { parameters.url }))
+    .fmap(testTake(isNotNull(PARAMETER_PARTS), { input.getArray(PARAMETER_PARTS) }))
+    .fmap(testTake(isNotNull(PARAMETER_TASK_ID), { input.getString(PARAMETER_TASK_ID) }))
+    .fmap(testTake(isNotNull(PARAMETER_URL), { input.getString(PARAMETER_URL) }))
     .fmap { (_, validatedParameters) ->
       val (url, rest) = validatedParameters
       val (taskId, rest2) = rest
       val (parts, _) = rest2
 
-      ValidationSuccess(ValidatedRequiredParameters(parts, taskId, url))
+      ValidationSuccess(RequiredParameters(parts, taskId, url))
     }
 
 class UploaderParameterFactory {
   fun fromInput(input: ReadableMap): ValidationResult<UploaderParameters> =
-    retrieveRequiredParameters(input)
-      .fmap(::validateRequiredParameters)
+    validateRequiredParameters(input)
       .fmap {
         val (rawParts, taskId, url) = it
 
-        val method = input.getString(PARAMETER_METHOD) ?: DEFAULT_UPLOAD_METHOD
+        val method = maybe(input.getString(PARAMETER_METHOD)).ifNone(DEFAULT_UPLOAD_METHOD)
 
         val unfilteredHeaders =
           input.getMap(PARAMETER_HEADERS)?.toHashMap() ?: emptyMap<String, Any>()
@@ -309,9 +291,7 @@ class UploaderParameterFactory {
             DEFAULT_PROGRESS_TIMEOUT_MILLISECONDS
           )
 
-        val errorOrVerifiedUnit = verifyParts(rawParts)
-
-        errorOrVerifiedUnit.map {
+        verifyParts(rawParts).map {
           val parts = createParts(rawParts)
 
           val uri = URL(url)

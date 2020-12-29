@@ -15,8 +15,6 @@ import io.deckers.blob_courier.common.ERROR_UNEXPECTED_ERROR
 import io.deckers.blob_courier.common.Failure
 import io.deckers.blob_courier.common.MANAGED_DOWNLOAD_FAILURE
 import io.deckers.blob_courier.common.Result
-import io.deckers.blob_courier.common.Success
-import io.deckers.blob_courier.common.`do`
 import io.deckers.blob_courier.common.createErrorFromThrowabe
 import io.deckers.blob_courier.progress.ManagedProgressUpdater
 import io.deckers.blob_courier.progress.ProgressNotifier
@@ -98,10 +96,7 @@ class ManagedDownloader(
             toAbsoluteFilePath,
             progressUpdater
           ) { errorOrResult ->
-            result = errorOrResult.`do`(
-              ::Failure,
-              ::Success
-            )
+            result = errorOrResult
 
             synchronized(waitForDownloadCompletion) {
               waitForDownloadCompletion.notify()
