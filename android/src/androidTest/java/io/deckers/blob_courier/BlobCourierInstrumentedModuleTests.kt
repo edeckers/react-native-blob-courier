@@ -68,7 +68,7 @@ class BlobCourierInstrumentedModuleTests {
 
     var result = Pair(false, "Unknown")
 
-    val pool = Executors.newSingleThreadExecutor()
+    val pool = Executors.newSingleThreadScheduledExecutor()
 
     val threadLock = Object()
 
@@ -79,22 +79,25 @@ class BlobCourierInstrumentedModuleTests {
       }
     }
 
-    pool.execute {
-      synchronized(threadLock) {
-        try {
-          runFetchBlob(
-            reactContext,
-            allRequiredParametersMap,
-            Fixtures.EitherPromise(
-              { message -> finishThread(false, message ?: "DOWNLOAD FAILED") },
-              { finishThread(true, "Success") }
+    pool.schedule(
+      {
+        synchronized(threadLock) {
+          try {
+            runFetchBlob(
+              reactContext,
+              allRequiredParametersMap,
+              Fixtures.EitherPromise(
+                { message -> finishThread(false, message ?: "DOWNLOAD FAILED") },
+                { finishThread(true, "Success") }
+              )
             )
-          )
-          threadLock.wait()
-        } catch (_: InterruptedException) {
+            threadLock.wait()
+          } catch (_: InterruptedException) {
+          }
         }
-      }
-    }
+      },
+      ADB_COMMAND_DELAY_MILLISECONDS, TimeUnit.MILLISECONDS
+    )
 
     pool.shutdown()
 
@@ -124,7 +127,7 @@ class BlobCourierInstrumentedModuleTests {
 
     var result = Pair(false, "Unknown")
 
-    val pool = Executors.newSingleThreadExecutor()
+    val pool = Executors.newSingleThreadScheduledExecutor()
 
     val threadLock = Object()
 
@@ -135,28 +138,31 @@ class BlobCourierInstrumentedModuleTests {
       }
     }
 
-    pool.execute {
-      synchronized(threadLock) {
-        try {
-          runFetchBlob(
-            reactContext,
-            allRequiredParametersMap,
-            Fixtures.EitherPromise(
-              { message -> finishThread(false, message ?: "DOWNLOAD FAILED") },
-              { result ->
-                val receivedType = result?.getString("type") ?: ""
-                val check = receivedType == DOWNLOAD_TYPE_MANAGED
-                finishThread(
-                  check, if (check) "Success" else "Received incorrect type `$receivedType`"
-                )
-              }
+    pool.schedule(
+      {
+        synchronized(threadLock) {
+          try {
+            runFetchBlob(
+              reactContext,
+              allRequiredParametersMap,
+              Fixtures.EitherPromise(
+                { message -> finishThread(false, message ?: "DOWNLOAD FAILED") },
+                { result ->
+                  val receivedType = result?.getString("type") ?: ""
+                  val check = receivedType == DOWNLOAD_TYPE_MANAGED
+                  finishThread(
+                    check, if (check) "Success" else "Received incorrect type `$receivedType`"
+                  )
+                }
+              )
             )
-          )
-          threadLock.wait()
-        } catch (_: InterruptedException) {
+            threadLock.wait()
+          } catch (_: InterruptedException) {
+          }
         }
-      }
-    }
+      },
+      ADB_COMMAND_DELAY_MILLISECONDS, TimeUnit.MILLISECONDS
+    )
 
     pool.shutdown()
 
@@ -185,7 +191,7 @@ class BlobCourierInstrumentedModuleTests {
 
     var result = Pair(false, "Unknown")
 
-    val pool = Executors.newSingleThreadExecutor()
+    val pool = Executors.newSingleThreadScheduledExecutor()
 
     val threadLock = Object()
 
@@ -196,28 +202,31 @@ class BlobCourierInstrumentedModuleTests {
       }
     }
 
-    pool.execute {
-      synchronized(threadLock) {
-        try {
-          runFetchBlob(
-            reactContext,
-            allRequiredParametersMap,
-            Fixtures.EitherPromise(
-              { message -> finishThread(false, message ?: "DOWNLOAD FAILED") },
-              { result ->
-                val receivedResult = result?.getMap("data")?.getString("result") ?: ""
-                val check = receivedResult == MANAGED_DOWNLOAD_SUCCESS
-                finishThread(
-                  check, if (check) "Success" else "Received incorrect result `$receivedResult`"
-                )
-              }
+    pool.schedule(
+      {
+        synchronized(threadLock) {
+          try {
+            runFetchBlob(
+              reactContext,
+              allRequiredParametersMap,
+              Fixtures.EitherPromise(
+                { message -> finishThread(false, message ?: "DOWNLOAD FAILED") },
+                { result ->
+                  val receivedResult = result?.getMap("data")?.getString("result") ?: ""
+                  val check = receivedResult == MANAGED_DOWNLOAD_SUCCESS
+                  finishThread(
+                    check, if (check) "Success" else "Received incorrect result `$receivedResult`"
+                  )
+                }
+              )
             )
-          )
-          threadLock.wait()
-        } catch (_: InterruptedException) {
+            threadLock.wait()
+          } catch (_: InterruptedException) {
+          }
         }
-      }
-    }
+      },
+      ADB_COMMAND_DELAY_MILLISECONDS, TimeUnit.MILLISECONDS
+    )
 
     pool.shutdown()
 
