@@ -193,7 +193,7 @@ open class BlobCourier: NSObject {
     }
 
     if parts.count > 0 {
-      data.append(string: "\r\n--\(boundary)--\r\n")
+      data.append(string: "--\(boundary)--\r\n")
     }
 
     return (request, data)
@@ -303,12 +303,13 @@ extension Data {
   }
 
   mutating func addFormDataPart(part: StringPart) {
-    append(string: "\r\n--\(part.boundary)\r\n")
+    append(string: "--\(part.boundary)\r\n")
     append(
       string: "Content-Disposition: form-data; name=\"\(part.paramName)\"\r\n")
     append(string: "Content-Length: \(part.value.count)\r\n")
     append(string: "\r\n")
     append(string: part.value)
+    append(string: "\r\n")
   }
 
   mutating func addFilePart(part: FilePart) throws {
@@ -317,7 +318,7 @@ extension Data {
 
     let maybeFileAttributes = try? FileManager.default.attributesOfItem(atPath: part.absoluteFilePath)
 
-    append(string: "\r\n--\(part.boundary)\r\n")
+    append(string: "--\(part.boundary)\r\n")
     append(
       "Content-Disposition: form-data; name=\"\(part.paramName)\"; filename=\"\(part.filename)\"\r\n"
         .data(using: .utf8)!)
@@ -329,5 +330,6 @@ extension Data {
 
     append(string: "\r\n")
     append(fileData)
+    append(string: "\r\n")
   }
 }
