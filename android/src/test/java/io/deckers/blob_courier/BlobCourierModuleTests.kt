@@ -20,7 +20,6 @@ import io.deckers.blob_courier.Fixtures.runUploadBlob
 import io.deckers.blob_courier.common.Either
 import io.deckers.blob_courier.common.ValidationError
 import io.deckers.blob_courier.common.isNotNull
-import io.deckers.blob_courier.common.isNotNullOrEmptyMap
 import io.deckers.blob_courier.common.validate
 import io.deckers.blob_courier.react.toReactMap
 import io.deckers.blob_courier.upload.InputStreamRequestBody
