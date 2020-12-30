@@ -174,7 +174,7 @@ private fun createFilePayload(payload: ReadableMap): FilePart {
 
   return errorOrFilename
     .map { v -> FilePart(fileUrlWithScheme, v, mimeType) }
-    .ifLeft(FilePart(fileUrl, "TESTTESTTEST", mimeType))
+    .ifLeft(FilePart(fileUrlWithScheme, "TESTTESTTEST", mimeType))
 }
 
 private fun createPart(part: ReadableMap): Part {
