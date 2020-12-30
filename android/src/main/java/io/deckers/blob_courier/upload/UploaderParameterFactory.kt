@@ -125,30 +125,6 @@ private fun invalidatePartToEither(invalidatedPart: ValidationResult<Part>):
         ::ValidationSuccess
       )
 
-private fun verifyParts(parts: ReadableArray): ValidationResult<List<Part>> {
-  val mapParts = filterReadableMapsFromReadableArray(parts)
-
-  val diff = parts.size() - mapParts.size
-  if (diff > 0) {
-    return Either.Left(
-      ValidationError.InvalidType(
-        "parts",
-        "ReadableMap[]",
-        parts.toArrayList().map { it.javaClass.name }.joinToString { ";" }
-      )
-    )
-  }
-
-  val validatedParts = mapParts.map { validatePartMap(it) }
-  val invalidatedParts = validatedParts.firstOrNull { verification -> verification is Either.Left }
-
-  return maybe(invalidatedParts)
-    .fold(
-      { validatedPartListToEither(validatedParts) },
-      ::invalidatePartToEither
-    )
-}
-
 private fun createFilePayload(payload: ReadableMap): ValidationResult<FilePayload> {
   val context = validationContext(payload, isNotNull(PARAMETER_PART_PAYLOAD))
     .fmap(testKeep(hasRequiredStringField(PARAMETER_ABSOLUTE_FILE_PATH)))
@@ -189,7 +165,7 @@ private fun createFilePayload(payload: ReadableMap): ValidationResult<FilePayloa
     .map { v -> FilePayload(fileUrlWithScheme, v, mimeType) }
 }
 
-private fun createStringPart(part: ReadableMap, name: String): ValidationResult<Part> =
+private fun validateStringPart(part: ReadableMap, name: String): ValidationResult<Part> =
   validationContext(part, isNotNull(PARAMETER_PARTS))
     .fmap(testKeep(hasRequiredStringField(PARAMETER_PART_PAYLOAD)))
     .map(::popToContext)
@@ -197,15 +173,15 @@ private fun createStringPart(part: ReadableMap, name: String): ValidationResult<
     .map(::readContext)
     .map { stringPayload -> Part(name, StringPayload(stringPayload)) }
 
-private fun createFilePart(part: ReadableMap, name: String): ValidationResult<Part> =
+private fun validateFilePart(part: ReadableMap, name: String): ValidationResult<Part> =
   validationContext(part, isNotNull(PARAMETER_PARTS))
     .fmap(testKeep(hasRequiredMapField(PARAMETER_PART_PAYLOAD)))
     .map(::popToContext)
     .fmap { (payload, _) -> createFilePayload(payload) }
     .map { filePayload -> Part(name, filePayload) }
 
-private fun createPart(part: ReadableMap): ValidationResult<Part> =
-  validationContext(part, isNotNull(PARAMETER_PARTS))
+private fun validatePart(partMap: ReadableMap?): ValidationResult<Part> =
+  validationContext(partMap, isNotNull(PARAMETER_PARTS))
     .fmap(testKeep(hasRequiredStringField(PARAMETER_PART_TYPE)))
     .fmap(testKeep(hasRequiredStringField(PARAMETER_PART_NAME)))
     .fmap { (p, w) ->
@@ -213,34 +189,52 @@ private fun createPart(part: ReadableMap): ValidationResult<Part> =
       val (type, _) = w2
 
       when (type) {
-        "file" -> createFilePart(p, name)
-        else -> createStringPart(p, name)
+        "file" -> validateFilePart(p, name)
+        else -> validateStringPart(p, name)
       }
     }
 
-private fun validatePartMap(partMap: ReadableMap?): ValidationResult<Part> =
-  validationContext(partMap, isNotNull(PARAMETER_PARTS))
-    .fmap(testDiscard(hasRequiredStringField(PARAMETER_PART_NAME)))
-    .fmap(testKeep(hasRequiredStringField(PARAMETER_PART_TYPE)))
-    .map(::readContext)
-    .fmap(::createPart)
+private fun validateParts(parts: ReadableArray): ValidationResult<List<Part>> {
+  val mapParts = filterReadableMapsFromReadableArray(parts)
 
-private fun validateRequiredParameters(input: ReadableMap): ValidationResult<RequiredParameters> =
-  validationContext(input, isNotNull(PROVIDED_PARAMETERS))
-    .fmap(testKeep(hasRequiredArrayField(PARAMETER_PARTS)))
-    .fmap(testKeep(hasRequiredStringField(PARAMETER_TASK_ID)))
-    .fmap(testKeep(hasRequiredStringField(PARAMETER_URL)))
-    .fmap { (_, validatedParameters) ->
-      val (url, rest) = validatedParameters
-      val (taskId, rest2) = rest
-      val (parts, _) = rest2
+  val diff = parts.size() - mapParts.size
+  if (diff > 0) {
+    return Either.Left(
+      ValidationError.InvalidType(
+        "parts",
+        "ReadableMap[]",
+        parts.toArrayList().map { it.javaClass.name }.joinToString { ";" }
+      )
+    )
+  }
 
-      ValidationSuccess(RequiredParameters(parts, taskId, url))
-    }
+  val validatedParts = mapParts.map { validatePart(it) }
+  val invalidatedParts = validatedParts.firstOrNull { verification -> verification is Either.Left }
+
+  return maybe(invalidatedParts)
+    .fold(
+      { validatedPartListToEither(validatedParts) },
+      ::invalidatePartToEither
+    )
+}
+
+private fun verifyRequiredParametersProvided(input: ReadableMap):
+  ValidationResult<RequiredParameters> =
+    validationContext(input, isNotNull(PROVIDED_PARAMETERS))
+      .fmap(testKeep(hasRequiredArrayField(PARAMETER_PARTS)))
+      .fmap(testKeep(hasRequiredStringField(PARAMETER_TASK_ID)))
+      .fmap(testKeep(hasRequiredStringField(PARAMETER_URL)))
+      .fmap { (_, validatedParameters) ->
+        val (url, rest) = validatedParameters
+        val (taskId, rest2) = rest
+        val (parts, _) = rest2
+
+        ValidationSuccess(RequiredParameters(parts, taskId, url))
+      }
 
 class UploaderParameterFactory {
   fun fromInput(input: ReadableMap): ValidationResult<UploaderParameters> =
-    validateRequiredParameters(input)
+    verifyRequiredParametersProvided(input)
       .fmap {
         val (rawParts, taskId, url) = it
 
@@ -261,7 +255,7 @@ class UploaderParameterFactory {
             DEFAULT_PROGRESS_TIMEOUT_MILLISECONDS
           )
 
-        verifyParts(rawParts).map { parts ->
+        validateParts(rawParts).map { parts ->
           UploaderParameters(
             taskId,
             parts,
