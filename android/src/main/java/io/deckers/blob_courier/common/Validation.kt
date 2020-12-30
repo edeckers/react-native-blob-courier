@@ -12,6 +12,21 @@ import com.facebook.react.bridge.ReadableType
 import io.deckers.blob_courier.react.toReactArray
 import io.deckers.blob_courier.react.toReactMap
 
+fun isNotNullOrEmptyString(
+  key: String,
+): (map: String?) -> ValidationResult<String> =
+  { value: String? ->
+    maybe(value)
+      .fold(
+        { ValidationFailure(ValidationError.IsNull(key)) },
+        { v ->
+          if (v == "")
+            ValidationFailure(ValidationError.IsEmpty(key))
+          else ValidationSuccess(v)
+        }
+      )
+  }
+
 fun <T> isNotNullOrEmptyMap(
   key: String,
   retrieve: (m: ReadableMap) -> T

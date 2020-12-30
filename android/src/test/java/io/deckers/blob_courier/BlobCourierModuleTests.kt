@@ -20,6 +20,7 @@ import io.deckers.blob_courier.Fixtures.runUploadBlob
 import io.deckers.blob_courier.common.Either
 import io.deckers.blob_courier.common.ValidationError
 import io.deckers.blob_courier.common.isNotNull
+import io.deckers.blob_courier.common.isNotNullOrEmptyString
 import io.deckers.blob_courier.common.validate
 import io.deckers.blob_courier.react.toReactMap
 import io.deckers.blob_courier.upload.InputStreamRequestBody
@@ -45,6 +46,10 @@ import org.robolectric.Shadows
 import org.robolectric.annotation.Config
 
 const val SOME_FILE_THAT_IS_ALWAYS_AVAILABLE = "file:///system/etc/fonts.xml"
+
+@Suppress("SameParameterValue")
+private fun <T : Any, V> assertTypeOf(message: String, o: T, t: Class<V>) =
+  assertSame(message, o::class.java, t)
 
 private fun mapMultipartsToNames(parts: List<MultipartBody.Part>) =
   parts.fold(
@@ -780,30 +785,30 @@ class BlobCourierModuleTests {
     assertSame("Object doesn't match the provided object", someObject, rightObject.v)
   }
 
-  // @Test
-  // fun validating_not_null_or_empty_values_works() {
-  //   val someObject = Object()
-  //   val someParameterName = "SOME_PARAMETER_NAME_0"
+  @Test
+  fun validating_not_null_or_empty_values_works() {
+    val someObject = Object()
+    val someParameterName = "SOME_PARAMETER_NAME_0"
 
-  //   val leftEmpty = validate("", isNotNullOrEmptyMap(someParameterName))
-  //   val leftNull = validate(null, isNotNullOrEmptyMap(someParameterName))
-  //   val rightObject = validate(someObject, isNotNull("SOME_PARAMETER_NAME_1"))
+    val leftEmpty = validate("", isNotNullOrEmptyString(someParameterName))
+    val leftNull = validate(null, isNotNullOrEmptyString(someParameterName))
+    val rightObject = validate(someObject, isNotNull("SOME_PARAMETER_NAME_1"))
 
-  //   assertTrue("Validation should fail", leftNull is Either.Left)
-  //   assertTrue("Validation should succeed", rightObject is Either.Right)
+    assertTrue("Validation should fail", leftNull is Either.Left)
+    assertTrue("Validation should succeed", rightObject is Either.Right)
 
-  //   leftEmpty as Either.Left
-  //   leftNull as Either.Left
-  //   rightObject as Either.Right
+    leftEmpty as Either.Left
+    leftNull as Either.Left
+    rightObject as Either.Right
 
-  //   assertTrue("Failure error is of wrong type", leftEmpty.v is ValidationError.IsEmpty)
-  //   assertEquals(someParameterName, (leftEmpty.v as ValidationError.IsEmpty).parameterName)
+    assertTypeOf("Failure error is of wrong type", leftEmpty.v, ValidationError.IsEmpty::class.java)
+    assertEquals(someParameterName, (leftEmpty.v as ValidationError.IsEmpty).parameterName)
 
-  //   assertTrue("Failure error is of wrong type", leftNull.v is ValidationError.IsNull)
-  //   assertEquals(someParameterName, (leftNull.v as ValidationError.IsNull).parameterName)
+    assertTypeOf("Failure error is of wrong type", leftNull.v, ValidationError.IsNull::class.java)
+    assertEquals(someParameterName, (leftNull.v as ValidationError.IsNull).parameterName)
 
-  //   assertSame("Object doesn't match the provided object", someObject, rightObject.v)
-  // }
+    assertSame("Object doesn't match the provided object", someObject, rightObject.v)
+  }
 
   private fun assert_correct_target_parameter_resolves_promise(correctTarget: String) {
     val allRequiredParametersMap = createValidTestFetchParameterMap()
