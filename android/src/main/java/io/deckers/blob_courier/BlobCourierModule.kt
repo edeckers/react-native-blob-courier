@@ -12,19 +12,29 @@ import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReactMethod
 import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.modules.network.OkHttpClientProvider
-import io.deckers.blob_courier.common.BlobCourierError
+import io.deckers.blob_courier.common.DEFAULT_PROGRESS_TIMEOUT_MILLISECONDS
+import io.deckers.blob_courier.common.ERROR_UNEXPECTED_EXCEPTION
 import io.deckers.blob_courier.common.ERROR_UNKNOWN_HOST
 import io.deckers.blob_courier.common.LIBRARY_NAME
-import io.deckers.blob_courier.common.processUnexpectedError
-import io.deckers.blob_courier.common.processUnexpectedException
+import io.deckers.blob_courier.common.Success
+import io.deckers.blob_courier.common.`do`
 import io.deckers.blob_courier.fetch.BlobDownloader
 import io.deckers.blob_courier.fetch.DownloaderParameterFactory
+import io.deckers.blob_courier.react.CongestionAvoidingProgressNotifierFactory
+import io.deckers.blob_courier.react.processUnexpectedError
+import io.deckers.blob_courier.react.processUnexpectedException
+import io.deckers.blob_courier.react.toReactMap
 import io.deckers.blob_courier.upload.BlobUploader
 import io.deckers.blob_courier.upload.UploaderParameterFactory
 import java.net.UnknownHostException
 import kotlin.concurrent.thread
 
 private fun createHttpClient() = OkHttpClientProvider.getOkHttpClient()
+private fun createProgressFactory(reactContext: ReactApplicationContext) =
+  CongestionAvoidingProgressNotifierFactory(
+    reactContext,
+    DEFAULT_PROGRESS_TIMEOUT_MILLISECONDS
+  )
 
 class BlobCourierModule(private val reactContext: ReactApplicationContext) :
   ReactContextBaseJavaModule(reactContext) {
@@ -35,20 +45,27 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
   fun fetchBlob(input: ReadableMap, promise: Promise) {
     thread {
       try {
-        val fetchParameters =
-          DownloaderParameterFactory().fromInput(input, promise)
+        val errorOrDownloadResult =
+          DownloaderParameterFactory().fromInput(input).fmap(
+            BlobDownloader(
+              reactContext,
+              createHttpClient(),
+              createProgressFactory(reactContext)
+            )::download
+          )
 
-        fetchParameters?.run {
-          BlobDownloader(reactContext, createHttpClient()).download(fetchParameters, promise)
-        }
-      } catch (e: BlobCourierError) {
-        promise.reject(e.code, e.message)
+        errorOrDownloadResult
+          .fmap { Success(it.toReactMap()) }
+          .`do`(
+            promise::reject,
+            promise::resolve
+          )
       } catch (e: UnknownHostException) {
         promise.reject(ERROR_UNKNOWN_HOST, e)
       } catch (e: Exception) {
-        processUnexpectedException(promise, e)
+        promise.reject(ERROR_UNEXPECTED_EXCEPTION, processUnexpectedException(e).message)
       } catch (e: Error) {
-        processUnexpectedError(promise, e)
+        promise.reject(ERROR_UNEXPECTED_EXCEPTION, processUnexpectedError(e).message)
       }
     }
   }
@@ -57,19 +74,29 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
   fun uploadBlob(input: ReadableMap, promise: Promise) {
     thread {
       try {
-        val uploadParameters = UploaderParameterFactory().fromInput(input, promise)
+        val errorOrUploadResult =
+          UploaderParameterFactory()
+            .fromInput(input)
+            .fmap(
+              BlobUploader(
+                reactContext,
+                createHttpClient(),
+                createProgressFactory(reactContext)
+              )::upload
+            )
 
-        uploadParameters?.run {
-          BlobUploader(reactContext, createHttpClient()).upload(uploadParameters, promise)
-        }
-      } catch (e: BlobCourierError) {
-        promise.reject(e.code, e.message)
+        errorOrUploadResult
+          .fmap { Success(it.toReactMap()) }
+          .`do`(
+            promise::reject,
+            promise::resolve
+          )
       } catch (e: UnknownHostException) {
         promise.reject(ERROR_UNKNOWN_HOST, e)
       } catch (e: Exception) {
-        processUnexpectedException(promise, e)
+        promise.reject(ERROR_UNEXPECTED_EXCEPTION, processUnexpectedException(e).message)
       } catch (e: Error) {
-        processUnexpectedError(promise, e)
+        promise.reject(ERROR_UNEXPECTED_EXCEPTION, processUnexpectedError(e).message)
       }
     }
   }

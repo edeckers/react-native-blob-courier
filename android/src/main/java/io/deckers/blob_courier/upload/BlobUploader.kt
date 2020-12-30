@@ -6,31 +6,27 @@
  */
 package io.deckers.blob_courier.upload
 
-import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
-import io.deckers.blob_courier.common.ERROR_UNEXPECTED_ERROR
-import io.deckers.blob_courier.common.ERROR_UNEXPECTED_EXCEPTION
+import io.deckers.blob_courier.common.Failure
+import io.deckers.blob_courier.common.Result
+import io.deckers.blob_courier.common.Success
 import io.deckers.blob_courier.common.mapHeadersToMap
-import io.deckers.blob_courier.common.toReactMap
 import io.deckers.blob_courier.progress.BlobCourierProgressRequest
+import io.deckers.blob_courier.progress.ProgressNotifierFactory
 import okhttp3.OkHttpClient
 import okhttp3.Request
 
 class BlobUploader(
   private val reactContext: ReactApplicationContext,
-  private val httpClient: OkHttpClient
+  private val httpClient: OkHttpClient,
+  private val progressNotifierFactory: ProgressNotifierFactory
 ) {
 
-  fun upload(
-    uploaderParameters: UploaderParameters,
-    promise: Promise,
-  ) {
+  fun upload(uploaderParameters: UploaderParameters): Result<Map<String, Any>> {
 
     val requestBody = BlobCourierProgressRequest(
-      reactContext,
-      uploaderParameters.taskId,
       uploaderParameters.toMultipartBody(reactContext.contentResolver),
-      uploaderParameters.progressInterval
+      progressNotifierFactory.create(uploaderParameters.taskId)
     )
 
     val requestBuilder = Request.Builder()
@@ -50,19 +46,19 @@ class BlobUploader(
 
       val b = response.body()?.string().orEmpty()
 
-      promise.resolve(
+      return Success(
         mapOf(
           "response" to mapOf(
             "code" to response.code(),
             "data" to if (uploaderParameters.returnResponse) b else "",
             "headers" to mapHeadersToMap(response.headers())
           )
-        ).toReactMap()
+        )
       )
     } catch (e: Exception) {
-      promise.reject(ERROR_UNEXPECTED_EXCEPTION, e.message)
+      return Failure(e)
     } catch (e: Error) {
-      promise.reject(ERROR_UNEXPECTED_ERROR, e.message)
+      return Failure(e)
     }
   }
 }
