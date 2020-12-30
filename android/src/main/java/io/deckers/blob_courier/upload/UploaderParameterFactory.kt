@@ -33,12 +33,13 @@ import io.deckers.blob_courier.common.ValidationSuccess
 import io.deckers.blob_courier.common.filterHeaders
 import io.deckers.blob_courier.common.fold
 import io.deckers.blob_courier.common.getMapInt
+import io.deckers.blob_courier.common.hasArrayReqParam
 import io.deckers.blob_courier.common.hasKey
-import io.deckers.blob_courier.common.hasReqParam
+import io.deckers.blob_courier.common.hasMapReqParam
+import io.deckers.blob_courier.common.hasStringReqParam
 import io.deckers.blob_courier.common.ifLeft
 import io.deckers.blob_courier.common.ifNone
 import io.deckers.blob_courier.common.isNotNull
-import io.deckers.blob_courier.common.isNotNullOrEmpty
 import io.deckers.blob_courier.common.maybe
 import io.deckers.blob_courier.common.right
 import io.deckers.blob_courier.common.testDrop
@@ -114,23 +115,23 @@ private fun filterReadableMapsFromReadableArray(parts: ReadableArray): Array<Rea
 
 private fun validatedPartListToEither(validatedParts: List<ValidationResult<ReadableMap>>):
   ValidationResult<List<ReadableMap>> =
-    validatedParts.fold(
-      right(emptyList()),
-      { listOfValidMaps, validMap ->
-        validMap.fold(
-          { listOfValidMaps },
-          { m -> listOfValidMaps.map { p0 -> p0.plus(m) } }
-        )
-      }
-    )
+  validatedParts.fold(
+    right(emptyList()),
+    { listOfValidMaps, validMap ->
+      validMap.fold(
+        { listOfValidMaps },
+        { m -> listOfValidMaps.map { p0 -> p0.plus(m) } }
+      )
+    }
+  )
 
 private fun invalidatePartToEither(invalidatedPart: ValidationResult<ReadableMap>):
   ValidationResult<List<ReadableMap>> =
-    invalidatedPart.map { emptyList<ReadableMap>() }
-      .fold(
-        ::ValidationFailure,
-        ::ValidationSuccess
-      )
+  invalidatedPart.map { emptyList<ReadableMap>() }
+    .fold(
+      ::ValidationFailure,
+      ::ValidationSuccess
+    )
 
 private fun verifyParts(parts: ReadableArray): ValidationResult<List<ReadableMap>> {
   val mapParts = filterReadableMapsFromReadableArray(parts)
@@ -163,26 +164,22 @@ private fun createFilePayload(payload: ReadableMap): FilePart? {
       .map { fileUrl }
       .ifNone(Uri.parse("file://$fileUrl"))
 
-  val filename =
-    validate(payload, hasKey(PARAMETER_FILENAME))
-      .map { m -> m.getString(PARAMETER_FILENAME) }
-      .ifLeft(fileUrl.lastPathSegment)
+  val errorOrFilename = ValidationSuccess(payload)
+    .pipe(::write)
+    .fmap(testTake(hasStringReqParam(PARAMETER_FILENAME)))
+    .map { (_, w) -> w }
+    .map { (f, _) -> f }
 
-  val mimeType =
-    validate(payload, hasKey(PARAMETER_MIME_TYPE))
-      .map { m -> m.getString(PARAMETER_MIME_TYPE) }
-      .fmap { maybeMimeType -> validate(maybeMimeType, isNotNullOrEmpty(PARAMETER_MIME_TYPE)) }
-      .ifLeft(DEFAULT_MIME_TYPE)
+  val mimeType = ValidationSuccess(payload)
+    .pipe(::write)
+    .fmap(testTake(hasStringReqParam(PARAMETER_MIME_TYPE)))
+    .map { (_, w) -> w }
+    .map { (mime, _) -> mime }
+    .ifLeft(DEFAULT_MIME_TYPE)
 
-  if (fileUrlWithScheme == null) {
-    return null
-  }
-
-  if (filename == null) {
-    return null
-  }
-
-  return FilePart(fileUrlWithScheme, filename, mimeType)
+  return errorOrFilename
+    .map { v -> FilePart(fileUrlWithScheme, v, mimeType) as FilePart? }
+    .ifLeft(null)
 }
 
 private fun createPart(part: ReadableMap): Part {
@@ -201,40 +198,29 @@ private fun createParts(parts: ReadableArray): List<Part> =
 
 private fun isValidFilePayload(map: ReadableMap?):
   ValidationResult<ReadableMap> =
-    validate(map, hasKey(PARAMETER_PART_PAYLOAD))
-      .pipe(::write)
-      .fmap(
-        testTake(
-          isNotNull(PARAMETER_PART_PAYLOAD),
-          { part -> part?.getMap(PARAMETER_PART_PAYLOAD) }
-        )
-      )
-      .fmap(testDrop(hasKey(PARAMETER_ABSOLUTE_FILE_PATH)))
-      .fmap(testDrop(hasKey(PARAMETER_MIME_TYPE)))
-      .fmap(
-        testDrop(
-          isNotNullOrEmpty(PARAMETER_ABSOLUTE_FILE_PATH),
-          { m -> m?.getString(PARAMETER_ABSOLUTE_FILE_PATH) }
-        )
-      )
-      .fmap(
-        testDrop(
-          isNotNullOrEmpty(PARAMETER_MIME_TYPE),
-          { m -> m?.getString(PARAMETER_MIME_TYPE) }
-        )
-      )
-      .map { it.first }
+  ValidationSuccess(map)
+    .pipe(::write)
+    // .fmap(testTake(hasMapReqParam((PARAMETER_PART_PAYLOAD))))
+    // .map { (_, w) ->
+    //   val (payload, _) = w
+
+    //   Pair(payload, w)
+    // }
+    // .fmap(testDrop(hasStringReqParam(PARAMETER_ABSOLUTE_FILE_PATH)))
+    // .fmap(testDrop(hasStringReqParam(PARAMETER_MIME_TYPE)))
+    .map { (_, w) ->
+      // val (_, w2) = w
+      // val (input, _) = w2
+
+      // input!!
+      map!!
+    }
 
 private fun isValidStringPayload(part: ReadableMap?):
   ValidationResult<ReadableMap> = validate(part, hasKey(PARAMETER_PART_PAYLOAD))
-    .pipe(::write)
-    .fmap(
-      testDrop(
-        isNotNullOrEmpty(PARAMETER_PART_PAYLOAD),
-        { m -> m?.getString(PARAMETER_PART_PAYLOAD) }
-      )
-    )
-    .map { it.first }
+  .pipe(::write)
+  .fmap(testDrop(hasMapReqParam(PARAMETER_PART_PAYLOAD)))
+  .map { it.first }
 
 private fun isValidPayload(map: ReadableMap?): ValidationResult<ReadableMap> =
   if (map?.getString(PARAMETER_PART_TYPE) == "file")
@@ -244,21 +230,18 @@ private fun isValidPayload(map: ReadableMap?): ValidationResult<ReadableMap> =
 private fun validatePartsMap(value: ReadableMap?): ValidationResult<ReadableMap> =
   validate(value, isNotNull(PARAMETER_PARTS))
     .pipe(::write)
-    .fmap(testDrop(hasReqParam(PARAMETER_PART_NAME, String::class.java)))
-    .fmap(testDrop(hasReqParam(PARAMETER_PART_PAYLOAD, ReadableMap::class.java)))
-    .fmap(testDrop(hasReqParam(PARAMETER_PART_TYPE, String::class.java)))
+    .fmap(testDrop(hasStringReqParam(PARAMETER_PART_NAME)))
+    .fmap(testDrop(hasMapReqParam(PARAMETER_PART_PAYLOAD)))
+    .fmap(testDrop(hasStringReqParam(PARAMETER_PART_TYPE)))
     .fmap(testDrop(::isValidPayload))
     .map { it.first }
 
 private fun validateRequiredParameters(input: ReadableMap): ValidationResult<RequiredParameters> =
   ValidationSuccess(input)
     .pipe(::write)
-    .fmap(testDrop(hasReqParam(PARAMETER_PARTS, ReadableMap::class.java)))
-    .fmap(testDrop(hasReqParam(PARAMETER_TASK_ID, String::class.java)))
-    .fmap(testDrop(hasReqParam(PARAMETER_URL, String::class.java)))
-    .fmap(testTake((isNotNull(PARAMETER_PARTS)), { input.getArray(PARAMETER_PARTS) }))
-    .fmap(testTake(isNotNull(PARAMETER_TASK_ID), { input.getString(PARAMETER_TASK_ID) }))
-    .fmap(testTake(isNotNull(PARAMETER_URL), { input.getString(PARAMETER_URL) }))
+    .fmap(testTake(hasArrayReqParam(PARAMETER_PARTS)))
+    .fmap(testTake(hasStringReqParam(PARAMETER_TASK_ID)))
+    .fmap(testTake(hasStringReqParam(PARAMETER_URL)))
     .fmap { (_, validatedParameters) ->
       val (url, rest) = validatedParameters
       val (taskId, rest2) = rest

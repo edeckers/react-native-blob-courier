@@ -36,5 +36,5 @@ fun <T> Maybe<T>.toEither() =
   }
 
 fun <T> just(v: T) = Maybe.Just(v)
-fun <T> maybe(v: T?): Maybe<T> = v?.let(::just) ?: nothing()
+fun <T> maybe(v: T?): Maybe<T> = v?.let(::just) ?: nothing<T>()
 fun <T> nothing() = Maybe.Nothing<T>()

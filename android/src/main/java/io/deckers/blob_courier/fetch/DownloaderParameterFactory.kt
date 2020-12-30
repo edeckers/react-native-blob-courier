@@ -24,7 +24,7 @@ import io.deckers.blob_courier.common.ValidationResult
 import io.deckers.blob_courier.common.ValidationSuccess
 import io.deckers.blob_courier.common.filterHeaders
 import io.deckers.blob_courier.common.getMapInt
-import io.deckers.blob_courier.common.hasReqParam
+import io.deckers.blob_courier.common.hasStringReqParam
 import io.deckers.blob_courier.common.ifNone
 import io.deckers.blob_courier.common.isNotNull
 import io.deckers.blob_courier.common.maybe
@@ -61,9 +61,9 @@ private fun validateRequiredParameters(input: ReadableMap):
   ValidationResult<RequiredDownloadParameters> =
     ValidationSuccess(input)
       .pipe(::write)
-      .fmap(testDrop(hasReqParam(PARAMETER_FILENAME, String::class.java)))
-      .fmap(testDrop(hasReqParam(PARAMETER_TASK_ID, String::class.java)))
-      .fmap(testDrop(hasReqParam(PARAMETER_URL, String::class.java)))
+      .fmap(testDrop(hasStringReqParam(PARAMETER_FILENAME)))
+      .fmap(testDrop(hasStringReqParam(PARAMETER_TASK_ID)))
+      .fmap(testDrop(hasStringReqParam(PARAMETER_URL)))
       .fmap(testTake(isNotNull(PARAMETER_FILENAME), { input.getString(PARAMETER_FILENAME) }))
       .fmap(testTake(isNotNull(PARAMETER_TASK_ID), { input.getString(PARAMETER_TASK_ID) }))
       .fmap(testTake(isNotNull(PARAMETER_URL), { input.getString(PARAMETER_URL) }))
