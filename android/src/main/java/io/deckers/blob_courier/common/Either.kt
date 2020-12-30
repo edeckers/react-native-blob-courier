@@ -28,6 +28,18 @@ fun <TLeft, TRight> Either<TLeft, TRight>.ifLeft(fallback: TRight) = when (this)
   is Either.Right -> this.v
 }
 
+fun <TLeft, TRight> Either<TLeft, TRight>.component1() =
+  when (this) {
+    is Either.Right -> null
+    is Either.Left -> v
+  }
+
+fun <TLeft, TRight> Either<TLeft, TRight>.component2() =
+  when (this) {
+    is Either.Right -> v
+    is Either.Left -> null
+  }
+
 fun <TLeft, TRight, R> Either<TLeft, TRight>.fold(
   ifLeft: (v: TLeft) -> R,
   ifRight: (v: TRight) -> R

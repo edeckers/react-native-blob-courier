@@ -6,6 +6,8 @@
  */
 package io.deckers.blob_courier.common
 
+import com.facebook.react.bridge.ReadableMap
+
 fun <T> isNotNullOrEmpty(name: String): (value: T?) -> ValidationResult<T> =
   { value: T? ->
     maybe(value)
@@ -20,6 +22,25 @@ fun <T> isNotNull(name: String): (value: T?) -> ValidationResult<T> =
     maybe(value)
       .map(::ValidationSuccess)
       .ifNone(ValidationFailure(ValidationError.IsNull(name)))
+  }
+
+fun hasKey(key: String): (map: ReadableMap?) -> ValidationResult<ReadableMap> =
+  { map: ReadableMap? ->
+    if (map?.hasKey(key) == true) right(map) else left(ValidationError.KeyDoesNotExist(key))
+  }
+
+fun hasReqParam(key: String, type: Class<*>): (map: ReadableMap?) -> ValidationResult<ReadableMap> =
+  { map: ReadableMap? ->
+    val testKey = hasKey(key)
+    val testNull =
+      { vr: ValidationResult<ReadableMap> -> vr.fmap { isNotNullOrEmpty<ReadableMap>(key)(it) } }
+
+    val exec = compose(testNull, testKey)
+
+    exec(map).fold(
+      { left(ValidationError.MissingParameter(key, "$type")) },
+      { r -> right(r) }
+    )
   }
 
 fun <A> validate(input: A?, test: (v: A?) -> ValidationResult<A>) = test(input)

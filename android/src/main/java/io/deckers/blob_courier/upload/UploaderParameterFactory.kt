@@ -33,11 +33,12 @@ import io.deckers.blob_courier.common.ValidationSuccess
 import io.deckers.blob_courier.common.filterHeaders
 import io.deckers.blob_courier.common.fold
 import io.deckers.blob_courier.common.getMapInt
+import io.deckers.blob_courier.common.hasKey
+import io.deckers.blob_courier.common.hasReqParam
 import io.deckers.blob_courier.common.ifLeft
 import io.deckers.blob_courier.common.ifNone
 import io.deckers.blob_courier.common.isNotNull
 import io.deckers.blob_courier.common.isNotNullOrEmpty
-import io.deckers.blob_courier.common.left
 import io.deckers.blob_courier.common.maybe
 import io.deckers.blob_courier.common.right
 import io.deckers.blob_courier.common.testDrop
@@ -240,24 +241,22 @@ private fun isValidPayload(map: ReadableMap?): ValidationResult<ReadableMap> =
     isValidFilePayload(map)
   else isValidStringPayload(map)
 
-private fun hasKey(key: String): (map: ReadableMap?) -> ValidationResult<ReadableMap> =
-  { map: ReadableMap? ->
-    if (map?.hasKey(key) == true) right(map) else left(ValidationError.KeyDoesNotExist(key))
-  }
-
 private fun validatePartsMap(value: ReadableMap?): ValidationResult<ReadableMap> =
   validate(value, isNotNull(PARAMETER_PARTS))
     .pipe(::write)
-    .fmap(testDrop(hasKey(PARAMETER_PART_NAME)))
-    .fmap(testDrop(hasKey(PARAMETER_PART_PAYLOAD)))
-    .fmap(testDrop(hasKey(PARAMETER_PART_TYPE)))
+    .fmap(testDrop(hasReqParam(PARAMETER_PART_NAME, String::class.java)))
+    .fmap(testDrop(hasReqParam(PARAMETER_PART_PAYLOAD, ReadableMap::class.java)))
+    .fmap(testDrop(hasReqParam(PARAMETER_PART_TYPE, String::class.java)))
     .fmap(testDrop(::isValidPayload))
     .map { it.first }
 
 private fun validateRequiredParameters(input: ReadableMap): ValidationResult<RequiredParameters> =
   ValidationSuccess(input)
     .pipe(::write)
-    .fmap(testTake(isNotNull(PARAMETER_PARTS), { input.getArray(PARAMETER_PARTS) }))
+    .fmap(testDrop(hasReqParam(PARAMETER_PARTS, ReadableMap::class.java)))
+    .fmap(testDrop(hasReqParam(PARAMETER_TASK_ID, String::class.java)))
+    .fmap(testDrop(hasReqParam(PARAMETER_URL, String::class.java)))
+    .fmap(testTake((isNotNull(PARAMETER_PARTS)), { input.getArray(PARAMETER_PARTS) }))
     .fmap(testTake(isNotNull(PARAMETER_TASK_ID), { input.getString(PARAMETER_TASK_ID) }))
     .fmap(testTake(isNotNull(PARAMETER_URL), { input.getString(PARAMETER_URL) }))
     .fmap { (_, validatedParameters) ->
