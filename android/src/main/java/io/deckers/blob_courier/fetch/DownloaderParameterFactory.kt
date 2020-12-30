@@ -18,19 +18,19 @@ import io.deckers.blob_courier.common.PARAMETER_MIME_TYPE
 import io.deckers.blob_courier.common.PARAMETER_SETTINGS_PROGRESS_INTERVAL
 import io.deckers.blob_courier.common.PARAMETER_TASK_ID
 import io.deckers.blob_courier.common.PARAMETER_URL
+import io.deckers.blob_courier.common.PROVIDED_PARAMETERS
 import io.deckers.blob_courier.common.ValidationError
 import io.deckers.blob_courier.common.ValidationFailure
 import io.deckers.blob_courier.common.ValidationResult
 import io.deckers.blob_courier.common.ValidationSuccess
 import io.deckers.blob_courier.common.filterHeaders
 import io.deckers.blob_courier.common.getMapInt
-import io.deckers.blob_courier.common.hasStringReqParam
+import io.deckers.blob_courier.common.hasRequiredStringField
 import io.deckers.blob_courier.common.ifNone
 import io.deckers.blob_courier.common.isNotNull
 import io.deckers.blob_courier.common.maybe
-import io.deckers.blob_courier.common.testDrop
-import io.deckers.blob_courier.common.testTake
-import io.deckers.blob_courier.common.write
+import io.deckers.blob_courier.common.testKeep
+import io.deckers.blob_courier.common.validationContext
 import java.util.Locale
 
 private const val PARAMETER_ANDROID_SETTINGS = "android"
@@ -59,14 +59,10 @@ data class DownloaderParameters(
 
 private fun validateRequiredParameters(input: ReadableMap):
   ValidationResult<RequiredDownloadParameters> =
-    ValidationSuccess(input)
-      .pipe(::write)
-      .fmap(testDrop(hasStringReqParam(PARAMETER_FILENAME)))
-      .fmap(testDrop(hasStringReqParam(PARAMETER_TASK_ID)))
-      .fmap(testDrop(hasStringReqParam(PARAMETER_URL)))
-      .fmap(testTake(isNotNull(PARAMETER_FILENAME), { input.getString(PARAMETER_FILENAME) }))
-      .fmap(testTake(isNotNull(PARAMETER_TASK_ID), { input.getString(PARAMETER_TASK_ID) }))
-      .fmap(testTake(isNotNull(PARAMETER_URL), { input.getString(PARAMETER_URL) }))
+    validationContext(input, isNotNull(PROVIDED_PARAMETERS))
+      .fmap(testKeep(hasRequiredStringField(PARAMETER_FILENAME)))
+      .fmap(testKeep(hasRequiredStringField(PARAMETER_TASK_ID)))
+      .fmap(testKeep(hasRequiredStringField(PARAMETER_URL)))
       .fmap { (_, validatedParameters) ->
         val (url, rest) = validatedParameters
         val (taskId, rest2) = rest

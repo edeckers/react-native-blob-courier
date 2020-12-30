@@ -60,3 +60,14 @@ fun <TLeft, TRight, TOut> Either<TLeft, TRight>.`do`(
 
 fun <TLeft, TRight> right(r: TRight): Either<TLeft, TRight> = Either.Right(r)
 fun <TLeft, TRight> left(l: TLeft): Either<TLeft, TRight> = Either.Left(l)
+
+fun <TLeft, TRight> List<Either<TLeft, TRight>>.toEither(): Either<TLeft, List<TRight>> =
+  this.fold(
+    right(emptyList()),
+    { acc, eitherItem ->
+      eitherItem.fold(
+        { acc },
+        { m -> acc.map { p0 -> p0.plus(m) } }
+      )
+    }
+  )

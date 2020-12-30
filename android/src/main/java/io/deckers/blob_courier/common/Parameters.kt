@@ -10,6 +10,8 @@ import com.facebook.react.bridge.ReadableMap
 
 const val ERROR_MISSING_REQUIRED_PARAMETER = "ERROR_MISSING_REQUIRED_PARAMETER"
 
+const val PROVIDED_PARAMETERS = "PROVIDED_PARAMETERS"
+
 const val PARAMETER_ABSOLUTE_FILE_PATH = "absoluteFilePath"
 const val PARAMETER_FILENAME = "filename"
 const val PARAMETER_HEADERS = "headers"
