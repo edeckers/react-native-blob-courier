@@ -87,7 +87,7 @@ fun hasRequiredArrayField(key: String): (map: ReadableMap?) -> ValidationResult<
     ReadableArray::class.java
   )
 
-fun hasMapReqParam(key: String): (map: ReadableMap?) -> ValidationResult<ReadableMap> =
+fun hasRequiredMapField(key: String): (map: ReadableMap?) -> ValidationResult<ReadableMap> =
   hasReqParam(
     key,
     {
