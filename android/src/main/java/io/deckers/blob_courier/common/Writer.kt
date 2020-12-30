@@ -24,4 +24,11 @@ class Writer<A, B>(o: A, acc: B) {
     contextAndResult.result.map { result -> Pair(contextAndResult.context, Writer(result, this)) }
 }
 
+fun <TContext, A, B> popToContext(c: Pair<TContext, Writer<A, B>>): Pair<A, B> {
+  val (_, w) = c
+  val (newContext, rest) = w
+
+  return Pair(newContext, rest)
+}
+
 fun <A> write(v: ValidationResult<A>) = v.map { Pair(it, Writer(it, Unit)) }

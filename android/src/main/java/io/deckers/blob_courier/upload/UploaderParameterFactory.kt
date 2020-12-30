@@ -42,6 +42,7 @@ import io.deckers.blob_courier.common.ifLeft
 import io.deckers.blob_courier.common.ifNone
 import io.deckers.blob_courier.common.isNotNull
 import io.deckers.blob_courier.common.maybe
+import io.deckers.blob_courier.common.popToContext
 import io.deckers.blob_courier.common.testDiscard
 import io.deckers.blob_courier.common.testKeep
 import io.deckers.blob_courier.common.toEither
@@ -160,13 +161,13 @@ private fun createFilePayload(payload: ReadableMap): FilePart {
   val errorOrFilename =
     context
       .fmap(testKeep(hasRequiredStringField(PARAMETER_FILENAME)))
-      .map { (_, w) -> w }
+      .map(::popToContext)
       .map { (f, _) -> f }
 
   val mimeType =
     context
       .fmap(testKeep(hasRequiredStringField(PARAMETER_MIME_TYPE)))
-      .map { (_, w) -> w }
+      .map(::popToContext)
       .map { (mime, _) -> mime }
       .ifLeft(DEFAULT_MIME_TYPE)
 
@@ -192,17 +193,12 @@ private fun createParts(parts: ReadableArray): List<Part> =
 private fun isValidFilePayload(partMap: ReadableMap):
   ValidationResult<ReadableMap> =
     validationContext(partMap, isNotNull(PARAMETER_PARTS))
-      .fmap(testKeep(isNotNull(PARAMETER_PARTS)))
       .fmap(testKeep(hasMapReqParam((PARAMETER_PART_PAYLOAD))))
-      .map { (_, w) ->
-        Pair(w.v.first, w)
-      }
+      .map(::popToContext)
       .fmap(testDiscard(hasRequiredStringField(PARAMETER_ABSOLUTE_FILE_PATH)))
       .fmap(testDiscard(hasRequiredStringField(PARAMETER_MIME_TYPE)))
       .map { (_, w) ->
-        val (_, w2) = w
-
-        val (nonNullPart) = w2
+        val (nonNullPart, _) = w
 
         nonNullPart
       }
