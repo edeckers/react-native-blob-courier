@@ -8,12 +8,9 @@ package io.deckers.blob_courier.fetch
 
 import android.net.Uri
 import com.facebook.react.bridge.ReadableMap
-import io.deckers.blob_courier.common.BlobCourierError
 import io.deckers.blob_courier.common.DEFAULT_FETCH_METHOD
 import io.deckers.blob_courier.common.DEFAULT_MIME_TYPE
 import io.deckers.blob_courier.common.DEFAULT_PROGRESS_TIMEOUT_MILLISECONDS
-import io.deckers.blob_courier.common.ERROR_INVALID_VALUE
-import io.deckers.blob_courier.common.Failure
 import io.deckers.blob_courier.common.PARAMETER_FILENAME
 import io.deckers.blob_courier.common.PARAMETER_HEADERS
 import io.deckers.blob_courier.common.PARAMETER_METHOD
@@ -21,13 +18,19 @@ import io.deckers.blob_courier.common.PARAMETER_MIME_TYPE
 import io.deckers.blob_courier.common.PARAMETER_SETTINGS_PROGRESS_INTERVAL
 import io.deckers.blob_courier.common.PARAMETER_TASK_ID
 import io.deckers.blob_courier.common.PARAMETER_URL
-import io.deckers.blob_courier.common.Result
-import io.deckers.blob_courier.common.Success
-import io.deckers.blob_courier.common.`do`
+import io.deckers.blob_courier.common.PROVIDED_PARAMETERS
+import io.deckers.blob_courier.common.ValidationError
+import io.deckers.blob_courier.common.ValidationFailure
+import io.deckers.blob_courier.common.ValidationResult
+import io.deckers.blob_courier.common.ValidationSuccess
 import io.deckers.blob_courier.common.filterHeaders
 import io.deckers.blob_courier.common.getMapInt
-import io.deckers.blob_courier.common.tryRetrieveString
-import io.deckers.blob_courier.react.processUnexpectedEmptyValue
+import io.deckers.blob_courier.common.hasRequiredStringField
+import io.deckers.blob_courier.common.ifNone
+import io.deckers.blob_courier.common.isNotNull
+import io.deckers.blob_courier.common.maybe
+import io.deckers.blob_courier.common.testKeep
+import io.deckers.blob_courier.common.validationContext
 import java.util.Locale
 
 private const val PARAMETER_ANDROID_SETTINGS = "android"
@@ -35,44 +38,11 @@ private const val PARAMETER_DOWNLOAD_MANAGER_SETTINGS = "downloadManager"
 private const val PARAMETER_TARGET = "target"
 private const val PARAMETER_USE_DOWNLOAD_MANAGER = "useDownloadManager"
 
-@Suppress("SameParameterValue")
-private fun processInvalidValue(
-  parameterName: String,
-  invalidValue: String
-) =
-  BlobCourierError(
-    ERROR_INVALID_VALUE,
-    "Parameter `$parameterName` has an invalid value (value=$invalidValue)."
-  )
-
-private fun retrieveRequiredParametersOrThrow(input: ReadableMap):
-  Triple<String?, String?, String?> {
-    val filename = tryRetrieveString(input, PARAMETER_FILENAME)
-    val taskId = tryRetrieveString(input, PARAMETER_TASK_ID)
-    val url = tryRetrieveString(input, PARAMETER_URL)
-
-    return Triple(filename, taskId, url)
-  }
-
-private fun validateRequiredParameters(
-  parameters: Triple<String?, String?, String?>,
-): Result<Triple<String, String, String>> {
-  val (filename, taskId, url) = parameters
-
-  if (filename == null) {
-    return Failure(processUnexpectedEmptyValue(PARAMETER_FILENAME))
-  }
-
-  if (taskId == null) {
-    return Failure(processUnexpectedEmptyValue(PARAMETER_TASK_ID))
-  }
-
-  if (url == null) {
-    return Failure(processUnexpectedEmptyValue(PARAMETER_URL))
-  }
-
-  return Success(Triple(filename, taskId, url))
-}
+data class RequiredDownloadParameters(
+  val filename: String,
+  val taskId: String,
+  val url: String,
+)
 
 data class DownloaderParameters(
   val taskId: String,
@@ -87,14 +57,28 @@ data class DownloaderParameters(
   val progressInterval: Int
 )
 
+private fun validateRequiredParameters(input: ReadableMap):
+  ValidationResult<RequiredDownloadParameters> =
+    validationContext(input, isNotNull(PROVIDED_PARAMETERS))
+      .fmap(testKeep(hasRequiredStringField(PARAMETER_FILENAME)))
+      .fmap(testKeep(hasRequiredStringField(PARAMETER_TASK_ID)))
+      .fmap(testKeep(hasRequiredStringField(PARAMETER_URL)))
+      .fmap { (_, validatedParameters) ->
+        val (url, rest) = validatedParameters
+        val (taskId, rest2) = rest
+        val (filename, _) = rest2
+
+        ValidationSuccess(RequiredDownloadParameters(filename, taskId, url))
+      }
+
 private fun validateParameters(
-  parameters: Triple<String, String, String>,
+  parameters: RequiredDownloadParameters,
   input: ReadableMap
-): Result<DownloaderParameters> {
+): ValidationResult<DownloaderParameters> {
   val (filename, taskId, url) = parameters
 
-  val method = input.getString(PARAMETER_METHOD) ?: DEFAULT_FETCH_METHOD
-  val mimeType = input.getString(PARAMETER_MIME_TYPE) ?: DEFAULT_MIME_TYPE
+  val method = maybe(input.getString(PARAMETER_METHOD)).ifNone(DEFAULT_FETCH_METHOD)
+  val mimeType = maybe(input.getString(PARAMETER_MIME_TYPE)).ifNone(DEFAULT_MIME_TYPE)
 
   val maybeAndroidSettings = input.getMap(PARAMETER_ANDROID_SETTINGS)
 
@@ -132,34 +116,30 @@ private fun validateParameters(
       DEFAULT_PROGRESS_TIMEOUT_MILLISECONDS
     )
 
-  if (maybeTargetDirectory == null) {
-    val e = processInvalidValue(PARAMETER_TARGET, targetDirectoryOrFallback)
-
-    return Failure(e)
-  }
-
-  return Success(
-    DownloaderParameters(
-      taskId,
-      useDownloadManager,
-      downloadManagerSettings,
-      Uri.parse(url),
-      maybeTargetDirectory,
-      filename,
-      headers,
-      method,
-      mimeType,
-      progressInterval
+  return maybe(maybeTargetDirectory)
+    .map { targetDirectory ->
+      ValidationSuccess(
+        DownloaderParameters(
+          taskId,
+          useDownloadManager,
+          downloadManagerSettings,
+          Uri.parse(url),
+          targetDirectory,
+          filename,
+          headers,
+          method,
+          mimeType,
+          progressInterval
+        )
+      )
+    }.ifNone(
+      ValidationFailure(
+        ValidationError.InvalidValue(PARAMETER_TARGET, targetDirectoryOrFallback)
+      )
     )
-  )
 }
 
 class DownloaderParameterFactory {
-  fun fromInput(input: ReadableMap): Result<DownloaderParameters> {
-    val requiredParameters = retrieveRequiredParametersOrThrow(input)
-
-    return validateRequiredParameters(requiredParameters).`do`(
-      ::Failure
-    ) { v -> validateParameters(v, input) }
-  }
+  fun fromInput(input: ReadableMap): ValidationResult<DownloaderParameters> =
+    validateRequiredParameters(input).fmap { v -> validateParameters(v, input) }
 }

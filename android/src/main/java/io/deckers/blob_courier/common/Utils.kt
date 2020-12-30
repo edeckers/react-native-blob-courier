@@ -25,3 +25,8 @@ fun filterHeaders(unfilteredHeaders: Map<String, Any>): Map<String, String> =
     .filter { true }
     .mapNotNull { (k, v) -> v?.let { k to it } }
     .toMap()
+
+fun <TFIn, TGIn, TOut> compose(
+  f: (i: TFIn) -> TOut,
+  g: (i: TGIn) -> TFIn
+): (t: TGIn) -> TOut = { input -> f(g(input)) }

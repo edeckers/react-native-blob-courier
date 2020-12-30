@@ -14,12 +14,12 @@ import io.deckers.blob_courier.common.ERROR_UNEXPECTED_EXCEPTION
 
 fun processUnexpectedError(e: Error) = BlobCourierError(
   ERROR_UNEXPECTED_ERROR,
-  "An unexpected error occurred: ${e.message}"
+  "An unexpected error occurred: ${e.message},$e"
 )
 
 fun processUnexpectedException(e: Exception) = BlobCourierError(
   ERROR_UNEXPECTED_EXCEPTION,
-  "An unexpected exception occurred: ${e.message}"
+  "An unexpected exception occurred: ${e.message},$e"
 )
 
 fun processUnexpectedEmptyValue(parameterName: String) = BlobCourierErrorUnexpectedEmpty(

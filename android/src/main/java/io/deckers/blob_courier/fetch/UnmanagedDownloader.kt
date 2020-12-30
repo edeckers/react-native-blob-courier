@@ -8,9 +8,11 @@ package io.deckers.blob_courier.fetch
 
 import android.net.Uri
 import io.deckers.blob_courier.common.DOWNLOAD_TYPE_UNMANAGED
+import io.deckers.blob_courier.common.ERROR_UNEXPECTED_ERROR
 import io.deckers.blob_courier.common.Failure
 import io.deckers.blob_courier.common.Result
 import io.deckers.blob_courier.common.Success
+import io.deckers.blob_courier.common.createErrorFromThrowabe
 import io.deckers.blob_courier.common.mapHeadersToMap
 import io.deckers.blob_courier.progress.BlobCourierProgressResponse
 import io.deckers.blob_courier.progress.ProgressNotifier
@@ -88,7 +90,7 @@ class UnmanagedDownloader(
         )
       )
     } catch (e: Throwable) {
-      return Failure(e)
+      return Failure(createErrorFromThrowabe(ERROR_UNEXPECTED_ERROR, e))
     }
   }
 }

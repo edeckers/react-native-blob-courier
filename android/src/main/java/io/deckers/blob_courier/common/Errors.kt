@@ -6,14 +6,18 @@
  */
 package io.deckers.blob_courier.common
 
+const val ERROR_PARAMETER_IS_NULL = "ERROR_PARAMETER_IS_NULL"
+
 const val ERROR_INVALID_VALUE = "ERROR_INVALID_VALUE"
 const val ERROR_UNEXPECTED_EXCEPTION = "ERROR_UNEXPECTED_EXCEPTION"
 const val ERROR_UNEXPECTED_ERROR = "ERROR_UNEXPECTED_ERROR"
 const val ERROR_UNEXPECTED_EMPTY_VALUE = "ERROR_UNEXPECTED_EMPTY_VALUE"
 const val ERROR_UNKNOWN_HOST = "ERROR_UNKNOWN_HOST"
 
-open class BlobCourierError(code: String, message: String) : BlobCourierThrowabe(code, message)
-open class BlobCourierThrowabe(val code: String, message: String) : Throwable(message)
+open class BlobCourierError(val code: String, val message: String)
+
+fun createErrorFromThrowabe(code: String, e: Throwable) =
+  BlobCourierError(code, e.message ?: "")
 
 class BlobCourierErrorInvalidValue(
   code: String,
