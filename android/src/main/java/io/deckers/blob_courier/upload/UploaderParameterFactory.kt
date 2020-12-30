@@ -43,6 +43,7 @@ import io.deckers.blob_courier.common.ifNone
 import io.deckers.blob_courier.common.isNotNull
 import io.deckers.blob_courier.common.maybe
 import io.deckers.blob_courier.common.popToContext
+import io.deckers.blob_courier.common.readContext
 import io.deckers.blob_courier.common.testDiscard
 import io.deckers.blob_courier.common.testKeep
 import io.deckers.blob_courier.common.toEither
@@ -162,13 +163,13 @@ private fun createFilePayload(payload: ReadableMap): FilePart {
     context
       .fmap(testKeep(hasRequiredStringField(PARAMETER_FILENAME)))
       .map(::popToContext)
-      .map { (f, _) -> f }
+      .map(::readContext)
 
   val mimeType =
     context
       .fmap(testKeep(hasRequiredStringField(PARAMETER_MIME_TYPE)))
       .map(::popToContext)
-      .map { (mime, _) -> mime }
+      .map(::readContext)
       .ifLeft(DEFAULT_MIME_TYPE)
 
   return errorOrFilename

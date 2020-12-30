@@ -31,4 +31,10 @@ fun <TContext, A, B> popToContext(c: Pair<TContext, Writer<A, B>>): Pair<A, B> {
   return Pair(newContext, rest)
 }
 
+fun <TContext, A, B> readContext(c: Pair<TContext, Writer<A, B>>): TContext {
+  val (v, _) = c
+
+  return v
+}
+
 fun <A> write(v: ValidationResult<A>) = v.map { Pair(it, Writer(it, Unit)) }
