@@ -6,4 +6,10 @@
  */
 package io.deckers.blob_courier.upload
 
-data class DataPart(val value: String) : PartPayload
+import android.net.Uri
+
+data class FilePayload(
+  val absoluteFilePath: Uri,
+  val filename: String,
+  val mimeType: String
+) : PartPayload
