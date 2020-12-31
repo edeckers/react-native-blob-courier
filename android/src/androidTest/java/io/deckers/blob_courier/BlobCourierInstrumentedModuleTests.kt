@@ -58,7 +58,7 @@ class BlobCourierInstrumentedModuleTests {
     every { Arguments.createArray() } answers { JavaOnlyArray() }
   }
 
-//  @Ignore("This breaks on GitHub Actions due to timeout")
+  //  @Ignore("This breaks on GitHub Actions due to timeout")
   @Test
   fun managed_download_succeeds() = runBlocking {
     val allRequiredParametersMap = createValidTestFetchParameterMap().toReactMap()
@@ -83,7 +83,7 @@ class BlobCourierInstrumentedModuleTests {
     assertRequestTrue(message, succeeded)
   }
 
-//  @Ignore("This breaks on GitHub Actions due to timeout")
+  //  @Ignore("This breaks on GitHub Actions due to timeout")
   @Test
   fun managed_download_returns_correct_type() = runBlocking {
     val allRequiredParametersMap = createValidTestFetchParameterMap().toReactMap()
@@ -96,6 +96,8 @@ class BlobCourierInstrumentedModuleTests {
 
     val ctx = InstrumentationRegistry.getInstrumentation().targetContext
     val reactContext = ReactApplicationContext(ctx)
+
+    enableNetworking(true)
 
     val (succeeded, message) = runRequestToBoolean({
       delay(ADB_COMMAND_DELAY_MILLISECONDS)
