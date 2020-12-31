@@ -16,7 +16,7 @@ import io.deckers.blob_courier.Fixtures.runFetchBlobSuspend
 import io.deckers.blob_courier.TestUtils.assertRequestFalse
 import io.deckers.blob_courier.TestUtils.assertRequestTrue
 import io.deckers.blob_courier.TestUtils.circumventHiddenApiExemptionsForMockk
-import io.deckers.blob_courier.TestUtils.runRequestToBoolean
+import io.deckers.blob_courier.TestUtils.runInstrumentedRequestToBoolean
 import io.deckers.blob_courier.common.DOWNLOAD_TYPE_MANAGED
 import io.deckers.blob_courier.common.MANAGED_DOWNLOAD_SUCCESS
 import io.deckers.blob_courier.common.left
@@ -27,7 +27,6 @@ import io.mockk.mockkStatic
 import java.util.UUID
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
-import org.junit.After
 import org.junit.Before
 import org.junit.Test
 
@@ -41,13 +40,6 @@ private fun enableNetworking(enable: Boolean) {
 }
 
 class BlobCourierInstrumentedModuleTests {
-  @After
-  fun restoreExpectedState() = runBlocking {
-    enableNetworking(true)
-
-    delay(ADB_COMMAND_DELAY_MILLISECONDS)
-  }
-
   @Before
   fun mockSomeNativeOnlyMethods() {
     circumventHiddenApiExemptionsForMockk()
@@ -71,14 +63,15 @@ class BlobCourierInstrumentedModuleTests {
     val ctx = InstrumentationRegistry.getInstrumentation().targetContext
     val reactContext = ReactApplicationContext(ctx)
 
-    val (succeeded, message) = runRequestToBoolean({
+    val (succeeded, message) = runInstrumentedRequestToBoolean {
+      enableNetworking(true)
       delay(ADB_COMMAND_DELAY_MILLISECONDS)
 
       runFetchBlobSuspend(
         reactContext,
         allRequiredParametersMap
       )
-    })
+    }
 
     assertRequestTrue(message, succeeded)
   }
@@ -97,9 +90,8 @@ class BlobCourierInstrumentedModuleTests {
     val ctx = InstrumentationRegistry.getInstrumentation().targetContext
     val reactContext = ReactApplicationContext(ctx)
 
-    enableNetworking(true)
-
-    val (succeeded, message) = runRequestToBoolean({
+    val (succeeded, message) = runInstrumentedRequestToBoolean {
+      enableNetworking(true)
       delay(ADB_COMMAND_DELAY_MILLISECONDS)
 
       runFetchBlobSuspend(reactContext, allRequiredParametersMap)
@@ -109,7 +101,7 @@ class BlobCourierInstrumentedModuleTests {
 
           if (check) right(result) else left("Received incorrect type `$receivedType`")
         }
-    })
+    }
 
     assertRequestTrue(message, succeeded)
   }
@@ -127,7 +119,8 @@ class BlobCourierInstrumentedModuleTests {
     val ctx = InstrumentationRegistry.getInstrumentation().targetContext
     val reactContext = ReactApplicationContext(ctx)
 
-    val (succeeded, message) = runRequestToBoolean({
+    val (succeeded, message) = runInstrumentedRequestToBoolean {
+      enableNetworking(true)
       delay(ADB_COMMAND_DELAY_MILLISECONDS)
 
       runFetchBlobSuspend(reactContext, allRequiredParametersMap)
@@ -137,7 +130,7 @@ class BlobCourierInstrumentedModuleTests {
 
           if (check) right(result) else left("Received incorrect result `$receivedResult`")
         }
-    })
+    }
 
     assertRequestTrue(message, succeeded)
   }
@@ -154,11 +147,12 @@ class BlobCourierInstrumentedModuleTests {
         someFileThatIsAlwaysAvailable
       )
 
-    val (succeeded, message) = runRequestToBoolean({
+    val (succeeded, message) = runInstrumentedRequestToBoolean {
+      enableNetworking(true)
       delay(ADB_COMMAND_DELAY_MILLISECONDS)
 
       Fixtures.runUploadBlobSuspend(ctx, uploadParametersMap.toReactMap())
-    })
+    }
 
     assertRequestTrue(message, succeeded)
   }
@@ -172,11 +166,12 @@ class BlobCourierInstrumentedModuleTests {
 
     val ctx = ReactApplicationContext(ApplicationProvider.getApplicationContext())
 
-    val (succeeded, message) = runRequestToBoolean({
+    val (succeeded, message) = runInstrumentedRequestToBoolean {
+      enableNetworking(true)
       delay(ADB_COMMAND_DELAY_MILLISECONDS)
 
       Fixtures.runUploadBlobSuspend(ctx, allRequiredParametersMap.toReactMap())
-    })
+    }
 
     assertRequestFalse(message, succeeded)
   }
@@ -188,13 +183,12 @@ class BlobCourierInstrumentedModuleTests {
 
     val ctx = ReactApplicationContext(ApplicationProvider.getApplicationContext())
 
-    enableNetworking(false)
-
-    val (succeeded, message) = runRequestToBoolean({
+    val (succeeded, message) = runInstrumentedRequestToBoolean {
+      enableNetworking(false)
       delay(ADB_COMMAND_DELAY_MILLISECONDS)
 
       runFetchBlobSuspend(ctx, allRequiredParametersMap.toReactMap())
-    })
+    }
 
     assertRequestFalse(message, succeeded)
   }

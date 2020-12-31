@@ -19,6 +19,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
 
 const val DEFAULT_PROMISE_TIMEOUT_MILLISECONDS = 10_000L
+const val DEFAULT_PROMISE_INSTRUMENTED_TIMEOUT_MILLISECONDS = 15_000L
 
 object Fixtures {
 

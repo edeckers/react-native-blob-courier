@@ -63,6 +63,12 @@ object TestUtils {
   ) =
     runRequest(block, timeoutMilliseconds).fold({ e -> Pair(false, e) }, { m -> Pair(true, "$m") })
 
+  suspend fun runInstrumentedRequestToBoolean(
+    block: suspend CoroutineScope.() -> Either<String, ReadableMap>,
+  ) =
+    runRequest(block, DEFAULT_PROMISE_INSTRUMENTED_TIMEOUT_MILLISECONDS)
+      .fold({ e -> Pair(false, e) }, { m -> Pair(true, "$m") })
+
   fun assertRequestFalse(message: String, b: Boolean) =
     Assert.assertFalse("Resolves, but expected reject: $message", b)
 
