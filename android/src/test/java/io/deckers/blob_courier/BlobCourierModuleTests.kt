@@ -139,10 +139,8 @@ class BlobCourierModuleTests {
 
     val ctx = ReactApplicationContext(ApplicationProvider.getApplicationContext())
     val (succeeded, message) = withTimeout(DEFAULT_PROMISE_TIMEOUT_MILLISECONDS) {
-      val errorOrResult = runFetchBlobSuspend(ctx, allRequiredParametersMap)
-
-      errorOrResult.fold({ e -> Pair(false, e) }, { m -> Pair(true, "$m") })
-    }
+      runFetchBlobSuspend(ctx, allRequiredParametersMap)
+    }.fold({ e -> Pair(false, e) }, { m -> Pair(true, "$m") })
 
     assertTrue("Rejected, but expected resolve: $message", succeeded)
   }
@@ -157,10 +155,8 @@ class BlobCourierModuleTests {
     val ctx = ReactApplicationContext(ApplicationProvider.getApplicationContext())
 
     val (succeeded, message) = withTimeout(DEFAULT_PROMISE_TIMEOUT_MILLISECONDS) {
-      val errorOrResult = runFetchBlobSuspend(ctx, requestWithNonExistentUrl)
-
-      errorOrResult.fold({ e -> Pair(false, e) }, { m -> Pair(true, "$m") })
-    }
+      runFetchBlobSuspend(ctx, requestWithNonExistentUrl)
+    }.fold({ e -> Pair(false, e) }, { m -> Pair(true, "$m") })
 
     assertFalse("Resolved, but expected reject: $message", succeeded)
   }
@@ -177,10 +173,8 @@ class BlobCourierModuleTests {
     val ctx = ReactApplicationContext(ApplicationProvider.getApplicationContext())
 
     val (succeeded, message) = withTimeout(DEFAULT_PROMISE_TIMEOUT_MILLISECONDS) {
-      val errorOrResult = runFetchBlobSuspend(ctx, requestWithNonExistentUrl)
-
-      errorOrResult.fold({ e -> Pair(false, e) }, { m -> Pair(true, "$m") })
-    }
+      runFetchBlobSuspend(ctx, requestWithNonExistentUrl)
+    }.fold({ e -> Pair(false, e) }, { m -> Pair(true, "$m") })
 
     assertTrue("Rejected, but expected resolve: $message", succeeded)
   }
@@ -208,8 +202,8 @@ class BlobCourierModuleTests {
         runBlocking {
           runUploadBlobSuspend(ctx, uploadParametersMap)
         }
-      }.fold({ e -> Pair(false, e) }, { m -> Pair(true, "$m") })
-    }
+      }
+    }.fold({ e -> Pair(false, e) }, { m -> Pair(true, "$m") })
 
     assertTrue("Rejected, but expected resolve: $message", succeeded)
   }
@@ -249,8 +243,8 @@ class BlobCourierModuleTests {
         runBlocking {
           runUploadBlobSuspend(ctx, uploadParametersWithStringPayloadMap.toReactMap())
         }
-      }.fold({ e -> Pair(false, e) }, { m -> Pair(true, "$m") })
-    }
+      }
+    }.fold({ e -> Pair(false, e) }, { m -> Pair(true, "$m") })
 
     assertTrue("Rejected, but expected resolve: $message", succeeded)
   }
@@ -280,8 +274,8 @@ class BlobCourierModuleTests {
         runBlocking {
           runUploadBlobSuspend(ctx, uploadParametersMap.toReactMap())
         }
-      }.fold({ e -> Pair(false, e) }, { m -> Pair(true, "$m") })
-    }
+      }
+    }.fold({ e -> Pair(false, e) }, { m -> Pair(true, "$m") })
 
     assertTrue("Rejected, but expected resolve: $message", succeeded)
   }
@@ -311,8 +305,8 @@ class BlobCourierModuleTests {
         runBlocking {
           runUploadBlobSuspend(ctx, requestWithUnreachableUrl.toReactMap())
         }
-      }.fold({ e -> Pair(false, e) }, { m -> Pair(true, "$m") })
-    }
+      }
+    }.fold({ e -> Pair(false, e) }, { m -> Pair(true, "$m") })
 
     assertFalse("Resolved, but expected reject: $message", succeeded)
   }
@@ -367,10 +361,8 @@ class BlobCourierModuleTests {
       ).toReactMap()
 
     val (succeeded, message) = withTimeout(DEFAULT_PROMISE_TIMEOUT_MILLISECONDS) {
-      val errorOrResult = runUploadBlobSuspend(ctx, uploadParametersMap)
-
-      errorOrResult.fold({ e -> Pair(false, e) }, { m -> Pair(true, "$m") })
-    }
+      runUploadBlobSuspend(ctx, uploadParametersMap)
+    }.fold({ e -> Pair(false, e) }, { m -> Pair(true, "$m") })
 
     assertTrue("Rejected, but expected resolve: $message", succeeded)
   }
@@ -394,10 +386,8 @@ class BlobCourierModuleTests {
     val ctx = ReactApplicationContext(ApplicationProvider.getApplicationContext())
 
     val (succeeded, message) = withTimeout(DEFAULT_PROMISE_TIMEOUT_MILLISECONDS) {
-      val errorOrResult = runFetchBlobSuspend(ctx, requestWithInvalidTargetDirectory)
-
-      errorOrResult.fold({ e -> Pair(false, e) }, { m -> Pair(true, "$m") })
-    }
+      runFetchBlobSuspend(ctx, requestWithInvalidTargetDirectory)
+    }.fold({ e -> Pair(false, e) }, { m -> Pair(true, "$m") })
 
     assertFalse("Resolves, but expected reject: $message", succeeded)
   }
@@ -449,10 +439,8 @@ class BlobCourierModuleTests {
     val ctx = ReactApplicationContext(ApplicationProvider.getApplicationContext())
 
     val (succeeded, message) = withTimeout(DEFAULT_PROMISE_TIMEOUT_MILLISECONDS) {
-      val errorOrResult = runUploadBlobSuspend(ctx, allRequiredParametersMap.toReactMap())
-
-      errorOrResult.fold({ e -> Pair(false, e) }, { m -> Pair(true, "$m") })
-    }
+      runUploadBlobSuspend(ctx, allRequiredParametersMap.toReactMap())
+    }.fold({ e -> Pair(false, e) }, { m -> Pair(true, "$m") })
 
     assertFalse("Resolves, but expected reject: $message", succeeded)
   }
@@ -516,10 +504,8 @@ class BlobCourierModuleTests {
       val ctx = ReactApplicationContext(ApplicationProvider.getApplicationContext())
 
       val (succeeded, message) = withTimeout(DEFAULT_PROMISE_TIMEOUT_MILLISECONDS) {
-        val errorOrResult = runFetchBlobSuspend(ctx, requestWithInvalidTargetDirectory.toReactMap())
-
-        errorOrResult.fold({ e -> Pair(false, e) }, { m -> Pair(true, "$m") })
-      }
+        runFetchBlobSuspend(ctx, requestWithInvalidTargetDirectory.toReactMap())
+      }.fold({ e -> Pair(false, e) }, { m -> Pair(true, "$m") })
 
       assertTrue("Rejected, but expected resolve: $message", succeeded)
     }
