@@ -10,6 +10,13 @@ import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.bridge.WritableMap
+import io.deckers.blob_courier.common.Either
+import io.deckers.blob_courier.common.left
+import io.deckers.blob_courier.common.right
+import io.deckers.blob_courier.react.toReactMap
+import kotlin.coroutines.coroutineContext
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
 
 const val DEFAULT_PROMISE_TIMEOUT_MILLISECONDS = 10_000L
 
@@ -49,6 +56,30 @@ object Fixtures {
     m.fetchBlob(input, promise)
   }
 
+  suspend fun runFetchBlobSuspend(
+    context: ReactApplicationContext,
+    input: ReadableMap,
+  ): Either<String, ReadableMap> {
+    val m = BlobCourierModule(context)
+
+    var result: Either<String, ReadableMap>? = null
+
+    m.fetchBlob(
+      input,
+      EitherPromise(
+        { e -> result = left(e ?: "Request failed without a message") },
+        { v -> result = right(v ?: emptyMap<String, Any>().toReactMap()) }
+      )
+    )
+
+    while (result == null) {
+      coroutineContext.ensureActive()
+      delay(1)
+    }
+
+    return result ?: left("Did not receive a response in time")
+  }
+
   fun runUploadBlob(
     context: ReactApplicationContext,
     input: ReadableMap,
@@ -57,6 +88,30 @@ object Fixtures {
     val m = BlobCourierModule(context)
 
     m.uploadBlob(input, promise)
+  }
+
+  suspend fun runUploadBlobSuspend(
+    context: ReactApplicationContext,
+    input: ReadableMap
+  ): Either<String, ReadableMap> {
+    val m = BlobCourierModule(context)
+
+    var result: Either<String, ReadableMap>? = null
+
+    m.uploadBlob(
+      input,
+      EitherPromise(
+        { e -> result = left(e ?: "Request failed without a message") },
+        { v -> result = right(v ?: emptyMap<String, Any>().toReactMap()) }
+      )
+    )
+
+    while (result == null) {
+      coroutineContext.ensureActive()
+      delay(1)
+    }
+
+    return result ?: left("Did not receive a response in time")
   }
 
   class EitherPromise(
