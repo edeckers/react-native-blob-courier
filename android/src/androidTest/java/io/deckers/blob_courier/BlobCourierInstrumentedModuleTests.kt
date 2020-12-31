@@ -10,23 +10,25 @@ import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.JavaOnlyArray
 import com.facebook.react.bridge.JavaOnlyMap
 import com.facebook.react.bridge.ReactApplicationContext
-import io.deckers.blob_courier.DEFAULT_PROMISE_TIMEOUT_MILLISECONDS
 import io.deckers.blob_courier.Fixtures
 import io.deckers.blob_courier.Fixtures.createValidTestFetchParameterMap
-import io.deckers.blob_courier.Fixtures.runFetchBlob
+import io.deckers.blob_courier.Fixtures.runFetchBlobSuspend
+import io.deckers.blob_courier.TestUtils.assertRequestFalse
+import io.deckers.blob_courier.TestUtils.assertRequestTrue
 import io.deckers.blob_courier.TestUtils.circumventHiddenApiExemptionsForMockk
+import io.deckers.blob_courier.TestUtils.runRequestToBoolean
 import io.deckers.blob_courier.common.DOWNLOAD_TYPE_MANAGED
 import io.deckers.blob_courier.common.MANAGED_DOWNLOAD_SUCCESS
+import io.deckers.blob_courier.common.left
+import io.deckers.blob_courier.common.right
 import io.deckers.blob_courier.react.toReactMap
 import io.mockk.every
 import io.mockk.mockkStatic
 import java.util.UUID
-import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
 import org.junit.After
-import org.junit.Assert
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Test
 
 private const val ADB_COMMAND_DELAY_MILLISECONDS = 5_000L
@@ -40,9 +42,10 @@ private fun enableNetworking(enable: Boolean) {
 
 class BlobCourierInstrumentedModuleTests {
   @After
-  fun restoreExpectedState() {
+  fun restoreExpectedState() = runBlocking {
     enableNetworking(true)
-    Thread.sleep(ADB_COMMAND_DELAY_MILLISECONDS)
+
+    delay(ADB_COMMAND_DELAY_MILLISECONDS)
   }
 
   @Before
@@ -55,9 +58,9 @@ class BlobCourierInstrumentedModuleTests {
     every { Arguments.createArray() } answers { JavaOnlyArray() }
   }
 
-  @Ignore("This breaks on GitHub Actions due to timeout")
+//  @Ignore("This breaks on GitHub Actions due to timeout")
   @Test
-  fun managed_download_succeeds() {
+  fun managed_download_succeeds() = runBlocking {
     val allRequiredParametersMap = createValidTestFetchParameterMap().toReactMap()
     val androidSettings = mapOf(
       "useDownloadManager" to true
@@ -68,55 +71,21 @@ class BlobCourierInstrumentedModuleTests {
     val ctx = InstrumentationRegistry.getInstrumentation().targetContext
     val reactContext = ReactApplicationContext(ctx)
 
-    var result = Pair(false, "Unknown")
+    val (succeeded, message) = runRequestToBoolean({
+      delay(ADB_COMMAND_DELAY_MILLISECONDS)
 
-    val pool = Executors.newSingleThreadScheduledExecutor()
-
-    val threadLock = Object()
-
-    val finishThread = { succeeded: Boolean, message: String ->
-      synchronized(threadLock) {
-        threadLock.notify()
-        result = Pair(succeeded, message)
-      }
-    }
-
-    pool.schedule(
-      {
-        synchronized(threadLock) {
-          try {
-            runFetchBlob(
-              reactContext,
-              allRequiredParametersMap,
-              Fixtures.EitherPromise(
-                { message -> finishThread(false, message ?: "DOWNLOAD FAILED") },
-                { finishThread(true, "Success") }
-              )
-            )
-            threadLock.wait()
-          } catch (_: InterruptedException) {
-          }
-        }
-      },
-      ADB_COMMAND_DELAY_MILLISECONDS, TimeUnit.MILLISECONDS
-    )
-
-    pool.shutdown()
-
-    if (!pool.awaitTermination(DEFAULT_PROMISE_TIMEOUT_MILLISECONDS * 1L, TimeUnit.MILLISECONDS)) {
-      pool.shutdownNow()
-      Assert.assertTrue(
-        "Test execution exceeded $DEFAULT_PROMISE_TIMEOUT_MILLISECONDS milliseconds", false
+      runFetchBlobSuspend(
+        reactContext,
+        allRequiredParametersMap
       )
-      return
-    }
+    })
 
-    Assert.assertTrue(result.second, result.first)
+    assertRequestTrue(message, succeeded)
   }
 
-  @Ignore("This breaks on GitHub Actions due to timeout")
+//  @Ignore("This breaks on GitHub Actions due to timeout")
   @Test
-  fun managed_download_returns_correct_type() {
+  fun managed_download_returns_correct_type() = runBlocking {
     val allRequiredParametersMap = createValidTestFetchParameterMap().toReactMap()
     val androidSettings = mapOf(
       "useDownloadManager" to true
@@ -128,61 +97,24 @@ class BlobCourierInstrumentedModuleTests {
     val ctx = InstrumentationRegistry.getInstrumentation().targetContext
     val reactContext = ReactApplicationContext(ctx)
 
-    var result = Pair(false, "Unknown")
+    val (succeeded, message) = runRequestToBoolean({
+      delay(ADB_COMMAND_DELAY_MILLISECONDS)
 
-    val pool = Executors.newSingleThreadScheduledExecutor()
+      runFetchBlobSuspend(reactContext, allRequiredParametersMap)
+        .fmap { result ->
+          val receivedType = result.getString("type") ?: ""
+          val check = receivedType == DOWNLOAD_TYPE_MANAGED
 
-    val threadLock = Object()
-
-    val finishThread = { succeeded: Boolean, message: String ->
-      synchronized(threadLock) {
-        threadLock.notify()
-        result = Pair(succeeded, message)
-      }
-    }
-
-    pool.schedule(
-      {
-        synchronized(threadLock) {
-          try {
-            runFetchBlob(
-              reactContext,
-              allRequiredParametersMap,
-              Fixtures.EitherPromise(
-                { message -> finishThread(false, message ?: "DOWNLOAD FAILED") },
-                { result ->
-                  val receivedType = result?.getString("type") ?: ""
-                  val check = receivedType == DOWNLOAD_TYPE_MANAGED
-                  finishThread(
-                    check, if (check) "Success" else "Received incorrect type `$receivedType`"
-                  )
-                }
-              )
-            )
-            threadLock.wait()
-          } catch (_: InterruptedException) {
-          }
+          if (check) right(result) else left("Received incorrect type `$receivedType`")
         }
-      },
-      ADB_COMMAND_DELAY_MILLISECONDS, TimeUnit.MILLISECONDS
-    )
+    })
 
-    pool.shutdown()
-
-    if (!pool.awaitTermination(DEFAULT_PROMISE_TIMEOUT_MILLISECONDS * 1L, TimeUnit.MILLISECONDS)) {
-      pool.shutdownNow()
-      Assert.assertTrue(
-        "Test execution exceeded $DEFAULT_PROMISE_TIMEOUT_MILLISECONDS milliseconds", false
-      )
-      return
-    }
-
-    Assert.assertTrue(result.second, result.first)
+    assertRequestTrue(message, succeeded)
   }
 
-  @Ignore("This breaks on GitHub Actions due to timeout")
+  // @Ignore("This breaks on GitHub Actions due to timeout")
   @Test
-  fun managed_download_returns_expected_result() {
+  fun managed_download_returns_expected_result() = runBlocking {
     val allRequiredParametersMap = createValidTestFetchParameterMap().toReactMap()
     val androidSettings = mapOf(
       "useDownloadManager" to true
@@ -193,114 +125,44 @@ class BlobCourierInstrumentedModuleTests {
     val ctx = InstrumentationRegistry.getInstrumentation().targetContext
     val reactContext = ReactApplicationContext(ctx)
 
-    var result = Pair(false, "Unknown")
+    val (succeeded, message) = runRequestToBoolean({
+      delay(ADB_COMMAND_DELAY_MILLISECONDS)
 
-    val pool = Executors.newSingleThreadScheduledExecutor()
+      runFetchBlobSuspend(reactContext, allRequiredParametersMap)
+        .fmap { result ->
+          val receivedResult = result.getMap("data")?.getString("result") ?: ""
+          val check = receivedResult == MANAGED_DOWNLOAD_SUCCESS
 
-    val threadLock = Object()
-
-    val finishThread = { succeeded: Boolean, message: String ->
-      synchronized(threadLock) {
-        threadLock.notify()
-        result = Pair(succeeded, message)
-      }
-    }
-
-    pool.schedule(
-      {
-        synchronized(threadLock) {
-          try {
-            runFetchBlob(
-              reactContext,
-              allRequiredParametersMap,
-              Fixtures.EitherPromise(
-                { message -> finishThread(false, message ?: "DOWNLOAD FAILED") },
-                { result ->
-                  val receivedResult = result?.getMap("data")?.getString("result") ?: ""
-                  val check = receivedResult == MANAGED_DOWNLOAD_SUCCESS
-                  finishThread(
-                    check, if (check) "Success" else "Received incorrect result `$receivedResult`"
-                  )
-                }
-              )
-            )
-            threadLock.wait()
-          } catch (_: InterruptedException) {
-          }
+          if (check) right(result) else left("Received incorrect result `$receivedResult`")
         }
-      },
-      ADB_COMMAND_DELAY_MILLISECONDS, TimeUnit.MILLISECONDS
-    )
+    })
 
-    pool.shutdown()
-
-    if (!pool.awaitTermination(DEFAULT_PROMISE_TIMEOUT_MILLISECONDS * 1L, TimeUnit.MILLISECONDS)) {
-      pool.shutdownNow()
-      Assert.assertTrue(
-        "Test execution exceeded $DEFAULT_PROMISE_TIMEOUT_MILLISECONDS milliseconds", false
-      )
-      return
-    }
-
-    Assert.assertTrue(result.second, result.first)
+    assertRequestTrue(message, succeeded)
   }
 
   @Test
-  fun uploading_a_file_from_outside_app_data_directory_resolves_promise() {
+  fun uploading_a_file_from_outside_app_data_directory_resolves_promise() = runBlocking {
     val someFileThatIsAlwaysAvailable = "file:///system/etc/fonts.xml"
 
     val ctx = ReactApplicationContext(ApplicationProvider.getApplicationContext())
 
-    var result = Pair(false, "Unknown")
-
-    val pool = Executors.newSingleThreadExecutor()
-
-    val threadLock = Object()
-    val finishThread = { succeeded: Boolean, message: String ->
-      synchronized(threadLock) {
-        threadLock.notify()
-        result = Pair(succeeded, message)
-      }
-    }
-
-    pool.execute {
-      synchronized(threadLock) {
-        try {
-          val uploadParametersMap =
-            Fixtures.createValidUploadTestParameterMap(
-              UUID.randomUUID().toString(),
-              someFileThatIsAlwaysAvailable
-            ).toReactMap()
-
-          Fixtures.runUploadBlob(
-            ctx,
-            uploadParametersMap,
-            Fixtures.EitherPromise(
-              { m1 -> finishThread(false, "Failed upload: $m1") },
-              { finishThread(true, "Success") }
-            )
-          )
-          threadLock.wait()
-        } catch (_: InterruptedException) {
-        }
-      }
-    }
-
-    pool.shutdown()
-
-    if (!pool.awaitTermination(DEFAULT_PROMISE_TIMEOUT_MILLISECONDS * 1L, TimeUnit.MILLISECONDS)) {
-      pool.shutdownNow()
-      Assert.assertTrue(
-        "Test execution exceeded $DEFAULT_PROMISE_TIMEOUT_MILLISECONDS milliseconds", false
+    val uploadParametersMap =
+      Fixtures.createValidUploadTestParameterMap(
+        UUID.randomUUID().toString(),
+        someFileThatIsAlwaysAvailable
       )
-      return
-    }
 
-    Assert.assertTrue(result.second, result.first)
+    val (succeeded, message) = runRequestToBoolean({
+      delay(ADB_COMMAND_DELAY_MILLISECONDS)
+
+      Fixtures.runUploadBlobSuspend(ctx, uploadParametersMap.toReactMap())
+    })
+
+    assertRequestTrue(message, succeeded)
   }
 
-  @Test // This is the faster, and less thorough version of the Instrumented test with the same name
-  fun non_existing_uploadable_file_rejects_promise() {
+  @Test
+  fun non_existing_uploadable_file_rejects_promise() = runBlocking {
     val irrelevantTaskId = UUID.randomUUID().toString()
     val someNonExistentPath = "file:///this/path/does/not/exist.png"
     val allRequiredParametersMap =
@@ -308,99 +170,30 @@ class BlobCourierInstrumentedModuleTests {
 
     val ctx = ReactApplicationContext(ApplicationProvider.getApplicationContext())
 
-    var result = Pair(false, "Unknown")
+    val (succeeded, message) = runRequestToBoolean({
+      delay(ADB_COMMAND_DELAY_MILLISECONDS)
 
-    val pool = Executors.newSingleThreadExecutor()
+      Fixtures.runUploadBlobSuspend(ctx, allRequiredParametersMap.toReactMap())
+    })
 
-    val threadLock = Object()
-    val finishThread = { succeeded: Boolean, message: String ->
-      synchronized(threadLock) {
-        threadLock.notify()
-        result = Pair(succeeded, message)
-      }
-    }
-
-    pool.execute {
-      synchronized(threadLock) {
-        try {
-          Fixtures.runUploadBlob(
-            ctx,
-            allRequiredParametersMap.toReactMap(),
-            Fixtures.EitherPromise(
-              { m0 -> finishThread(true, "Success: $m0") },
-              { m0 -> finishThread(false, "Resolved but expected reject: $m0") }
-            )
-          )
-          threadLock.wait()
-        } catch (_: InterruptedException) {
-        }
-      }
-    }
-
-    pool.shutdown()
-
-    if (!pool.awaitTermination(DEFAULT_PROMISE_TIMEOUT_MILLISECONDS * 1L, TimeUnit.MILLISECONDS)) {
-      pool.shutdownNow()
-      Assert.assertTrue(
-        "Test execution exceeded $DEFAULT_PROMISE_TIMEOUT_MILLISECONDS milliseconds", false
-      )
-      return
-    }
-
-    Assert.assertTrue(result.second, result.first)
+    assertRequestFalse(message, succeeded)
   }
 
-  @Ignore("This breaks on GitHub Actions due to timeout")
-  @Test(timeout = DEFAULT_PROMISE_TIMEOUT_MILLISECONDS)
-  fun no_network_connection_rejects_promise() {
-    val allRequiredParametersMap = createValidTestFetchParameterMap().toReactMap()
+  //  @Ignore("This breaks on GitHub Actions due to timeout")
+  @Test
+  fun no_network_connection_rejects_promise() = runBlocking {
+    val allRequiredParametersMap = createValidTestFetchParameterMap()
 
     val ctx = ReactApplicationContext(ApplicationProvider.getApplicationContext())
 
-    var result = Pair(false, "Unknown")
-
-    val pool = Executors.newSingleThreadScheduledExecutor()
-
-    val threadLock = Object()
-    val finishThread = { succeeded: Boolean, message: String ->
-      synchronized(threadLock) {
-        threadLock.notify()
-        result = Pair(succeeded, message)
-      }
-    }
-
     enableNetworking(false)
 
-    pool.schedule(
-      {
-        synchronized(threadLock) {
-          try {
-            runFetchBlob(
-              ctx,
-              allRequiredParametersMap,
-              Fixtures.EitherPromise(
-                { m0 -> finishThread(true, "Success: $m0") },
-                { m0 -> finishThread(false, "Resolved but expected reject: $m0") }
-              )
-            )
-            threadLock.wait()
-          } catch (_: InterruptedException) {
-          }
-        }
-      },
-      ADB_COMMAND_DELAY_MILLISECONDS, TimeUnit.MILLISECONDS
-    )
+    val (succeeded, message) = runRequestToBoolean({
+      delay(ADB_COMMAND_DELAY_MILLISECONDS)
 
-    pool.shutdown()
+      runFetchBlobSuspend(ctx, allRequiredParametersMap.toReactMap())
+    })
 
-    if (!pool.awaitTermination(DEFAULT_PROMISE_TIMEOUT_MILLISECONDS * 1L, TimeUnit.MILLISECONDS)) {
-      pool.shutdownNow()
-      Assert.assertTrue(
-        "Test execution exceeded $DEFAULT_PROMISE_TIMEOUT_MILLISECONDS milliseconds", false
-      )
-      return
-    }
-
-    Assert.assertTrue(result.second, result.first)
+    assertRequestFalse(message, succeeded)
   }
 }

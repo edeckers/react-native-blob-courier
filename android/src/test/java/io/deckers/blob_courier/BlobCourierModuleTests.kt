@@ -12,11 +12,14 @@ import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.JavaOnlyArray
 import com.facebook.react.bridge.JavaOnlyMap
 import com.facebook.react.bridge.ReactApplicationContext
-import com.facebook.react.bridge.ReadableMap
 import io.deckers.blob_courier.Fixtures.createValidTestFetchParameterMap
 import io.deckers.blob_courier.Fixtures.createValidUploadTestParameterMap
 import io.deckers.blob_courier.Fixtures.runFetchBlobSuspend
 import io.deckers.blob_courier.Fixtures.runUploadBlobSuspend
+import io.deckers.blob_courier.TestUtils.assertRequestFalse
+import io.deckers.blob_courier.TestUtils.assertRequestTrue
+import io.deckers.blob_courier.TestUtils.runRequest
+import io.deckers.blob_courier.TestUtils.runRequestToBoolean
 import io.deckers.blob_courier.category.EndToEnd
 import io.deckers.blob_courier.category.Isolated
 import io.deckers.blob_courier.category.Regression
@@ -34,14 +37,11 @@ import io.deckers.blob_courier.upload.toMultipartBody
 import io.mockk.every
 import io.mockk.mockkStatic
 import java.util.UUID
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withTimeout
 import okhttp3.MediaType
 import okhttp3.MultipartBody
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -57,24 +57,6 @@ const val SOME_FILE_THAT_IS_ALWAYS_AVAILABLE = "file:///system/etc/fonts.xml"
 @Suppress("SameParameterValue")
 private fun <T : Any, V> assertTypeOf(message: String, o: T, t: Class<V>) =
   assertSame(message, o::class.java, t)
-
-private suspend fun runRequest(
-  block: suspend CoroutineScope.() -> Either<String, ReadableMap>,
-  timeoutMilliseconds: Long = DEFAULT_PROMISE_TIMEOUT_MILLISECONDS
-) =
-  withTimeout(timeoutMilliseconds, block)
-
-private suspend fun runRequestToBoolean(
-  block: suspend CoroutineScope.() -> Either<String, ReadableMap>,
-  timeoutMilliseconds: Long = DEFAULT_PROMISE_TIMEOUT_MILLISECONDS
-) =
-  runRequest(block, timeoutMilliseconds).fold({ e -> Pair(false, e) }, { m -> Pair(true, "$m") })
-
-private fun assertRequestFalse(message: String, b: Boolean) =
-  assertFalse("Resolves, but expected reject: $message", b)
-
-private fun assertRequestTrue(message: String, b: Boolean) =
-  assertTrue("Rejects, but expected resolve: $message", b)
 
 private fun mapMultipartsToNames(parts: List<MultipartBody.Part>) =
   parts.fold(

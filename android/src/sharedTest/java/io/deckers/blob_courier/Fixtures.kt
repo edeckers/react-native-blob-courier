@@ -46,16 +46,6 @@ object Fixtures {
     "https://file.io"
   )
 
-  fun runFetchBlob(
-    context: ReactApplicationContext,
-    input: ReadableMap,
-    promise: Promise,
-  ) {
-    val m = BlobCourierModule(context)
-
-    m.fetchBlob(input, promise)
-  }
-
   suspend fun runFetchBlobSuspend(
     context: ReactApplicationContext,
     input: ReadableMap,
@@ -78,16 +68,6 @@ object Fixtures {
     }
 
     return result ?: left("Did not receive a response in time")
-  }
-
-  fun runUploadBlob(
-    context: ReactApplicationContext,
-    input: ReadableMap,
-    promise: Promise,
-  ) {
-    val m = BlobCourierModule(context)
-
-    m.uploadBlob(input, promise)
   }
 
   suspend fun runUploadBlobSuspend(
@@ -151,35 +131,5 @@ object Fixtures {
       left(message)
 
     override fun reject(message: String?) = left(message ?: "")
-  }
-
-  class BooleanPromise(val c: (Boolean) -> Unit) : Promise {
-    override fun reject(code: String?, message: String?) = c(false)
-
-    override fun reject(code: String?, throwable: Throwable?) = c(false)
-
-    override fun reject(code: String?, message: String?, throwable: Throwable?) = c(false)
-
-    override fun reject(throwable: Throwable?) = c(false)
-
-    override fun reject(throwable: Throwable?, userInfo: WritableMap?) = c(false)
-
-    override fun reject(code: String?, userInfo: WritableMap) = c(false)
-
-    override fun reject(code: String?, throwable: Throwable?, userInfo: WritableMap?) = c(false)
-
-    override fun reject(code: String?, message: String?, userInfo: WritableMap) = c(false)
-
-    override fun reject(
-      code: String?,
-      message: String?,
-      throwable: Throwable?,
-      userInfo: WritableMap?
-    ) =
-      c(false)
-
-    override fun reject(message: String?) = c(false)
-
-    override fun resolve(value: Any?) = c(true)
   }
 }
