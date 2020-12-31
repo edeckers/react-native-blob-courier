@@ -94,10 +94,8 @@ private fun retrieveMissingKeys(
       }
     )
 
-private fun createAllSingleMissingKeyCombinations(m: Map<*, *>): List<Map<Any?, Any?>> {
-  if (m.keys.isEmpty()) return listOf()
-
-  return m.keys.flatMap { k0 ->
+private fun createAllSingleMissingKeyCombinations(m: Map<*, *>): List<Map<Any?, Any?>> =
+  m.keys.flatMap { k0 ->
     val dictWithoutKey0 = m.filterKeys { k -> k != k0 }
 
     val d0 =
@@ -110,7 +108,6 @@ private fun createAllSingleMissingKeyCombinations(m: Map<*, *>): List<Map<Any?, 
 
     listOf(dictWithoutKey0).plus(d0)
   }
-}
 
 @RunWith(RobolectricTestRunner::class)
 @Config(manifest = Config.NONE)
