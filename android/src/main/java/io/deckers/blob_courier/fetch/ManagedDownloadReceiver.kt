@@ -62,8 +62,8 @@ class ManagedDownloadReceiver(
 
   private fun processCompletedDownloadStatus(context: Context, cursor: Cursor) {
     val columnIndex = cursor.getColumnIndex(DownloadManager.COLUMN_STATUS)
-
-    val isStatusSuccessful = cursor.getInt(columnIndex) == DownloadManager.STATUS_SUCCESSFUL
+    val status = cursor.getInt(columnIndex)
+    val isStatusSuccessful = status == DownloadManager.STATUS_SUCCESSFUL
 
     if (isStatusSuccessful) {
       val localFileUri =
@@ -78,7 +78,7 @@ class ManagedDownloadReceiver(
       Failure(
         BlobCourierError(
           MANAGED_DOWNLOAD_FAILURE,
-          "Something went wrong retrieving download status"
+          "Something went wrong retrieving download status (status=$status)"
         )
       )
     )
