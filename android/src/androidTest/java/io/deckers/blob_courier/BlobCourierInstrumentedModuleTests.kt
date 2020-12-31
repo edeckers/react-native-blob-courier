@@ -30,7 +30,7 @@ import kotlinx.coroutines.runBlocking
 import org.junit.Before
 import org.junit.Test
 
-private const val ADB_COMMAND_DELAY_MILLISECONDS = 5_000L
+private const val ADB_COMMAND_DELAY_MILLISECONDS = 8_000L
 
 private fun enableNetworking(enable: Boolean) {
   val word = if (enable) "enable" else "disable"
