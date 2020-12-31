@@ -12,10 +12,9 @@ import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.JavaOnlyArray
 import com.facebook.react.bridge.JavaOnlyMap
 import com.facebook.react.bridge.ReactApplicationContext
-import io.deckers.blob_courier.Fixtures.BooleanPromise
+import com.facebook.react.bridge.ReadableMap
 import io.deckers.blob_courier.Fixtures.createValidTestFetchParameterMap
 import io.deckers.blob_courier.Fixtures.createValidUploadTestParameterMap
-import io.deckers.blob_courier.Fixtures.runFetchBlob
 import io.deckers.blob_courier.Fixtures.runFetchBlobSuspend
 import io.deckers.blob_courier.Fixtures.runUploadBlobSuspend
 import io.deckers.blob_courier.category.EndToEnd
@@ -35,6 +34,7 @@ import io.deckers.blob_courier.upload.toMultipartBody
 import io.mockk.every
 import io.mockk.mockkStatic
 import java.util.UUID
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import okhttp3.MediaType
@@ -57,6 +57,24 @@ const val SOME_FILE_THAT_IS_ALWAYS_AVAILABLE = "file:///system/etc/fonts.xml"
 @Suppress("SameParameterValue")
 private fun <T : Any, V> assertTypeOf(message: String, o: T, t: Class<V>) =
   assertSame(message, o::class.java, t)
+
+private suspend fun runRequest(
+  block: suspend CoroutineScope.() -> Either<String, ReadableMap>,
+  timeoutMilliseconds: Long = DEFAULT_PROMISE_TIMEOUT_MILLISECONDS
+) =
+  withTimeout(timeoutMilliseconds, block)
+
+private suspend fun runRequestToBoolean(
+  block: suspend CoroutineScope.() -> Either<String, ReadableMap>,
+  timeoutMilliseconds: Long = DEFAULT_PROMISE_TIMEOUT_MILLISECONDS
+) =
+  runRequest(block, timeoutMilliseconds).fold({ e -> Pair(false, e) }, { m -> Pair(true, "$m") })
+
+private fun assertRequestFalse(message: String, b: Boolean) =
+  assertFalse("Resolves, but expected reject: $message", b)
+
+private fun assertRequestTrue(message: String, b: Boolean) =
+  assertTrue("Rejects, but expected resolve: $message", b)
 
 private fun mapMultipartsToNames(parts: List<MultipartBody.Part>) =
   parts.fold(
@@ -127,9 +145,7 @@ class BlobCourierModuleTests {
 
     val missingKeyCombinations = createAllSingleMissingKeyCombinations(allValuesMapping)
 
-    missingKeyCombinations.forEach {
-      assert_missing_required_fetch_parameter_rejects_promise(it, allValuesMapping)
-    }
+    missingKeyCombinations.forEach(::assert_missing_required_fetch_parameter_rejects_promise)
   }
 
   @Category(EndToEnd::class)
@@ -138,11 +154,10 @@ class BlobCourierModuleTests {
     val allRequiredParametersMap = createValidTestFetchParameterMap().toReactMap()
 
     val ctx = ReactApplicationContext(ApplicationProvider.getApplicationContext())
-    val (succeeded, message) = withTimeout(DEFAULT_PROMISE_TIMEOUT_MILLISECONDS) {
-      runFetchBlobSuspend(ctx, allRequiredParametersMap)
-    }.fold({ e -> Pair(false, e) }, { m -> Pair(true, "$m") })
+    val (succeeded, message) =
+      runRequestToBoolean({ runFetchBlobSuspend(ctx, allRequiredParametersMap) })
 
-    assertTrue("Rejected, but expected resolve: $message", succeeded)
+    assertRequestTrue(message, succeeded)
   }
 
   @Category(EndToEnd::class)
@@ -154,11 +169,10 @@ class BlobCourierModuleTests {
 
     val ctx = ReactApplicationContext(ApplicationProvider.getApplicationContext())
 
-    val (succeeded, message) = withTimeout(DEFAULT_PROMISE_TIMEOUT_MILLISECONDS) {
-      runFetchBlobSuspend(ctx, requestWithNonExistentUrl)
-    }.fold({ e -> Pair(false, e) }, { m -> Pair(true, "$m") })
+    val (succeeded, message) =
+      runRequestToBoolean({ runFetchBlobSuspend(ctx, requestWithNonExistentUrl) })
 
-    assertFalse("Resolved, but expected reject: $message", succeeded)
+    assertRequestFalse(message, succeeded)
   }
 
   @Category(EndToEnd::class, Slow::class)
@@ -172,11 +186,10 @@ class BlobCourierModuleTests {
 
     val ctx = ReactApplicationContext(ApplicationProvider.getApplicationContext())
 
-    val (succeeded, message) = withTimeout(DEFAULT_PROMISE_TIMEOUT_MILLISECONDS) {
-      runFetchBlobSuspend(ctx, requestWithNonExistentUrl)
-    }.fold({ e -> Pair(false, e) }, { m -> Pair(true, "$m") })
+    val (succeeded, message) =
+      runRequestToBoolean({ runFetchBlobSuspend(ctx, requestWithNonExistentUrl) })
 
-    assertTrue("Rejected, but expected resolve: $message", succeeded)
+    assertRequestTrue(message, succeeded)
   }
 
   @Category(EndToEnd::class)
@@ -186,7 +199,7 @@ class BlobCourierModuleTests {
 
     val ctx = ReactApplicationContext(ApplicationProvider.getApplicationContext())
 
-    val (succeeded, message) = withTimeout(DEFAULT_PROMISE_TIMEOUT_MILLISECONDS) {
+    val (succeeded, message) = runRequestToBoolean({
       val errorOrResult = runFetchBlobSuspend(ctx, allRequiredParametersMap)
 
       errorOrResult.fmap { result ->
@@ -203,9 +216,9 @@ class BlobCourierModuleTests {
           runUploadBlobSuspend(ctx, uploadParametersMap)
         }
       }
-    }.fold({ e -> Pair(false, e) }, { m -> Pair(true, "$m") })
+    })
 
-    assertTrue("Rejected, but expected resolve: $message", succeeded)
+    assertRequestTrue(message, succeeded)
   }
 
   @Category(EndToEnd::class)
@@ -215,7 +228,7 @@ class BlobCourierModuleTests {
 
     val ctx = ReactApplicationContext(ApplicationProvider.getApplicationContext())
 
-    val (succeeded, message) = withTimeout(DEFAULT_PROMISE_TIMEOUT_MILLISECONDS) {
+    val (succeeded, message) = runRequestToBoolean({
       val errorOrResult = runFetchBlobSuspend(ctx, allRequiredParametersMap)
 
       errorOrResult.fmap { result ->
@@ -244,9 +257,9 @@ class BlobCourierModuleTests {
           runUploadBlobSuspend(ctx, uploadParametersWithStringPayloadMap.toReactMap())
         }
       }
-    }.fold({ e -> Pair(false, e) }, { m -> Pair(true, "$m") })
+    })
 
-    assertTrue("Rejected, but expected resolve: $message", succeeded)
+    assertRequestTrue(message, succeeded)
   }
 
   @Category(EndToEnd::class)
@@ -256,7 +269,7 @@ class BlobCourierModuleTests {
 
     val ctx = ReactApplicationContext(ApplicationProvider.getApplicationContext())
 
-    val (succeeded, message) = withTimeout(DEFAULT_PROMISE_TIMEOUT_MILLISECONDS) {
+    val (succeeded, message) = runRequestToBoolean({
       val errorOrResult = runFetchBlobSuspend(ctx, allRequiredParametersMap)
 
       errorOrResult.fmap { result ->
@@ -275,9 +288,9 @@ class BlobCourierModuleTests {
           runUploadBlobSuspend(ctx, uploadParametersMap.toReactMap())
         }
       }
-    }.fold({ e -> Pair(false, e) }, { m -> Pair(true, "$m") })
+    })
 
-    assertTrue("Rejected, but expected resolve: $message", succeeded)
+    assertRequestTrue(message, succeeded)
   }
 
   @Category(EndToEnd::class, Slow::class)
@@ -287,7 +300,7 @@ class BlobCourierModuleTests {
 
     val ctx = ReactApplicationContext(ApplicationProvider.getApplicationContext())
 
-    val (succeeded, message) = withTimeout(DEFAULT_PROMISE_TIMEOUT_MILLISECONDS) {
+    val (succeeded, message) = runRequestToBoolean({
       val errorOrResult = runFetchBlobSuspend(ctx, allRequiredParametersMap)
 
       errorOrResult.fmap { result ->
@@ -306,9 +319,9 @@ class BlobCourierModuleTests {
           runUploadBlobSuspend(ctx, requestWithUnreachableUrl.toReactMap())
         }
       }
-    }.fold({ e -> Pair(false, e) }, { m -> Pair(true, "$m") })
+    })
 
-    assertFalse("Resolved, but expected reject: $message", succeeded)
+    assertRequestFalse(message, succeeded)
   }
 
   @Category(Isolated::class)
@@ -364,7 +377,7 @@ class BlobCourierModuleTests {
       runUploadBlobSuspend(ctx, uploadParametersMap)
     }.fold({ e -> Pair(false, e) }, { m -> Pair(true, "$m") })
 
-    assertTrue("Rejected, but expected resolve: $message", succeeded)
+    assertRequestTrue(message, succeeded)
   }
 
   @Category(EndToEnd::class, Regression::class)
@@ -385,11 +398,12 @@ class BlobCourierModuleTests {
 
     val ctx = ReactApplicationContext(ApplicationProvider.getApplicationContext())
 
-    val (succeeded, message) = withTimeout(DEFAULT_PROMISE_TIMEOUT_MILLISECONDS) {
-      runFetchBlobSuspend(ctx, requestWithInvalidTargetDirectory)
-    }.fold({ e -> Pair(false, e) }, { m -> Pair(true, "$m") })
+    val (succeeded, message) =
+      runRequestToBoolean({
+        runFetchBlobSuspend(ctx, requestWithInvalidTargetDirectory)
+      })
 
-    assertFalse("Resolves, but expected reject: $message", succeeded)
+    assertRequestFalse(message, succeeded)
   }
 
   @Category(Isolated::class, Regression::class)
@@ -438,11 +452,11 @@ class BlobCourierModuleTests {
 
     val ctx = ReactApplicationContext(ApplicationProvider.getApplicationContext())
 
-    val (succeeded, message) = withTimeout(DEFAULT_PROMISE_TIMEOUT_MILLISECONDS) {
+    val (succeeded, message) = runRequestToBoolean({
       runUploadBlobSuspend(ctx, allRequiredParametersMap.toReactMap())
-    }.fold({ e -> Pair(false, e) }, { m -> Pair(true, "$m") })
+    })
 
-    assertFalse("Resolves, but expected reject: $message", succeeded)
+    assertRequestFalse(message, succeeded)
   }
 
   @Category(Isolated::class)
@@ -503,25 +517,25 @@ class BlobCourierModuleTests {
 
       val ctx = ReactApplicationContext(ApplicationProvider.getApplicationContext())
 
-      val (succeeded, message) = withTimeout(DEFAULT_PROMISE_TIMEOUT_MILLISECONDS) {
+      val (succeeded, message) = runRequestToBoolean({
         runFetchBlobSuspend(ctx, requestWithInvalidTargetDirectory.toReactMap())
-      }.fold({ e -> Pair(false, e) }, { m -> Pair(true, "$m") })
+      })
 
-      assertTrue("Rejected, but expected resolve: $message", succeeded)
+      assertRequestTrue(message, succeeded)
     }
 
   private fun assert_missing_required_fetch_parameter_rejects_promise(
     availableParameters: Map<Any?, Any?>,
-    allValuesMapping: Map<String, String>
-  ) {
+  ) = runBlocking {
     val availableParametersAsMap = availableParameters.toMap().toReactMap()
-
-    val missingValues = retrieveMissingKeys(allValuesMapping, availableParameters)
-    println("Missing values: ${missingValues.joinToString()}")
 
     val ctx = ReactApplicationContext(ApplicationProvider.getApplicationContext())
 
-    runFetchBlob(ctx, availableParametersAsMap, BooleanPromise { v -> assertFalse(v) })
+    val (succeeded, message) = runRequestToBoolean({
+      runFetchBlobSuspend(ctx, availableParametersAsMap)
+    })
+
+    assertRequestFalse(message, succeeded)
   }
 
   private fun assert_missing_required_upload_parameter_rejects_promise(
@@ -531,11 +545,10 @@ class BlobCourierModuleTests {
     val allFetchParametersMap = createValidTestFetchParameterMap()
 
     val missingValues = retrieveMissingKeys(allValuesMapping, availableParameters)
-    println("Missing values: ${missingValues.joinToString()}")
 
     val ctx = ReactApplicationContext(ApplicationProvider.getApplicationContext())
 
-    val (succeeded, message) = withTimeout(DEFAULT_PROMISE_TIMEOUT_MILLISECONDS) {
+    val (succeeded, message) = runRequestToBoolean({
       val errorOrResult = runFetchBlobSuspend(ctx, allFetchParametersMap.toReactMap())
 
       errorOrResult.fmap { result ->
@@ -549,14 +562,14 @@ class BlobCourierModuleTests {
           createValidUploadTestParameterMap(taskId, absoluteFilePath).toMap()
 
         val mangledUploadParametersMap =
-          uploadParametersMap.keys.fold(uploadParametersMap, { acc, key -> acc.minus(key) })
+          missingValues.fold(uploadParametersMap, { acc, key -> acc.minus(key) })
 
         runBlocking {
           runUploadBlobSuspend(ctx, mangledUploadParametersMap.toReactMap())
         }
       }
-    }.fold({ e -> Pair(false, e) }, { m -> Pair(true, "$m") })
+    })
 
-    assertFalse("Resolves, but expected reject: $message", succeeded)
+    assertRequestFalse(message, succeeded)
   }
 }
