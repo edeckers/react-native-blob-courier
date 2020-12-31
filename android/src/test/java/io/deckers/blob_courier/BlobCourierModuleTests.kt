@@ -371,9 +371,9 @@ class BlobCourierModuleTests {
         SOME_FILE_THAT_IS_ALWAYS_AVAILABLE
       ).toReactMap()
 
-    val (succeeded, message) = withTimeout(DEFAULT_PROMISE_TIMEOUT_MILLISECONDS) {
+    val (succeeded, message) = runRequestToBoolean({
       runUploadBlobSuspend(ctx, uploadParametersMap)
-    }.fold({ e -> Pair(false, e) }, { m -> Pair(true, "$m") })
+    })
 
     assertRequestTrue(message, succeeded)
   }
