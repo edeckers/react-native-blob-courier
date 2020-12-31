@@ -354,9 +354,7 @@ class BlobCourierModuleTests {
 
     val missingKeyCombinations = createAllSingleMissingKeyCombinations(allValuesMapping)
 
-    missingKeyCombinations.forEach {
-      assert_missing_required_upload_parameter_rejects_promise(it, allValuesMapping)
-    }
+    missingKeyCombinations.forEach(::assert_missing_required_upload_parameter_rejects_promise)
   }
 
   @Category(EndToEnd::class, Regression::class)
@@ -524,6 +522,14 @@ class BlobCourierModuleTests {
       assertRequestTrue(message, succeeded)
     }
 
+  private fun createErrorReportForMissingParameter(availableParameters: Map<*, *>, result: String) =
+    "(missingKeys=${
+    retrieveMissingKeys(
+      createValidUploadTestParameterMap("", "").toMap(),
+      availableParameters
+    ).joinToString(";")
+    }; result=$result)"
+
   private fun assert_missing_required_fetch_parameter_rejects_promise(
     availableParameters: Map<Any?, Any?>,
   ) = runBlocking {
@@ -531,44 +537,40 @@ class BlobCourierModuleTests {
 
     val ctx = ReactApplicationContext(ApplicationProvider.getApplicationContext())
 
-    val (succeeded, message) = runRequestToBoolean({
+    val (succeeded, message) = runRequest({
       runFetchBlobSuspend(ctx, availableParametersAsMap)
-    })
+    }).fold(
+      { Pair(false, createErrorReportForMissingParameter(availableParameters, it)) },
+      { Pair(true, createErrorReportForMissingParameter(availableParameters, "$it")) }
+    )
 
     assertRequestFalse(message, succeeded)
   }
 
   private fun assert_missing_required_upload_parameter_rejects_promise(
-    availableParameters: Map<Any?, Any?>,
-    allValuesMapping: Map<String, Any>
+    availableParameters: Map<Any?, Any?>
   ) = runBlocking {
     val allFetchParametersMap = createValidTestFetchParameterMap()
 
-    val missingValues = retrieveMissingKeys(allValuesMapping, availableParameters)
-
     val ctx = ReactApplicationContext(ApplicationProvider.getApplicationContext())
 
-    val (succeeded, message) = runRequestToBoolean({
+    val (succeeded, message) = runRequest({
       val errorOrResult = runFetchBlobSuspend(ctx, allFetchParametersMap.toReactMap())
 
       errorOrResult.fmap { result ->
-        val taskId = allFetchParametersMap["taskId"] ?: ""
         val absoluteFilePath = result.getMap("data")?.getString("absoluteFilePath") ?: ""
 
         Shadows.shadowOf(ctx.contentResolver)
           .registerInputStream(Uri.parse(absoluteFilePath), "".byteInputStream())
 
-        val uploadParametersMap =
-          createValidUploadTestParameterMap(taskId, absoluteFilePath).toMap()
-
-        val mangledUploadParametersMap =
-          missingValues.fold(uploadParametersMap, { acc, key -> acc.minus(key) })
-
         runBlocking {
-          runUploadBlobSuspend(ctx, mangledUploadParametersMap.toReactMap())
+          runUploadBlobSuspend(ctx, availableParameters.toReactMap())
         }
       }
-    })
+    }).fold(
+      { Pair(false, createErrorReportForMissingParameter(availableParameters, it)) },
+      { Pair(true, createErrorReportForMissingParameter(availableParameters, "$it")) }
+    )
 
     assertRequestFalse(message, succeeded)
   }
