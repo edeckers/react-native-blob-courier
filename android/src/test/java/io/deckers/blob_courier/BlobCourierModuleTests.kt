@@ -17,6 +17,10 @@ import io.deckers.blob_courier.Fixtures.createValidTestFetchParameterMap
 import io.deckers.blob_courier.Fixtures.createValidUploadTestParameterMap
 import io.deckers.blob_courier.Fixtures.runFetchBlob
 import io.deckers.blob_courier.Fixtures.runUploadBlob
+import io.deckers.blob_courier.category.EndToEnd
+import io.deckers.blob_courier.category.Isolated
+import io.deckers.blob_courier.category.Regression
+import io.deckers.blob_courier.category.Slow
 import io.deckers.blob_courier.common.Either
 import io.deckers.blob_courier.common.ValidationError
 import io.deckers.blob_courier.common.isNotNull
@@ -40,6 +44,7 @@ import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import org.junit.experimental.categories.Category
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows
@@ -116,6 +121,7 @@ class BlobCourierModuleTests {
     every { Arguments.createArray() } answers { JavaOnlyArray() }
   }
 
+  @Category(Isolated::class)
   @Test
   fun missing_required_fetch_parameters_rejects_fetch_promise() {
     val allValuesMapping = createValidTestFetchParameterMap()
@@ -127,6 +133,7 @@ class BlobCourierModuleTests {
     }
   }
 
+  @Category(EndToEnd::class)
   @Test(timeout = DEFAULT_PROMISE_TIMEOUT_MILLISECONDS)
   fun all_required_fetch_parameters_provided_resolves_promise() {
     val allRequiredParametersMap = createValidTestFetchParameterMap().toReactMap()
@@ -172,6 +179,7 @@ class BlobCourierModuleTests {
     assertTrue(result.second, result.first)
   }
 
+  @Category(EndToEnd::class)
   @Test(timeout = DEFAULT_PROMISE_TIMEOUT_MILLISECONDS)
   fun unreachable_fetch_server_rejects_promise() {
     val allRequiredParametersMap = createValidTestFetchParameterMap()
@@ -219,6 +227,7 @@ class BlobCourierModuleTests {
     assertTrue(result.second, result.first)
   }
 
+  @Category(EndToEnd::class, Slow::class)
   @Test(timeout = DEFAULT_PROMISE_TIMEOUT_MILLISECONDS)
   fun non_ok_http_fetch_response_resolves_promise() {
     val allRequiredParametersMap = createValidTestFetchParameterMap()
@@ -268,6 +277,7 @@ class BlobCourierModuleTests {
     assertTrue(result.second, result.first)
   }
 
+  @Category(EndToEnd::class)
   @Test(timeout = DEFAULT_PROMISE_TIMEOUT_MILLISECONDS)
   fun all_required_parameters_provided_resolves_upload_promise() {
     val allRequiredParametersMap = createValidTestFetchParameterMap().toReactMap()
@@ -331,6 +341,7 @@ class BlobCourierModuleTests {
     assertTrue(result.second, result.first)
   }
 
+  @Category(EndToEnd::class)
   @Test(timeout = DEFAULT_PROMISE_TIMEOUT_MILLISECONDS)
   fun using_a_string_payload_resolves_upload_promise() {
     val allRequiredParametersMap = createValidTestFetchParameterMap().toReactMap()
@@ -406,6 +417,7 @@ class BlobCourierModuleTests {
     assertTrue(result.second, result.first)
   }
 
+  @Category(EndToEnd::class)
   @Test(timeout = DEFAULT_PROMISE_TIMEOUT_MILLISECONDS)
   fun non_ok_http_response_resolves_upload_promise() {
     val allRequiredParametersMap = createValidTestFetchParameterMap().toReactMap()
@@ -472,6 +484,7 @@ class BlobCourierModuleTests {
     assertTrue(result.second, result.first)
   }
 
+  @Category(EndToEnd::class, Slow::class)
   @Test(timeout = DEFAULT_PROMISE_TIMEOUT_MILLISECONDS)
   fun unreachable_server_rejects_upload_promise() {
     val allRequiredParametersMap = createValidTestFetchParameterMap().toReactMap()
@@ -537,6 +550,7 @@ class BlobCourierModuleTests {
     assertTrue(result.second, result.first)
   }
 
+  @Category(Isolated::class)
   @Test
   fun total_number_of_bytes_estimate_is_returned_by_input_stream_request_body() {
     val ctx = ReactApplicationContext(ApplicationProvider.getApplicationContext())
@@ -558,6 +572,7 @@ class BlobCourierModuleTests {
     )
   }
 
+  @Category(Isolated::class)
   @Test
   fun missing_required_upload_parameters_rejects_fetch_promise() {
     val allValuesMapping =
@@ -570,6 +585,7 @@ class BlobCourierModuleTests {
     }
   }
 
+  @Category(EndToEnd::class, Regression::class)
   @Test // This is the faster, and less thorough version of the Instrumented test with the same name
   fun uploading_a_file_from_outside_app_data_directory_resolves_promise() {
 
@@ -623,11 +639,13 @@ class BlobCourierModuleTests {
     assertTrue(result.second, result.first)
   }
 
+  @Category(EndToEnd::class, Regression::class)
   @Test
   fun correct_target_parameters_resolve_promise() {
     listOf("cache", "data").forEach { assert_correct_target_parameter_resolves_promise(it) }
   }
 
+  @Category(EndToEnd::class, Regression::class)
   @Test
   fun incorrect_target_parameter_rejects_promise() {
     val allRequiredParametersMap = createValidTestFetchParameterMap()
@@ -682,6 +700,7 @@ class BlobCourierModuleTests {
     assertTrue(result.second, result.first)
   }
 
+  @Category(Isolated::class, Regression::class)
   @Test
   fun multipart_parameters_must_be_sent_to_the_server_in_the_order_they_were_provided() {
     val uploadParameterReadableMap =
@@ -717,6 +736,7 @@ class BlobCourierModuleTests {
     }
   }
 
+  @Category(EndToEnd::class)
   @Test // This is the faster, and less thorough version of the Instrumented test with the same name
   fun non_existing_uploadable_file_rejects_promise() {
     val irrelevantTaskId = UUID.randomUUID().toString()
@@ -765,6 +785,7 @@ class BlobCourierModuleTests {
     assertTrue(result.second, result.first)
   }
 
+  @Category(Isolated::class)
   @Test
   fun validating_non_null_values_works() {
     val someObject = Object()
@@ -785,6 +806,7 @@ class BlobCourierModuleTests {
     assertSame("Object doesn't match the provided object", someObject, rightObject.v)
   }
 
+  @Category(Isolated::class)
   @Test
   fun validating_not_null_or_empty_values_works() {
     val someObject = Object()
