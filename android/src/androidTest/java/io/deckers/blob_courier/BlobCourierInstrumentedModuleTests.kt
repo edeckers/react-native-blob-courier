@@ -4,6 +4,7 @@
  * This source code is licensed under the MPL-2.0 license found in the
  * LICENSE file in the root directory of this source tree.
  */
+import android.util.Log
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.platform.app.InstrumentationRegistry
 import com.facebook.react.bridge.Arguments
@@ -25,18 +26,73 @@ import io.deckers.blob_courier.react.toReactMap
 import io.mockk.every
 import io.mockk.mockkStatic
 import java.util.UUID
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
 import org.junit.Before
 import org.junit.Test
 
-private const val ADB_COMMAND_DELAY_MILLISECONDS = 8_000L
+private const val ADB_COMMAND_DELAY_MILLISECONDS = 10_000L
 
-private fun enableNetworking(enable: Boolean) {
+private suspend fun waitForDisabledNetwork() =
+  withContext(Dispatchers.IO) {
+    while (true) {
+      val p = Runtime.getRuntime().exec("ping github.com")
+
+      println("waitForDisabledNetwork")
+      p.errorStream.bufferedReader().use {
+        val line = it.readLine()
+        println(line)
+        if (line?.contains("unknown") == true) {
+          return@withContext
+        }
+      }
+
+      if (!p.isAlive && p.exitValue() == 2) {
+        return@withContext
+      }
+
+      delay(10)
+    }
+  }
+
+private suspend fun waitForEnabledNetwork() =
+  withContext(Dispatchers.IO) {
+    while (true) {
+      val p: Process = Runtime.getRuntime().exec("ping github.com")
+
+      println("waitForEnabledNetwork")
+      p.inputStream.bufferedReader().use {
+        while (p.isAlive) {
+          val line = it.readLine()
+          println(line)
+          if (line?.contains("PING github.com") == true) {
+            return@withContext
+          }
+
+          delay(10)
+        }
+      }
+
+      if (!p.isAlive && p.exitValue() == 0) {
+        return@withContext
+      }
+    }
+  }
+
+private fun toggleNetworking(enable: Boolean) {
   val word = if (enable) "enable" else "disable"
 
   InstrumentationRegistry.getInstrumentation().uiAutomation.executeShellCommand("svc wifi $word")
   InstrumentationRegistry.getInstrumentation().uiAutomation.executeShellCommand("svc data $word")
+
+  runBlocking {
+    withTimeout(ADB_COMMAND_DELAY_MILLISECONDS) {
+      if (enable) waitForEnabledNetwork() else waitForDisabledNetwork()
+    }
+  }
 }
 
 class BlobCourierInstrumentedModuleTests {
@@ -48,9 +104,12 @@ class BlobCourierInstrumentedModuleTests {
 
     every { Arguments.createMap() } answers { JavaOnlyMap() }
     every { Arguments.createArray() } answers { JavaOnlyArray() }
+
+    toggleNetworking(true)
+    println("before")
+    Log.e("AAAAAAAA", " BBBBBBBBB")
   }
 
-  //  @Ignore("This breaks on GitHub Actions due to timeout")
   @Test
   fun managed_download_succeeds() = runBlocking {
     val allRequiredParametersMap = createValidTestFetchParameterMap().toReactMap()
@@ -64,19 +123,14 @@ class BlobCourierInstrumentedModuleTests {
     val reactContext = ReactApplicationContext(ctx)
 
     val (succeeded, message) = runInstrumentedRequestToBoolean {
-      enableNetworking(true)
-      delay(ADB_COMMAND_DELAY_MILLISECONDS)
-
       runFetchBlobSuspend(
-        reactContext,
-        allRequiredParametersMap
+        reactContext, allRequiredParametersMap
       )
     }
 
     assertRequestTrue(message, succeeded)
   }
 
-  //  @Ignore("This breaks on GitHub Actions due to timeout")
   @Test
   fun managed_download_returns_correct_type() = runBlocking {
     val allRequiredParametersMap = createValidTestFetchParameterMap().toReactMap()
@@ -91,9 +145,6 @@ class BlobCourierInstrumentedModuleTests {
     val reactContext = ReactApplicationContext(ctx)
 
     val (succeeded, message) = runInstrumentedRequestToBoolean {
-      enableNetworking(true)
-      delay(ADB_COMMAND_DELAY_MILLISECONDS)
-
       runFetchBlobSuspend(reactContext, allRequiredParametersMap)
         .fmap { result ->
           val receivedType = result.getString("type") ?: ""
@@ -106,7 +157,6 @@ class BlobCourierInstrumentedModuleTests {
     assertRequestTrue(message, succeeded)
   }
 
-  // @Ignore("This breaks on GitHub Actions due to timeout")
   @Test
   fun managed_download_returns_expected_result() = runBlocking {
     val allRequiredParametersMap = createValidTestFetchParameterMap().toReactMap()
@@ -120,8 +170,6 @@ class BlobCourierInstrumentedModuleTests {
     val reactContext = ReactApplicationContext(ctx)
 
     val (succeeded, message) = runInstrumentedRequestToBoolean {
-      enableNetworking(true)
-      delay(ADB_COMMAND_DELAY_MILLISECONDS)
 
       runFetchBlobSuspend(reactContext, allRequiredParametersMap)
         .fmap { result ->
@@ -148,9 +196,6 @@ class BlobCourierInstrumentedModuleTests {
       )
 
     val (succeeded, message) = runInstrumentedRequestToBoolean {
-      enableNetworking(true)
-      delay(ADB_COMMAND_DELAY_MILLISECONDS)
-
       Fixtures.runUploadBlobSuspend(ctx, uploadParametersMap.toReactMap())
     }
 
@@ -167,16 +212,12 @@ class BlobCourierInstrumentedModuleTests {
     val ctx = ReactApplicationContext(ApplicationProvider.getApplicationContext())
 
     val (succeeded, message) = runInstrumentedRequestToBoolean {
-      enableNetworking(true)
-      delay(ADB_COMMAND_DELAY_MILLISECONDS)
-
       Fixtures.runUploadBlobSuspend(ctx, allRequiredParametersMap.toReactMap())
     }
 
     assertRequestFalse(message, succeeded)
   }
 
-  //  @Ignore("This breaks on GitHub Actions due to timeout")
   @Test
   fun no_network_connection_rejects_promise() = runBlocking {
     val allRequiredParametersMap = createValidTestFetchParameterMap()
@@ -184,8 +225,7 @@ class BlobCourierInstrumentedModuleTests {
     val ctx = ReactApplicationContext(ApplicationProvider.getApplicationContext())
 
     val (succeeded, message) = runInstrumentedRequestToBoolean {
-      enableNetworking(false)
-      delay(ADB_COMMAND_DELAY_MILLISECONDS)
+      toggleNetworking(false)
 
       runFetchBlobSuspend(ctx, allRequiredParametersMap.toReactMap())
     }

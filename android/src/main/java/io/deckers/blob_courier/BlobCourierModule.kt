@@ -29,7 +29,8 @@ import io.deckers.blob_courier.react.toReactMap
 import io.deckers.blob_courier.upload.BlobUploader
 import io.deckers.blob_courier.upload.UploaderParameterFactory
 import java.net.UnknownHostException
-import kotlin.concurrent.thread
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 private fun createHttpClient() = OkHttpClientProvider.getOkHttpClient()
 private fun createProgressFactory(reactContext: ReactApplicationContext) =
@@ -44,9 +45,9 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
   override fun getName(): String = LIBRARY_NAME
 
   @ReactMethod
-  fun fetchBlob(input: ReadableMap, promise: Promise) {
-    thread {
-      try {
+  suspend fun fetchBlob(input: ReadableMap, promise: Promise) {
+    try {
+      withContext(Dispatchers.IO) {
         val errorOrDownloadResult =
           DownloaderParameterFactory()
             .fromInput(input)
@@ -65,20 +66,20 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
             { f -> promise.reject(f.code, f.message) },
             promise::resolve
           )
-      } catch (e: UnknownHostException) {
-        promise.reject(ERROR_UNKNOWN_HOST, e)
-      } catch (e: Exception) {
-        promise.reject(ERROR_UNEXPECTED_EXCEPTION, processUnexpectedException(e).message)
-      } catch (e: Error) {
-        promise.reject(ERROR_UNEXPECTED_EXCEPTION, processUnexpectedError(e).message)
       }
+    } catch (e: UnknownHostException) {
+      promise.reject(ERROR_UNKNOWN_HOST, e)
+    } catch (e: Exception) {
+      promise.reject(ERROR_UNEXPECTED_EXCEPTION, processUnexpectedException(e).message)
+    } catch (e: Error) {
+      promise.reject(ERROR_UNEXPECTED_EXCEPTION, processUnexpectedError(e).message)
     }
   }
 
   @ReactMethod
-  fun uploadBlob(input: ReadableMap, promise: Promise) {
-    thread {
-      try {
+  suspend fun uploadBlob(input: ReadableMap, promise: Promise) {
+    try {
+      withContext(Dispatchers.IO) {
         UploaderParameterFactory()
           .fromInput(input)
           .fold(::Failure, ::Success)
@@ -94,13 +95,13 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
             { f -> promise.reject(f.code, f.message) },
             promise::resolve
           )
-      } catch (e: UnknownHostException) {
-        promise.reject(ERROR_UNKNOWN_HOST, e)
-      } catch (e: Exception) {
-        promise.reject(ERROR_UNEXPECTED_EXCEPTION, processUnexpectedException(e).message)
-      } catch (e: Error) {
-        promise.reject(ERROR_UNEXPECTED_EXCEPTION, processUnexpectedError(e).message)
       }
+    } catch (e: UnknownHostException) {
+      promise.reject(ERROR_UNKNOWN_HOST, e)
+    } catch (e: Exception) {
+      promise.reject(ERROR_UNEXPECTED_EXCEPTION, processUnexpectedException(e).message)
+    } catch (e: Error) {
+      promise.reject(ERROR_UNEXPECTED_EXCEPTION, processUnexpectedError(e).message)
     }
   }
 }
