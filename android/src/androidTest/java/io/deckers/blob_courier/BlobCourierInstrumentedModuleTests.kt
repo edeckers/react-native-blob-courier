@@ -10,6 +10,8 @@ import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.JavaOnlyArray
 import com.facebook.react.bridge.JavaOnlyMap
 import com.facebook.react.bridge.ReactApplicationContext
+import io.deckers.blob_courier.BuildConfig.ADB_COMMAND_TIMEOUT_MILLISECONDS
+import io.deckers.blob_courier.BuildConfig.PROMISE_TIMEOUT_MILLISECONDS
 import io.deckers.blob_courier.Fixtures
 import io.deckers.blob_courier.Fixtures.createValidTestFetchParameterMap
 import io.deckers.blob_courier.Fixtures.runFetchBlobSuspend
@@ -22,7 +24,6 @@ import io.deckers.blob_courier.common.Logger
 import io.deckers.blob_courier.common.MANAGED_DOWNLOAD_SUCCESS
 import io.deckers.blob_courier.common.left
 import io.deckers.blob_courier.common.right
-import io.deckers.blob_courier.common.tag
 import io.deckers.blob_courier.react.toReactMap
 import io.mockk.every
 import io.mockk.mockkStatic
@@ -36,9 +37,7 @@ import kotlinx.coroutines.withTimeout
 import org.junit.Before
 import org.junit.Test
 
-private const val ADB_COMMAND_DELAY_MILLISECONDS = 10_000L
-
-private val TAG = tag("InstrumentedTests")
+private const val TAG = "InstrumentedTests"
 
 private val logger = Logger(TAG)
 private fun li(m: String) = logger.i(m)
@@ -98,6 +97,7 @@ private suspend fun waitForEnabledNetwork() =
 
 private fun toggleNetworking(enable: Boolean) {
   val word = if (enable) "enable" else "disable"
+
   li("Toggling network (toggle=$word)")
 
   InstrumentationRegistry.getInstrumentation().uiAutomation.executeShellCommand("svc wifi $word")
@@ -105,14 +105,14 @@ private fun toggleNetworking(enable: Boolean) {
   li("Toggled network (toggle=$word)")
 
   runBlocking {
-    li("Waiting for network status to settle (timeout=$ADB_COMMAND_DELAY_MILLISECONDS)")
+    li("Waiting for network status to settle (timeout=$ADB_COMMAND_TIMEOUT_MILLISECONDS)")
 
     try {
-      withTimeout(ADB_COMMAND_DELAY_MILLISECONDS) {
+      withTimeout(ADB_COMMAND_TIMEOUT_MILLISECONDS) {
         if (enable) waitForEnabledNetwork() else waitForDisabledNetwork()
       }
     } catch (e: TimeoutCancellationException) {
-      li("Network status did not change in due time (timeout=$ADB_COMMAND_DELAY_MILLISECONDS)")
+      li("Network status did not change in due time (timeout=$ADB_COMMAND_TIMEOUT_MILLISECONDS)")
 
       throw e
     } finally {
@@ -122,6 +122,12 @@ private fun toggleNetworking(enable: Boolean) {
 }
 
 class BlobCourierInstrumentedModuleTests {
+  @Before
+  fun logTestContextInformation() {
+    li("Setting test timeout (timeout=${PROMISE_TIMEOUT_MILLISECONDS}ms)")
+    li("Setting adb command timeout (timeout=${ADB_COMMAND_TIMEOUT_MILLISECONDS}ms)")
+  }
+
   @Before
   fun mockSomeNativeOnlyMethods() {
     li("Restore method mocks")

@@ -8,6 +8,7 @@ package io.deckers.blob_courier
 
 import android.os.Build
 import com.facebook.react.bridge.ReadableMap
+import io.deckers.blob_courier.BuildConfig.PROMISE_TIMEOUT_MILLISECONDS
 import io.deckers.blob_courier.common.Either
 import io.deckers.blob_courier.common.fold
 import java.lang.reflect.Method
@@ -53,20 +54,20 @@ object TestUtils {
 
   suspend fun runRequest(
     block: suspend CoroutineScope.() -> Either<String, ReadableMap>,
-    timeoutMilliseconds: Long = DEFAULT_PROMISE_TIMEOUT_MILLISECONDS
+    timeoutMilliseconds: Long = PROMISE_TIMEOUT_MILLISECONDS
   ) =
     withTimeout(timeoutMilliseconds, block)
 
   suspend fun runRequestToBoolean(
     block: suspend CoroutineScope.() -> Either<String, ReadableMap>,
-    timeoutMilliseconds: Long = DEFAULT_PROMISE_TIMEOUT_MILLISECONDS
+    timeoutMilliseconds: Long = PROMISE_TIMEOUT_MILLISECONDS
   ) =
     runRequest(block, timeoutMilliseconds).fold({ e -> Pair(false, e) }, { m -> Pair(true, "$m") })
 
   suspend fun runInstrumentedRequestToBoolean(
     block: suspend CoroutineScope.() -> Either<String, ReadableMap>,
   ) =
-    runRequest(block, DEFAULT_PROMISE_INSTRUMENTED_TIMEOUT_MILLISECONDS)
+    runRequest(block, PROMISE_TIMEOUT_MILLISECONDS)
       .fold({ e -> Pair(false, e) }, { m -> Pair(true, "$m") })
 
   fun assertRequestFalse(message: String, b: Boolean) =

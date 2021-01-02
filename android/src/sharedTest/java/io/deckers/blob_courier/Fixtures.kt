@@ -18,9 +18,6 @@ import kotlin.coroutines.coroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
 
-const val DEFAULT_PROMISE_TIMEOUT_MILLISECONDS = 10_000L
-const val DEFAULT_PROMISE_INSTRUMENTED_TIMEOUT_MILLISECONDS = 60_000L
-
 object Fixtures {
 
   fun createValidTestFetchParameterMap(): Map<String, String> = mapOf(

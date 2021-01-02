@@ -23,14 +23,13 @@ import io.deckers.blob_courier.common.Result
 import io.deckers.blob_courier.common.Success
 import io.deckers.blob_courier.common.createDownloadManager
 import io.deckers.blob_courier.common.createErrorFromThrowabe
-import io.deckers.blob_courier.common.tag
 import io.deckers.blob_courier.progress.ManagedProgressUpdater
 import java.io.Closeable
 import java.io.File
 import java.io.FileOutputStream
 import java.io.InputStream
 
-private val TAG = tag(ManagedDownloadReceiver::class.java.name)
+private val TAG = ManagedDownloadReceiver::class.java.name
 private val logger = Logger(TAG)
 private fun lv(m: String, e: Throwable? = null) = logger.v(m, e)
 private fun lw(m: String, e: Throwable? = null) = logger.w(m, e)

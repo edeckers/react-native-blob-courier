@@ -131,7 +131,7 @@ class BlobCourierModuleTests {
   }
 
   @Category(EndToEnd::class)
-  @Test(timeout = DEFAULT_PROMISE_TIMEOUT_MILLISECONDS)
+  @Test
   fun all_required_fetch_parameters_provided_resolves_promise() = runBlocking {
     val allRequiredParametersMap = createValidTestFetchParameterMap().toReactMap()
 
@@ -143,7 +143,7 @@ class BlobCourierModuleTests {
   }
 
   @Category(EndToEnd::class)
-  @Test(timeout = DEFAULT_PROMISE_TIMEOUT_MILLISECONDS)
+  @Test
   fun unreachable_fetch_server_rejects_promise() = runBlocking {
     val allRequiredParametersMap = createValidTestFetchParameterMap()
     val requestWithNonExistentUrl =
@@ -158,7 +158,7 @@ class BlobCourierModuleTests {
   }
 
   @Category(EndToEnd::class, Slow::class)
-  @Test(timeout = DEFAULT_PROMISE_TIMEOUT_MILLISECONDS)
+  @Test
   fun non_ok_http_fetch_response_resolves_promise() = runBlocking {
     val allRequiredParametersMap = createValidTestFetchParameterMap()
     val requestWithNonExistentUrl =
@@ -175,7 +175,7 @@ class BlobCourierModuleTests {
   }
 
   @Category(EndToEnd::class)
-  @Test(timeout = DEFAULT_PROMISE_TIMEOUT_MILLISECONDS)
+  @Test
   fun all_required_parameters_provided_resolves_upload_promise() = runBlocking {
     val allRequiredParametersMap = createValidTestFetchParameterMap().toReactMap()
 
@@ -204,7 +204,7 @@ class BlobCourierModuleTests {
   }
 
   @Category(EndToEnd::class)
-  @Test(timeout = DEFAULT_PROMISE_TIMEOUT_MILLISECONDS)
+  @Test
   fun using_a_string_payload_resolves_upload_promise() = runBlocking {
     val allRequiredParametersMap = createValidTestFetchParameterMap().toReactMap()
 
@@ -245,7 +245,7 @@ class BlobCourierModuleTests {
   }
 
   @Category(EndToEnd::class)
-  @Test(timeout = DEFAULT_PROMISE_TIMEOUT_MILLISECONDS)
+  @Test
   fun non_ok_http_response_resolves_upload_promise() = runBlocking {
     val allRequiredParametersMap = createValidTestFetchParameterMap().toReactMap()
 
@@ -276,7 +276,7 @@ class BlobCourierModuleTests {
   }
 
   @Category(EndToEnd::class, Slow::class)
-  @Test(timeout = DEFAULT_PROMISE_TIMEOUT_MILLISECONDS)
+  @Test
   fun unreachable_server_rejects_upload_promise() = runBlocking {
     val allRequiredParametersMap = createValidTestFetchParameterMap().toReactMap()
 

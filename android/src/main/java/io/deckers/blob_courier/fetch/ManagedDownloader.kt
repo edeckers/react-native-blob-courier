@@ -18,7 +18,6 @@ import io.deckers.blob_courier.common.MANAGED_DOWNLOAD_FAILURE
 import io.deckers.blob_courier.common.Result
 import io.deckers.blob_courier.common.createErrorFromThrowabe
 import io.deckers.blob_courier.common.fold
-import io.deckers.blob_courier.common.tag
 import io.deckers.blob_courier.progress.ManagedProgressUpdater
 import io.deckers.blob_courier.progress.ProgressNotifier
 import java.io.File
@@ -27,7 +26,7 @@ private const val DOWNLOAD_MANAGER_PARAMETER_DESCRIPTION = "description"
 private const val DOWNLOAD_MANAGER_PARAMETER_ENABLE_NOTIFICATIONS = "enableNotifications"
 private const val DOWNLOAD_MANAGER_PARAMETER_TITLE = "title"
 
-private val TAG = tag(ManagedDownloader::class.java.name)
+private val TAG = ManagedDownloader::class.java.name
 private val logger = Logger(TAG)
 private fun li(m: String) = logger.i(m)
 private fun lv(m: String, e: Throwable? = null) = logger.v(m, e)

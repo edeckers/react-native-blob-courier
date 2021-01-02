@@ -22,7 +22,6 @@ import io.deckers.blob_courier.common.Logger
 import io.deckers.blob_courier.common.Success
 import io.deckers.blob_courier.common.`do`
 import io.deckers.blob_courier.common.fold
-import io.deckers.blob_courier.common.tag
 import io.deckers.blob_courier.fetch.BlobDownloader
 import io.deckers.blob_courier.fetch.DownloaderParameterFactory
 import io.deckers.blob_courier.react.CongestionAvoidingProgressNotifierFactory
@@ -42,7 +41,7 @@ private fun createProgressFactory(reactContext: ReactApplicationContext) =
     DEFAULT_PROGRESS_TIMEOUT_MILLISECONDS
   )
 
-private val TAG = tag(BlobCourierModule::class.java.name)
+private val TAG = BlobCourierModule::class.java.name
 private val logger = Logger(TAG)
 private fun le(m: String, e: Throwable? = null) = logger.e(m, e)
 private fun li(m: String) = logger.i(m)

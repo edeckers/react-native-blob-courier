@@ -39,6 +39,8 @@ android {
     versionName "1.0"
     testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     multiDexEnabled true
+    buildConfigField "Long", "ADB_COMMAND_TIMEOUT_MILLISECONDS", ADB_COMMAND_TIMEOUT_MILLISECONDS
+    buildConfigField "Long", "PROMISE_TIMEOUT_MILLISECONDS", PROMISE_TIMEOUT_MILLISECONDS
   }
 
   packagingOptions {

@@ -55,9 +55,13 @@ jobs:
           java-version: 1.8
       - run: yarn
       - uses: reactivecircus/android-emulator-runner@v2.13.0
+        env:
+          ORG_GRADLE_PROJECT_ADB_COMMAND_TIMEOUT_MILLISECONDS: ${{ secrets.ORG_GRADLE_PROJECT_ADB_COMMAND_TIMEOUT_MILLISECONDS }}
+          ORG_GRADLE_PROJECT_PROMISE_TIMEOUT_MILLISECONDS: ${{ secrets.ORG_GRADLE_PROJECT_PROMISE_TIMEOUT_MILLISECONDS }}
         with:
           api-level: 30
           script: |
+            echo "ORG_GRADLE_PROJECT_PROMISE_TIMEOUT_MILLISECONDS ${ORG_GRADLE_PROJECT_PROMISE_TIMEOUT_MILLISECONDS}"
             adb logcat -c
             adb logcat | grep 'io.deckers.blob_courier' &
             ./gradlew connectedAndroidTest

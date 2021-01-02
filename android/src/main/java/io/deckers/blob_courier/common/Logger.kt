@@ -8,6 +8,3 @@ class Logger(private val tag: String) {
   fun v(message: String, throwable: Throwable? = null) = Log.v(tag, message, throwable)
   fun w(message: String, throwable: Throwable? = null) = Log.w(tag, message, throwable)
 }
-
-// fun tag(tag:String) = "io.deckers.blob_courier.$tag"
-fun tag(tag: String) = tag
