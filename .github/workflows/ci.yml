@@ -38,7 +38,7 @@ jobs:
         with:
           build-root-directory: android
           wrapper-directory: android
-          arguments: testDebugUnitTest
+          arguments: testDebugUnitTest --tests=BlobCourierModuleTests
       - uses: actions/upload-artifact@v2
         with:
           name: android-unit-test-results
