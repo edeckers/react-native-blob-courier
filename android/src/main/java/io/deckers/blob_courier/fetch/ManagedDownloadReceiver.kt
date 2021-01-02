@@ -16,6 +16,7 @@ import io.deckers.blob_courier.common.BlobCourierError
 import io.deckers.blob_courier.common.DOWNLOAD_TYPE_MANAGED
 import io.deckers.blob_courier.common.ERROR_UNEXPECTED_EXCEPTION
 import io.deckers.blob_courier.common.Failure
+import io.deckers.blob_courier.common.Logger
 import io.deckers.blob_courier.common.MANAGED_DOWNLOAD_FAILURE
 import io.deckers.blob_courier.common.MANAGED_DOWNLOAD_SUCCESS
 import io.deckers.blob_courier.common.Result
@@ -28,6 +29,11 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.InputStream
 
+private val TAG = ManagedDownloadReceiver::class.java.name
+private val logger = Logger(TAG)
+private fun lv(m: String, e: Throwable? = null) = logger.v(m, e)
+private fun lw(m: String, e: Throwable? = null) = logger.w(m, e)
+
 class ManagedDownloadReceiver(
   private val downloadId: Long,
   private val destinationFile: File,
@@ -37,6 +43,7 @@ class ManagedDownloadReceiver(
   BroadcastReceiver(), Closeable {
   override fun onReceive(context: Context, intent: Intent) {
     try {
+      lv("Received ${DownloadManager.ACTION_DOWNLOAD_COMPLETE} completed message")
       val downloadManager = createDownloadManager(context)
 
       processDownloadCompleteAction(downloadManager, context)
@@ -45,14 +52,17 @@ class ManagedDownloadReceiver(
     } finally {
       context.unregisterReceiver(this)
       close()
+      lv("Unregistered and closed ${DownloadManager.ACTION_DOWNLOAD_COMPLETE} receiver")
     }
   }
 
   private fun processDownloadCompleteAction(downloadManager: DownloadManager, context: Context) {
     val query = DownloadManager.Query().apply { setFilterById(downloadId) }
+    lv("Queried download manager for download (id=$downloadId)")
 
     downloadManager.query(query).use { cursor ->
       if (!cursor.moveToFirst()) {
+        lw("Did not find download (id=$downloadId)")
         return
       }
 
@@ -61,9 +71,12 @@ class ManagedDownloadReceiver(
   }
 
   private fun processCompletedDownloadStatus(context: Context, cursor: Cursor) {
+    lv("Processing completed download status")
     val columnIndex = cursor.getColumnIndex(DownloadManager.COLUMN_STATUS)
+    val status = cursor.getInt(columnIndex)
+    val isStatusSuccessful = status == DownloadManager.STATUS_SUCCESSFUL
 
-    val isStatusSuccessful = cursor.getInt(columnIndex) == DownloadManager.STATUS_SUCCESSFUL
+    lv("Received status (status=$status, isStatusSuccesful=$isStatusSuccessful)")
 
     if (isStatusSuccessful) {
       val localFileUri =
@@ -74,11 +87,13 @@ class ManagedDownloadReceiver(
       return
     }
 
+    lw("Something went wrong processing the managed download (status=$status)")
+
     processCompletedOrError(
       Failure(
         BlobCourierError(
           MANAGED_DOWNLOAD_FAILURE,
-          "Something went wrong retrieving download status"
+          "Something went wrong retrieving download status (status=$status)"
         )
       )
     )
@@ -93,20 +108,27 @@ class ManagedDownloadReceiver(
   }
 
   private fun writeFileOnInternalStorage(inputStream: InputStream) {
+    lv("Writing stream to $destinationFile")
     if (destinationFile.parentFile?.exists() != true) {
+      lv("${destinationFile.parentFile} does not exist, so create it")
       destinationFile.parentFile?.mkdir()
     }
 
     try {
       FileOutputStream(destinationFile).use { fos -> inputStream.copyTo(fos) }
+      lv("Finished writing stream to $destinationFile")
     } catch (e: Exception) {
-      e.printStackTrace()
+      lv("Something went wrong writing the stream to $destinationFile", e)
+
+      throw e
     }
   }
 
   private fun onDownloadDone(context: Context, localFileUri: Uri) {
+    lv("Processing succesful managed download")
     moveFileToInternalStorage(context, localFileUri)
 
+    lv("Returning success message")
     processCompletedOrError(
       Success(
         mapOf(
@@ -121,6 +143,7 @@ class ManagedDownloadReceiver(
   }
 
   private fun moveFileToInternalStorage(context: Context, localFileUri: Uri) {
+    lv("Writing downloaded file $localFileUri to internal storage")
     getFileData(context, localFileUri)?.use { fis ->
       writeFileOnInternalStorage(fis)
     }

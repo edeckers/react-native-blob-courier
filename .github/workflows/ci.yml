@@ -38,12 +38,13 @@ jobs:
         with:
           build-root-directory: android
           wrapper-directory: android
-          arguments: testDebugUnitTest
+          arguments: testDebugUnitTest --tests=BlobCourierModuleTests
       - uses: actions/upload-artifact@v2
         with:
           name: android-unit-test-results
           path: android/build/test-results/**/*.xml
   run-android-instrumented-tests:
+    continue-on-error: true
     needs: build-typescript
     runs-on: macos-latest
     steps: 
@@ -54,15 +55,28 @@ jobs:
           java-version: 1.8
       - run: yarn
       - uses: reactivecircus/android-emulator-runner@v2.13.0
+        env:
+          ORG_GRADLE_PROJECT_ADB_COMMAND_TIMEOUT_MILLISECONDS: ${{ secrets.ORG_GRADLE_PROJECT_ADB_COMMAND_TIMEOUT_MILLISECONDS }}
+          ORG_GRADLE_PROJECT_PROMISE_TIMEOUT_MILLISECONDS: ${{ secrets.ORG_GRADLE_PROJECT_PROMISE_TIMEOUT_MILLISECONDS }}
         with:
           api-level: 30
-          script: ./gradlew connectedAndroidTest
+          script: |
+            echo "ORG_GRADLE_PROJECT_PROMISE_TIMEOUT_MILLISECONDS ${ORG_GRADLE_PROJECT_PROMISE_TIMEOUT_MILLISECONDS}"
+            adb logcat -c
+            adb logcat | grep 'io.deckers.blob_courier' &
+            ./gradlew connectedAndroidTest
           target: google_apis
           working-directory: './android' 
       - uses: actions/upload-artifact@v2
         with:
           name: android-instrumented-test-results
           path: android/build/outputs/androidTest-results/connected/flavors/debugAndroidTest/*.xml
+        if: always()
+      - uses: actions/upload-artifact@v2
+        with:
+          name: android-instrumented-logcat
+          path: android_instrumented_logcat.log
+        if: always()
   run-ios-tests:
     needs: build-typescript
     runs-on: macos-latest

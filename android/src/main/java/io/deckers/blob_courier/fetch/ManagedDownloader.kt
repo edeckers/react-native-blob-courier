@@ -13,9 +13,11 @@ import com.facebook.react.bridge.ReactApplicationContext
 import io.deckers.blob_courier.common.BlobCourierError
 import io.deckers.blob_courier.common.ERROR_UNEXPECTED_ERROR
 import io.deckers.blob_courier.common.Failure
+import io.deckers.blob_courier.common.Logger
 import io.deckers.blob_courier.common.MANAGED_DOWNLOAD_FAILURE
 import io.deckers.blob_courier.common.Result
 import io.deckers.blob_courier.common.createErrorFromThrowabe
+import io.deckers.blob_courier.common.fold
 import io.deckers.blob_courier.progress.ManagedProgressUpdater
 import io.deckers.blob_courier.progress.ProgressNotifier
 import java.io.File
@@ -23,6 +25,11 @@ import java.io.File
 private const val DOWNLOAD_MANAGER_PARAMETER_DESCRIPTION = "description"
 private const val DOWNLOAD_MANAGER_PARAMETER_ENABLE_NOTIFICATIONS = "enableNotifications"
 private const val DOWNLOAD_MANAGER_PARAMETER_TITLE = "title"
+
+private val TAG = ManagedDownloader::class.java.name
+private val logger = Logger(TAG)
+private fun li(m: String) = logger.i(m)
+private fun lv(m: String, e: Throwable? = null) = logger.v(m, e)
 
 class ManagedDownloader(
   private val reactContext: ReactApplicationContext,
@@ -36,11 +43,13 @@ class ManagedDownloader(
     toAbsoluteFilePath: File,
   ): Result<Map<String, Any>> {
     try {
+      li("Starting managed fetch")
       val request =
         DownloadManager.Request(downloaderParameters.uri)
           .setAllowedOverRoaming(true)
           .setMimeType(downloaderParameters.mimeType)
           .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+      lv("Created request")
 
       val downloadManagerSettings = downloaderParameters.downloadManagerSettings
       if (downloadManagerSettings.containsKey(DOWNLOAD_MANAGER_PARAMETER_DESCRIPTION)) {
@@ -48,18 +57,21 @@ class ManagedDownloader(
           downloadManagerSettings[DOWNLOAD_MANAGER_PARAMETER_DESCRIPTION] as String
         )
       }
+      lv("Set download description")
 
       if (downloadManagerSettings.containsKey(DOWNLOAD_MANAGER_PARAMETER_TITLE)) {
         request.setTitle(
           downloadManagerSettings[DOWNLOAD_MANAGER_PARAMETER_TITLE] as String
         )
       }
+      lv("Set download title")
 
       val enableNotifications =
         downloadManagerSettings.containsKey(DOWNLOAD_MANAGER_PARAMETER_ENABLE_NOTIFICATIONS) &&
           downloadManagerSettings[DOWNLOAD_MANAGER_PARAMETER_ENABLE_NOTIFICATIONS] == true
 
       request.setNotificationVisibility(if (enableNotifications) 1 else 0)
+      lv("Toggled notification visibility (visibility=$enableNotifications)")
 
       val downloadId = request
         .let { requestBuilder
@@ -74,6 +86,7 @@ class ManagedDownloader(
             requestBuilder
           )
         }
+      lv("Queued request")
 
       val progressUpdater =
         ManagedProgressUpdater(
@@ -84,6 +97,7 @@ class ManagedDownloader(
         )
 
       progressUpdater.start()
+      lv("Started progress updater")
 
       val waitForDownloadCompletion = Object()
 
@@ -97,9 +111,11 @@ class ManagedDownloader(
             progressUpdater
           ) { errorOrResult ->
             result = errorOrResult
+            lv("Finished managed download")
 
             synchronized(waitForDownloadCompletion) {
               waitForDownloadCompletion.notify()
+              lv("Notify lock")
             }
           }
 
@@ -108,7 +124,15 @@ class ManagedDownloader(
           IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE)
         )
 
+        lv("Registered ${DownloadManager.ACTION_DOWNLOAD_COMPLETE} receiver")
+
+        lv("Waiting for completion")
+
         waitForDownloadCompletion.wait()
+
+        li("Finished managed fetch and returning result")
+
+        lv("Result: ${result?.fold({ it }, { it.toString() }) ?: "NO_RESULT_SET"}")
 
         return result
           ?: Failure(BlobCourierError(MANAGED_DOWNLOAD_FAILURE, "Result was never set"))

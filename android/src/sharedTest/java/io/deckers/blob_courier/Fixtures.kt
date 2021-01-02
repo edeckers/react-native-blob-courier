@@ -10,8 +10,13 @@ import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.bridge.WritableMap
-
-const val DEFAULT_PROMISE_TIMEOUT_MILLISECONDS = 10_000L
+import io.deckers.blob_courier.common.Either
+import io.deckers.blob_courier.common.left
+import io.deckers.blob_courier.common.right
+import io.deckers.blob_courier.react.toReactMap
+import kotlin.coroutines.coroutineContext
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
 
 object Fixtures {
 
@@ -39,24 +44,52 @@ object Fixtures {
     "https://file.io"
   )
 
-  fun runFetchBlob(
+  suspend fun runFetchBlobSuspend(
     context: ReactApplicationContext,
     input: ReadableMap,
-    promise: Promise,
-  ) {
+  ): Either<String, ReadableMap> {
     val m = BlobCourierModule(context)
 
-    m.fetchBlob(input, promise)
+    var result: Either<String, ReadableMap>? = null
+
+    m.fetchBlob(
+      input,
+      EitherPromise(
+        { e -> result = left(e ?: "Request failed without a message") },
+        { v -> result = right(v ?: emptyMap<String, Any>().toReactMap()) }
+      )
+    )
+
+    while (result == null) {
+      coroutineContext.ensureActive()
+      delay(1)
+    }
+
+    return result ?: left("Did not receive a response in time")
   }
 
-  fun runUploadBlob(
+  suspend fun runUploadBlobSuspend(
     context: ReactApplicationContext,
-    input: ReadableMap,
-    promise: Promise,
-  ) {
+    input: ReadableMap
+  ): Either<String, ReadableMap> {
     val m = BlobCourierModule(context)
 
-    m.uploadBlob(input, promise)
+    var result: Either<String, ReadableMap>? = null
+
+    m.uploadBlob(
+      input,
+      EitherPromise(
+        { e -> result = left(e ?: "Request failed without a message") },
+        { v -> result = right(v ?: emptyMap<String, Any>().toReactMap()) }
+      )
+    )
+
+    while (result == null) {
+      coroutineContext.ensureActive()
+      delay(1)
+    }
+
+    return result ?: left("Did not receive a response in time")
   }
 
   class EitherPromise(
@@ -96,35 +129,5 @@ object Fixtures {
       left(message)
 
     override fun reject(message: String?) = left(message ?: "")
-  }
-
-  class BooleanPromise(val c: (Boolean) -> Unit) : Promise {
-    override fun reject(code: String?, message: String?) = c(false)
-
-    override fun reject(code: String?, throwable: Throwable?) = c(false)
-
-    override fun reject(code: String?, message: String?, throwable: Throwable?) = c(false)
-
-    override fun reject(throwable: Throwable?) = c(false)
-
-    override fun reject(throwable: Throwable?, userInfo: WritableMap?) = c(false)
-
-    override fun reject(code: String?, userInfo: WritableMap) = c(false)
-
-    override fun reject(code: String?, throwable: Throwable?, userInfo: WritableMap?) = c(false)
-
-    override fun reject(code: String?, message: String?, userInfo: WritableMap) = c(false)
-
-    override fun reject(
-      code: String?,
-      message: String?,
-      throwable: Throwable?,
-      userInfo: WritableMap?
-    ) =
-      c(false)
-
-    override fun reject(message: String?) = c(false)
-
-    override fun resolve(value: Any?) = c(true)
   }
 }
