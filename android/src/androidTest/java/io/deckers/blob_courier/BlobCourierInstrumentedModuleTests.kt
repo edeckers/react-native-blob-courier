@@ -4,7 +4,6 @@
  * This source code is licensed under the MPL-2.0 license found in the
  * LICENSE file in the root directory of this source tree.
  */
-import android.util.Log
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.platform.app.InstrumentationRegistry
 import com.facebook.react.bridge.Arguments
@@ -19,14 +18,17 @@ import io.deckers.blob_courier.TestUtils.assertRequestTrue
 import io.deckers.blob_courier.TestUtils.circumventHiddenApiExemptionsForMockk
 import io.deckers.blob_courier.TestUtils.runInstrumentedRequestToBoolean
 import io.deckers.blob_courier.common.DOWNLOAD_TYPE_MANAGED
+import io.deckers.blob_courier.common.Logger
 import io.deckers.blob_courier.common.MANAGED_DOWNLOAD_SUCCESS
 import io.deckers.blob_courier.common.left
 import io.deckers.blob_courier.common.right
+import io.deckers.blob_courier.common.tag
 import io.deckers.blob_courier.react.toReactMap
 import io.mockk.every
 import io.mockk.mockkStatic
 import java.util.UUID
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
@@ -36,24 +38,33 @@ import org.junit.Test
 
 private const val ADB_COMMAND_DELAY_MILLISECONDS = 10_000L
 
+private val TAG = tag("InstrumentedTests")
+
+private val logger = Logger(TAG)
+private fun li(m: String) = logger.i(m)
+private fun lv(m: String, e: Throwable? = null) = logger.v(m, e)
+
 private suspend fun waitForDisabledNetwork() =
   withContext(Dispatchers.IO) {
     while (true) {
+      lv("Test if known host is reachable")
       val p = Runtime.getRuntime().exec("ping github.com")
 
-      println("waitForDisabledNetwork")
       p.errorStream.bufferedReader().use {
         val line = it.readLine()
-        println(line)
+        li("Read line $line")
         if (line?.contains("unknown") == true) {
+          li("Line contains 'unknown'; network is disabled")
           return@withContext
         }
       }
 
       if (!p.isAlive && p.exitValue() == 2) {
+        li("Process exited with non-zero value; network is disabled")
         return@withContext
       }
 
+      lv("Network still active, backing off for a few milliseconds before retry")
       delay(10)
     }
   }
@@ -61,22 +72,25 @@ private suspend fun waitForDisabledNetwork() =
 private suspend fun waitForEnabledNetwork() =
   withContext(Dispatchers.IO) {
     while (true) {
+      lv("Test if known host is reachable")
       val p: Process = Runtime.getRuntime().exec("ping github.com")
 
-      println("waitForEnabledNetwork")
       p.inputStream.bufferedReader().use {
         while (p.isAlive) {
           val line = it.readLine()
-          println(line)
+          li("Read line $line")
           if (line?.contains("PING github.com") == true) {
+            li("Line contains valid PING-response'; network is enabled")
             return@withContext
           }
 
+          lv("Network still inactive, backing off for a few milliseconds before retry")
           delay(10)
         }
       }
 
       if (!p.isAlive && p.exitValue() == 0) {
+        li("Process exited with zero value; network is enabled")
         return@withContext
       }
     }
@@ -84,13 +98,25 @@ private suspend fun waitForEnabledNetwork() =
 
 private fun toggleNetworking(enable: Boolean) {
   val word = if (enable) "enable" else "disable"
+  li("Toggling network (toggle=$word)")
 
   InstrumentationRegistry.getInstrumentation().uiAutomation.executeShellCommand("svc wifi $word")
   InstrumentationRegistry.getInstrumentation().uiAutomation.executeShellCommand("svc data $word")
+  li("Toggled network (toggle=$word)")
 
   runBlocking {
-    withTimeout(ADB_COMMAND_DELAY_MILLISECONDS) {
-      if (enable) waitForEnabledNetwork() else waitForDisabledNetwork()
+    li("Waiting for network status to settle (timeout=$ADB_COMMAND_DELAY_MILLISECONDS)")
+
+    try {
+      withTimeout(ADB_COMMAND_DELAY_MILLISECONDS) {
+        if (enable) waitForEnabledNetwork() else waitForDisabledNetwork()
+      }
+    } catch (e: TimeoutCancellationException) {
+      li("Network status did not change in due time (timeout=$ADB_COMMAND_DELAY_MILLISECONDS)")
+
+      throw e
+    } finally {
+      li("Finished waiting for network status to settle")
     }
   }
 }
@@ -98,16 +124,20 @@ private fun toggleNetworking(enable: Boolean) {
 class BlobCourierInstrumentedModuleTests {
   @Before
   fun mockSomeNativeOnlyMethods() {
+    li("Restore method mocks")
+
     circumventHiddenApiExemptionsForMockk()
 
     mockkStatic(Arguments::class)
 
     every { Arguments.createMap() } answers { JavaOnlyMap() }
     every { Arguments.createArray() } answers { JavaOnlyArray() }
+  }
 
+  @Before
+  fun restoreNetworkingState() {
+    li("Restore networking state")
     toggleNetworking(true)
-    println("before")
-    Log.e("AAAAAAAA", " BBBBBBBBB")
   }
 
   @Test

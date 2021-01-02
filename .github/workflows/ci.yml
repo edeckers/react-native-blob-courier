@@ -59,7 +59,7 @@ jobs:
           api-level: 30
           script: |
             adb logcat -c
-            adb logcat &
+            adb logcat | grep 'io.deckers.blob_courier' &
             ./gradlew connectedAndroidTest
           target: google_apis
           working-directory: './android' 

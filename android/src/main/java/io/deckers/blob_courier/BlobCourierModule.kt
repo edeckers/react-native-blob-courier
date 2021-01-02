@@ -13,13 +13,16 @@ import com.facebook.react.bridge.ReactMethod
 import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.modules.network.OkHttpClientProvider
 import io.deckers.blob_courier.common.DEFAULT_PROGRESS_TIMEOUT_MILLISECONDS
+import io.deckers.blob_courier.common.ERROR_UNEXPECTED_ERROR
 import io.deckers.blob_courier.common.ERROR_UNEXPECTED_EXCEPTION
 import io.deckers.blob_courier.common.ERROR_UNKNOWN_HOST
 import io.deckers.blob_courier.common.Failure
 import io.deckers.blob_courier.common.LIBRARY_NAME
+import io.deckers.blob_courier.common.Logger
 import io.deckers.blob_courier.common.Success
 import io.deckers.blob_courier.common.`do`
 import io.deckers.blob_courier.common.fold
+import io.deckers.blob_courier.common.tag
 import io.deckers.blob_courier.fetch.BlobDownloader
 import io.deckers.blob_courier.fetch.DownloaderParameterFactory
 import io.deckers.blob_courier.react.CongestionAvoidingProgressNotifierFactory
@@ -39,6 +42,12 @@ private fun createProgressFactory(reactContext: ReactApplicationContext) =
     DEFAULT_PROGRESS_TIMEOUT_MILLISECONDS
   )
 
+private val TAG = tag(BlobCourierModule::class.java.name)
+private val logger = Logger(TAG)
+private fun le(m: String, e: Throwable? = null) = logger.e(m, e)
+private fun li(m: String) = logger.i(m)
+private fun lv(m: String, e: Throwable? = null) = logger.v(m, e)
+
 class BlobCourierModule(private val reactContext: ReactApplicationContext) :
   ReactContextBaseJavaModule(reactContext) {
 
@@ -46,6 +55,7 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
 
   @ReactMethod
   suspend fun fetchBlob(input: ReadableMap, promise: Promise) {
+    li("Calling fetchBlob")
     try {
       withContext(Dispatchers.IO) {
         val errorOrDownloadResult =
@@ -63,21 +73,29 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
         errorOrDownloadResult
           .fmap { Success(it.toReactMap()) }
           .`do`(
-            { f -> promise.reject(f.code, f.message) },
+            { f ->
+              lv("Something went wrong during fetch (code=${f.code},message=${f.message})")
+              promise.reject(f.code, f.message)
+            },
             promise::resolve
           )
       }
     } catch (e: UnknownHostException) {
+      lv("Unknown host", e)
       promise.reject(ERROR_UNKNOWN_HOST, e)
     } catch (e: Exception) {
+      le("Unexpected exception", e)
       promise.reject(ERROR_UNEXPECTED_EXCEPTION, processUnexpectedException(e).message)
     } catch (e: Error) {
-      promise.reject(ERROR_UNEXPECTED_EXCEPTION, processUnexpectedError(e).message)
+      le("Unexpected error", e)
+      promise.reject(ERROR_UNEXPECTED_ERROR, processUnexpectedError(e).message)
     }
+    li("Called fetchBlob")
   }
 
   @ReactMethod
   suspend fun uploadBlob(input: ReadableMap, promise: Promise) {
+    li("Calling uploadBlob")
     try {
       withContext(Dispatchers.IO) {
         UploaderParameterFactory()
@@ -92,16 +110,23 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
           )
           .map { it.toReactMap() }
           .`do`(
-            { f -> promise.reject(f.code, f.message) },
+            { f ->
+              lv("Something went wrong during upload (code=${f.code},message=${f.message})")
+              promise.reject(f.code, f.message)
+            },
             promise::resolve
           )
       }
     } catch (e: UnknownHostException) {
+      lv("Unknown host", e)
       promise.reject(ERROR_UNKNOWN_HOST, e)
     } catch (e: Exception) {
+      le("Unexpected exception", e)
       promise.reject(ERROR_UNEXPECTED_EXCEPTION, processUnexpectedException(e).message)
     } catch (e: Error) {
-      promise.reject(ERROR_UNEXPECTED_EXCEPTION, processUnexpectedError(e).message)
+      le("Unexpected error", e)
+      promise.reject(ERROR_UNEXPECTED_ERROR, processUnexpectedError(e).message)
     }
+    li("Called uploadBlob")
   }
 }
