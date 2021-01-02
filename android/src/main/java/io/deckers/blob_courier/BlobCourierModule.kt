@@ -31,8 +31,7 @@ import io.deckers.blob_courier.react.toReactMap
 import io.deckers.blob_courier.upload.BlobUploader
 import io.deckers.blob_courier.upload.UploaderParameterFactory
 import java.net.UnknownHostException
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import kotlin.concurrent.thread
 
 private fun createHttpClient() = OkHttpClientProvider.getOkHttpClient()
 private fun createProgressFactory(reactContext: ReactApplicationContext) =
@@ -53,10 +52,10 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
   override fun getName(): String = LIBRARY_NAME
 
   @ReactMethod
-  suspend fun fetchBlob(input: ReadableMap, promise: Promise) {
+  fun fetchBlob(input: ReadableMap, promise: Promise) {
     li("Calling fetchBlob")
-    try {
-      withContext(Dispatchers.IO) {
+    thread {
+      try {
         val errorOrDownloadResult =
           DownloaderParameterFactory()
             .fromInput(input)
@@ -78,25 +77,25 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
             },
             promise::resolve
           )
+      } catch (e: UnknownHostException) {
+        lv("Unknown host", e)
+        promise.reject(ERROR_UNKNOWN_HOST, e)
+      } catch (e: Exception) {
+        le("Unexpected exception", e)
+        promise.reject(ERROR_UNEXPECTED_EXCEPTION, processUnexpectedException(e).message)
+      } catch (e: Error) {
+        le("Unexpected error", e)
+        promise.reject(ERROR_UNEXPECTED_ERROR, processUnexpectedError(e).message)
       }
-    } catch (e: UnknownHostException) {
-      lv("Unknown host", e)
-      promise.reject(ERROR_UNKNOWN_HOST, e)
-    } catch (e: Exception) {
-      le("Unexpected exception", e)
-      promise.reject(ERROR_UNEXPECTED_EXCEPTION, processUnexpectedException(e).message)
-    } catch (e: Error) {
-      le("Unexpected error", e)
-      promise.reject(ERROR_UNEXPECTED_ERROR, processUnexpectedError(e).message)
     }
     li("Called fetchBlob")
   }
 
   @ReactMethod
-  suspend fun uploadBlob(input: ReadableMap, promise: Promise) {
+  fun uploadBlob(input: ReadableMap, promise: Promise) {
     li("Calling uploadBlob")
-    try {
-      withContext(Dispatchers.IO) {
+    thread {
+      try {
         UploaderParameterFactory()
           .fromInput(input)
           .fold(::Failure, ::Success)
@@ -115,16 +114,16 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
             },
             promise::resolve
           )
+      } catch (e: UnknownHostException) {
+        lv("Unknown host", e)
+        promise.reject(ERROR_UNKNOWN_HOST, e)
+      } catch (e: Exception) {
+        le("Unexpected exception", e)
+        promise.reject(ERROR_UNEXPECTED_EXCEPTION, processUnexpectedException(e).message)
+      } catch (e: Error) {
+        le("Unexpected error", e)
+        promise.reject(ERROR_UNEXPECTED_ERROR, processUnexpectedError(e).message)
       }
-    } catch (e: UnknownHostException) {
-      lv("Unknown host", e)
-      promise.reject(ERROR_UNKNOWN_HOST, e)
-    } catch (e: Exception) {
-      le("Unexpected exception", e)
-      promise.reject(ERROR_UNEXPECTED_EXCEPTION, processUnexpectedException(e).message)
-    } catch (e: Error) {
-      le("Unexpected error", e)
-      promise.reject(ERROR_UNEXPECTED_ERROR, processUnexpectedError(e).message)
     }
     li("Called uploadBlob")
   }
