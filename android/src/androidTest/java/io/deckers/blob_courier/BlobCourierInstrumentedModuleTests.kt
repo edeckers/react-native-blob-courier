@@ -37,7 +37,7 @@ import kotlinx.coroutines.withTimeout
 import org.junit.Before
 import org.junit.Test
 
-private const val TAG = "InstrumentedTests"
+private val TAG = BlobCourierInstrumentedModuleTests::class.java.name
 
 private val logger = Logger(TAG)
 private fun li(m: String) = logger.i(m)
