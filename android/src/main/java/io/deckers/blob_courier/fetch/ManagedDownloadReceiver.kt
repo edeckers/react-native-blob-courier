@@ -43,7 +43,14 @@ class ManagedDownloadReceiver(
   BroadcastReceiver(), Closeable {
   override fun onReceive(context: Context, intent: Intent) {
     try {
-      lv("Received ${DownloadManager.ACTION_DOWNLOAD_COMPLETE} completed message")
+      val intentDownloadId = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1)
+
+      if (intentDownloadId != downloadId) {
+        lv("Received ${DownloadManager.ACTION_DOWNLOAD_COMPLETE} message for another download (downloadId=${downloadId}, receivedId=${intentDownloadId})")
+        return
+      }
+
+      lv("Received ${DownloadManager.ACTION_DOWNLOAD_COMPLETE} message")
       val downloadManager = createDownloadManager(context)
 
       processDownloadCompleteAction(downloadManager, context)
@@ -57,7 +64,7 @@ class ManagedDownloadReceiver(
   }
 
   private fun processDownloadCompleteAction(downloadManager: DownloadManager, context: Context) {
-    val query = DownloadManager.Query().apply { setFilterById(downloadId) }
+    val query = DownloadManager.Query().setFilterById(downloadId)
     lv("Queried download manager for download (id=$downloadId)")
 
     downloadManager.query(query).use { cursor ->
