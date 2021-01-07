@@ -43,21 +43,29 @@ class ManagedDownloadReceiver(
   BroadcastReceiver(), Closeable {
   override fun onReceive(context: Context, intent: Intent) {
     try {
-      lv("Received ${DownloadManager.ACTION_DOWNLOAD_COMPLETE} completed message")
+      val intentDownloadId = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1)
+
+      if (intentDownloadId != downloadId) {
+        lv("Ignoring ${DownloadManager.ACTION_DOWNLOAD_COMPLETE} message for another download (downloadId=${downloadId}, receivedId=${intentDownloadId})")
+        return
+      }
+
+      lv("Processing ${DownloadManager.ACTION_DOWNLOAD_COMPLETE} message (downloadId=${intentDownloadId}")
       val downloadManager = createDownloadManager(context)
 
       processDownloadCompleteAction(downloadManager, context)
     } catch (e: Exception) {
+      lv("Processing completed error: ${e.message}")
       processCompletedOrError(Failure(createErrorFromThrowabe(ERROR_UNEXPECTED_EXCEPTION, e)))
     } finally {
       context.unregisterReceiver(this)
       close()
-      lv("Unregistered and closed ${DownloadManager.ACTION_DOWNLOAD_COMPLETE} receiver")
+      lv("Unregistered and closed ${DownloadManager.ACTION_DOWNLOAD_COMPLETE} receiver (downloadId=${downloadId})")
     }
   }
 
   private fun processDownloadCompleteAction(downloadManager: DownloadManager, context: Context) {
-    val query = DownloadManager.Query().apply { setFilterById(downloadId) }
+    val query = DownloadManager.Query().setFilterById(downloadId)
     lv("Queried download manager for download (id=$downloadId)")
 
     downloadManager.query(query).use { cursor ->
