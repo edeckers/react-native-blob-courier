@@ -160,13 +160,14 @@ class BlobCourierInstrumentedModuleTests {
       .toReactMap()
     allRequiredParametersMap.putMap("android", androidSettings)
 
+
     val ctx = InstrumentationRegistry.getInstrumentation().targetContext
     val reactContext = ReactApplicationContext(ctx)
 
     val (succeeded, message) = runInstrumentedRequestToBoolean {
-      runFetchBlobSuspend(
-        reactContext, allRequiredParametersMap
-      )
+      toggleNetworking(true)
+
+      runFetchBlobSuspend(reactContext, allRequiredParametersMap)
     }
 
     assertRequestTrue(message, succeeded)
@@ -186,6 +187,8 @@ class BlobCourierInstrumentedModuleTests {
     val reactContext = ReactApplicationContext(ctx)
 
     val (succeeded, message) = runInstrumentedRequestToBoolean {
+      toggleNetworking(true)
+
       runFetchBlobSuspend(reactContext, allRequiredParametersMap)
         .fmap { result ->
           val receivedType = result.getString("type") ?: ""
@@ -211,6 +214,7 @@ class BlobCourierInstrumentedModuleTests {
     val reactContext = ReactApplicationContext(ctx)
 
     val (succeeded, message) = runInstrumentedRequestToBoolean {
+      toggleNetworking(true)
 
       runFetchBlobSuspend(reactContext, allRequiredParametersMap)
         .fmap { result ->
@@ -237,6 +241,8 @@ class BlobCourierInstrumentedModuleTests {
       )
 
     val (succeeded, message) = runInstrumentedRequestToBoolean {
+      toggleNetworking(true)
+
       Fixtures.runUploadBlobSuspend(ctx, uploadParametersMap.toReactMap())
     }
 
@@ -250,9 +256,12 @@ class BlobCourierInstrumentedModuleTests {
     val allRequiredParametersMap =
       Fixtures.createValidUploadTestParameterMap(irrelevantTaskId, someNonExistentPath)
 
+
     val ctx = ReactApplicationContext(ApplicationProvider.getApplicationContext())
 
     val (succeeded, message) = runInstrumentedRequestToBoolean {
+      toggleNetworking(true)
+
       Fixtures.runUploadBlobSuspend(ctx, allRequiredParametersMap.toReactMap())
     }
 
