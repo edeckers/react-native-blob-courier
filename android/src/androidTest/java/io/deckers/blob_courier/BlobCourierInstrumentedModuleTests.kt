@@ -56,6 +56,11 @@ private suspend fun waitForDisabledNetwork() =
           li("Line contains 'unknown'; network is disabled")
           return@withContext
         }
+
+        if (line?.contains("unreachable") == true) {
+          li("Line contains 'unreachable'; network is disabled")
+          return@withContext
+        }
       }
 
       if (!p.isAlive && p.exitValue() == 2) {

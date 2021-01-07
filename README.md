@@ -33,6 +33,12 @@ If _CocoaPods_ is used in the project, make sure to install the pod:
 cd ios && pod install
 ```
 
+## Requirements
+
+- Android >= 19
+- iOS >= 7
+- Kotlin >= 1.4.x
+
 ## Usage
 
 The library provides both a fluent and a more concise interface. In the examples the concise approach is applied; fluent interface is demonstrated later in this document.
