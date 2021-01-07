@@ -63,7 +63,7 @@ jobs:
           script: |
             echo "ORG_GRADLE_PROJECT_PROMISE_TIMEOUT_MILLISECONDS ${ORG_GRADLE_PROJECT_PROMISE_TIMEOUT_MILLISECONDS}"
             adb logcat -c
-            adb logcat | grep 'io.deckers.blob_courier' &
+            adb logcat | tee android_instrumented_logcat.log | grep 'io.deckers.blob_courier' &
             ./gradlew connectedAndroidTest
           target: google_apis
           working-directory: './android' 
@@ -75,7 +75,7 @@ jobs:
       - uses: actions/upload-artifact@v2
         with:
           name: android-instrumented-logcat
-          path: android_instrumented_logcat.log
+          path: android/android_instrumented_logcat.log
         if: always()
   run-ios-tests:
     needs: build-typescript
