@@ -46,7 +46,7 @@ jobs:
   run-android-instrumented-tests:
     continue-on-error: true
     needs: build-typescript
-    runs-on: macos-latest
+    runs-on: self-hosted
     steps: 
       - uses: actions/checkout@v2
       - name: set up JDK 1.8
@@ -79,10 +79,10 @@ jobs:
         if: always()
   run-ios-tests:
     needs: build-typescript
-    runs-on: macos-latest
+    runs-on: self-hosted
     steps: 
       - uses: actions/checkout@v2
-      - run: xcrun simctl boot "iPhone 11"
+      - run: xcrun simctl boot "iPhone 11" || true
       - uses: actions/setup-node@v2-beta
         with:
           node-version: '12'
