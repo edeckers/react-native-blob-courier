@@ -16,6 +16,7 @@ jobs:
           node-version: '12'
       - run: yarn install
         if: steps.node_modules.outputs.cache-hit != 'true'
+      - run: yarn lint
   run-typescript-tests:
     needs: build-typescript
     runs-on: ubuntu-latest
@@ -34,7 +35,7 @@ jobs:
         with:
           name: ts-test-results
           path: output/typescript-test-output.xml
-  run-android-unit-tests:
+  run-android-lint:
     needs: build-typescript
     runs-on: ubuntu-latest
     steps: 
@@ -50,16 +51,38 @@ jobs:
           key: ${{ hashFiles('package.json') }}
       - uses: eskatos/gradle-command-action@v1
         with:
-          arguments: testDebugUnitTest --tests=BlobCourierModuleTests
+          arguments: lint
           build-root-directory: android
           configuration-cache-enabled: true
           dependencies-cache-enabled: true
           wrapper-cache-enabled: true
           wrapper-directory: android
-      - uses: actions/upload-artifact@v2
-        with:
-          name: android-unit-test-results
-          path: android/build/test-results/**/*.xml
+  run-android-unit-tests:
+   needs: run-android-lint
+   runs-on: ubuntu-latest
+   steps: 
+     - uses: actions/checkout@v2
+     - name: set up JDK 1.8
+       uses: actions/setup-java@v1
+       with:
+         java-version: 1.8
+     - uses: actions/cache@v2
+       id: node_modules
+       with:
+         path: node_modules
+         key: ${{ hashFiles('package.json') }}
+     - uses: eskatos/gradle-command-action@v1
+       with:
+         arguments: testDebugUnitTest --tests=BlobCourierModuleTests
+         build-root-directory: android
+         configuration-cache-enabled: true
+         dependencies-cache-enabled: true
+         wrapper-cache-enabled: true
+         wrapper-directory: android
+     - uses: actions/upload-artifact@v2
+       with:
+         name: android-unit-test-results
+         path: android/build/test-results/**/*.xml
   run-android-instrumented-tests:
     continue-on-error: true
     needs: build-typescript
