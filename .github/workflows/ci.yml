@@ -48,14 +48,6 @@ jobs:
         with:
           path: node_modules
           key: ${{ hashFiles('package.json') }}
-      # - uses: actions/cache@v2
-      #   with:
-      #     path: |
-      #       ~/.gradle/caches
-      #       ~/.gradle/wrapper
-      #     key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-      #     restore-keys: |
-      #       ${{ runner.os }}-gradle-
       - uses: eskatos/gradle-command-action@v1
         with:
           arguments: testDebugUnitTest --tests=BlobCourierModuleTests
@@ -83,14 +75,6 @@ jobs:
         with:
           path: node_modules
           key: ${{ hashFiles('package.json') }}
-      # - uses: actions/cache@v2
-      #   with:
-      #     path: |
-      #       ~/.gradle/caches
-      #       ~/.gradle/wrapper
-      #     key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-      #     restore-keys: |
-      #       ${{ runner.os }}-gradle-
       - uses: reactivecircus/android-emulator-runner@v2.13.0
         env:
           ORG_GRADLE_PROJECT_ADB_COMMAND_TIMEOUT_MILLISECONDS: ${{ secrets.ORG_GRADLE_PROJECT_ADB_COMMAND_TIMEOUT_MILLISECONDS }}
@@ -128,12 +112,6 @@ jobs:
         with:
           path: node_modules
           key: ${{ hashFiles('package.json') }}
-      # - uses: actions/cache@v2
-      #   with:
-      #     path: ios/Pods
-      #     key: ${{ runner.os }}-pods-${{ hashFiles('ios/Podfile.lock') }}
-      #     restore-keys: |
-      #       ${{ runner.os }}-pods-
       - run: cd ios && pod install
       - run: xcodebuild test -scheme BlobCourierTests -destination 'platform=iOS Simulator,name=iPhone 11' -workspace 'ios/BlobCourier.xcworkspace' | xcpretty --report junit
       - uses: actions/upload-artifact@v2
