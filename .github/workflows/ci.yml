@@ -2,7 +2,7 @@ name: Build and test
 on: push
 
 jobs:
-  build-typescript:
+  build-typescript-linux:
     runs-on: ubuntu-latest
     steps: 
       - uses: actions/checkout@v2
@@ -10,14 +10,30 @@ jobs:
         id: node_modules
         with:
           path: node_modules
-          key: ${{ hashFiles('package.json') }}
+          key: yarn-${{ hashFiles('**/yarn.lock') }}
       - uses: actions/setup-node@v2-beta
         with:
           node-version: '12'
       - run: yarn install
         if: steps.node_modules.outputs.cache-hit != 'true'
-  run-typescript-tests:
-    needs: build-typescript
+  build-typescript-macos:
+    runs-on: self-hosted
+    steps: 
+      - uses: actions/checkout@v2
+      - uses: actions/cache@v2
+        id: node_modules
+        with:
+          path: node_modules
+          key: yarn-${{ hashFiles('**/yarn.lock') }}
+      - uses: actions/setup-node@v2-beta
+        with:
+          node-version: '12'
+      - run: yarn install
+        if: steps.node_modules.outputs.cache-hit != 'true'
+  build-typescript-lint:
+    needs:
+      - build-typescript-linux
+      - build-typescript-macos
     runs-on: ubuntu-latest
     steps: 
       - uses: actions/checkout@v2
@@ -25,7 +41,21 @@ jobs:
         id: node_modules
         with:
           path: node_modules
-          key: ${{ hashFiles('package.json') }}
+          key: yarn-${{ hashFiles('**/yarn.lock') }}
+      - uses: actions/setup-node@v2-beta
+        with:
+          node-version: '12'
+      - run: yarn lint
+  run-typescript-tests:
+    needs: build-typescript-lint
+    runs-on: ubuntu-latest
+    steps: 
+      - uses: actions/checkout@v2
+      - uses: actions/cache@v2
+        id: node_modules
+        with:
+          path: node_modules
+          key: yarn-${{ hashFiles('**/yarn.lock') }}
       - uses: actions/setup-node@v2-beta
         with:
           node-version: '12'
@@ -34,8 +64,10 @@ jobs:
         with:
           name: ts-test-results
           path: output/typescript-test-output.xml
-  run-android-unit-tests:
-    needs: build-typescript
+  run-android-lint:
+    needs:
+      - build-typescript-linux
+      - build-typescript-macos
     runs-on: ubuntu-latest
     steps: 
       - uses: actions/checkout@v2
@@ -47,7 +79,29 @@ jobs:
         id: node_modules
         with:
           path: node_modules
-          key: ${{ hashFiles('package.json') }}
+          key: yarn-${{ hashFiles('**/yarn.lock') }}
+      - uses: eskatos/gradle-command-action@v1
+        with:
+          arguments: lint
+          build-root-directory: android
+          configuration-cache-enabled: true
+          dependencies-cache-enabled: true
+          wrapper-cache-enabled: true
+          wrapper-directory: android
+  run-android-unit-tests:
+    needs: run-android-lint
+    runs-on: ubuntu-latest
+    steps: 
+      - uses: actions/checkout@v2
+      - name: set up JDK 1.8
+        uses: actions/setup-java@v1
+        with:
+          java-version: 1.8
+      - uses: actions/cache@v2
+        id: node_modules
+        with:
+          path: node_modules
+          key: yarn-${{ hashFiles('**/yarn.lock') }}
       - uses: eskatos/gradle-command-action@v1
         with:
           arguments: testDebugUnitTest --tests=BlobCourierModuleTests
@@ -61,8 +115,8 @@ jobs:
           name: android-unit-test-results
           path: android/build/test-results/**/*.xml
   run-android-instrumented-tests:
+    needs: run-android-lint
     continue-on-error: true
-    needs: build-typescript
     runs-on: self-hosted
     steps: 
       - uses: actions/checkout@v2
@@ -74,7 +128,7 @@ jobs:
         id: node_modules
         with:
           path: node_modules
-          key: ${{ hashFiles('package.json') }}
+          key: yarn-${{ hashFiles('**/yarn.lock') }}
       - uses: reactivecircus/android-emulator-runner@v2.13.0
         env:
           ORG_GRADLE_PROJECT_ADB_COMMAND_TIMEOUT_MILLISECONDS: ${{ secrets.ORG_GRADLE_PROJECT_ADB_COMMAND_TIMEOUT_MILLISECONDS }}
@@ -98,20 +152,31 @@ jobs:
           name: android-instrumented-logcat
           path: android/android_instrumented_logcat.log
         if: always()
-  run-ios-tests:
-    needs: build-typescript
+  run-ios-lint:
+    needs:
+      - build-typescript-linux
+      - build-typescript-macos
     runs-on: self-hosted
     steps: 
       - uses: actions/checkout@v2
-      - run: xcrun simctl boot "iPhone 11" || true
-      - uses: actions/setup-node@v2-beta
-        with:
-          node-version: '12'
       - uses: actions/cache@v2
         id: node_modules
         with:
           path: node_modules
-          key: ${{ hashFiles('package.json') }}
+          key: yarn-${{ hashFiles('**/yarn.lock') }}
+      - run: cd ios && pod install
+      - run: cd ios && swiftlint
+  run-ios-tests:
+    needs: run-ios-lint
+    runs-on: self-hosted
+    steps: 
+      - uses: actions/checkout@v2
+      - run: xcrun simctl boot "iPhone 11" || true
+      - uses: actions/cache@v2
+        id: node_modules
+        with:
+          path: node_modules
+          key: yarn-${{ hashFiles('**/yarn.lock') }}
       - run: cd ios && pod install
       - run: xcodebuild test -scheme BlobCourierTests -destination 'platform=iOS Simulator,name=iPhone 11' -workspace 'ios/BlobCourier.xcworkspace' | xcpretty --report junit
       - uses: actions/upload-artifact@v2
