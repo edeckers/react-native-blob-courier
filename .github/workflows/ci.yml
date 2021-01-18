@@ -16,7 +16,7 @@ jobs:
           node-version: '12'
       - run: yarn install
         if: steps.node_modules.outputs.cache-hit != 'true'
-  build-typescript-mac:
+  build-typescript-macos:
     runs-on: self-hosted
     steps: 
       - uses: actions/checkout@v2
@@ -33,7 +33,7 @@ jobs:
   build-typescript-lint:
     needs:
       - build-typescript-linux
-      - build-typescript-mac
+      - build-typescript-macos
     runs-on: ubuntu-latest
     steps: 
       - uses: actions/checkout@v2
@@ -67,7 +67,7 @@ jobs:
   run-android-lint:
     needs:
       - build-typescript-linux
-      - build-typescript-mac
+      - build-typescript-macos
     runs-on: ubuntu-latest
     steps: 
       - uses: actions/checkout@v2
@@ -155,7 +155,7 @@ jobs:
   run-ios-lint:
     needs:
       - build-typescript-linux
-      - build-typescript-mac
+      - build-typescript-macos
     runs-on: self-hosted
     steps: 
       - uses: actions/checkout@v2
@@ -165,7 +165,7 @@ jobs:
           path: node_modules
           key: yarn-${{ hashFiles('**/yarn.lock') }}
       - run: cd ios && pod install
-      - run: swiftlint
+      - run: cd ios && swiftlint
   run-ios-tests:
     needs: run-ios-lint
     runs-on: self-hosted
