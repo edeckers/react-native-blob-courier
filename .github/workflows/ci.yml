@@ -6,19 +6,29 @@ jobs:
     runs-on: ubuntu-latest
     steps: 
       - uses: actions/checkout@v2
+      - uses: actions/cache@v2
+        id: node_modules
+        with:
+          path: node_modules
+          key: ${{ hashFiles('package.json') }}
       - uses: actions/setup-node@v2-beta
         with:
           node-version: '12'
-      - run: yarn
+      - run: yarn install
+        if: steps.node_modules.outputs.cache-hit != 'true'
   run-typescript-tests:
     needs: build-typescript
     runs-on: ubuntu-latest
     steps: 
       - uses: actions/checkout@v2
+      - uses: actions/cache@v2
+        id: node_modules
+        with:
+          path: node_modules
+          key: ${{ hashFiles('package.json') }}
       - uses: actions/setup-node@v2-beta
         with:
           node-version: '12'
-      - run: yarn
       - run: yarn test
       - uses: actions/upload-artifact@v2
         with:
@@ -33,12 +43,19 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: 1.8
-      - run: yarn
+      - uses: actions/cache@v2
+        id: node_modules
+        with:
+          path: node_modules
+          key: ${{ hashFiles('package.json') }}
       - uses: eskatos/gradle-command-action@v1
         with:
-          build-root-directory: android
-          wrapper-directory: android
           arguments: testDebugUnitTest --tests=BlobCourierModuleTests
+          build-root-directory: android
+          configuration-cache-enabled: true
+          dependencies-cache-enabled: true
+          wrapper-cache-enabled: true
+          wrapper-directory: android
       - uses: actions/upload-artifact@v2
         with:
           name: android-unit-test-results
@@ -53,7 +70,11 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: 1.8
-      - run: yarn
+      - uses: actions/cache@v2
+        id: node_modules
+        with:
+          path: node_modules
+          key: ${{ hashFiles('package.json') }}
       - uses: reactivecircus/android-emulator-runner@v2.13.0
         env:
           ORG_GRADLE_PROJECT_ADB_COMMAND_TIMEOUT_MILLISECONDS: ${{ secrets.ORG_GRADLE_PROJECT_ADB_COMMAND_TIMEOUT_MILLISECONDS }}
@@ -86,7 +107,11 @@ jobs:
       - uses: actions/setup-node@v2-beta
         with:
           node-version: '12'
-      - run: yarn
+      - uses: actions/cache@v2
+        id: node_modules
+        with:
+          path: node_modules
+          key: ${{ hashFiles('package.json') }}
       - run: cd ios && pod install
       - run: xcodebuild test -scheme BlobCourierTests -destination 'platform=iOS Simulator,name=iPhone 11' -workspace 'ios/BlobCourier.xcworkspace' | xcpretty --report junit
       - uses: actions/upload-artifact@v2
