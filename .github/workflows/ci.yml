@@ -16,7 +16,6 @@ jobs:
           node-version: '12'
       - run: yarn install
         if: steps.node_modules.outputs.cache-hit != 'true'
-      - run: yarn test
   run-typescript-tests:
     needs: build-typescript
     runs-on: ubuntu-latest
@@ -30,8 +29,6 @@ jobs:
       - uses: actions/setup-node@v2-beta
         with:
           node-version: '12'
-      - run: yarn install
-        if: steps.node_modules.outputs.cache-hit != 'true'
       - run: yarn test
       - uses: actions/upload-artifact@v2
         with:
@@ -59,8 +56,6 @@ jobs:
       #     key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
       #     restore-keys: |
       #       ${{ runner.os }}-gradle-
-      - run: yarn install
-        if: steps.node_modules.outputs.cache-hit != 'true'
       - uses: eskatos/gradle-command-action@v1
         with:
           arguments: testDebugUnitTest --tests=BlobCourierModuleTests
@@ -96,8 +91,6 @@ jobs:
       #     key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
       #     restore-keys: |
       #       ${{ runner.os }}-gradle-
-      - run: yarn install
-        if: steps.node_modules.outputs.cache-hit != 'true'
       - uses: reactivecircus/android-emulator-runner@v2.13.0
         env:
           ORG_GRADLE_PROJECT_ADB_COMMAND_TIMEOUT_MILLISECONDS: ${{ secrets.ORG_GRADLE_PROJECT_ADB_COMMAND_TIMEOUT_MILLISECONDS }}
@@ -141,8 +134,6 @@ jobs:
       #     key: ${{ runner.os }}-pods-${{ hashFiles('ios/Podfile.lock') }}
       #     restore-keys: |
       #       ${{ runner.os }}-pods-
-      - run: yarn install
-        if: steps.node_modules.outputs.cache-hit != 'true'
       - run: cd ios && pod install
       - run: xcodebuild test -scheme BlobCourierTests -destination 'platform=iOS Simulator,name=iPhone 11' -workspace 'ios/BlobCourier.xcworkspace' | xcpretty --report junit
       - uses: actions/upload-artifact@v2
