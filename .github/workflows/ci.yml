@@ -132,6 +132,12 @@ jobs:
         with:
           path: node_modules
           key: ${{ hashFiles('package.json') }}
+      - uses: actions/cache@v1
+        with:
+          path: ios/Pods
+          key: ${{ runner.os }}-pods-${{ hashFiles('ios/Podfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pods-
       - run: yarn install
         if: steps.node_modules.outputs.cache-hit != 'true'
       - run: cd ios && pod install
