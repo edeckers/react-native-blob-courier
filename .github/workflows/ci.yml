@@ -16,9 +16,22 @@ jobs:
           node-version: '12'
       - run: yarn install
         if: steps.node_modules.outputs.cache-hit != 'true'
+  build-typescript-lint:
+    needs: build-typescript
+    runs-on: ubuntu-latest
+    steps: 
+      - uses: actions/checkout@v2
+      - uses: actions/cache@v2
+        id: node_modules
+        with:
+          path: node_modules
+          key: ${{ hashFiles('package.json') }}
+      - uses: actions/setup-node@v2-beta
+        with:
+          node-version: '12'
       - run: yarn lint
   run-typescript-tests:
-    needs: build-typescript
+    needs: build-typescript-lint
     runs-on: ubuntu-latest
     steps: 
       - uses: actions/checkout@v2
@@ -85,7 +98,7 @@ jobs:
          path: android/build/test-results/**/*.xml
   run-android-instrumented-tests:
     continue-on-error: true
-    needs: build-typescript
+    needs: run-android-lint
     runs-on: self-hosted
     steps: 
       - uses: actions/checkout@v2
@@ -121,15 +134,24 @@ jobs:
           name: android-instrumented-logcat
           path: android/android_instrumented_logcat.log
         if: always()
-  run-ios-tests:
+  run-ios-lint:
     needs: build-typescript
     runs-on: self-hosted
     steps: 
       - uses: actions/checkout@v2
-      - run: xcrun simctl boot "iPhone 11" || true
-      - uses: actions/setup-node@v2-beta
+      - uses: actions/cache@v2
+        id: node_modules
         with:
-          node-version: '12'
+          path: node_modules
+          key: ${{ hashFiles('package.json') }}
+      - run: cd ios && pod install
+      - run: swiftlint
+  run-ios-tests:
+    needs: run-ios-lint
+    runs-on: self-hosted
+    steps: 
+      - uses: actions/checkout@v2
+      - run: xcrun simctl boot "iPhone 11" || true
       - uses: actions/cache@v2
         id: node_modules
         with:
