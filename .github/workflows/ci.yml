@@ -65,6 +65,9 @@ jobs:
         with:
           build-root-directory: android
           wrapper-directory: android
+          wrapper-cache-enabled: true
+          dependencies-cache-enabled: true
+          configuration-cache-enabled: true
           arguments: testDebugUnitTest --tests=BlobCourierModuleTests
       - uses: actions/upload-artifact@v2
         with:
