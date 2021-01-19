@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+
+cd `dirname ${0}`/..
+
+ROOT_PATH=`pwd`
+TARGET=${1:-${target}}
+
+expected_options=("android android:instrumented android:unit ios typescript")
+
+if [ -z "${TARGET}" ] || [[ ! " ${expected_options[@]} " =~ " ${TARGET} " ]]; then
+  echo "Expecting parameter target to be one of '${expected_options}'"
+  exit 2
+fi
+
+jump_to_root_directory() {
+  cd ${ROOT_PATH}
+}
+
+run_android_instrumented_tests() {
+  cd android && ./gradlew connectedAndroidTest
+}
+
+run_android_unit_tests() {
+  cd android && ./gradlew testDebugUnitTest --tests=BlobCourierModuleTests
+}
+
+run_all_android_tests() {
+  run_android_unit_tests
+  jump_to_root_directory
+  run_android_instrumented_tests
+}
+
+run_ios_tests() {
+  xcodebuild test -scheme BlobCourierTests -destination 'platform=iOS Simulator,name=iPhone 11' -workspace 'ios/BlobCourier.xcworkspace'
+}
+
+run_typescript_tests() {
+  yarn test
+}
+
+case ${TARGET} in
+  android)
+    run_all_android_tests
+    ;;
+  android:instrumented)
+    run_android_instrumented_tests
+    ;;
+  android:unit)
+    run_android_unit_tests
+    ;;
+  typescript)
+    run_typescript_tests
+    ;;
+esac
+
+exit 0
