@@ -136,10 +136,9 @@ jobs:
         with:
           api-level: 30
           script: |
-            echo "ORG_GRADLE_PROJECT_PROMISE_TIMEOUT_MILLISECONDS ${ORG_GRADLE_PROJECT_PROMISE_TIMEOUT_MILLISECONDS}"
             adb logcat -c
             adb logcat | tee android_instrumented_logcat.log | grep 'io.deckers.blob_courier' &
-            ./gradlew connectedAndroidTest
+            TARGET=android:instrumented make test
           target: google_apis
           working-directory: './android' 
       - uses: actions/upload-artifact@v2
