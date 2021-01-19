@@ -7,7 +7,7 @@ MAKEFLAGS += --no-builtin-rules
 
 all: help
 
-build: clean
+build:
 	bin/run-build
 
 ci:
@@ -18,6 +18,9 @@ clean: require-target
 
 help:
 	bin/print-help
+
+lint: build
+	bin/run-lint
 
 run: build
 	cd example && yarn && yarn start
@@ -31,4 +34,4 @@ endif
 test: build
 	bin/run-tests
 
-.PHONY: build clean help run-example test
+.PHONY: build ci clean help lint run test

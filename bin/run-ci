@@ -7,7 +7,7 @@ validate_target_parameter
 ci_typescript() {
   jump_to_root_directory
   TARGET=typescript bin/run-build
-  # TARGET=typescript bin/run-lint
+  TARGET=typescript bin/run-lint
   TARGET=typescript bin/run-tests
 }
 
@@ -15,7 +15,7 @@ ci_android() {
   ci_typescript
   jump_to_root_directory
   TARGET=android bin/run-build
-  # TARGET=android bin/run-lint
+  TARGET=android bin/run-lint
   TARGET=android:instrumented bin/run-tests
   TARGET=android:unit bin/run-tests
 }
@@ -24,7 +24,7 @@ ci_ios() {
   ci_typescript
   jump_to_root_directory
   TARGET=ios bin/run-build
-  # TARGET=ios bin/run-lint
+  TARGET=ios bin/run-lint
   TARGET=ios bin/run-tests
 }
 
