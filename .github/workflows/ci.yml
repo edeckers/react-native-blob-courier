@@ -102,14 +102,7 @@ jobs:
         with:
           path: node_modules
           key: yarn-${{ hashFiles('**/yarn.lock') }}
-      - uses: eskatos/gradle-command-action@v1
-        with:
-          arguments: testDebugUnitTest --tests=BlobCourierModuleTests
-          build-root-directory: android
-          configuration-cache-enabled: true
-          dependencies-cache-enabled: true
-          wrapper-cache-enabled: true
-          wrapper-directory: android
+      - run: TARGET=android:unit make test
       - uses: actions/upload-artifact@v2
         with:
           name: android-unit-test-results
