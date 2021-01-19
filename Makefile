@@ -10,6 +10,9 @@ all: help
 build: clean
 	bin/run-build
 
+ci:
+	bin/run-ci
+
 clean: require-target
 	bin/run-clean
 
