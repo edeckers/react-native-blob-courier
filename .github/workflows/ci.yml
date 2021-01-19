@@ -126,14 +126,14 @@ jobs:
         env:
           ORG_GRADLE_PROJECT_ADB_COMMAND_TIMEOUT_MILLISECONDS: ${{ secrets.ORG_GRADLE_PROJECT_ADB_COMMAND_TIMEOUT_MILLISECONDS }}
           ORG_GRADLE_PROJECT_PROMISE_TIMEOUT_MILLISECONDS: ${{ secrets.ORG_GRADLE_PROJECT_PROMISE_TIMEOUT_MILLISECONDS }}
+          TARGET: android:instrumented
         with:
           api-level: 30
           script: |
             adb logcat -c
             adb logcat | tee android_instrumented_logcat.log | grep 'io.deckers.blob_courier' &
-            TARGET=android:instrumented make test
+            make test
           target: google_apis
-          working-directory: './android' 
       - uses: actions/upload-artifact@v2
         with:
           name: android-instrumented-test-results
@@ -142,7 +142,7 @@ jobs:
       - uses: actions/upload-artifact@v2
         with:
           name: android-instrumented-logcat
-          path: android/android_instrumented_logcat.log
+          path: android_instrumented_logcat.log
         if: always()
   run-ios-lint:
     needs:
