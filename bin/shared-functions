@@ -19,10 +19,11 @@ jump_to_ios_directory() {
 }
 
 validate_target_parameter() {
-  expected_targets=("android android:unit android:instrumented ios typescript")
+  targets_as_string=${1:-"android android:unit android:instrumented ios typescript"}
+  expected_targets=(${targets_as_string})
   
   if [ -z "${TARGET}" ] || [[ ! " ${expected_targets[@]} " =~ " ${TARGET} " ]]; then
-    echo "Expecting environment variable TARGET to be one of '${expected_targets}'"
+    echo "Expecting environment variable TARGET to be one of '${targets_as_string}'"
     exit 2
   fi
 }

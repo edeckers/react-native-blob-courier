@@ -2,7 +2,7 @@
 
 source `dirname $0`/shared-functions
 
-validate_target_parameter
+validate_target_parameter "android ios typescript"
 
 lint_typescript() {
   jump_to_root_directory

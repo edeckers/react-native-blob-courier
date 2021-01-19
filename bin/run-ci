@@ -2,7 +2,7 @@
 
 source `dirname $0`/shared-functions
 
-validate_target_parameter
+validate_target_parameter "android ios"
 
 ci_typescript() {
   jump_to_root_directory
