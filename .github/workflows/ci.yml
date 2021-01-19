@@ -165,7 +165,6 @@ jobs:
         with:
           path: node_modules
           key: yarn-${{ hashFiles('**/yarn.lock') }}
-      - run: cd ios && pod install
       - run: TARGET=ios make clean test
       - uses: actions/upload-artifact@v2
         with:
