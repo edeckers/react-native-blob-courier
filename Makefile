@@ -21,12 +21,7 @@ clean: require-target
 > bin/run-clean
 
 help:
-> @echo "TARGET=[android android:instrumented android:unit ios typescript] make build - build the library"
-> @echo "TARGET=[android android:instrumented android:unit ios typescript] make clean - clean build"
-> @echo ""
-> @echo "TARGET=[android ios] make run - run the example app"
-> @echo ""
-> @echo "TARGET=[android android:instrumented android:unit ios typescript] make test - run tests"
+> bin/print-help
 
 run: build
 > cd example && yarn && yarn start

@@ -34,10 +34,10 @@ case ${TARGET} in
   android:instrumented)
     build_android_instrumented
     ;;
-  build:ios)
+  ios)
     build_ios
     ;;
-  build:typescript)
+  typescript)
     build_typescript
     ;;
 esac
