@@ -170,7 +170,7 @@ jobs:
           path: node_modules
           key: yarn-${{ hashFiles('**/yarn.lock') }}
       - run: cd ios && pod install
-      - run: TARGET=ios make test | xcpretty --report junit
+      - run: TARGET=ios make test
       - uses: actions/upload-artifact@v2
         with:
           name: ios-test-results
