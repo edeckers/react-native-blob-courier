@@ -1,6 +1,10 @@
 name: Build and test
 on: push
 
+env: 
+  node-version: 12
+  android-api-level: 30
+
 jobs:
   build-typescript-linux:
     runs-on: ubuntu-latest
@@ -13,7 +17,7 @@ jobs:
           key: yarn-${{ hashFiles('**/yarn.lock') }}
       - uses: actions/setup-node@v2-beta
         with:
-          node-version: '12'
+          node-version: ${{ env.node-version }}
       - run: TARGET=typescript make clean build
         if: steps.node_modules.outputs.cache-hit != 'true'
   build-typescript-macos:
@@ -27,7 +31,7 @@ jobs:
           key: yarn-${{ hashFiles('**/yarn.lock') }}
       - uses: actions/setup-node@v2-beta
         with:
-          node-version: '12'
+          node-version: ${{ env.node-version }}
       - run: TARGET=typescript make clean build
         if: steps.node_modules.outputs.cache-hit != 'true'
   build-typescript-lint:
@@ -44,7 +48,7 @@ jobs:
           key: yarn-${{ hashFiles('**/yarn.lock') }}
       - uses: actions/setup-node@v2-beta
         with:
-          node-version: '12'
+          node-version: ${{ env.node-version }}
       - run: TARGET=typescript make lint
   run-typescript-tests:
     needs: build-typescript-lint
@@ -58,7 +62,7 @@ jobs:
           key: yarn-${{ hashFiles('**/yarn.lock') }}
       - uses: actions/setup-node@v2-beta
         with:
-          node-version: '12'
+          node-version: ${{ env.node-version }}
       - run: TARGET=typescript make test
       - uses: actions/upload-artifact@v2
         with:
@@ -121,7 +125,7 @@ jobs:
           ORG_GRADLE_PROJECT_PROMISE_TIMEOUT_MILLISECONDS: ${{ secrets.ORG_GRADLE_PROJECT_PROMISE_TIMEOUT_MILLISECONDS }}
           TARGET: android:instrumented
         with:
-          api-level: 30
+          api-level: ${{ env.android-api-level }}
           script: |
             adb logcat -c
             adb logcat | tee android_instrumented_logcat.log | grep 'io.deckers.blob_courier' &
