@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+
+source `dirname $0`/shared-functions
+
+IOS_DESTINATION=${IOS_DESTINATION:-"platform=iOS Simulator,name=iPhone 11"}
+
+validate_target_parameter
+
+build_typescript() {
+  jump_to_root_directory
+  yarn
+}
+
+build_android() {
+  build_typescript
+  jump_to_android_directory
+  ./gradlew assemble
+}
+
+build_android_instrumented() {
+  build_android
+  ./gradlew assembleAndroidTest
+}
+
+build_ios() {
+  build_typescript
+  jump_to_ios_directory
+}
+
+case ${TARGET} in
+  android|android:unit)
+    build_android
+    ;;
+  android:instrumented)
+    build_android_instrumented
+    ;;
+  build:ios)
+    build_ios
+    ;;
+  build:typescript)
+    build_typescript
+    ;;
+esac
+
+exit 0

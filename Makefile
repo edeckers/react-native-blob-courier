@@ -15,32 +15,31 @@ SHELL := bash
 all: help
 
 build: clean
-> yarn
+> bin/run-build
 
-clean:
-> rm -rf node_modules
-> rm -rf ios/Pods
-> rm -rf android/build
-> rm -rf android/.gradle
+clean: require-target
+> bin/run-clean
 
 help:
-> @echo "make build target=[android, ios] - build the library"
-> @echo "make clean - clean build"
+> @echo "TARGET=[android android:instrumented android:unit ios typescript] make build - build the library"
+> @echo "TARGET=[android android:instrumented android:unit ios typescript] make clean - clean build"
 > @echo ""
-> @echo "make run target=[example:android example:ios example:server] - run the example app"
+> @echo "TARGET=[android ios] make run - run the example app"
 > @echo ""
-> @echo "make test target=[android android:instrumented android:unit ios typescript] - run tests"
+> @echo "TARGET=[android android:instrumented android:unit ios typescript] make test - run tests"
 
-run-example: build
+run: build
 > cd example && yarn && yarn start
 
 require-target:
-ifndef target
-> @echo "expect target parameter, see 'make help'"
+ifndef TARGET
+> @echo "expect TARGET parameter, see 'make help'"
 > exit 1
 endif
 
-test: require-target build
-> bin/run-tests $(target)
+test: build
+> bin/run-clean
+> bin/run-build
+> bin/run-tests
 
 .PHONY: build clean help run-example test
