@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+
+source `dirname $0`/shared-functions
+
+validate_target_parameter "android ios typescript"
+
+lint_typescript() {
+  jump_to_root_directory
+  yarn lint
+}
+
+lint_android() {
+  jump_to_android_directory
+  ./gradlew lint
+}
+
+lint_ios() {
+  jump_to_ios_directory
+  swiftlint
+}
+
+case ${TARGET} in
+  android)
+    lint_android
+    ;;
+  ios)
+    lint_ios
+    ;;
+  typescript)
+    lint_typescript
+    ;;
+esac
+
+exit 0

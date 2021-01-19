@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+
+source `dirname $0`/shared-functions
+
+IOS_DESTINATION=${IOS_DESTINATION:-"platform=iOS Simulator,name=iPhone 11"}
+
+validate_target_parameter
+
+run_android_instrumented_tests() {
+  jump_to_android_directory
+  ./gradlew connectedAndroidTest
+}
+
+run_android_unit_tests() {
+  jump_to_android_directory
+  ./gradlew testDebugUnitTest --tests=BlobCourierModuleTests
+}
+
+run_all_android_tests() {
+  run_android_unit_tests
+  run_android_instrumented_tests
+}
+
+run_ios_tests() {
+  jump_to_root_directory
+  xcodebuild test -scheme BlobCourierTests -destination "${IOS_DESTINATION}" -workspace 'ios/BlobCourier.xcworkspace' | xcpretty --report junit
+}
+
+run_typescript_tests() {
+  jump_to_root_directory
+  yarn test
+}
+
+case ${TARGET} in
+  android)
+    run_all_android_tests
+    ;;
+  android:instrumented)
+    run_android_instrumented_tests
+    ;;
+  android:unit)
+    run_android_unit_tests
+    ;;
+  ios)
+    run_ios_tests
+    ;;
+  typescript)
+    run_typescript_tests
+    ;;
+esac
+
+exit 0

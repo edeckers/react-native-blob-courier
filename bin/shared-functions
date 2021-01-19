@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+
+cd `dirname ${0}`/..
+
+ROOT_PATH=`pwd`
+
+jump_to_root_directory() {
+  cd ${ROOT_PATH}
+}
+
+jump_to_android_directory() {
+  jump_to_root_directory
+  cd android
+}
+
+jump_to_ios_directory() {
+  jump_to_root_directory
+  cd ios
+}
+
+validate_target_parameter() {
+  targets_as_string=${1:-"android android:unit android:instrumented ios typescript"}
+  expected_targets=(${targets_as_string})
+  
+  if [ -z "${TARGET}" ] || [[ ! " ${expected_targets[@]} " =~ " ${TARGET} " ]]; then
+    echo "Expecting environment variable TARGET to be one of '${targets_as_string}'"
+    exit 2
+  fi
+}
+

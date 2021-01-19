@@ -1,6 +1,10 @@
 name: Build and test
 on: push
 
+env: 
+  node-version: 12
+  android-api-level: 30
+
 jobs:
   build-typescript-linux:
     runs-on: ubuntu-latest
@@ -13,8 +17,8 @@ jobs:
           key: yarn-${{ hashFiles('**/yarn.lock') }}
       - uses: actions/setup-node@v2-beta
         with:
-          node-version: '12'
-      - run: yarn install
+          node-version: ${{ env.node-version }}
+      - run: TARGET=typescript make clean build
         if: steps.node_modules.outputs.cache-hit != 'true'
   build-typescript-macos:
     runs-on: self-hosted
@@ -27,8 +31,8 @@ jobs:
           key: yarn-${{ hashFiles('**/yarn.lock') }}
       - uses: actions/setup-node@v2-beta
         with:
-          node-version: '12'
-      - run: yarn install
+          node-version: ${{ env.node-version }}
+      - run: TARGET=typescript make clean build
         if: steps.node_modules.outputs.cache-hit != 'true'
   build-typescript-lint:
     needs:
@@ -44,8 +48,8 @@ jobs:
           key: yarn-${{ hashFiles('**/yarn.lock') }}
       - uses: actions/setup-node@v2-beta
         with:
-          node-version: '12'
-      - run: yarn lint
+          node-version: ${{ env.node-version }}
+      - run: TARGET=typescript make lint
   run-typescript-tests:
     needs: build-typescript-lint
     runs-on: ubuntu-latest
@@ -58,8 +62,8 @@ jobs:
           key: yarn-${{ hashFiles('**/yarn.lock') }}
       - uses: actions/setup-node@v2-beta
         with:
-          node-version: '12'
-      - run: yarn test
+          node-version: ${{ env.node-version }}
+      - run: TARGET=typescript make test
       - uses: actions/upload-artifact@v2
         with:
           name: ts-test-results
@@ -80,14 +84,7 @@ jobs:
         with:
           path: node_modules
           key: yarn-${{ hashFiles('**/yarn.lock') }}
-      - uses: eskatos/gradle-command-action@v1
-        with:
-          arguments: lint
-          build-root-directory: android
-          configuration-cache-enabled: true
-          dependencies-cache-enabled: true
-          wrapper-cache-enabled: true
-          wrapper-directory: android
+      - run: TARGET=android make clean lint
   run-android-unit-tests:
     needs: run-android-lint
     runs-on: ubuntu-latest
@@ -102,14 +99,7 @@ jobs:
         with:
           path: node_modules
           key: yarn-${{ hashFiles('**/yarn.lock') }}
-      - uses: eskatos/gradle-command-action@v1
-        with:
-          arguments: testDebugUnitTest --tests=BlobCourierModuleTests
-          build-root-directory: android
-          configuration-cache-enabled: true
-          dependencies-cache-enabled: true
-          wrapper-cache-enabled: true
-          wrapper-directory: android
+      - run: TARGET=android:unit make clean test
       - uses: actions/upload-artifact@v2
         with:
           name: android-unit-test-results
@@ -133,15 +123,14 @@ jobs:
         env:
           ORG_GRADLE_PROJECT_ADB_COMMAND_TIMEOUT_MILLISECONDS: ${{ secrets.ORG_GRADLE_PROJECT_ADB_COMMAND_TIMEOUT_MILLISECONDS }}
           ORG_GRADLE_PROJECT_PROMISE_TIMEOUT_MILLISECONDS: ${{ secrets.ORG_GRADLE_PROJECT_PROMISE_TIMEOUT_MILLISECONDS }}
+          TARGET: android:instrumented
         with:
-          api-level: 30
+          api-level: ${{ env.android-api-level }}
           script: |
-            echo "ORG_GRADLE_PROJECT_PROMISE_TIMEOUT_MILLISECONDS ${ORG_GRADLE_PROJECT_PROMISE_TIMEOUT_MILLISECONDS}"
             adb logcat -c
             adb logcat | tee android_instrumented_logcat.log | grep 'io.deckers.blob_courier' &
-            ./gradlew connectedAndroidTest
+            make clean test
           target: google_apis
-          working-directory: './android' 
       - uses: actions/upload-artifact@v2
         with:
           name: android-instrumented-test-results
@@ -150,7 +139,7 @@ jobs:
       - uses: actions/upload-artifact@v2
         with:
           name: android-instrumented-logcat
-          path: android/android_instrumented_logcat.log
+          path: android_instrumented_logcat.log
         if: always()
   run-ios-lint:
     needs:
@@ -164,8 +153,7 @@ jobs:
         with:
           path: node_modules
           key: yarn-${{ hashFiles('**/yarn.lock') }}
-      - run: cd ios && pod install
-      - run: cd ios && swiftlint
+      - run: TARGET=ios make lint
   run-ios-tests:
     needs: run-ios-lint
     runs-on: self-hosted
@@ -177,8 +165,7 @@ jobs:
         with:
           path: node_modules
           key: yarn-${{ hashFiles('**/yarn.lock') }}
-      - run: cd ios && pod install
-      - run: xcodebuild test -scheme BlobCourierTests -destination 'platform=iOS Simulator,name=iPhone 11' -workspace 'ios/BlobCourier.xcworkspace' | xcpretty --report junit
+      - run: TARGET=ios make clean test
       - uses: actions/upload-artifact@v2
         with:
           name: ios-test-results
