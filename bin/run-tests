@@ -22,7 +22,8 @@ run_all_android_tests() {
 }
 
 run_ios_tests() {
-  xcodebuild test -scheme BlobCourierTests -destination ${IOS_DESTINATION} -workspace 'ios/BlobCourier.xcworkspace'
+  jump_to_root_directory
+  xcodebuild test -scheme BlobCourierTests -destination "${IOS_DESTINATION}" -workspace 'ios/BlobCourier.xcworkspace'
 }
 
 run_typescript_tests() {
@@ -39,6 +40,9 @@ case ${TARGET} in
     ;;
   android:unit)
     run_android_unit_tests
+    ;;
+  ios)
+    run_ios_tests
     ;;
   typescript)
     run_typescript_tests

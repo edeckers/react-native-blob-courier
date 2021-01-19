@@ -26,8 +26,6 @@ ifndef TARGET
 endif
 
 test: build
-	bin/run-clean
-	bin/run-build
 	bin/run-tests
 
 .PHONY: build clean help run-example test

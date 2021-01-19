@@ -25,6 +25,7 @@ build_android_instrumented() {
 build_ios() {
   build_typescript
   jump_to_ios_directory
+  pod install
 }
 
 case ${TARGET} in
