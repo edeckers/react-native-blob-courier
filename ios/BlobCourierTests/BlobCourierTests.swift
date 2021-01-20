@@ -14,7 +14,7 @@ import MimeParser
 
 // swiftlint:disable type_body_length
 class BlobCourierTests: XCTestCase {
-    static let defaultPromiseTimeoutSeconds: UInt32 = 10
+    static let defaultPromiseTimeoutSeconds: Int = 10
 
     var sut: BlobCourier?
 
@@ -88,9 +88,13 @@ class BlobCourierTests: XCTestCase {
 
         let httpServer = EmbeddedHttpServer(withRouter: router)
 
+        let dispatchGroup = DispatchGroup()
+
+        dispatchGroup.enter()
+
         let reject: RCTPromiseRejectBlock = { (_: String?, _: String?, error: Error?) -> Void in
-          result = (false, error?.localizedDescription ?? "") }
-        let resolveUpload: RCTPromiseResolveBlock = { (_: Any?) -> Void in print("")  }
+          result = (false, error?.localizedDescription ?? ""); dispatchGroup.leave() }
+        let resolveUpload: RCTPromiseResolveBlock = { (_: Any?) -> Void in print(""); dispatchGroup.leave() }
         let resolve: RCTPromiseResolveBlock = { (response: Any?) -> Void in
             let dict = response as? NSDictionary ?? [:]
             let data = dict["data"] as? NSDictionary ?? [:]
@@ -120,7 +124,10 @@ class BlobCourierTests: XCTestCase {
 
         sut?.fetchBlob(input: input, resolve: resolve, reject: reject)
 
-        sleep(BlobCourierTests.defaultPromiseTimeoutSeconds)
+        dispatchGroup.wait(timeout: .now() +
+          DispatchTimeInterval.seconds(BlobCourierTests.defaultPromiseTimeoutSeconds))
+
+        // sleep(BlobCourierTests.defaultPromiseTimeoutSeconds)
         httpServer.stop()
 
         XCTAssertTrue(result.0)
@@ -134,13 +141,19 @@ class BlobCourierTests: XCTestCase {
           "taskId": "some-task-id",
           "url": "https://github.com/edeckers/react-native-blob-courier"
         ]
-        let resolve: RCTPromiseResolveBlock = { (_: Any?) -> Void in result = (true, "Success") }
+
+        let dispatchGroup = DispatchGroup() 
+
+        dispatchGroup.enter()
+
+        let resolve: RCTPromiseResolveBlock = { (_: Any?) -> Void in result = (true, "Success"); dispatchGroup.leave() }
         let reject: RCTPromiseRejectBlock = { (_: String?, _: String?, error: Error?) -> Void in
-          result = (false, error?.localizedDescription ?? "") }
+          result = (false, error?.localizedDescription ?? ""); dispatchGroup.leave() }
 
         sut?.fetchBlob(input: input, resolve: resolve, reject: reject)
 
-        sleep(BlobCourierTests.defaultPromiseTimeoutSeconds)
+        dispatchGroup.wait(timeout: .now() +
+          DispatchTimeInterval.seconds(BlobCourierTests.defaultPromiseTimeoutSeconds))
         XCTAssertTrue(result.0)
     }
 
@@ -150,14 +163,20 @@ class BlobCourierTests: XCTestCase {
           "taskId": "some-task-id",
           "url": "https://github.com/edeckers/react-native-blob-courier"
         ]
+
+        let dispatchGroup = DispatchGroup() 
+
+        dispatchGroup.enter()
+
         let resolve: RCTPromiseResolveBlock = { (_: Any?) -> Void in
-           result = (false, "Resolved, but expected reject") }
+           result = (false, "Resolved, but expected reject"); dispatchGroup.leave() }
         let reject: RCTPromiseRejectBlock = { (_: String?, _: String?, _: Error?) -> Void in
-           result = (true, "Success") }
+           result = (true, "Success"); dispatchGroup.leave() }
 
         sut?.fetchBlob(input: input, resolve: resolve, reject: reject)
 
-        sleep(BlobCourierTests.defaultPromiseTimeoutSeconds)
+        dispatchGroup.wait(timeout: .now() +
+          DispatchTimeInterval.seconds(BlobCourierTests.defaultPromiseTimeoutSeconds))
         XCTAssertTrue(result.0)
     }
 
@@ -168,10 +187,15 @@ class BlobCourierTests: XCTestCase {
           "taskId": "some-task-id",
           "url": "https://github.com/edeckers/react-native-blob-courier"
         ]
+
+        let dispatchGroup = DispatchGroup() 
+
+        dispatchGroup.enter()
+
         let reject: RCTPromiseRejectBlock = { (_: String?, _: String?, error: Error?) -> Void in
-          result = (false, error?.localizedDescription ?? "") }
+          result = (false, error?.localizedDescription ?? ""); dispatchGroup.leave() }
         let resolveUpload: RCTPromiseResolveBlock = { (_: Any?) -> Void in
-          result = (true, "Success") }
+          result = (true, "Success"); dispatchGroup.leave() }
         let resolve: RCTPromiseResolveBlock = { (response: Any?) -> Void in
             let dict = response as? NSDictionary ?? [:]
             let data = dict["data"] as? NSDictionary ?? [:]
@@ -193,7 +217,8 @@ class BlobCourierTests: XCTestCase {
 
         sut?.fetchBlob(input: input, resolve: resolve, reject: reject)
 
-        sleep(BlobCourierTests.defaultPromiseTimeoutSeconds)
+        dispatchGroup.wait(timeout: .now() +
+          DispatchTimeInterval.seconds(BlobCourierTests.defaultPromiseTimeoutSeconds))
         XCTAssertTrue(result.0)
     }
 
@@ -204,10 +229,15 @@ class BlobCourierTests: XCTestCase {
           "taskId": "some-task-id",
           "url": "https://github.com/edeckers/react-native-blob-courier"
         ]
+
+        let dispatchGroup = DispatchGroup() 
+
+        dispatchGroup.enter()
+
         let reject: RCTPromiseRejectBlock = { (_: String?, _: String?, _: Error?) -> Void in
-          result = (true, "Success") }
+          result = (true, "Success"); dispatchGroup.leave() }
         let resolveUpload: RCTPromiseResolveBlock = { (_: Any?) -> Void in
-          result = (false, "Resoved, but expected reject") }
+          result = (false, "Resoved, but expected reject"); dispatchGroup.leave() }
         let resolve: RCTPromiseResolveBlock = { (response: Any?) -> Void in
             let dict = response as? NSDictionary ?? [:]
             let data = dict["data"] as? NSDictionary ?? [:]
@@ -228,7 +258,8 @@ class BlobCourierTests: XCTestCase {
 
         sut?.fetchBlob(input: input, resolve: resolve, reject: reject)
 
-        sleep(BlobCourierTests.defaultPromiseTimeoutSeconds)
+        dispatchGroup.wait(timeout: .now() +
+          DispatchTimeInterval.seconds(BlobCourierTests.defaultPromiseTimeoutSeconds))
         XCTAssertTrue(result.0)
     }
 
@@ -243,14 +274,20 @@ class BlobCourierTests: XCTestCase {
             "taskId": "some-task-id",
             "url": "https://github.com/edeckers/react-native-blob-courier"
           ]
-          let resolve: RCTPromiseResolveBlock = { (_: Any?) -> Void in result = (true, "Success") }
+
+          let dispatchGroup = DispatchGroup() 
+
+          dispatchGroup.enter()
+
+          let resolve: RCTPromiseResolveBlock = { (_: Any?) -> Void in result = (true, "Success"); dispatchGroup.leave() }
           let reject: RCTPromiseRejectBlock = { (_: String?, _: String?, error: Error?) -> Void in
-            result = (false, error?.localizedDescription ?? "") }
+            result = (false, error?.localizedDescription ?? ""); dispatchGroup.leave() }
 
           sut?.fetchBlob(input: input, resolve: resolve, reject: reject)
 
-          sleep(BlobCourierTests.defaultPromiseTimeoutSeconds)
-        XCTAssertTrue(result.0)
+          dispatchGroup.wait(timeout: .now() +
+            DispatchTimeInterval.seconds(BlobCourierTests.defaultPromiseTimeoutSeconds))
+          XCTAssertTrue(result.0)
         }
     }
 
@@ -266,14 +303,20 @@ class BlobCourierTests: XCTestCase {
           "taskId": "some-task-id",
           "url": "https://github.com/edeckers/react-native-blob-courier"
         ]
+
+        let dispatchGroup = DispatchGroup() 
+
+        dispatchGroup.enter()
+
         let resolve: RCTPromiseResolveBlock = { (_: Any?) -> Void in
-          result = (false, "Resolved, but expected reject") }
+          result = (false, "Resolved, but expected reject"); dispatchGroup.leave() }
         let reject: RCTPromiseRejectBlock = { (_: String?, _: String?, _: Error?) -> Void in
-          result = (true, "Success") }
+          result = (true, "Success"); dispatchGroup.leave() }
 
         sut?.fetchBlob(input: input, resolve: resolve, reject: reject)
 
-        sleep(BlobCourierTests.defaultPromiseTimeoutSeconds)
+        dispatchGroup.wait(timeout: .now() +
+          DispatchTimeInterval.seconds(BlobCourierTests.defaultPromiseTimeoutSeconds))
         XCTAssertTrue(result.0)
     }
 
@@ -285,20 +328,30 @@ class BlobCourierTests: XCTestCase {
           "taskId": "some-task-id",
           "url": "http://127.0.0.1:12345"
         ]
-        let resolve: RCTPromiseResolveBlock = { (_: Any?) -> Void in result = (false, "Resolved, but expected reject") }
-        let reject: RCTPromiseRejectBlock = { (_, _, _) -> Void in result = (true, "Success") }
+
+        let dispatchGroup = DispatchGroup() 
+
+        dispatchGroup.enter()
+
+        let resolve: RCTPromiseResolveBlock = { (_: Any?) -> Void in result = (false, "Resolved, but expected reject"); dispatchGroup.leave() }
+        let reject: RCTPromiseRejectBlock = { (_, _, _) -> Void in result = (true, "Success"); dispatchGroup.leave() }
 
         sut?.fetchBlob(input: input, resolve: resolve, reject: reject)
 
-        sleep(BlobCourierTests.defaultPromiseTimeoutSeconds)
+        dispatchGroup.wait(timeout: .now() +
+          DispatchTimeInterval.seconds(BlobCourierTests.defaultPromiseTimeoutSeconds))
         XCTAssertTrue(result.0)
     }
 
     func testUploadOfNonExistentFileRejectsPromise() throws {
         var result = (false, "Unknown")
 
-        let resolve: RCTPromiseResolveBlock = { (_: Any?) -> Void in result = (false, "Resolved, but expected reject") }
-        let reject: RCTPromiseRejectBlock = { (_, _, _) -> Void in result = (true, "Success") }
+        let dispatchGroup = DispatchGroup() 
+
+        dispatchGroup.enter()
+
+        let resolve: RCTPromiseResolveBlock = { (_: Any?) -> Void in result = (false, "Resolved, but expected reject"); dispatchGroup.leave() }
+        let reject: RCTPromiseRejectBlock = { (_, _, _) -> Void in result = (true, "Success"); dispatchGroup.leave() }
 
         self.sut?.uploadBlob(input: [
          "parts": [
@@ -315,7 +368,8 @@ class BlobCourierTests: XCTestCase {
          "url": "https://file.io"
         ], resolve: resolve, reject: reject)
 
-        sleep(BlobCourierTests.defaultPromiseTimeoutSeconds)
+        dispatchGroup.wait(timeout: .now() +
+          DispatchTimeInterval.seconds(BlobCourierTests.defaultPromiseTimeoutSeconds))
         XCTAssertTrue(result.0)
     }
 
@@ -327,13 +381,19 @@ class BlobCourierTests: XCTestCase {
           "taskId": "some-task-id",
           "url": "https://github.com/edeckers/this-does-not-exist"
         ]
-        let resolve: RCTPromiseResolveBlock = { (_: Any?) -> Void in result = (true, "Success") }
+
+        let dispatchGroup = DispatchGroup() 
+
+        dispatchGroup.enter()
+
+        let resolve: RCTPromiseResolveBlock = { (_: Any?) -> Void in result = (true, "Success"); dispatchGroup.leave() }
         let reject: RCTPromiseRejectBlock = { (_: String?, _: String?, error: Error?) -> Void in
-          result = (false, error?.localizedDescription ?? "") }
+          result = (false, error?.localizedDescription ?? ""); dispatchGroup.leave() }
 
         sut?.fetchBlob(input: input, resolve: resolve, reject: reject)
 
-        sleep(BlobCourierTests.defaultPromiseTimeoutSeconds)
+        dispatchGroup.wait(timeout: .now() +
+          DispatchTimeInterval.seconds(BlobCourierTests.defaultPromiseTimeoutSeconds))
         XCTAssertTrue(result.0)
     }
 
@@ -345,10 +405,15 @@ class BlobCourierTests: XCTestCase {
           "taskId": "some-task-id",
           "url": "https://github.com/edeckers/react-native-blob-courier"
         ]
+
+        let dispatchGroup = DispatchGroup() 
+
+        dispatchGroup.enter()
+
         let reject: RCTPromiseRejectBlock = { (_: String?, _: String?, error: Error?) -> Void in
-          result = (false, error?.localizedDescription ?? "") }
+          result = (false, error?.localizedDescription ?? ""); dispatchGroup.leave() }
         let resolveUpload: RCTPromiseResolveBlock = { (_: Any?) -> Void in
-          result = (true, "Success") }
+          result = (true, "Success"); dispatchGroup.leave() }
         let resolve: RCTPromiseResolveBlock = { (response: Any?) -> Void in
             let dict = response as? NSDictionary ?? [:]
             let data = dict["data"] as? NSDictionary ?? [:]
@@ -370,7 +435,8 @@ class BlobCourierTests: XCTestCase {
 
         sut?.fetchBlob(input: input, resolve: resolve, reject: reject)
 
-        sleep(BlobCourierTests.defaultPromiseTimeoutSeconds)
+        dispatchGroup.wait(timeout: .now() +
+          DispatchTimeInterval.seconds(BlobCourierTests.defaultPromiseTimeoutSeconds))
         XCTAssertTrue(result.0)
     }
- }
+}
