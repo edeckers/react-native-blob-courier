@@ -13,6 +13,7 @@ import MimeParser
 @testable import BlobCourier
 
 // swiftlint:disable type_body_length
+// swiftlint:disable file_length
 class BlobCourierTests: XCTestCase {
     static let defaultPromiseTimeoutSeconds: Int = 10
 
@@ -55,7 +56,7 @@ class BlobCourierTests: XCTestCase {
 
                 let httpMessage = "Content-Type: \(contentType!)\r\n\(body)"
                 let bodyStartsWithBoundary = body.hasPrefix("--")
-                if (!bodyStartsWithBoundary) {
+                if !bodyStartsWithBoundary {
                   result = (false, "Body must start with boundary")
                   return
                 }
@@ -142,7 +143,7 @@ class BlobCourierTests: XCTestCase {
           "url": "https://github.com/edeckers/react-native-blob-courier"
         ]
 
-        let dispatchGroup = DispatchGroup() 
+        let dispatchGroup = DispatchGroup()
 
         dispatchGroup.enter()
 
@@ -164,7 +165,7 @@ class BlobCourierTests: XCTestCase {
           "url": "https://github.com/edeckers/react-native-blob-courier"
         ]
 
-        let dispatchGroup = DispatchGroup() 
+        let dispatchGroup = DispatchGroup()
 
         dispatchGroup.enter()
 
@@ -188,7 +189,7 @@ class BlobCourierTests: XCTestCase {
           "url": "https://github.com/edeckers/react-native-blob-courier"
         ]
 
-        let dispatchGroup = DispatchGroup() 
+        let dispatchGroup = DispatchGroup()
 
         dispatchGroup.enter()
 
@@ -230,7 +231,7 @@ class BlobCourierTests: XCTestCase {
           "url": "https://github.com/edeckers/react-native-blob-courier"
         ]
 
-        let dispatchGroup = DispatchGroup() 
+        let dispatchGroup = DispatchGroup()
 
         dispatchGroup.enter()
 
@@ -275,11 +276,12 @@ class BlobCourierTests: XCTestCase {
             "url": "https://github.com/edeckers/react-native-blob-courier"
           ]
 
-          let dispatchGroup = DispatchGroup() 
+          let dispatchGroup = DispatchGroup()
 
           dispatchGroup.enter()
 
-          let resolve: RCTPromiseResolveBlock = { (_: Any?) -> Void in result = (true, "Success"); dispatchGroup.leave() }
+          let resolve: RCTPromiseResolveBlock = { (_: Any?) -> Void in
+            result = (true, "Success"); dispatchGroup.leave() }
           let reject: RCTPromiseRejectBlock = { (_: String?, _: String?, error: Error?) -> Void in
             result = (false, error?.localizedDescription ?? ""); dispatchGroup.leave() }
 
@@ -304,7 +306,7 @@ class BlobCourierTests: XCTestCase {
           "url": "https://github.com/edeckers/react-native-blob-courier"
         ]
 
-        let dispatchGroup = DispatchGroup() 
+        let dispatchGroup = DispatchGroup()
 
         dispatchGroup.enter()
 
@@ -329,12 +331,14 @@ class BlobCourierTests: XCTestCase {
           "url": "http://127.0.0.1:12345"
         ]
 
-        let dispatchGroup = DispatchGroup() 
+        let dispatchGroup = DispatchGroup()
 
         dispatchGroup.enter()
 
-        let resolve: RCTPromiseResolveBlock = { (_: Any?) -> Void in result = (false, "Resolved, but expected reject"); dispatchGroup.leave() }
-        let reject: RCTPromiseRejectBlock = { (_, _, _) -> Void in result = (true, "Success"); dispatchGroup.leave() }
+        let resolve: RCTPromiseResolveBlock = { (_: Any?) -> Void in
+          result = (false, "Resolved, but expected reject"); dispatchGroup.leave() }
+        let reject: RCTPromiseRejectBlock = { (_, _, _) -> Void in
+          result = (true, "Success"); dispatchGroup.leave() }
 
         sut?.fetchBlob(input: input, resolve: resolve, reject: reject)
 
@@ -346,12 +350,14 @@ class BlobCourierTests: XCTestCase {
     func testUploadOfNonExistentFileRejectsPromise() throws {
         var result = (false, "Unknown")
 
-        let dispatchGroup = DispatchGroup() 
+        let dispatchGroup = DispatchGroup()
 
         dispatchGroup.enter()
 
-        let resolve: RCTPromiseResolveBlock = { (_: Any?) -> Void in result = (false, "Resolved, but expected reject"); dispatchGroup.leave() }
-        let reject: RCTPromiseRejectBlock = { (_, _, _) -> Void in result = (true, "Success"); dispatchGroup.leave() }
+        let resolve: RCTPromiseResolveBlock = { (_: Any?) -> Void in
+          result = (false, "Resolved, but expected reject"); dispatchGroup.leave() }
+        let reject: RCTPromiseRejectBlock = { (_, _, _) -> Void in
+          result = (true, "Success"); dispatchGroup.leave() }
 
         self.sut?.uploadBlob(input: [
          "parts": [
@@ -382,7 +388,7 @@ class BlobCourierTests: XCTestCase {
           "url": "https://github.com/edeckers/this-does-not-exist"
         ]
 
-        let dispatchGroup = DispatchGroup() 
+        let dispatchGroup = DispatchGroup()
 
         dispatchGroup.enter()
 
@@ -406,7 +412,7 @@ class BlobCourierTests: XCTestCase {
           "url": "https://github.com/edeckers/react-native-blob-courier"
         ]
 
-        let dispatchGroup = DispatchGroup() 
+        let dispatchGroup = DispatchGroup()
 
         dispatchGroup.enter()
 
