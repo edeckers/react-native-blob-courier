@@ -161,7 +161,6 @@
 			isa = PBXGroup;
 			children = (
 				B96A888225BC565300F42B65 /* Constants.swift */,
-				B940948F253DFC0800A58583 /* DownloaderDelegate.swift */,
 				B96A888325BC565300F42B65 /* Errors.swift */,
 			);
 			path = Common;
@@ -170,6 +169,7 @@
 		B96A888C25BC566300F42B65 /* Fetch */ = {
 			isa = PBXGroup;
 			children = (
+				B940948F253DFC0800A58583 /* DownloaderDelegate.swift */,
 				B96A888D25BC566300F42B65 /* BlobDownloader.swift */,
 			);
 			path = Fetch;
