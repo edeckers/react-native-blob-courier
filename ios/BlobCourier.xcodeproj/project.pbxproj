@@ -135,9 +135,6 @@
 				B96A8F0825BCB1DA00F42B65 /* BlobCourier.m */,
 				B96A8E3725BCA76300F42B65 /* BlobCourierDelayedEventEmitter.swift */,
 				B96A8E3825BCA76300F42B65 /* BlobCourierEventEmitter.swift */,
-				B96A889525BC567000F42B65 /* BlobUploader.swift */,
-				B9409539253E1F5800A58583 /* UploaderDelegate.swift */,
-				B940948F253DFC0800A58583 /* DownloaderDelegate.swift */,
 				B96A888125BC565300F42B65 /* Common */,
 				B96A888C25BC566300F42B65 /* Fetch */,
 				B96A88AE25BC5EB800F42B65 /* Progress */,
@@ -166,6 +163,7 @@
 			isa = PBXGroup;
 			children = (
 				B96A888225BC565300F42B65 /* Constants.swift */,
+				B940948F253DFC0800A58583 /* DownloaderDelegate.swift */,
 				B96A888325BC565300F42B65 /* Errors.swift */,
 			);
 			path = Common;
@@ -182,6 +180,8 @@
 		B96A889425BC567000F42B65 /* Upload */ = {
 			isa = PBXGroup;
 			children = (
+				B96A889525BC567000F42B65 /* BlobUploader.swift */,
+				B9409539253E1F5800A58583 /* UploaderDelegate.swift */,
 			);
 			path = Upload;
 			sourceTree = "<group>";
