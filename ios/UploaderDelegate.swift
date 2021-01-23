@@ -3,7 +3,6 @@
 // This source code is licensed under the MPL-2.0 license found in the
 // LICENSE file in the root directory of this source tree.
 import Foundation
-import React
 
 open class UploaderDelegate: NSObject, URLSessionDataDelegate, URLSessionTaskDelegate {
   private static let uploadTypeUnmanaged  = "Unmanaged"

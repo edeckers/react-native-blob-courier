@@ -10,24 +10,16 @@
 		4FE57FA32AB062D2C02046FC /* Pods_BlobCourier.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3E7061D9BB42686E43B842F1 /* Pods_BlobCourier.framework */; };
 		9E7ACE2A91119EDFBE772FAC /* Pods_BlobCourier_BlobCourierTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 664603EE079B6D1526FE70F8 /* Pods_BlobCourier_BlobCourierTests.framework */; };
 		B92C3A1025935C2700630464 /* EmbeddedHttpServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = B92C3A0F25935C2700630464 /* EmbeddedHttpServer.swift */; };
-		B96829D7254EC721002B4B04 /* BlobCourierDelayedEventEmitter.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9229D282540E153000175D8 /* BlobCourierDelayedEventEmitter.swift */; };
 		B96829D9254EC727002B4B04 /* UploaderDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9409539253E1F5800A58583 /* UploaderDelegate.swift */; };
-		B96829DD254EC730002B4B04 /* BlobCourierEventEmitter.swift in Sources */ = {isa = PBXBuildFile; fileRef = B94094E3253E107400A58583 /* BlobCourierEventEmitter.swift */; };
 		B96829DF254EC736002B4B04 /* DownloaderDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B940948F253DFC0800A58583 /* DownloaderDelegate.swift */; };
 		B96829E8254EC872002B4B04 /* BlobCourierTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B96829E7254EC872002B4B04 /* BlobCourierTests.swift */; };
 		B96829EA254EC872002B4B04 /* libBlobCourier.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 134814201AA4EA6300B7C361 /* libBlobCourier.a */; };
 		B96A888425BC565300F42B65 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = B96A888225BC565300F42B65 /* Constants.swift */; };
-		B96A888525BC565300F42B65 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = B96A888225BC565300F42B65 /* Constants.swift */; };
 		B96A888625BC565300F42B65 /* Errors.swift in Sources */ = {isa = PBXBuildFile; fileRef = B96A888325BC565300F42B65 /* Errors.swift */; };
-		B96A888725BC565300F42B65 /* Errors.swift in Sources */ = {isa = PBXBuildFile; fileRef = B96A888325BC565300F42B65 /* Errors.swift */; };
 		B96A888E25BC566300F42B65 /* BlobDownloader.swift in Sources */ = {isa = PBXBuildFile; fileRef = B96A888D25BC566300F42B65 /* BlobDownloader.swift */; };
-		B96A888F25BC566300F42B65 /* BlobDownloader.swift in Sources */ = {isa = PBXBuildFile; fileRef = B96A888D25BC566300F42B65 /* BlobDownloader.swift */; };
 		B96A889625BC567000F42B65 /* BlobUploader.swift in Sources */ = {isa = PBXBuildFile; fileRef = B96A889525BC567000F42B65 /* BlobUploader.swift */; };
-		B96A889725BC567000F42B65 /* BlobUploader.swift in Sources */ = {isa = PBXBuildFile; fileRef = B96A889525BC567000F42B65 /* BlobUploader.swift */; };
-		B96A88A225BC5E7200F42B65 /* DownloaderDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B940948F253DFC0800A58583 /* DownloaderDelegate.swift */; };
-		B96A88A725BC5E7800F42B65 /* UploaderDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9409539253E1F5800A58583 /* UploaderDelegate.swift */; };
-		B96A8B2825BC807200F42B65 /* BlobCourierEventEmitter.swift in Sources */ = {isa = PBXBuildFile; fileRef = B94094E3253E107400A58583 /* BlobCourierEventEmitter.swift */; };
-		B96A8B2B25BC808000F42B65 /* BlobCourierDelayedEventEmitter.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9229D282540E153000175D8 /* BlobCourierDelayedEventEmitter.swift */; };
+		B96A8E3925BCA76300F42B65 /* BlobCourierDelayedEventEmitter.swift in Sources */ = {isa = PBXBuildFile; fileRef = B96A8E3725BCA76300F42B65 /* BlobCourierDelayedEventEmitter.swift */; };
+		B96A8E3A25BCA76300F42B65 /* BlobCourierEventEmitter.swift in Sources */ = {isa = PBXBuildFile; fileRef = B96A8E3825BCA76300F42B65 /* BlobCourierEventEmitter.swift */; };
 		F4FF95D7245B92E800C19C63 /* BlobCourier.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4FF95D6245B92E800C19C63 /* BlobCourier.swift */; };
 /* End PBXBuildFile section */
 
@@ -61,11 +53,8 @@
 		3E7061D9BB42686E43B842F1 /* Pods_BlobCourier.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_BlobCourier.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		664603EE079B6D1526FE70F8 /* Pods_BlobCourier_BlobCourierTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_BlobCourier_BlobCourierTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		7487E74E1A0C30B41CC57453 /* Pods-BlobCourier-BlobCourierTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BlobCourier-BlobCourierTests.release.xcconfig"; path = "Target Support Files/Pods-BlobCourier-BlobCourierTests/Pods-BlobCourier-BlobCourierTests.release.xcconfig"; sourceTree = "<group>"; };
-		B3E7B5891CC2AC0600A0062D /* BlobCourier.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BlobCourier.m; sourceTree = "<group>"; };
-		B9229D282540E153000175D8 /* BlobCourierDelayedEventEmitter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlobCourierDelayedEventEmitter.swift; sourceTree = "<group>"; };
 		B92C3A0F25935C2700630464 /* EmbeddedHttpServer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EmbeddedHttpServer.swift; sourceTree = "<group>"; };
 		B940948F253DFC0800A58583 /* DownloaderDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloaderDelegate.swift; sourceTree = "<group>"; };
-		B94094E3253E107400A58583 /* BlobCourierEventEmitter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlobCourierEventEmitter.swift; sourceTree = "<group>"; };
 		B9409539253E1F5800A58583 /* UploaderDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UploaderDelegate.swift; sourceTree = "<group>"; };
 		B96829E5254EC872002B4B04 /* BlobCourierTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BlobCourierTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		B96829E7254EC872002B4B04 /* BlobCourierTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlobCourierTests.swift; sourceTree = "<group>"; };
@@ -74,6 +63,8 @@
 		B96A888325BC565300F42B65 /* Errors.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Errors.swift; sourceTree = "<group>"; };
 		B96A888D25BC566300F42B65 /* BlobDownloader.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BlobDownloader.swift; sourceTree = "<group>"; };
 		B96A889525BC567000F42B65 /* BlobUploader.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BlobUploader.swift; sourceTree = "<group>"; };
+		B96A8E3725BCA76300F42B65 /* BlobCourierDelayedEventEmitter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BlobCourierDelayedEventEmitter.swift; sourceTree = "<group>"; };
+		B96A8E3825BCA76300F42B65 /* BlobCourierEventEmitter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BlobCourierEventEmitter.swift; sourceTree = "<group>"; };
 		E431917845347E135BAF189E /* Pods-BlobCourier.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BlobCourier.release.xcconfig"; path = "Target Support Files/Pods-BlobCourier/Pods-BlobCourier.release.xcconfig"; sourceTree = "<group>"; };
 		F0F8F7008E715FB238D44E2E /* Pods-BlobCourier.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BlobCourier.debug.xcconfig"; path = "Target Support Files/Pods-BlobCourier/Pods-BlobCourier.debug.xcconfig"; sourceTree = "<group>"; };
 		F4FF95D5245B92E700C19C63 /* BlobCourier-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "BlobCourier-Bridging-Header.h"; sourceTree = "<group>"; };
@@ -134,12 +125,19 @@
 		58B511D21A9E6C8500147676 = {
 			isa = PBXGroup;
 			children = (
+				B96A8E3725BCA76300F42B65 /* BlobCourierDelayedEventEmitter.swift */,
+				B96A8E3825BCA76300F42B65 /* BlobCourierEventEmitter.swift */,
+				B96A889525BC567000F42B65 /* BlobUploader.swift */,
+				B9409539253E1F5800A58583 /* UploaderDelegate.swift */,
+				B96A888225BC565300F42B65 /* Constants.swift */,
+				B96A888325BC565300F42B65 /* Errors.swift */,
+				B96A888D25BC566300F42B65 /* BlobDownloader.swift */,
+				B940948F253DFC0800A58583 /* DownloaderDelegate.swift */,
 				B96A888125BC565300F42B65 /* Common */,
 				B96A888C25BC566300F42B65 /* Fetch */,
 				B96A88AE25BC5EB800F42B65 /* Progress */,
 				B96A889425BC567000F42B65 /* Upload */,
 				F4FF95D6245B92E800C19C63 /* BlobCourier.swift */,
-				B3E7B5891CC2AC0600A0062D /* BlobCourier.m */,
 				F4FF95D5245B92E700C19C63 /* BlobCourier-Bridging-Header.h */,
 				B96829E6254EC872002B4B04 /* BlobCourierTests */,
 				134814211AA4EA7D00B7C361 /* Products */,
@@ -162,8 +160,6 @@
 		B96A888125BC565300F42B65 /* Common */ = {
 			isa = PBXGroup;
 			children = (
-				B96A888225BC565300F42B65 /* Constants.swift */,
-				B96A888325BC565300F42B65 /* Errors.swift */,
 			);
 			path = Common;
 			sourceTree = "<group>";
@@ -171,8 +167,6 @@
 		B96A888C25BC566300F42B65 /* Fetch */ = {
 			isa = PBXGroup;
 			children = (
-				B96A888D25BC566300F42B65 /* BlobDownloader.swift */,
-				B940948F253DFC0800A58583 /* DownloaderDelegate.swift */,
 			);
 			path = Fetch;
 			sourceTree = "<group>";
@@ -180,8 +174,6 @@
 		B96A889425BC567000F42B65 /* Upload */ = {
 			isa = PBXGroup;
 			children = (
-				B96A889525BC567000F42B65 /* BlobUploader.swift */,
-				B9409539253E1F5800A58583 /* UploaderDelegate.swift */,
 			);
 			path = Upload;
 			sourceTree = "<group>";
@@ -189,8 +181,6 @@
 		B96A88AE25BC5EB800F42B65 /* Progress */ = {
 			isa = PBXGroup;
 			children = (
-				B9229D282540E153000175D8 /* BlobCourierDelayedEventEmitter.swift */,
-				B94094E3253E107400A58583 /* BlobCourierEventEmitter.swift */,
 			);
 			path = Progress;
 			sourceTree = "<group>";
@@ -403,13 +393,13 @@
 			files = (
 				F4FF95D7245B92E800C19C63 /* BlobCourier.swift in Sources */,
 				B96829DF254EC736002B4B04 /* DownloaderDelegate.swift in Sources */,
-				B96829DD254EC730002B4B04 /* BlobCourierEventEmitter.swift in Sources */,
 				B96A888E25BC566300F42B65 /* BlobDownloader.swift in Sources */,
-				B96829D7254EC721002B4B04 /* BlobCourierDelayedEventEmitter.swift in Sources */,
+				B96A8E3925BCA76300F42B65 /* BlobCourierDelayedEventEmitter.swift in Sources */,
 				B96A889625BC567000F42B65 /* BlobUploader.swift in Sources */,
 				B96A888625BC565300F42B65 /* Errors.swift in Sources */,
 				B96A888425BC565300F42B65 /* Constants.swift in Sources */,
 				B96829D9254EC727002B4B04 /* UploaderDelegate.swift in Sources */,
+				B96A8E3A25BCA76300F42B65 /* BlobCourierEventEmitter.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -417,16 +407,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				B96A8B2B25BC808000F42B65 /* BlobCourierDelayedEventEmitter.swift in Sources */,
-				B96A8B2825BC807200F42B65 /* BlobCourierEventEmitter.swift in Sources */,
-				B96A88A725BC5E7800F42B65 /* UploaderDelegate.swift in Sources */,
-				B96A888725BC565300F42B65 /* Errors.swift in Sources */,
-				B96A88A225BC5E7200F42B65 /* DownloaderDelegate.swift in Sources */,
 				B96829E8254EC872002B4B04 /* BlobCourierTests.swift in Sources */,
 				B92C3A1025935C2700630464 /* EmbeddedHttpServer.swift in Sources */,
-				B96A889725BC567000F42B65 /* BlobUploader.swift in Sources */,
-				B96A888F25BC566300F42B65 /* BlobDownloader.swift in Sources */,
-				B96A888525BC565300F42B65 /* Constants.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -543,6 +525,7 @@
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
 					"$(SRCROOT)/../../../React/**",
 					"$(SRCROOT)/../../react-native/React/**",
+					"${SRCROOT}",
 				);
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				OTHER_LDFLAGS = "-ObjC";
@@ -563,6 +546,7 @@
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
 					"$(SRCROOT)/../../../React/**",
 					"$(SRCROOT)/../../react-native/React/**",
+					"${SRCROOT}",
 				);
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				OTHER_LDFLAGS = "-ObjC";
