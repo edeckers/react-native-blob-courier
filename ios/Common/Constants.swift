@@ -30,5 +30,6 @@ open class Constants: NSObject {
   static let defaultMethod = "GET"
   static let defaultMimeType = "application/octet-stream"
   static let defaultProgressIntervalMilliseconds = 500
+  static let defaultRequestTimeoutSeconds = 5
   static let defaultTarget = targetCache
 }

@@ -15,9 +15,8 @@ open class BlobDownloader: NSObject {
   // swiftlint:disable function_body_length
   static func fetchBlobFromValidatedParameters(
     input: NSDictionary,
-    resolve: @escaping RCTPromiseResolveBlock,
     reject: @escaping RCTPromiseRejectBlock
-  ) throws {
+  ) throws -> NSDictionary {
     let taskId = (input[Constants.parameterTaskId] as? String) ?? ""
 
     let iosSettings =
@@ -34,7 +33,7 @@ open class BlobDownloader: NSObject {
         parameterName: Constants.parameterTarget,
         value: target)
 
-      return
+      return [:] // FIXME ED Return Error
     }
 
     let progressIntervalMilliseconds =
@@ -60,24 +59,44 @@ open class BlobDownloader: NSObject {
 
     let fileURL = URL(string: url)
     let sessionConfig = URLSessionConfiguration.default
-    let downloaderDelegate =
-      DownloaderDelegate(
-        taskId: taskId,
-        destinationFileUrl: destinationFileUrl,
-        progressIntervalMilliseconds: progressIntervalMilliseconds,
-        resolve: resolve,
-        reject: reject)
 
-    startFetchBlob(
-      sessionConfig: sessionConfig,
-      delegate: downloaderDelegate,
-      reject: reject,
-      fileURL: fileURL!,
-      headers: headers)
+    let group = DispatchGroup()
+    let queue = DispatchQueue.global()
+
+    var result: NSDictionary = [:]
+
+    group.enter()
+
+    queue.async(group: group) {
+      let succesfulResult = { (theResult: NSDictionary) -> Void in
+        result = theResult
+
+	group.leave()
+      }
+
+      let downloaderDelegate =
+        DownloaderDelegate(
+          taskId: taskId,
+          destinationFileUrl: destinationFileUrl,
+          progressIntervalMilliseconds: progressIntervalMilliseconds,
+          resolve: succesfulResult,
+          reject: reject)
+
+      startFetchBlob(
+        sessionConfig: sessionConfig,
+        delegate: downloaderDelegate,
+        reject: reject,
+        fileURL: fileURL!,
+        headers: headers)
+    }
+
+    group.wait(timeout: .now() + DispatchTimeInterval.seconds(Constants.defaultRequestTimeoutSeconds))
+
+    return result
   }
   // swiftlint:enable function_body_length
 
-  static func startFetchBlob(
+  private static func startFetchBlob(
     sessionConfig: URLSessionConfiguration,
     delegate: DownloaderDelegate,
     reject: @escaping RCTPromiseRejectBlock,

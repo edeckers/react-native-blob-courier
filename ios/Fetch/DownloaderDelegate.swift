@@ -4,11 +4,14 @@
 // LICENSE file in the root directory of this source tree.
 import Foundation
 
+
 open class DownloaderDelegate: NSObject, URLSessionDownloadDelegate {
+  typealias SuccessHandler = (NSDictionary) -> Void
+
   private static let downloadTypeUnmanaged  = "Unmanaged"
 
   let destinationFileUrl: URL
-  let resolve: RCTPromiseResolveBlock
+  let resolve: SuccessHandler
   let reject: RCTPromiseRejectBlock
   let taskId: String
 
@@ -18,7 +21,7 @@ open class DownloaderDelegate: NSObject, URLSessionDownloadDelegate {
     taskId: String,
     destinationFileUrl: URL,
     progressIntervalMilliseconds: Int,
-    resolve: @escaping RCTPromiseResolveBlock,
+    resolve: @escaping SuccessHandler,
     reject: @escaping RCTPromiseRejectBlock) {
     self.destinationFileUrl = destinationFileUrl
     self.resolve = resolve
