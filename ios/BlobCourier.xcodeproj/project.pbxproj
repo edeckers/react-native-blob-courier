@@ -17,6 +17,14 @@
 		B96829DF254EC736002B4B04 /* DownloaderDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B940948F253DFC0800A58583 /* DownloaderDelegate.swift */; };
 		B96829E8254EC872002B4B04 /* BlobCourierTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B96829E7254EC872002B4B04 /* BlobCourierTests.swift */; };
 		B96829EA254EC872002B4B04 /* libBlobCourier.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 134814201AA4EA6300B7C361 /* libBlobCourier.a */; };
+		B96A888425BC565300F42B65 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = B96A888225BC565300F42B65 /* Constants.swift */; };
+		B96A888525BC565300F42B65 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = B96A888225BC565300F42B65 /* Constants.swift */; };
+		B96A888625BC565300F42B65 /* Errors.swift in Sources */ = {isa = PBXBuildFile; fileRef = B96A888325BC565300F42B65 /* Errors.swift */; };
+		B96A888725BC565300F42B65 /* Errors.swift in Sources */ = {isa = PBXBuildFile; fileRef = B96A888325BC565300F42B65 /* Errors.swift */; };
+		B96A888E25BC566300F42B65 /* BlobDownloader.swift in Sources */ = {isa = PBXBuildFile; fileRef = B96A888D25BC566300F42B65 /* BlobDownloader.swift */; };
+		B96A888F25BC566300F42B65 /* BlobDownloader.swift in Sources */ = {isa = PBXBuildFile; fileRef = B96A888D25BC566300F42B65 /* BlobDownloader.swift */; };
+		B96A889625BC567000F42B65 /* BlobUploader.swift in Sources */ = {isa = PBXBuildFile; fileRef = B96A889525BC567000F42B65 /* BlobUploader.swift */; };
+		B96A889725BC567000F42B65 /* BlobUploader.swift in Sources */ = {isa = PBXBuildFile; fileRef = B96A889525BC567000F42B65 /* BlobUploader.swift */; };
 		F4FF95D7245B92E800C19C63 /* BlobCourier.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4FF95D6245B92E800C19C63 /* BlobCourier.swift */; };
 /* End PBXBuildFile section */
 
@@ -65,6 +73,10 @@
 		B96829E5254EC872002B4B04 /* BlobCourierTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BlobCourierTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		B96829E7254EC872002B4B04 /* BlobCourierTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlobCourierTests.swift; sourceTree = "<group>"; };
 		B96829E9254EC872002B4B04 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		B96A888225BC565300F42B65 /* Constants.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
+		B96A888325BC565300F42B65 /* Errors.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Errors.swift; sourceTree = "<group>"; };
+		B96A888D25BC566300F42B65 /* BlobDownloader.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BlobDownloader.swift; sourceTree = "<group>"; };
+		B96A889525BC567000F42B65 /* BlobUploader.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BlobUploader.swift; sourceTree = "<group>"; };
 		E431917845347E135BAF189E /* Pods-BlobCourier.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BlobCourier.release.xcconfig"; path = "Target Support Files/Pods-BlobCourier/Pods-BlobCourier.release.xcconfig"; sourceTree = "<group>"; };
 		F0F8F7008E715FB238D44E2E /* Pods-BlobCourier.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BlobCourier.debug.xcconfig"; path = "Target Support Files/Pods-BlobCourier/Pods-BlobCourier.debug.xcconfig"; sourceTree = "<group>"; };
 		F4FF95D5245B92E700C19C63 /* BlobCourier-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "BlobCourier-Bridging-Header.h"; sourceTree = "<group>"; };
@@ -125,6 +137,9 @@
 		58B511D21A9E6C8500147676 = {
 			isa = PBXGroup;
 			children = (
+				B96A889425BC567000F42B65 /* Upload */,
+				B96A888C25BC566300F42B65 /* Fetch */,
+				B96A888125BC565300F42B65 /* Common */,
 				B9229D292540E153000175D8 /* BlobCourierDelayedEventEmitter.m */,
 				B9229D282540E153000175D8 /* BlobCourierDelayedEventEmitter.swift */,
 				B940953A253E1F5800A58583 /* UploaderDelegate.m */,
@@ -154,6 +169,31 @@
 				B96829E9254EC872002B4B04 /* Info.plist */,
 			);
 			path = BlobCourierTests;
+			sourceTree = "<group>";
+		};
+		B96A888125BC565300F42B65 /* Common */ = {
+			isa = PBXGroup;
+			children = (
+				B96A888225BC565300F42B65 /* Constants.swift */,
+				B96A888325BC565300F42B65 /* Errors.swift */,
+			);
+			path = Common;
+			sourceTree = "<group>";
+		};
+		B96A888C25BC566300F42B65 /* Fetch */ = {
+			isa = PBXGroup;
+			children = (
+				B96A888D25BC566300F42B65 /* BlobDownloader.swift */,
+			);
+			path = Fetch;
+			sourceTree = "<group>";
+		};
+		B96A889425BC567000F42B65 /* Upload */ = {
+			isa = PBXGroup;
+			children = (
+				B96A889525BC567000F42B65 /* BlobUploader.swift */,
+			);
+			path = Upload;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -364,7 +404,11 @@
 				F4FF95D7245B92E800C19C63 /* BlobCourier.swift in Sources */,
 				B96829DF254EC736002B4B04 /* DownloaderDelegate.swift in Sources */,
 				B96829DD254EC730002B4B04 /* BlobCourierEventEmitter.swift in Sources */,
+				B96A888E25BC566300F42B65 /* BlobDownloader.swift in Sources */,
 				B96829D7254EC721002B4B04 /* BlobCourierDelayedEventEmitter.swift in Sources */,
+				B96A889625BC567000F42B65 /* BlobUploader.swift in Sources */,
+				B96A888625BC565300F42B65 /* Errors.swift in Sources */,
+				B96A888425BC565300F42B65 /* Constants.swift in Sources */,
 				B96829D9254EC727002B4B04 /* UploaderDelegate.swift in Sources */,
 				B96829DB254EC72C002B4B04 /* BlobCourierErrors.swift in Sources */,
 			);
@@ -374,8 +418,12 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B96A888725BC565300F42B65 /* Errors.swift in Sources */,
 				B96829E8254EC872002B4B04 /* BlobCourierTests.swift in Sources */,
 				B92C3A1025935C2700630464 /* EmbeddedHttpServer.swift in Sources */,
+				B96A889725BC567000F42B65 /* BlobUploader.swift in Sources */,
+				B96A888F25BC566300F42B65 /* BlobDownloader.swift in Sources */,
+				B96A888525BC565300F42B65 /* Constants.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
