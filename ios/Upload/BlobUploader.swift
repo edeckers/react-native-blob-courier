@@ -5,18 +5,18 @@
 import Foundation
 
 open class BlobUploader: NSObject {
-  func filterHeaders(unfilteredHeaders: NSDictionary) -> NSDictionary {
+  static func filterHeaders(unfilteredHeaders: NSDictionary) -> NSDictionary {
     Dictionary(uniqueKeysWithValues: unfilteredHeaders
       .map { key, value in (key as? String, value as? String) }
       .filter({ $0.1 != nil }))
       .mapValues { $0! } as NSDictionary
   }
 
-  func isValidTargetValue(_ value: String) -> Bool {
-    return BlobUploader.targetValues.contains(value)
+  static func isValidTargetValue(_ value: String) -> Bool {
+    return Constants.targetValues.contains(value)
   }
 
-  func buildRequestDataForFileUpload(
+  static func buildRequestDataForFileUpload(
     url: URL,
     parts: NSArray,
     headers: NSDictionary) throws -> (URLRequest, Data) {
@@ -40,12 +40,12 @@ open class BlobUploader: NSObject {
       if let part = value as? [String: Any], let paramName = part["name"] as? String {
 
         if part["type"] as? String == "file" {
-          let payload = part[Errors.parameterPartPayload] as? [String: String] ?? [:]
-          let absoluteFilePath = payload[Errors.parameterAbsoluteFilePath]!
+          let payload = part[Constants.parameterPartPayload] as? [String: String] ?? [:]
+          let absoluteFilePath = payload[Constants.parameterAbsoluteFilePath]!
 
           let fileUrl = URL(string: absoluteFilePath)!
-          let filename = payload[Errors.parameterFilename] ?? fileUrl.lastPathComponent
-          let mimeType = payload[Errors.parameterMimeType] ?? BlobUploader.defaultMimeType
+          let filename = payload[Constants.parameterFilename] ?? fileUrl.lastPathComponent
+          let mimeType = payload[Constants.parameterMimeType] ?? Constants.defaultMimeType
 
           try data.addFilePart(
             part: FilePart(
@@ -57,7 +57,7 @@ open class BlobUploader: NSObject {
           continue
         }
 
-        let formDataValue = part[Errors.parameterPartPayload] as? String ?? ""
+        let formDataValue = part[Constants.parameterPartPayload] as? String ?? ""
 
         data.addFormDataPart(
           part: StringPart(
@@ -74,24 +74,24 @@ open class BlobUploader: NSObject {
     return (request, data)
   }
 
-  func uploadBlobFromValidatedParameters(
+  static func uploadBlobFromValidatedParameters(
     input: NSDictionary,
     resolve: @escaping RCTPromiseResolveBlock,
     reject: @escaping RCTPromiseRejectBlock
   ) throws {
-    let taskId = (input[Errors.parameterTaskId] as? String) ?? ""
+    let taskId = (input[Constants.parameterTaskId] as? String) ?? ""
 
     let progressIntervalMilliseconds =
-      (input[Errors.parameterProgressInterval] as? Int) ??
-        BlobUploader.defaultProgressIntervalMilliseconds
+      (input[Constants.parameterProgressInterval] as? Int) ??
+        Constants.defaultProgressIntervalMilliseconds
 
-    let url = (input[Errors.parameterUrl] as? String) ?? ""
+    let url = (input[Constants.parameterUrl] as? String) ?? ""
 
     let urlObject = URL(string: url)!
 
-    let parts = (input[Errors.parameterParts] as? NSArray) ?? NSArray()
+    let parts = (input[Constants.parameterParts] as? NSArray) ?? NSArray()
 
-    let returnResponse = (input[Errors.parameterReturnResponse] as? Bool) ?? false
+    let returnResponse = (input[Constants.parameterReturnResponse] as? Bool) ?? false
 
     let sessionConfig = URLSessionConfiguration.default
     let uploaderDelegate =
@@ -105,7 +105,7 @@ open class BlobUploader: NSObject {
 
     let headers =
       filterHeaders(unfilteredHeaders:
-        (input[Errors.parameterHeaders] as? NSDictionary) ??
+        (input[Constants.parameterHeaders] as? NSDictionary) ??
         NSDictionary())
 
     let (request, fileData) = try buildRequestDataForFileUpload(url: urlObject, parts: parts, headers: headers)

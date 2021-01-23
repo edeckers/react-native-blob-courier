@@ -5,7 +5,7 @@
 import Foundation
 
 open class BlobDownloader: NSObject {
-  func filterHeaders(unfilteredHeaders: NSDictionary) -> NSDictionary {
+  static func filterHeaders(unfilteredHeaders: NSDictionary) -> NSDictionary {
     Dictionary(uniqueKeysWithValues: unfilteredHeaders
       .map { key, value in (key as? String, value as? String) }
       .filter({ $0.1 != nil }))
@@ -13,46 +13,46 @@ open class BlobDownloader: NSObject {
   }
 
   // swiftlint:disable function_body_length
-  func fetchBlobFromValidatedParameters(
+  static func fetchBlobFromValidatedParameters(
     input: NSDictionary,
     resolve: @escaping RCTPromiseResolveBlock,
     reject: @escaping RCTPromiseRejectBlock
   ) throws {
-    let taskId = (input[Errors.parameterTaskId] as? String) ?? ""
+    let taskId = (input[Constants.parameterTaskId] as? String) ?? ""
 
     let iosSettings =
-      (input[Errors.parameterIOSSettings] as? NSDictionary) ??
+      (input[Constants.parameterIOSSettings] as? NSDictionary) ??
       NSDictionary()
 
     let target =
-      (iosSettings[Errors.parameterTarget] as? String) ??
-      BlobDownloader.defaultTarget
+      (iosSettings[Constants.parameterTarget] as? String) ??
+      Constants.defaultTarget
 
     if !isValidTargetValue(target) {
-      BlobDownloaderErrors.processInvalidValue(
+      Errors.processInvalidValue(
         reject: reject,
-        parameterName: Errors.parameterTarget,
+        parameterName: Constants.parameterTarget,
         value: target)
 
       return
     }
 
     let progressIntervalMilliseconds =
-      (input[Errors.parameterProgressInterval] as? Int) ??
-        BlobDownloader.defaultProgressIntervalMilliseconds
+      (input[Constants.parameterProgressInterval] as? Int) ??
+        Constants.defaultProgressIntervalMilliseconds
 
-    let url = (input[Errors.parameterUrl] as? String) ?? ""
+    let url = (input[Constants.parameterUrl] as? String) ?? ""
 
-    let filename = (input[Errors.parameterFilename] as? String) ?? ""
+    let filename = (input[Constants.parameterFilename] as? String) ?? ""
 
     let headers =
       filterHeaders(unfilteredHeaders:
-        (input[Errors.parameterHeaders] as? NSDictionary) ??
+        (input[Constants.parameterHeaders] as? NSDictionary) ??
         NSDictionary())
 
     let targetUrl: URL =
       try FileManager.default.url(
-        for: target == BlobDownloader.targetData ? .documentDirectory : .cachesDirectory,
+        for: target == Constants.targetData ? .documentDirectory : .cachesDirectory,
         in: .userDomainMask,
         appropriateFor: nil,
         create: false)
@@ -77,7 +77,7 @@ open class BlobDownloader: NSObject {
   }
   // swiftlint:enable function_body_length
 
-  func startFetchBlob(
+  static func startFetchBlob(
     sessionConfig: URLSessionConfiguration,
     delegate: DownloaderDelegate,
     reject: @escaping RCTPromiseRejectBlock,
@@ -101,7 +101,7 @@ open class BlobDownloader: NSObject {
     session.downloadTask(with: request).resume()
   }
 
-  func isValidTargetValue(_ value: String) -> Bool {
-    return BlobDownloader.targetValues.contains(value)
+  static func isValidTargetValue(_ value: String) -> Bool {
+    return Constants.targetValues.contains(value)
   }
 }

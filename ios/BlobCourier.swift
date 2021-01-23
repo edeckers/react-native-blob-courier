@@ -11,18 +11,18 @@ open class BlobCourier: NSObject {
     input: NSDictionary, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock
   ) {
     do {
-      try assertRequiredParameter(
-        input: input, type: "String", parameterName: BlobCourier.parameterFilename)
-      try assertRequiredParameter(
-        input: input, type: "String", parameterName: BlobCourier.parameterTaskId)
-      try assertRequiredParameter(
-        input: input, type: "String", parameterName: BlobCourier.parameterUrl)
+      try Errors.assertRequiredParameter(
+        input: input, type: "String", parameterName: Constants.parameterFilename)
+      try Errors.assertRequiredParameter(
+        input: input, type: "String", parameterName: Constants.parameterTaskId)
+      try Errors.assertRequiredParameter(
+        input: input, type: "String", parameterName: Constants.parameterUrl)
 
-      try fetchBlobFromValidatedParameters(input: input, resolve: resolve, reject: reject)
-    } catch BlobCourierErrors.BlobCourierError.requiredParameter(let parameterName) {
-      BlobCourierErrors.processUnexpectedEmptyValue(reject: reject, parameterName: parameterName)
+      try BlobDownloader.fetchBlobFromValidatedParameters(input: input, resolve: resolve, reject: reject)
+    } catch Errors.BlobCourierError.requiredParameter(let parameterName) {
+      Errors.processUnexpectedEmptyValue(reject: reject, parameterName: parameterName)
     } catch {
-      BlobCourierErrors.processUnexpectedException(reject: reject, error: error)
+      Errors.processUnexpectedException(reject: reject, error: error)
       print("\(error)")
     }
   }
@@ -34,18 +34,18 @@ open class BlobCourier: NSObject {
     reject: @escaping RCTPromiseRejectBlock
   ) {
     do {
-      try assertRequiredParameter(
-        input: input, type: "NSArray", parameterName: BlobCourier.parameterParts)
-      try assertRequiredParameter(
-        input: input, type: "String", parameterName: BlobCourier.parameterTaskId)
-      try assertRequiredParameter(
-        input: input, type: "String", parameterName: BlobCourier.parameterUrl)
+      try Errors.assertRequiredParameter(
+        input: input, type: "NSArray", parameterName: Constants.parameterParts)
+      try Errors.assertRequiredParameter(
+        input: input, type: "String", parameterName: Constants.parameterTaskId)
+      try Errors.assertRequiredParameter(
+        input: input, type: "String", parameterName: Constants.parameterUrl)
 
-      try uploadBlobFromValidatedParameters(input: input, resolve: resolve, reject: reject)
-    } catch BlobCourierErrors.BlobCourierError.requiredParameter(let parameterName) {
-      BlobCourierErrors.processUnexpectedEmptyValue(reject: reject, parameterName: parameterName)
+      try BlobUploader.uploadBlobFromValidatedParameters(input: input, resolve: resolve, reject: reject)
+    } catch Errors.BlobCourierError.requiredParameter(let parameterName) {
+      Errors.processUnexpectedEmptyValue(reject: reject, parameterName: parameterName)
     } catch {
-      BlobCourierErrors.processUnexpectedException(reject: reject, error: error)
+      Errors.processUnexpectedException(reject: reject, error: error)
     }
   }
 }

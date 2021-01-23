@@ -12,7 +12,6 @@
 		B92C3A1025935C2700630464 /* EmbeddedHttpServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = B92C3A0F25935C2700630464 /* EmbeddedHttpServer.swift */; };
 		B96829D7254EC721002B4B04 /* BlobCourierDelayedEventEmitter.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9229D282540E153000175D8 /* BlobCourierDelayedEventEmitter.swift */; };
 		B96829D9254EC727002B4B04 /* UploaderDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9409539253E1F5800A58583 /* UploaderDelegate.swift */; };
-		B96829DB254EC72C002B4B04 /* BlobCourierErrors.swift in Sources */ = {isa = PBXBuildFile; fileRef = B940950E253E1BEF00A58583 /* BlobCourierErrors.swift */; };
 		B96829DD254EC730002B4B04 /* BlobCourierEventEmitter.swift in Sources */ = {isa = PBXBuildFile; fileRef = B94094E3253E107400A58583 /* BlobCourierEventEmitter.swift */; };
 		B96829DF254EC736002B4B04 /* DownloaderDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B940948F253DFC0800A58583 /* DownloaderDelegate.swift */; };
 		B96829E8254EC872002B4B04 /* BlobCourierTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B96829E7254EC872002B4B04 /* BlobCourierTests.swift */; };
@@ -25,6 +24,8 @@
 		B96A888F25BC566300F42B65 /* BlobDownloader.swift in Sources */ = {isa = PBXBuildFile; fileRef = B96A888D25BC566300F42B65 /* BlobDownloader.swift */; };
 		B96A889625BC567000F42B65 /* BlobUploader.swift in Sources */ = {isa = PBXBuildFile; fileRef = B96A889525BC567000F42B65 /* BlobUploader.swift */; };
 		B96A889725BC567000F42B65 /* BlobUploader.swift in Sources */ = {isa = PBXBuildFile; fileRef = B96A889525BC567000F42B65 /* BlobUploader.swift */; };
+		B96A88A225BC5E7200F42B65 /* DownloaderDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B940948F253DFC0800A58583 /* DownloaderDelegate.swift */; };
+		B96A88A725BC5E7800F42B65 /* UploaderDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9409539253E1F5800A58583 /* UploaderDelegate.swift */; };
 		F4FF95D7245B92E800C19C63 /* BlobCourier.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4FF95D6245B92E800C19C63 /* BlobCourier.swift */; };
 /* End PBXBuildFile section */
 
@@ -66,8 +67,6 @@
 		B94094E2253E0C2900A58583 /* DownloaderDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DownloaderDelegate.m; sourceTree = "<group>"; };
 		B94094E3253E107400A58583 /* BlobCourierEventEmitter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlobCourierEventEmitter.swift; sourceTree = "<group>"; };
 		B94094E4253E107400A58583 /* BlobCourierEventEmitter.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BlobCourierEventEmitter.m; sourceTree = "<group>"; };
-		B940950E253E1BEF00A58583 /* BlobCourierErrors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlobCourierErrors.swift; sourceTree = "<group>"; };
-		B940950F253E1BEF00A58583 /* BlobCourierErrors.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BlobCourierErrors.m; sourceTree = "<group>"; };
 		B9409539253E1F5800A58583 /* UploaderDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UploaderDelegate.swift; sourceTree = "<group>"; };
 		B940953A253E1F5800A58583 /* UploaderDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = UploaderDelegate.m; sourceTree = "<group>"; };
 		B96829E5254EC872002B4B04 /* BlobCourierTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BlobCourierTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -137,19 +136,10 @@
 		58B511D21A9E6C8500147676 = {
 			isa = PBXGroup;
 			children = (
-				B96A889425BC567000F42B65 /* Upload */,
-				B96A888C25BC566300F42B65 /* Fetch */,
 				B96A888125BC565300F42B65 /* Common */,
-				B9229D292540E153000175D8 /* BlobCourierDelayedEventEmitter.m */,
-				B9229D282540E153000175D8 /* BlobCourierDelayedEventEmitter.swift */,
-				B940953A253E1F5800A58583 /* UploaderDelegate.m */,
-				B9409539253E1F5800A58583 /* UploaderDelegate.swift */,
-				B94094E4253E107400A58583 /* BlobCourierEventEmitter.m */,
-				B940950F253E1BEF00A58583 /* BlobCourierErrors.m */,
-				B940950E253E1BEF00A58583 /* BlobCourierErrors.swift */,
-				B94094E3253E107400A58583 /* BlobCourierEventEmitter.swift */,
-				B94094E2253E0C2900A58583 /* DownloaderDelegate.m */,
-				B940948F253DFC0800A58583 /* DownloaderDelegate.swift */,
+				B96A888C25BC566300F42B65 /* Fetch */,
+				B96A88AE25BC5EB800F42B65 /* Progress */,
+				B96A889425BC567000F42B65 /* Upload */,
 				F4FF95D6245B92E800C19C63 /* BlobCourier.swift */,
 				B3E7B5891CC2AC0600A0062D /* BlobCourier.m */,
 				F4FF95D5245B92E700C19C63 /* BlobCourier-Bridging-Header.h */,
@@ -183,7 +173,9 @@
 		B96A888C25BC566300F42B65 /* Fetch */ = {
 			isa = PBXGroup;
 			children = (
+				B94094E2253E0C2900A58583 /* DownloaderDelegate.m */,
 				B96A888D25BC566300F42B65 /* BlobDownloader.swift */,
+				B940948F253DFC0800A58583 /* DownloaderDelegate.swift */,
 			);
 			path = Fetch;
 			sourceTree = "<group>";
@@ -192,8 +184,21 @@
 			isa = PBXGroup;
 			children = (
 				B96A889525BC567000F42B65 /* BlobUploader.swift */,
+				B940953A253E1F5800A58583 /* UploaderDelegate.m */,
+				B9409539253E1F5800A58583 /* UploaderDelegate.swift */,
 			);
 			path = Upload;
+			sourceTree = "<group>";
+		};
+		B96A88AE25BC5EB800F42B65 /* Progress */ = {
+			isa = PBXGroup;
+			children = (
+				B9229D292540E153000175D8 /* BlobCourierDelayedEventEmitter.m */,
+				B9229D282540E153000175D8 /* BlobCourierDelayedEventEmitter.swift */,
+				B94094E4253E107400A58583 /* BlobCourierEventEmitter.m */,
+				B94094E3253E107400A58583 /* BlobCourierEventEmitter.swift */,
+			);
+			path = Progress;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -410,7 +415,6 @@
 				B96A888625BC565300F42B65 /* Errors.swift in Sources */,
 				B96A888425BC565300F42B65 /* Constants.swift in Sources */,
 				B96829D9254EC727002B4B04 /* UploaderDelegate.swift in Sources */,
-				B96829DB254EC72C002B4B04 /* BlobCourierErrors.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -418,7 +422,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B96A88A725BC5E7800F42B65 /* UploaderDelegate.swift in Sources */,
 				B96A888725BC565300F42B65 /* Errors.swift in Sources */,
+				B96A88A225BC5E7200F42B65 /* DownloaderDelegate.swift in Sources */,
 				B96829E8254EC872002B4B04 /* BlobCourierTests.swift in Sources */,
 				B92C3A1025935C2700630464 /* EmbeddedHttpServer.swift in Sources */,
 				B96A889725BC567000F42B65 /* BlobUploader.swift in Sources */,

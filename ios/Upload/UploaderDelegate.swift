@@ -63,7 +63,7 @@ open class UploaderDelegate: NSObject, URLSessionDataDelegate, URLSessionTaskDel
         print(
           "Error while uploading a file. Error description: \(theError.localizedDescription)"
         )
-        BlobCourierErrors.processUnexpectedException(reject: reject, error: theError)
+        Errors.processUnexpectedException(reject: reject, error: theError)
         return
      }
 
@@ -85,10 +85,10 @@ open class UploaderDelegate: NSObject, URLSessionDataDelegate, URLSessionTaskDel
 
       let noStatusCodeError =
         NSError(
-          domain: BlobCourier.libraryDomain,
+          domain: Constants.libraryDomain,
           code: -1,
           userInfo: [NSLocalizedDescriptionKey: "Received no status code"])
 
-      BlobCourierErrors.processUnexpectedException(reject: reject, error: noStatusCodeError)
+      Errors.processUnexpectedException(reject: reject, error: noStatusCodeError)
   }
 }
