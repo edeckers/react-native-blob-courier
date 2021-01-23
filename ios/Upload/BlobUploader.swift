@@ -4,43 +4,7 @@
 //  LICENSE file in the root directory of this source tree.
 import Foundation
 
-@objc(BlobCourier)
-open class BlobCourier: NSObject {
-  static let downloadTypeUnmanaged  = "Unmanaged"
-
-  static let libraryDomain  = "io.deckers.blob_courier"
-
-  static let parameterFilename = "filename"
-  static let parameterAbsoluteFilePath = "absoluteFilePath"
-  static let parameterHeaders = "headers"
-  static let parameterIOSSettings = "ios"
-  static let parameterMethod = "method"
-  static let parameterMimeType = "mimeType"
-  static let parameterPartPayload = "payload"
-  static let parameterParts = "parts"
-  static let parameterProgressInterval = "progressIntervalMilliseconds"
-  static let parameterReturnResponse = "returnResponse"
-  static let parameterTarget = "target"
-  static let parameterTaskId = "taskId"
-  static let parameterUrl = "url"
-
-  static let targetCache = "cache"
-  static let targetData = "data"
-  static let targetValues = [targetCache, targetData]
-
-  static let defaultMethod = "GET"
-  static let defaultMimeType = "application/octet-stream"
-  static let defaultProgressIntervalMilliseconds = 500
-  static let defaultTarget = targetCache
-
-  func assertRequiredParameter(input: NSDictionary, type: String, parameterName: String) throws {
-    let maybeValue = input[parameterName]
-
-    if maybeValue == nil {
-      throw BlobCourierErrors.BlobCourierError.requiredParameter(parameter: parameterName)
-    }
-  }
-
+open class BlobUploader: NSObject {
   func filterHeaders(unfilteredHeaders: NSDictionary) -> NSDictionary {
     Dictionary(uniqueKeysWithValues: unfilteredHeaders
       .map { key, value in (key as? String, value as? String) }
@@ -48,97 +12,8 @@ open class BlobCourier: NSObject {
       .mapValues { $0! } as NSDictionary
   }
 
-  // swiftlint:disable function_body_length
-  func fetchBlobFromValidatedParameters(
-    input: NSDictionary,
-    resolve: @escaping RCTPromiseResolveBlock,
-    reject: @escaping RCTPromiseRejectBlock
-  ) throws {
-    let taskId = (input[BlobCourier.parameterTaskId] as? String) ?? ""
-
-    let iosSettings =
-      (input[BlobCourier.parameterIOSSettings] as? NSDictionary) ??
-      NSDictionary()
-
-    let target =
-      (iosSettings[BlobCourier.parameterTarget] as? String) ??
-      BlobCourier.defaultTarget
-
-    if !isValidTargetValue(target) {
-      BlobCourierErrors.processInvalidValue(
-        reject: reject,
-        parameterName: BlobCourier.parameterTarget,
-        value: target)
-
-      return
-    }
-
-    let progressIntervalMilliseconds =
-      (input[BlobCourier.parameterProgressInterval] as? Int) ??
-        BlobCourier.defaultProgressIntervalMilliseconds
-
-    let url = (input[BlobCourier.parameterUrl] as? String) ?? ""
-
-    let filename = (input[BlobCourier.parameterFilename] as? String) ?? ""
-
-    let headers =
-      filterHeaders(unfilteredHeaders:
-        (input[BlobCourier.parameterHeaders] as? NSDictionary) ??
-        NSDictionary())
-
-    let targetUrl: URL =
-      try FileManager.default.url(
-        for: target == BlobCourier.targetData ? .documentDirectory : .cachesDirectory,
-        in: .userDomainMask,
-        appropriateFor: nil,
-        create: false)
-    let destinationFileUrl = targetUrl.appendingPathComponent(filename)
-
-    let fileURL = URL(string: url)
-    let sessionConfig = URLSessionConfiguration.default
-    let downloaderDelegate =
-      DownloaderDelegate(
-        taskId: taskId,
-        destinationFileUrl: destinationFileUrl,
-        progressIntervalMilliseconds: progressIntervalMilliseconds,
-        resolve: resolve,
-        reject: reject)
-
-    startFetchBlob(
-      sessionConfig: sessionConfig,
-      delegate: downloaderDelegate,
-      reject: reject,
-      fileURL: fileURL!,
-      headers: headers)
-  }
-  // swiftlint:enable function_body_length
-
-  func startFetchBlob(
-    sessionConfig: URLSessionConfiguration,
-    delegate: DownloaderDelegate,
-    reject: @escaping RCTPromiseRejectBlock,
-    fileURL: URL,
-    headers: NSDictionary) {
-    let session =
-     URLSession(
-       configuration: sessionConfig,
-       delegate: delegate,
-       delegateQueue: nil)
-
-    var request = URLRequest(url: fileURL)
-    for (key, value) in headers {
-      if let headerKey = key as? String, let headerValue = value as? String {
-        request.setValue(
-          headerValue,
-          forHTTPHeaderField: headerKey)
-      }
-    }
-
-    session.downloadTask(with: request).resume()
-  }
-
   func isValidTargetValue(_ value: String) -> Bool {
-    return BlobCourier.targetValues.contains(value)
+    return BlobUploader.targetValues.contains(value)
   }
 
   func buildRequestDataForFileUpload(
@@ -165,12 +40,12 @@ open class BlobCourier: NSObject {
       if let part = value as? [String: Any], let paramName = part["name"] as? String {
 
         if part["type"] as? String == "file" {
-          let payload = part[BlobCourier.parameterPartPayload] as? [String: String] ?? [:]
-          let absoluteFilePath = payload[BlobCourier.parameterAbsoluteFilePath]!
+          let payload = part[Errors.parameterPartPayload] as? [String: String] ?? [:]
+          let absoluteFilePath = payload[Errors.parameterAbsoluteFilePath]!
 
           let fileUrl = URL(string: absoluteFilePath)!
-          let filename = payload[BlobCourier.parameterFilename] ?? fileUrl.lastPathComponent
-          let mimeType = payload[BlobCourier.parameterMimeType] ?? BlobCourier.defaultMimeType
+          let filename = payload[Errors.parameterFilename] ?? fileUrl.lastPathComponent
+          let mimeType = payload[Errors.parameterMimeType] ?? BlobUploader.defaultMimeType
 
           try data.addFilePart(
             part: FilePart(
@@ -182,7 +57,7 @@ open class BlobCourier: NSObject {
           continue
         }
 
-        let formDataValue = part[BlobCourier.parameterPartPayload] as? String ?? ""
+        let formDataValue = part[Errors.parameterPartPayload] as? String ?? ""
 
         data.addFormDataPart(
           part: StringPart(
@@ -204,19 +79,19 @@ open class BlobCourier: NSObject {
     resolve: @escaping RCTPromiseResolveBlock,
     reject: @escaping RCTPromiseRejectBlock
   ) throws {
-    let taskId = (input[BlobCourier.parameterTaskId] as? String) ?? ""
+    let taskId = (input[Errors.parameterTaskId] as? String) ?? ""
 
     let progressIntervalMilliseconds =
-      (input[BlobCourier.parameterProgressInterval] as? Int) ??
-        BlobCourier.defaultProgressIntervalMilliseconds
+      (input[Errors.parameterProgressInterval] as? Int) ??
+        BlobUploader.defaultProgressIntervalMilliseconds
 
-    let url = (input[BlobCourier.parameterUrl] as? String) ?? ""
+    let url = (input[Errors.parameterUrl] as? String) ?? ""
 
     let urlObject = URL(string: url)!
 
-    let parts = (input[BlobCourier.parameterParts] as? NSArray) ?? NSArray()
+    let parts = (input[Errors.parameterParts] as? NSArray) ?? NSArray()
 
-    let returnResponse = (input[BlobCourier.parameterReturnResponse] as? Bool) ?? false
+    let returnResponse = (input[Errors.parameterReturnResponse] as? Bool) ?? false
 
     let sessionConfig = URLSessionConfiguration.default
     let uploaderDelegate =
@@ -230,54 +105,11 @@ open class BlobCourier: NSObject {
 
     let headers =
       filterHeaders(unfilteredHeaders:
-        (input[BlobCourier.parameterHeaders] as? NSDictionary) ??
+        (input[Errors.parameterHeaders] as? NSDictionary) ??
         NSDictionary())
 
     let (request, fileData) = try buildRequestDataForFileUpload(url: urlObject, parts: parts, headers: headers)
     session.uploadTask(with: request, from: fileData).resume()
-  }
-
-  @objc(fetchBlob:withResolver:withRejecter:)
-  func fetchBlob(
-    input: NSDictionary, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock
-  ) {
-    do {
-      try assertRequiredParameter(
-        input: input, type: "String", parameterName: BlobCourier.parameterFilename)
-      try assertRequiredParameter(
-        input: input, type: "String", parameterName: BlobCourier.parameterTaskId)
-      try assertRequiredParameter(
-        input: input, type: "String", parameterName: BlobCourier.parameterUrl)
-
-      try fetchBlobFromValidatedParameters(input: input, resolve: resolve, reject: reject)
-    } catch BlobCourierErrors.BlobCourierError.requiredParameter(let parameterName) {
-      BlobCourierErrors.processUnexpectedEmptyValue(reject: reject, parameterName: parameterName)
-    } catch {
-      BlobCourierErrors.processUnexpectedException(reject: reject, error: error)
-      print("\(error)")
-    }
-  }
-
-  @objc(uploadBlob:withResolver:withRejecter:)
-  func uploadBlob(
-    input: NSDictionary,
-    resolve: @escaping RCTPromiseResolveBlock,
-    reject: @escaping RCTPromiseRejectBlock
-  ) {
-    do {
-      try assertRequiredParameter(
-        input: input, type: "NSArray", parameterName: BlobCourier.parameterParts)
-      try assertRequiredParameter(
-        input: input, type: "String", parameterName: BlobCourier.parameterTaskId)
-      try assertRequiredParameter(
-        input: input, type: "String", parameterName: BlobCourier.parameterUrl)
-
-      try uploadBlobFromValidatedParameters(input: input, resolve: resolve, reject: reject)
-    } catch BlobCourierErrors.BlobCourierError.requiredParameter(let parameterName) {
-      BlobCourierErrors.processUnexpectedEmptyValue(reject: reject, parameterName: parameterName)
-    } catch {
-      BlobCourierErrors.processUnexpectedException(reject: reject, error: error)
-    }
   }
 }
 
