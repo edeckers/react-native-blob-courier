@@ -20,6 +20,10 @@
 		B96A889625BC567000F42B65 /* BlobUploader.swift in Sources */ = {isa = PBXBuildFile; fileRef = B96A889525BC567000F42B65 /* BlobUploader.swift */; };
 		B96A8E3925BCA76300F42B65 /* BlobCourierDelayedEventEmitter.swift in Sources */ = {isa = PBXBuildFile; fileRef = B96A8E3725BCA76300F42B65 /* BlobCourierDelayedEventEmitter.swift */; };
 		B96A8E3A25BCA76300F42B65 /* BlobCourierEventEmitter.swift in Sources */ = {isa = PBXBuildFile; fileRef = B96A8E3825BCA76300F42B65 /* BlobCourierEventEmitter.swift */; };
+		B96A8F0925BCB1DA00F42B65 /* BlobCourier.m in Sources */ = {isa = PBXBuildFile; fileRef = B96A8F0825BCB1DA00F42B65 /* BlobCourier.m */; };
+		B96A8F0A25BCB1DA00F42B65 /* BlobCourier.m in Sources */ = {isa = PBXBuildFile; fileRef = B96A8F0825BCB1DA00F42B65 /* BlobCourier.m */; };
+		B96A8FEC25BCB87E00F42B65 /* BlobCourierEventEmitter.m in Sources */ = {isa = PBXBuildFile; fileRef = B96A8FEB25BCB87E00F42B65 /* BlobCourierEventEmitter.m */; };
+		B96A8FED25BCB87E00F42B65 /* BlobCourierEventEmitter.m in Sources */ = {isa = PBXBuildFile; fileRef = B96A8FEB25BCB87E00F42B65 /* BlobCourierEventEmitter.m */; };
 		F4FF95D7245B92E800C19C63 /* BlobCourier.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4FF95D6245B92E800C19C63 /* BlobCourier.swift */; };
 /* End PBXBuildFile section */
 
@@ -65,6 +69,8 @@
 		B96A889525BC567000F42B65 /* BlobUploader.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BlobUploader.swift; sourceTree = "<group>"; };
 		B96A8E3725BCA76300F42B65 /* BlobCourierDelayedEventEmitter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BlobCourierDelayedEventEmitter.swift; sourceTree = "<group>"; };
 		B96A8E3825BCA76300F42B65 /* BlobCourierEventEmitter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BlobCourierEventEmitter.swift; sourceTree = "<group>"; };
+		B96A8F0825BCB1DA00F42B65 /* BlobCourier.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BlobCourier.m; sourceTree = "<group>"; };
+		B96A8FEB25BCB87E00F42B65 /* BlobCourierEventEmitter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BlobCourierEventEmitter.m; sourceTree = "<group>"; };
 		E431917845347E135BAF189E /* Pods-BlobCourier.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BlobCourier.release.xcconfig"; path = "Target Support Files/Pods-BlobCourier/Pods-BlobCourier.release.xcconfig"; sourceTree = "<group>"; };
 		F0F8F7008E715FB238D44E2E /* Pods-BlobCourier.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BlobCourier.debug.xcconfig"; path = "Target Support Files/Pods-BlobCourier/Pods-BlobCourier.debug.xcconfig"; sourceTree = "<group>"; };
 		F4FF95D5245B92E700C19C63 /* BlobCourier-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "BlobCourier-Bridging-Header.h"; sourceTree = "<group>"; };
@@ -125,6 +131,8 @@
 		58B511D21A9E6C8500147676 = {
 			isa = PBXGroup;
 			children = (
+				B96A8FEB25BCB87E00F42B65 /* BlobCourierEventEmitter.m */,
+				B96A8F0825BCB1DA00F42B65 /* BlobCourier.m */,
 				B96A8E3725BCA76300F42B65 /* BlobCourierDelayedEventEmitter.swift */,
 				B96A8E3825BCA76300F42B65 /* BlobCourierEventEmitter.swift */,
 				B96A889525BC567000F42B65 /* BlobUploader.swift */,
@@ -393,6 +401,8 @@
 			files = (
 				F4FF95D7245B92E800C19C63 /* BlobCourier.swift in Sources */,
 				B96829DF254EC736002B4B04 /* DownloaderDelegate.swift in Sources */,
+				B96A8FEC25BCB87E00F42B65 /* BlobCourierEventEmitter.m in Sources */,
+				B96A8F0925BCB1DA00F42B65 /* BlobCourier.m in Sources */,
 				B96A888E25BC566300F42B65 /* BlobDownloader.swift in Sources */,
 				B96A8E3925BCA76300F42B65 /* BlobCourierDelayedEventEmitter.swift in Sources */,
 				B96A889625BC567000F42B65 /* BlobUploader.swift in Sources */,
@@ -407,8 +417,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B96A8FED25BCB87E00F42B65 /* BlobCourierEventEmitter.m in Sources */,
 				B96829E8254EC872002B4B04 /* BlobCourierTests.swift in Sources */,
 				B92C3A1025935C2700630464 /* EmbeddedHttpServer.swift in Sources */,
+				B96A8F0A25BCB1DA00F42B65 /* BlobCourier.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

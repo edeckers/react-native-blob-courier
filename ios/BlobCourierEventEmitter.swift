@@ -4,6 +4,7 @@
 // LICENSE file in the root directory of this source tree.
 import Foundation
 
+@objc(BlobCourierEventEmitter)
 open class BlobCourierEventEmitter: RCTEventEmitter {
   public static let eventProgress = "BlobCourierProgress"
 
