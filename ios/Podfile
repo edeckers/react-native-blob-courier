@@ -39,7 +39,6 @@ target 'BlobCourier' do
   use_native_modules!
 
   target 'BlobCourierTests' do
-      # inherit! :search_paths
       inherit! :complete
       # Pods for testing
       pod 'Embassy', '~> 4.1'

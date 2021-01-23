@@ -4,7 +4,6 @@
 // LICENSE file in the root directory of this source tree.
 import Foundation
 
-@objc(DownloaderDelegate)
 open class DownloaderDelegate: NSObject, URLSessionDownloadDelegate {
   private static let downloadTypeUnmanaged  = "Unmanaged"
 
@@ -38,7 +37,7 @@ open class DownloaderDelegate: NSObject, URLSessionDownloadDelegate {
   public func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
       if let theError = error {
         print("session: didCompleteWithError: \(theError.localizedDescription)")
-        BlobCourierErrors.processUnexpectedException(reject: self.reject, error: theError)
+        Errors.processUnexpectedException(reject: self.reject, error: theError)
 
         session.finishTasksAndInvalidate()
       }
@@ -71,7 +70,7 @@ open class DownloaderDelegate: NSObject, URLSessionDownloadDelegate {
         "Error took place while downloading a file. Error description: \(theError.localizedDescription)"
       )
 
-      BlobCourierErrors.processUnexpectedException(reject: self.reject, error: theError)
+      Errors.processUnexpectedException(reject: self.reject, error: theError)
       return
     }
 
@@ -93,7 +92,7 @@ open class DownloaderDelegate: NSObject, URLSessionDownloadDelegate {
         print("Successfully moved file to \(self.destinationFileUrl)")
         self.resolve(result)
       } catch let writeError {
-        BlobCourierErrors.processUnexpectedException(reject: reject, error: writeError)
+        Errors.processUnexpectedException(reject: reject, error: writeError)
       }
     }
   }
