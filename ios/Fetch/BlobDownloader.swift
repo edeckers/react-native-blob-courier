@@ -4,7 +4,6 @@
 //  LICENSE file in the root directory of this source tree.
 import Foundation
 
-@objc(BlobDownloader)
 open class BlobDownloader: NSObject {
   static func filterHeaders(unfilteredHeaders: NSDictionary) -> NSDictionary {
     Dictionary(uniqueKeysWithValues: unfilteredHeaders

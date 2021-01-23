@@ -4,7 +4,6 @@
 // LICENSE file in the root directory of this source tree.
 import Foundation
 
-@objc(DownloaderDelegate)
 open class DownloaderDelegate: NSObject, URLSessionDownloadDelegate {
   private static let downloadTypeUnmanaged  = "Unmanaged"
 
