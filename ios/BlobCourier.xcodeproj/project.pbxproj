@@ -63,14 +63,10 @@
 		7487E74E1A0C30B41CC57453 /* Pods-BlobCourier-BlobCourierTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BlobCourier-BlobCourierTests.release.xcconfig"; path = "Target Support Files/Pods-BlobCourier-BlobCourierTests/Pods-BlobCourier-BlobCourierTests.release.xcconfig"; sourceTree = "<group>"; };
 		B3E7B5891CC2AC0600A0062D /* BlobCourier.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BlobCourier.m; sourceTree = "<group>"; };
 		B9229D282540E153000175D8 /* BlobCourierDelayedEventEmitter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlobCourierDelayedEventEmitter.swift; sourceTree = "<group>"; };
-		B9229D292540E153000175D8 /* BlobCourierDelayedEventEmitter.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BlobCourierDelayedEventEmitter.m; sourceTree = "<group>"; };
 		B92C3A0F25935C2700630464 /* EmbeddedHttpServer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EmbeddedHttpServer.swift; sourceTree = "<group>"; };
 		B940948F253DFC0800A58583 /* DownloaderDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloaderDelegate.swift; sourceTree = "<group>"; };
-		B94094E2253E0C2900A58583 /* DownloaderDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DownloaderDelegate.m; sourceTree = "<group>"; };
 		B94094E3253E107400A58583 /* BlobCourierEventEmitter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlobCourierEventEmitter.swift; sourceTree = "<group>"; };
-		B94094E4253E107400A58583 /* BlobCourierEventEmitter.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BlobCourierEventEmitter.m; sourceTree = "<group>"; };
 		B9409539253E1F5800A58583 /* UploaderDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UploaderDelegate.swift; sourceTree = "<group>"; };
-		B940953A253E1F5800A58583 /* UploaderDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = UploaderDelegate.m; sourceTree = "<group>"; };
 		B96829E5254EC872002B4B04 /* BlobCourierTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BlobCourierTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		B96829E7254EC872002B4B04 /* BlobCourierTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlobCourierTests.swift; sourceTree = "<group>"; };
 		B96829E9254EC872002B4B04 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -175,7 +171,6 @@
 		B96A888C25BC566300F42B65 /* Fetch */ = {
 			isa = PBXGroup;
 			children = (
-				B94094E2253E0C2900A58583 /* DownloaderDelegate.m */,
 				B96A888D25BC566300F42B65 /* BlobDownloader.swift */,
 				B940948F253DFC0800A58583 /* DownloaderDelegate.swift */,
 			);
@@ -186,7 +181,6 @@
 			isa = PBXGroup;
 			children = (
 				B96A889525BC567000F42B65 /* BlobUploader.swift */,
-				B940953A253E1F5800A58583 /* UploaderDelegate.m */,
 				B9409539253E1F5800A58583 /* UploaderDelegate.swift */,
 			);
 			path = Upload;
@@ -195,9 +189,7 @@
 		B96A88AE25BC5EB800F42B65 /* Progress */ = {
 			isa = PBXGroup;
 			children = (
-				B9229D292540E153000175D8 /* BlobCourierDelayedEventEmitter.m */,
 				B9229D282540E153000175D8 /* BlobCourierDelayedEventEmitter.swift */,
-				B94094E4253E107400A58583 /* BlobCourierEventEmitter.m */,
 				B94094E3253E107400A58583 /* BlobCourierEventEmitter.swift */,
 			);
 			path = Progress;
@@ -259,6 +251,7 @@
 					};
 					B96829E4254EC872002B4B04 = {
 						CreatedOnToolsVersion = 12.1;
+						LastSwiftMigration = 1230;
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -588,6 +581,7 @@
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
 				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
@@ -619,6 +613,7 @@
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
 				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;

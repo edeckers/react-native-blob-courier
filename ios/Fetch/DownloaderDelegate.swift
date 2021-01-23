@@ -5,7 +5,6 @@
 import Foundation
 import React
 
-@objc(DownloaderDelegate)
 open class DownloaderDelegate: NSObject, URLSessionDownloadDelegate {
   private static let downloadTypeUnmanaged  = "Unmanaged"
 

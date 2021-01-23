@@ -6,7 +6,6 @@
 //
 import Foundation
 
-@objc(BlobCourierDelayedEventEmitter)
 open class BlobCourierDelayedEventEmitter: NSObject {
   let taskId: String
   let eventEmitter: BlobCourierEventEmitter?

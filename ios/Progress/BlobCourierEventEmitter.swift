@@ -5,7 +5,6 @@
 import Foundation
 import React
 
-@objc(BlobCourierEventEmitter)
 open class BlobCourierEventEmitter: RCTEventEmitter {
   public static let eventProgress = "BlobCourierProgress"
 

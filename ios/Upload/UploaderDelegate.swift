@@ -5,7 +5,6 @@
 import Foundation
 import React
 
-@objc(UploaderDelegate)
 open class UploaderDelegate: NSObject, URLSessionDataDelegate, URLSessionTaskDelegate {
   private static let uploadTypeUnmanaged  = "Unmanaged"
 

@@ -5,7 +5,6 @@
 import Foundation
 import React
 
-@objc(BlobDownloader)
 open class BlobDownloader: NSObject {
   static func filterHeaders(unfilteredHeaders: NSDictionary) -> NSDictionary {
     Dictionary(uniqueKeysWithValues: unfilteredHeaders
