@@ -26,6 +26,8 @@
 		B96A889725BC567000F42B65 /* BlobUploader.swift in Sources */ = {isa = PBXBuildFile; fileRef = B96A889525BC567000F42B65 /* BlobUploader.swift */; };
 		B96A88A225BC5E7200F42B65 /* DownloaderDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B940948F253DFC0800A58583 /* DownloaderDelegate.swift */; };
 		B96A88A725BC5E7800F42B65 /* UploaderDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9409539253E1F5800A58583 /* UploaderDelegate.swift */; };
+		B96A8B2825BC807200F42B65 /* BlobCourierEventEmitter.swift in Sources */ = {isa = PBXBuildFile; fileRef = B94094E3253E107400A58583 /* BlobCourierEventEmitter.swift */; };
+		B96A8B2B25BC808000F42B65 /* BlobCourierDelayedEventEmitter.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9229D282540E153000175D8 /* BlobCourierDelayedEventEmitter.swift */; };
 		F4FF95D7245B92E800C19C63 /* BlobCourier.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4FF95D6245B92E800C19C63 /* BlobCourier.swift */; };
 /* End PBXBuildFile section */
 
@@ -422,6 +424,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B96A8B2B25BC808000F42B65 /* BlobCourierDelayedEventEmitter.swift in Sources */,
+				B96A8B2825BC807200F42B65 /* BlobCourierEventEmitter.swift in Sources */,
 				B96A88A725BC5E7800F42B65 /* UploaderDelegate.swift in Sources */,
 				B96A888725BC565300F42B65 /* Errors.swift in Sources */,
 				B96A88A225BC5E7200F42B65 /* DownloaderDelegate.swift in Sources */,
