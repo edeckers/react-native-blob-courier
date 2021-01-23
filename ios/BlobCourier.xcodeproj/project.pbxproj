@@ -137,9 +137,6 @@
 				B96A8E3825BCA76300F42B65 /* BlobCourierEventEmitter.swift */,
 				B96A889525BC567000F42B65 /* BlobUploader.swift */,
 				B9409539253E1F5800A58583 /* UploaderDelegate.swift */,
-				B96A888225BC565300F42B65 /* Constants.swift */,
-				B96A888325BC565300F42B65 /* Errors.swift */,
-				B96A888D25BC566300F42B65 /* BlobDownloader.swift */,
 				B940948F253DFC0800A58583 /* DownloaderDelegate.swift */,
 				B96A888125BC565300F42B65 /* Common */,
 				B96A888C25BC566300F42B65 /* Fetch */,
@@ -168,6 +165,8 @@
 		B96A888125BC565300F42B65 /* Common */ = {
 			isa = PBXGroup;
 			children = (
+				B96A888225BC565300F42B65 /* Constants.swift */,
+				B96A888325BC565300F42B65 /* Errors.swift */,
 			);
 			path = Common;
 			sourceTree = "<group>";
@@ -175,6 +174,7 @@
 		B96A888C25BC566300F42B65 /* Fetch */ = {
 			isa = PBXGroup;
 			children = (
+				B96A888D25BC566300F42B65 /* BlobDownloader.swift */,
 			);
 			path = Fetch;
 			sourceTree = "<group>";
