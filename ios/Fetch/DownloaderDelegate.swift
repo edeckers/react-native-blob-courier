@@ -6,7 +6,7 @@ import Foundation
 
 open class DownloaderDelegate: NSObject, URLSessionDownloadDelegate {
   typealias SuccessHandler = (NSDictionary) -> Void
-  typealias FailureHandler = (Error) -> Void
+  typealias FailureHandler = (BlobCourierError) -> Void
 
   private static let downloadTypeUnmanaged  = "Unmanaged"
 
@@ -40,7 +40,7 @@ open class DownloaderDelegate: NSObject, URLSessionDownloadDelegate {
   public func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
       if let theError = error {
         print("session: didCompleteWithError: \(theError.localizedDescription)")
-	self.reject(theError)
+	self.reject(Errors.createUnexpectedError(error: theError))
 
         session.finishTasksAndInvalidate()
       }

@@ -14,7 +14,7 @@ open class BlobDownloader: NSObject {
 
   // swiftlint:disable function_body_length
   static func fetchBlobFromValidatedParameters(input: NSDictionary) throws ->
-    Result<NSDictionary, Error> {
+    Result<NSDictionary, BlobCourierError> {
     let taskId = (input[Constants.parameterTaskId] as? String) ?? ""
 
     let iosSettings =
@@ -59,7 +59,7 @@ open class BlobDownloader: NSObject {
     let group = DispatchGroup()
     let queue = DispatchQueue.global()
 
-    var result: Result<NSDictionary, Error> = Result { [:] }
+    var result: Result<NSDictionary, BlobCourierError> = .success([:])
 
     group.enter()
 
@@ -70,7 +70,7 @@ open class BlobDownloader: NSObject {
         group.leave()
       }
 
-      let failedResult = { (error: Error) -> Void in
+      let failedResult = { (error: BlobCourierError) -> Void in
         result = .failure(error)
 
         group.leave()

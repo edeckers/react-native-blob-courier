@@ -6,7 +6,7 @@ import Foundation
 
 open class UploaderDelegate: NSObject, URLSessionDataDelegate, URLSessionTaskDelegate {
   typealias SuccessHandler = (NSDictionary) -> Void
-  typealias FailureHandler = (Error) -> Void
+  typealias FailureHandler = (BlobCourierError) -> Void
 
   private static let uploadTypeUnmanaged  = "Unmanaged"
 

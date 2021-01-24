@@ -18,20 +18,18 @@ open class BlobCourier: NSObject {
       try Errors.assertRequiredParameter(
         input: input, type: "String", parameterName: Constants.parameterUrl)
 
-      let result: Result<NSDictionary, Error> =
-        try BlobDownloader.fetchBlobFromValidatedParameters(input: input)
+      let result = try BlobDownloader.fetchBlobFromValidatedParameters(input: input)
 
       switch result {
       case .success(let success):
         resolve(success)
       case .failure(let error):
-        reject("FIX_THIS_CODE", "FIX_THIS_MESSAGE", nil) // FIXME ED Process error
+        reject(error.code, error.message, error.error)
       }
-    } catch Errors.BlobCourierError.requiredParameter(let parameterName) {
-      Errors.processUnexpectedEmptyValue(reject: reject, parameterName: parameterName)
     } catch {
-      Errors.processUnexpectedException(reject: reject, error: error)
-      print("\(error)")
+      let unexpectedError = Errors.createUnexpectedError(error: error)
+
+      reject(unexpectedError.code, unexpectedError.message, unexpectedError.error)
     }
   }
 
@@ -55,12 +53,12 @@ open class BlobCourier: NSObject {
       case .success(let success):
         resolve(success)
       case .failure(let error):
-        reject("FIX_THIS_CODE", "FIX_THIS_MESSAGE", nil) // FIXME ED Process error
+        reject(error.code, error.message, error.error)
       }
-     } catch Errors.BlobCourierError.requiredParameter(let parameterName) {
-      Errors.processUnexpectedEmptyValue(reject: reject, parameterName: parameterName)
     } catch {
-      Errors.processUnexpectedException(reject: reject, error: error)
+      let unexpectedError = Errors.createUnexpectedError(error: error)
+
+      reject(unexpectedError.code, unexpectedError.message, unexpectedError.error)
     }
   }
 }

@@ -75,7 +75,7 @@ open class BlobUploader: NSObject {
   }
 
   static func uploadBlobFromValidatedParameters(input: NSDictionary) throws ->
-    Result<NSDictionary, Error> {
+    Result<NSDictionary, BlobCourierError> {
     let taskId = (input[Constants.parameterTaskId] as? String) ?? ""
 
     let progressIntervalMilliseconds =
@@ -95,7 +95,7 @@ open class BlobUploader: NSObject {
     let group = DispatchGroup()
     let queue = DispatchQueue.global()
 
-    var result: Result<NSDictionary, Error> = Result { [:] }
+    var result: Result<NSDictionary, BlobCourierError> = .success([:])
 
     group.enter()
 
@@ -106,7 +106,7 @@ open class BlobUploader: NSObject {
         group.leave()
       }
 
-      let failedResult = { (error: Error) -> Void in
+      let failedResult = { (error: BlobCourierError) -> Void in
         result = .failure(error)
 
         group.leave()
