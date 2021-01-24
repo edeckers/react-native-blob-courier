@@ -128,7 +128,6 @@ class BlobCourierTests: XCTestCase {
         dispatchGroup.wait(timeout: .now() +
           DispatchTimeInterval.seconds(BlobCourierTests.defaultPromiseTimeoutSeconds))
 
-        // sleep(BlobCourierTests.defaultPromiseTimeoutSeconds)
         httpServer.stop()
 
         XCTAssertTrue(result.0)
@@ -344,6 +343,7 @@ class BlobCourierTests: XCTestCase {
 
         dispatchGroup.wait(timeout: .now() +
           DispatchTimeInterval.seconds(BlobCourierTests.defaultPromiseTimeoutSeconds))
+
         XCTAssertTrue(result.0)
     }
 

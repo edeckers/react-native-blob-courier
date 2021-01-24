@@ -5,10 +5,13 @@
 import Foundation
 
 open class UploaderDelegate: NSObject, URLSessionDataDelegate, URLSessionTaskDelegate {
+  typealias SuccessHandler = (NSDictionary) -> Void
+  typealias FailureHandler = (BlobCourierError) -> Void
+
   private static let uploadTypeUnmanaged  = "Unmanaged"
 
-  private let resolve: RCTPromiseResolveBlock
-  private let reject: RCTPromiseRejectBlock
+  private let resolve: SuccessHandler
+  private let reject: FailureHandler
 
   private let taskId: String
   private let returnResponse: Bool
@@ -21,8 +24,8 @@ open class UploaderDelegate: NSObject, URLSessionDataDelegate, URLSessionTaskDel
     taskId: String,
     returnResponse: Bool,
     progressIntervalMilliseconds: Int,
-    resolve: @escaping RCTPromiseResolveBlock,
-    reject: @escaping RCTPromiseRejectBlock) {
+    resolve: @escaping SuccessHandler,
+    reject: @escaping FailureHandler) {
     self.taskId = taskId
     self.returnResponse = returnResponse
 
@@ -62,7 +65,7 @@ open class UploaderDelegate: NSObject, URLSessionDataDelegate, URLSessionTaskDel
         print(
           "Error while uploading a file. Error description: \(theError.localizedDescription)"
         )
-        Errors.processUnexpectedException(reject: reject, error: theError)
+        reject(Errors.createUnexpectedError(error: theError))
         return
      }
 
@@ -88,6 +91,6 @@ open class UploaderDelegate: NSObject, URLSessionDataDelegate, URLSessionTaskDel
           code: -1,
           userInfo: [NSLocalizedDescriptionKey: "Received no status code"])
 
-      Errors.processUnexpectedException(reject: reject, error: noStatusCodeError)
+      reject(Errors.createUnexpectedError(error: noStatusCodeError))
   }
 }

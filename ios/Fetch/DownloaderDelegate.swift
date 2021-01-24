@@ -5,11 +5,14 @@
 import Foundation
 
 open class DownloaderDelegate: NSObject, URLSessionDownloadDelegate {
+  typealias SuccessHandler = (NSDictionary) -> Void
+  typealias FailureHandler = (BlobCourierError) -> Void
+
   private static let downloadTypeUnmanaged  = "Unmanaged"
 
   let destinationFileUrl: URL
-  let resolve: RCTPromiseResolveBlock
-  let reject: RCTPromiseRejectBlock
+  let resolve: SuccessHandler
+  let reject: FailureHandler
   let taskId: String
 
   let eventEmitter: BlobCourierDelayedEventEmitter
@@ -18,8 +21,8 @@ open class DownloaderDelegate: NSObject, URLSessionDownloadDelegate {
     taskId: String,
     destinationFileUrl: URL,
     progressIntervalMilliseconds: Int,
-    resolve: @escaping RCTPromiseResolveBlock,
-    reject: @escaping RCTPromiseRejectBlock) {
+    resolve: @escaping SuccessHandler,
+    reject: @escaping FailureHandler) {
     self.destinationFileUrl = destinationFileUrl
     self.resolve = resolve
     self.reject = reject
@@ -37,7 +40,7 @@ open class DownloaderDelegate: NSObject, URLSessionDownloadDelegate {
   public func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
       if let theError = error {
         print("session: didCompleteWithError: \(theError.localizedDescription)")
-        Errors.processUnexpectedException(reject: self.reject, error: theError)
+	self.reject(Errors.createUnexpectedError(error: theError))
 
         session.finishTasksAndInvalidate()
       }
@@ -70,7 +73,7 @@ open class DownloaderDelegate: NSObject, URLSessionDownloadDelegate {
         "Error took place while downloading a file. Error description: \(theError.localizedDescription)"
       )
 
-      Errors.processUnexpectedException(reject: self.reject, error: theError)
+      Errors.createUnexpectedError(error: theError)
       return
     }
 
@@ -92,7 +95,7 @@ open class DownloaderDelegate: NSObject, URLSessionDownloadDelegate {
         print("Successfully moved file to \(self.destinationFileUrl)")
         self.resolve(result)
       } catch let writeError {
-        Errors.processUnexpectedException(reject: reject, error: writeError)
+        self.reject(Errors.createUnexpectedError(error: writeError))
       }
     }
   }

@@ -10,20 +10,28 @@ open class BlobCourier: NSObject {
   func fetchBlob(
     input: NSDictionary, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock
   ) {
-    do {
-      try Errors.assertRequiredParameter(
-        input: input, type: "String", parameterName: Constants.parameterFilename)
-      try Errors.assertRequiredParameter(
-        input: input, type: "String", parameterName: Constants.parameterTaskId)
-      try Errors.assertRequiredParameter(
-        input: input, type: "String", parameterName: Constants.parameterUrl)
+    DispatchQueue.global(qos: .background).async {
+      do {
+        try Errors.assertRequiredParameter(
+          input: input, type: "String", parameterName: Constants.parameterFilename)
+        try Errors.assertRequiredParameter(
+          input: input, type: "String", parameterName: Constants.parameterTaskId)
+        try Errors.assertRequiredParameter(
+          input: input, type: "String", parameterName: Constants.parameterUrl)
 
-      try BlobDownloader.fetchBlobFromValidatedParameters(input: input, resolve: resolve, reject: reject)
-    } catch Errors.BlobCourierError.requiredParameter(let parameterName) {
-      Errors.processUnexpectedEmptyValue(reject: reject, parameterName: parameterName)
-    } catch {
-      Errors.processUnexpectedException(reject: reject, error: error)
-      print("\(error)")
+        let result = try BlobDownloader.fetchBlobFromValidatedParameters(input: input)
+
+        switch result {
+        case .success(let success):
+          resolve(success)
+        case .failure(let error):
+          reject(error.code, error.message, error.error)
+        }
+      } catch {
+        let unexpectedError = Errors.createUnexpectedError(error: error)
+
+        reject(unexpectedError.code, unexpectedError.message, unexpectedError.error)
+      }
     }
   }
 
@@ -33,19 +41,28 @@ open class BlobCourier: NSObject {
     resolve: @escaping RCTPromiseResolveBlock,
     reject: @escaping RCTPromiseRejectBlock
   ) {
-    do {
-      try Errors.assertRequiredParameter(
-        input: input, type: "NSArray", parameterName: Constants.parameterParts)
-      try Errors.assertRequiredParameter(
-        input: input, type: "String", parameterName: Constants.parameterTaskId)
-      try Errors.assertRequiredParameter(
-        input: input, type: "String", parameterName: Constants.parameterUrl)
+    DispatchQueue.global(qos: .background).async {
+      do {
+        try Errors.assertRequiredParameter(
+          input: input, type: "NSArray", parameterName: Constants.parameterParts)
+        try Errors.assertRequiredParameter(
+          input: input, type: "String", parameterName: Constants.parameterTaskId)
+        try Errors.assertRequiredParameter(
+          input: input, type: "String", parameterName: Constants.parameterUrl)
 
-      try BlobUploader.uploadBlobFromValidatedParameters(input: input, resolve: resolve, reject: reject)
-    } catch Errors.BlobCourierError.requiredParameter(let parameterName) {
-      Errors.processUnexpectedEmptyValue(reject: reject, parameterName: parameterName)
-    } catch {
-      Errors.processUnexpectedException(reject: reject, error: error)
+        let result = try BlobUploader.uploadBlobFromValidatedParameters(input: input)
+
+        switch result {
+        case .success(let success):
+          resolve(success)
+        case .failure(let error):
+          reject(error.code, error.message, error.error)
+        }
+      } catch {
+        let unexpectedError = Errors.createUnexpectedError(error: error)
+
+        reject(unexpectedError.code, unexpectedError.message, unexpectedError.error)
+      }
     }
   }
 }

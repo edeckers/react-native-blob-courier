@@ -13,11 +13,8 @@ open class BlobDownloader: NSObject {
   }
 
   // swiftlint:disable function_body_length
-  static func fetchBlobFromValidatedParameters(
-    input: NSDictionary,
-    resolve: @escaping RCTPromiseResolveBlock,
-    reject: @escaping RCTPromiseRejectBlock
-  ) throws {
+  static func fetchBlobFromValidatedParameters(input: NSDictionary) throws ->
+    Result<NSDictionary, BlobCourierError> {
     let taskId = (input[Constants.parameterTaskId] as? String) ?? ""
 
     let iosSettings =
@@ -29,12 +26,10 @@ open class BlobDownloader: NSObject {
       Constants.defaultTarget
 
     if !isValidTargetValue(target) {
-      Errors.processInvalidValue(
-        reject: reject,
-        parameterName: Constants.parameterTarget,
-        value: target)
+      let invalidTargetError =
+        Errors.createInvalidValue(parameterName: Constants.parameterTarget, value: target)
 
-      return
+      return .failure(invalidTargetError)
     }
 
     let progressIntervalMilliseconds =
@@ -60,27 +55,51 @@ open class BlobDownloader: NSObject {
 
     let fileURL = URL(string: url)
     let sessionConfig = URLSessionConfiguration.default
-    let downloaderDelegate =
-      DownloaderDelegate(
-        taskId: taskId,
-        destinationFileUrl: destinationFileUrl,
-        progressIntervalMilliseconds: progressIntervalMilliseconds,
-        resolve: resolve,
-        reject: reject)
 
-    startFetchBlob(
-      sessionConfig: sessionConfig,
-      delegate: downloaderDelegate,
-      reject: reject,
-      fileURL: fileURL!,
-      headers: headers)
+    let group = DispatchGroup()
+    let queue = DispatchQueue.global()
+
+    var result: Result<NSDictionary, BlobCourierError> = .success([:])
+
+    group.enter()
+
+    queue.async(group: group) {
+      let succesfulResult = { (theResult: NSDictionary) -> Void in
+        result = .success(theResult)
+
+        group.leave()
+      }
+
+      let failedResult = { (error: BlobCourierError) -> Void in
+        result = .failure(error)
+
+        group.leave()
+      }
+
+      let downloaderDelegate =
+        DownloaderDelegate(
+          taskId: taskId,
+          destinationFileUrl: destinationFileUrl,
+          progressIntervalMilliseconds: progressIntervalMilliseconds,
+          resolve: succesfulResult,
+          reject: failedResult)
+
+      startFetchBlob(
+        sessionConfig: sessionConfig,
+        delegate: downloaderDelegate,
+        fileURL: fileURL!,
+        headers: headers)
+    }
+
+    group.wait()
+
+    return result
   }
   // swiftlint:enable function_body_length
 
-  static func startFetchBlob(
+  private static func startFetchBlob(
     sessionConfig: URLSessionConfiguration,
     delegate: DownloaderDelegate,
-    reject: @escaping RCTPromiseRejectBlock,
     fileURL: URL,
     headers: NSDictionary) {
     let session =
