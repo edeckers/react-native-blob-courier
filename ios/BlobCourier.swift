@@ -12,12 +12,7 @@ open class BlobCourier: NSObject {
   ) {
     DispatchQueue.global(qos: .background).async {
       do {
-        try Errors.assertRequiredParameter(
-          input: input, type: "String", parameterName: Constants.parameterFilename)
-        try Errors.assertRequiredParameter(
-          input: input, type: "String", parameterName: Constants.parameterTaskId)
-        try Errors.assertRequiredParameter(
-          input: input, type: "String", parameterName: Constants.parameterUrl)
+        let errorOrParameters = DownloaderParameterFactory.fromInput(input: input)
 
         let result = try BlobDownloader.fetchBlobFromValidatedParameters(input: input)
 
