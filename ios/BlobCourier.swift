@@ -18,9 +18,15 @@ open class BlobCourier: NSObject {
       try Errors.assertRequiredParameter(
         input: input, type: "String", parameterName: Constants.parameterUrl)
 
-      let result: NSDictionary = try BlobDownloader.fetchBlobFromValidatedParameters(input: input, reject: reject)
+      let result: Result<NSDictionary, Error> =
+        try BlobDownloader.fetchBlobFromValidatedParameters(input: input)
 
-      return resolve(result)
+      switch result {
+      case .success(let success):
+        resolve(success)
+      case .failure(let error):
+        reject("FIX_THIS_CODE", "FIX_THIS_MESSAGE", nil) // FIXME ED Process error
+      }
     } catch Errors.BlobCourierError.requiredParameter(let parameterName) {
       Errors.processUnexpectedEmptyValue(reject: reject, parameterName: parameterName)
     } catch {

@@ -15,6 +15,13 @@ open class Errors: NSObject {
     case withMessage(code: String, message: String)
   }
 
+  static func createUnexpectedError(error: Error) -> BlobCourierError {
+    // FIXME ED Return stack trace / error
+    return BlobCourierError.withMessage(
+      code: Errors.errorUnexpectedException,
+      message: "An unexpected exception occurred: \(error.localizedDescription)")
+  }
+
   static func processUnexpectedException(
     reject: @escaping RCTPromiseRejectBlock, error: Error
   ) {
@@ -28,6 +35,11 @@ open class Errors: NSObject {
     reject: @escaping RCTPromiseRejectBlock, parameterName: String
   ) {
     reject(Errors.errorUnexpectedValue, "Parameter `\(parameterName)` cannot be empty.", nil)
+  }
+
+
+  static func createInvalidValue(parameterName: String, value: String) -> BlobCourierError {
+    return BlobCourierError.withMessage(code: Errors.errorInvalidValue, message: "Parameter `\(parameterName)` cannot be `\(value)`.")
   }
 
   static func processInvalidValue(

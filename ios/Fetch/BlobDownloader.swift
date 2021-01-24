@@ -13,10 +13,8 @@ open class BlobDownloader: NSObject {
   }
 
   // swiftlint:disable function_body_length
-  static func fetchBlobFromValidatedParameters(
-    input: NSDictionary,
-    reject: @escaping RCTPromiseRejectBlock
-  ) throws -> NSDictionary {
+  static func fetchBlobFromValidatedParameters(input: NSDictionary) throws ->
+    Result<NSDictionary, Error> {
     let taskId = (input[Constants.parameterTaskId] as? String) ?? ""
 
     let iosSettings =
@@ -28,12 +26,10 @@ open class BlobDownloader: NSObject {
       Constants.defaultTarget
 
     if !isValidTargetValue(target) {
-      Errors.processInvalidValue(
-        reject: reject,
-        parameterName: Constants.parameterTarget,
-        value: target)
+      let invalidTargetError =
+        Errors.createInvalidValue(parameterName: Constants.parameterTarget, value: target)
 
-      return [:] // FIXME ED Return Error
+      return .failure(invalidTargetError)
     }
 
     let progressIntervalMilliseconds =
@@ -63,15 +59,21 @@ open class BlobDownloader: NSObject {
     let group = DispatchGroup()
     let queue = DispatchQueue.global()
 
-    var result: NSDictionary = [:]
+    var result: Result<NSDictionary, Error> = Result { [:] }
 
     group.enter()
 
     queue.async(group: group) {
       let succesfulResult = { (theResult: NSDictionary) -> Void in
-        result = theResult
+        result = .success(theResult)
 
-	group.leave()
+        group.leave()
+      }
+
+      let failedResult = { (error: Error) -> Void in
+        result = .failure(error)
+
+        group.leave()
       }
 
       let downloaderDelegate =
@@ -80,12 +82,11 @@ open class BlobDownloader: NSObject {
           destinationFileUrl: destinationFileUrl,
           progressIntervalMilliseconds: progressIntervalMilliseconds,
           resolve: succesfulResult,
-          reject: reject)
+          reject: failedResult)
 
       startFetchBlob(
         sessionConfig: sessionConfig,
         delegate: downloaderDelegate,
-        reject: reject,
         fileURL: fileURL!,
         headers: headers)
     }
@@ -99,7 +100,6 @@ open class BlobDownloader: NSObject {
   private static func startFetchBlob(
     sessionConfig: URLSessionConfiguration,
     delegate: DownloaderDelegate,
-    reject: @escaping RCTPromiseRejectBlock,
     fileURL: URL,
     headers: NSDictionary) {
     let session =
