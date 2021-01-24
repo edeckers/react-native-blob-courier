@@ -91,7 +91,7 @@ open class BlobDownloader: NSObject {
         headers: headers)
     }
 
-    group.wait(timeout: .now() + DispatchTimeInterval.seconds(Constants.defaultRequestTimeoutSeconds))
+    group.wait()
 
     return result
   }

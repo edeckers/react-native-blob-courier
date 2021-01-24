@@ -131,11 +131,11 @@ open class BlobUploader: NSObject {
 
         session.uploadTask(with: request, from: fileData).resume()
       } catch {
-        result = .failure(Errors.createUnexpectedError(error: error))
+        failedResult(Errors.createUnexpectedError(error: error))
       }
     }
 
-    group.wait(timeout: .now() + DispatchTimeInterval.seconds(Constants.defaultRequestTimeoutSeconds))
+    group.wait()
 
     return result
   }
