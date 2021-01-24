@@ -37,9 +37,10 @@ open class Errors: NSObject {
     reject(Errors.errorUnexpectedValue, "Parameter `\(parameterName)` cannot be empty.", nil)
   }
 
-
   static func createInvalidValue(parameterName: String, value: String) -> BlobCourierError {
-    return BlobCourierError.withMessage(code: Errors.errorInvalidValue, message: "Parameter `\(parameterName)` cannot be `\(value)`.")
+    return BlobCourierError.withMessage(
+      code: Errors.errorInvalidValue,
+      message: "Parameter `\(parameterName)` cannot be `\(value)`.")
   }
 
   static func processInvalidValue(

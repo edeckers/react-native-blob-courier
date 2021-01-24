@@ -74,11 +74,8 @@ open class BlobUploader: NSObject {
     return (request, data)
   }
 
-  static func uploadBlobFromValidatedParameters(
-    input: NSDictionary,
-    resolve: @escaping RCTPromiseResolveBlock,
-    reject: @escaping RCTPromiseRejectBlock
-  ) throws {
+  static func uploadBlobFromValidatedParameters(input: NSDictionary) throws ->
+    Result<NSDictionary, Error> {
     let taskId = (input[Constants.parameterTaskId] as? String) ?? ""
 
     let progressIntervalMilliseconds =
@@ -94,22 +91,53 @@ open class BlobUploader: NSObject {
     let returnResponse = (input[Constants.parameterReturnResponse] as? Bool) ?? false
 
     let sessionConfig = URLSessionConfiguration.default
-    let uploaderDelegate =
-      UploaderDelegate(
-        taskId: taskId,
-        returnResponse: returnResponse,
-        progressIntervalMilliseconds: progressIntervalMilliseconds,
-        resolve: resolve,
-        reject: reject)
-    let session = URLSession(configuration: sessionConfig, delegate: uploaderDelegate, delegateQueue: nil)
 
-    let headers =
-      filterHeaders(unfilteredHeaders:
-        (input[Constants.parameterHeaders] as? NSDictionary) ??
-        NSDictionary())
+    let group = DispatchGroup()
+    let queue = DispatchQueue.global()
 
-    let (request, fileData) = try buildRequestDataForFileUpload(url: urlObject, parts: parts, headers: headers)
-    session.uploadTask(with: request, from: fileData).resume()
+    var result: Result<NSDictionary, Error> = Result { [:] }
+
+    group.enter()
+
+    queue.async(group: group) {
+      let successfulResult = { (theResult: NSDictionary) -> Void in
+        result = .success(theResult)
+
+        group.leave()
+      }
+
+      let failedResult = { (error: Error) -> Void in
+        result = .failure(error)
+
+        group.leave()
+      }
+
+      let uploaderDelegate =
+        UploaderDelegate(
+          taskId: taskId,
+          returnResponse: returnResponse,
+          progressIntervalMilliseconds: progressIntervalMilliseconds,
+          resolve: successfulResult,
+          reject: failedResult)
+      let session = URLSession(configuration: sessionConfig, delegate: uploaderDelegate, delegateQueue: nil)
+
+      let headers =
+        filterHeaders(unfilteredHeaders:
+          (input[Constants.parameterHeaders] as? NSDictionary) ??
+          NSDictionary())
+
+      do {
+        let (request, fileData) = try buildRequestDataForFileUpload(url: urlObject, parts: parts, headers: headers)
+
+        session.uploadTask(with: request, from: fileData).resume()
+      } catch {
+        result = .failure(Errors.createUnexpectedError(error: error))
+      }
+    }
+
+    group.wait(timeout: .now() + DispatchTimeInterval.seconds(Constants.defaultRequestTimeoutSeconds))
+
+    return result
   }
 }
 
