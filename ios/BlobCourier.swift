@@ -14,7 +14,9 @@ open class BlobCourier: NSObject {
       do {
         let errorOrParameters = DownloaderParameterFactory.fromInput(input: input)
 
-        let result = try BlobDownloader.fetchBlobFromValidatedParameters(input: input)
+	guard case .success(let parameters) = errorOrParameters else { reject("TEST", "TEST", nil); return }
+
+        let result = BlobDownloader.fetchBlobFromValidatedParameters(parameters: parameters)
 
         switch result {
         case .success(let success):

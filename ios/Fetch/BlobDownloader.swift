@@ -12,48 +12,14 @@ open class BlobDownloader: NSObject {
       .mapValues { $0! } as NSDictionary
   }
 
-  // swiftlint:disable function_body_length
-  static func fetchBlobFromValidatedParameters(input: NSDictionary) throws ->
+  static func fetchBlobFromValidatedParameters(parameters: DownloadParameters) ->
     Result<NSDictionary, BlobCourierError> {
-    let taskId = (input[Constants.parameterTaskId] as? String) ?? ""
+    let taskId = parameters.taskId
 
-    let iosSettings =
-      (input[Constants.parameterIOSSettings] as? NSDictionary) ??
-      NSDictionary()
+    let url = parameters.url
 
-    let target =
-      (iosSettings[Constants.parameterTarget] as? String) ??
-      Constants.defaultTarget
+    let filename = parameters.filename
 
-    if !isValidTargetValue(target) {
-      let invalidTargetError =
-        Errors.createInvalidValue(parameterName: Constants.parameterTarget, value: target)
-
-      return .failure(invalidTargetError)
-    }
-
-    let progressIntervalMilliseconds =
-      (input[Constants.parameterProgressInterval] as? Int) ??
-        Constants.defaultProgressIntervalMilliseconds
-
-    let url = (input[Constants.parameterUrl] as? String) ?? ""
-
-    let filename = (input[Constants.parameterFilename] as? String) ?? ""
-
-    let headers =
-      filterHeaders(unfilteredHeaders:
-        (input[Constants.parameterHeaders] as? NSDictionary) ??
-        NSDictionary())
-
-    let targetUrl: URL =
-      try FileManager.default.url(
-        for: target == Constants.targetData ? .documentDirectory : .cachesDirectory,
-        in: .userDomainMask,
-        appropriateFor: nil,
-        create: false)
-    let destinationFileUrl = targetUrl.appendingPathComponent(filename)
-
-    let fileURL = URL(string: url)
     let sessionConfig = URLSessionConfiguration.default
 
     let group = DispatchGroup()
@@ -76,26 +42,27 @@ open class BlobDownloader: NSObject {
         group.leave()
       }
 
+      let destinationFileUrl = parameters.targetDirectory.appendingPathComponent(parameters.filename)
+
       let downloaderDelegate =
         DownloaderDelegate(
           taskId: taskId,
           destinationFileUrl: destinationFileUrl,
-          progressIntervalMilliseconds: progressIntervalMilliseconds,
+          progressIntervalMilliseconds: parameters.progressIntervalMilliseconds,
           resolve: succesfulResult,
           reject: failedResult)
 
       startFetchBlob(
         sessionConfig: sessionConfig,
         delegate: downloaderDelegate,
-        fileURL: fileURL!,
-        headers: headers)
+        fileURL: parameters.url,
+        headers: parameters.headers)
     }
 
     group.wait()
 
     return result
   }
-  // swiftlint:enable function_body_length
 
   private static func startFetchBlob(
     sessionConfig: URLSessionConfiguration,
@@ -118,9 +85,5 @@ open class BlobDownloader: NSObject {
     }
 
     session.downloadTask(with: request).resume()
-  }
-
-  static func isValidTargetValue(_ value: String) -> Bool {
-    return Constants.targetValues.contains(value)
   }
 }

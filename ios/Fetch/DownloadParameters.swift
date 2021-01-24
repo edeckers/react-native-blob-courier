@@ -7,11 +7,23 @@ import Foundation
 
 struct DownloadParameters {
   let filename: String
+  let headers: NSDictionary
+  let progressIntervalMilliseconds: Int
+  let targetDirectory: URL
   let taskId: String
-  let url: String
+  let url: URL
 
-  init(filename: String, taskId: String, url: String) {
+  init(
+    filename: String,
+    headers: NSDictionary,
+    progressIntervalMilliseconds: Int,
+    targetDirectory: URL,
+    taskId: String,
+    url: URL) {
     self.filename = filename
+    self.headers = headers
+    self.progressIntervalMilliseconds = progressIntervalMilliseconds
+    self.targetDirectory = targetDirectory
     self.taskId = taskId
     self.url = url
   }

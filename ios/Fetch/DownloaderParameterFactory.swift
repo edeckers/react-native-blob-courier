@@ -5,37 +5,90 @@
 import Foundation
 
 open class DownloaderParameterFactory: NSObject {
-  static func validateParameters(input: NSDictionary) throws {
-    try Errors.assertRequiredParameter(
-      input: input, type: "String", parameterName: Constants.parameterFilename)
-    try Errors.assertRequiredParameter(
-      input: input, type: "String", parameterName: Constants.parameterTaskId)
-    try Errors.assertRequiredParameter(
-      input: input, type: "String", parameterName: Constants.parameterUrl)
+  static func filterHeaders(unfilteredHeaders: NSDictionary) -> NSDictionary {
+    Dictionary(uniqueKeysWithValues: unfilteredHeaders
+      .map { key, value in (key as? String, value as? String) }
+      .filter({ $0.1 != nil }))
+      .mapValues { $0! } as NSDictionary
   }
+
+  // swiftlint:disable function_body_length
+  static func validateParameters(input: NSDictionary) -> Result<DownloadParameters, BlobCourierError> {
+    try? Errors.assertRequiredParameter(
+      input: input, type: "String", parameterName: Constants.parameterFilename)
+    try? Errors.assertRequiredParameter(
+      input: input, type: "String", parameterName: Constants.parameterTaskId)
+    try? Errors.assertRequiredParameter(
+      input: input, type: "String", parameterName: Constants.parameterUrl)
+
+    let iosSettings =
+      (input[Constants.parameterIOSSettings] as? NSDictionary) ??
+        NSDictionary()
+
+    let target =
+      (iosSettings[Constants.parameterTarget] as? String) ??
+        Constants.defaultTarget
+
+    if !isValidTargetValue(target) {
+      let invalidTargetError =
+        Errors.createInvalidValue(parameterName: Constants.parameterTarget, value: target)
+
+      return .failure(invalidTargetError)
+    }
+
+    let progressIntervalMilliseconds =
+      (input[Constants.parameterProgressInterval] as? Int) ??
+        Constants.defaultProgressIntervalMilliseconds
+
+    let headers =
+      filterHeaders(unfilteredHeaders:
+        (input[Constants.parameterHeaders] as? NSDictionary) ??
+          NSDictionary())
+
+    guard let targetUrl =
+      try? FileManager.default.url(
+        for: target == Constants.targetData ? .documentDirectory : .cachesDirectory,
+        in: .userDomainMask,
+        appropriateFor: nil,
+        create: false) else {
+          return .failure(BlobCourierError(code: "FIX_THIS_CODE", message: "FIX THIS MESSAGE", error: nil))
+        }
+
+    guard let filename = input[Constants.parameterFilename] as? String,
+          let taskId = input[Constants.parameterTaskId] as? String,
+          let url = input[Constants.parameterUrl] as? String else {
+            return .failure(BlobCourierError(
+              code: Errors.errorMissingRequiredParameter,
+              message: "One of the required parameters is missing", // FIXME ED Use generic error handler
+              error: nil))
+          }
+
+    let destinationFileUrl = targetUrl.appendingPathComponent(filename)
+
+    guard let fileUrl = URL(string: url) else { return .failure(BlobCourierError(
+      code: Errors.errorMissingRequiredParameter,
+      message: "One of the required parameters is missing", // FIXME ED Use generic error handler
+      error: nil)) }
+
+    return .success(DownloadParameters(
+      filename: filename,
+      headers: headers,
+      progressIntervalMilliseconds: progressIntervalMilliseconds,
+      targetDirectory: targetUrl,
+      taskId: taskId,
+      url: fileUrl))
+  }
+  // swiftlint:enable function_body_length
 
   static func fromInput(input: NSDictionary) -> Result<DownloadParameters, BlobCourierError> {
     do {
-      try validateParameters(input: input)
-
-      guard let filename = input[Constants.parameterFilename] as? String,
-            let taskId = input[Constants.parameterTaskId] as? String,
-            let url = input[Constants.parameterUrl] as? String else {
-              return .failure(BlobCourierError(code: "FIX_THIS_CODE", message: "FIX_THIS_MESSAGE", error: nil))
-            }
-
-      let xxx = DownloadParameters(
-        filename: filename,
-        taskId: taskId,
-        url: url)
-      // let xxx = DownloadParameters(
-      //   filename: filename,
-      //   taskId: taskId,
-      //   url: url)
-
-      return .success(xxx)
+      return validateParameters(input: input)
     } catch {
       return .failure(Errors.createUnexpectedError(error: error))
     }
+  }
+
+  static func isValidTargetValue(_ value: String) -> Bool {
+    return Constants.targetValues.contains(value)
   }
 }
