@@ -30,6 +30,10 @@
 		B96A970125BDEA7D00F42B65 /* DownloaderParameterFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = B96A96FF25BDEA7D00F42B65 /* DownloaderParameterFactory.swift */; };
 		B96A976925BDEC4D00F42B65 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = B96A888225BC565300F42B65 /* Constants.swift */; };
 		B96A976A25BDEC4D00F42B65 /* Errors.swift in Sources */ = {isa = PBXBuildFile; fileRef = B96A888325BC565300F42B65 /* Errors.swift */; };
+		B96A993D25BE166900F42B65 /* UploaderParameterFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = B96A993B25BE166900F42B65 /* UploaderParameterFactory.swift */; };
+		B96A993E25BE166900F42B65 /* UploaderParameterFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = B96A993B25BE166900F42B65 /* UploaderParameterFactory.swift */; };
+		B96A993F25BE166900F42B65 /* UploadParameters.swift in Sources */ = {isa = PBXBuildFile; fileRef = B96A993C25BE166900F42B65 /* UploadParameters.swift */; };
+		B96A994025BE166900F42B65 /* UploadParameters.swift in Sources */ = {isa = PBXBuildFile; fileRef = B96A993C25BE166900F42B65 /* UploadParameters.swift */; };
 		F4FF95D7245B92E800C19C63 /* BlobCourier.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4FF95D6245B92E800C19C63 /* BlobCourier.swift */; };
 /* End PBXBuildFile section */
 
@@ -79,6 +83,8 @@
 		B96A940A25BD847C00F42B65 /* BlobCourierEventEmitter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlobCourierEventEmitter.swift; sourceTree = "<group>"; };
 		B96A96D725BDE55900F42B65 /* DownloadParameters.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadParameters.swift; sourceTree = "<group>"; };
 		B96A96FF25BDEA7D00F42B65 /* DownloaderParameterFactory.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DownloaderParameterFactory.swift; sourceTree = "<group>"; };
+		B96A993B25BE166900F42B65 /* UploaderParameterFactory.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UploaderParameterFactory.swift; sourceTree = "<group>"; };
+		B96A993C25BE166900F42B65 /* UploadParameters.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UploadParameters.swift; sourceTree = "<group>"; };
 		E431917845347E135BAF189E /* Pods-BlobCourier.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BlobCourier.release.xcconfig"; path = "Target Support Files/Pods-BlobCourier/Pods-BlobCourier.release.xcconfig"; sourceTree = "<group>"; };
 		F0F8F7008E715FB238D44E2E /* Pods-BlobCourier.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BlobCourier.debug.xcconfig"; path = "Target Support Files/Pods-BlobCourier/Pods-BlobCourier.debug.xcconfig"; sourceTree = "<group>"; };
 		F4FF95D5245B92E700C19C63 /* BlobCourier-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "BlobCourier-Bridging-Header.h"; sourceTree = "<group>"; };
@@ -189,6 +195,8 @@
 		B96A889425BC567000F42B65 /* Upload */ = {
 			isa = PBXGroup;
 			children = (
+				B96A993B25BE166900F42B65 /* UploaderParameterFactory.swift */,
+				B96A993C25BE166900F42B65 /* UploadParameters.swift */,
 				B96A889525BC567000F42B65 /* BlobUploader.swift */,
 				B9409539253E1F5800A58583 /* UploaderDelegate.swift */,
 			);
@@ -419,6 +427,7 @@
 			files = (
 				B96A954A25BD8D3B00F42B65 /* BlobCourierEventEmitter.swift in Sources */,
 				F4FF95D7245B92E800C19C63 /* BlobCourier.swift in Sources */,
+				B96A993D25BE166900F42B65 /* UploaderParameterFactory.swift in Sources */,
 				B96829DF254EC736002B4B04 /* DownloaderDelegate.swift in Sources */,
 				B96A8FEC25BCB87E00F42B65 /* BlobCourierEventEmitter.m in Sources */,
 				B96A8F0925BCB1DA00F42B65 /* BlobCourier.m in Sources */,
@@ -430,6 +439,7 @@
 				B96A888625BC565300F42B65 /* Errors.swift in Sources */,
 				B96A888425BC565300F42B65 /* Constants.swift in Sources */,
 				B96829D9254EC727002B4B04 /* UploaderDelegate.swift in Sources */,
+				B96A993F25BE166900F42B65 /* UploadParameters.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -437,9 +447,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B96A993E25BE166900F42B65 /* UploaderParameterFactory.swift in Sources */,
 				B96A976925BDEC4D00F42B65 /* Constants.swift in Sources */,
 				B96A976A25BDEC4D00F42B65 /* Errors.swift in Sources */,
 				B96A8FED25BCB87E00F42B65 /* BlobCourierEventEmitter.m in Sources */,
+				B96A994025BE166900F42B65 /* UploadParameters.swift in Sources */,
 				B96A96D925BDE55900F42B65 /* DownloadParameters.swift in Sources */,
 				B96A970125BDEA7D00F42B65 /* DownloaderParameterFactory.swift in Sources */,
 				B96829E8254EC872002B4B04 /* BlobCourierTests.swift in Sources */,

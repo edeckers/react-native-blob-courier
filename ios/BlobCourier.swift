@@ -14,15 +14,16 @@ open class BlobCourier: NSObject {
       do {
         let errorOrParameters = DownloaderParameterFactory.fromInput(input: input)
 
-	guard case .success(let parameters) = errorOrParameters else { reject("TEST", "TEST", nil); return }
+	if case .failure(let error) = errorOrParameters { reject(error.code, error.message, error.error) }
+	guard case .success(let parameters) = errorOrParameters else { return }
 
         let result = BlobDownloader.fetchBlobFromValidatedParameters(parameters: parameters)
 
         switch result {
         case .success(let success):
           resolve(success)
-        case .failure(let error):
-          reject(error.code, error.message, error.error)
+        case .failure(let theError):
+          reject(theError.code, theError.message, theError.error)
         }
       } catch {
         let unexpectedError = Errors.createUnexpectedError(error: error)
@@ -40,14 +41,12 @@ open class BlobCourier: NSObject {
   ) {
     DispatchQueue.global(qos: .background).async {
       do {
-        try Errors.assertRequiredParameter(
-          input: input, type: "NSArray", parameterName: Constants.parameterParts)
-        try Errors.assertRequiredParameter(
-          input: input, type: "String", parameterName: Constants.parameterTaskId)
-        try Errors.assertRequiredParameter(
-          input: input, type: "String", parameterName: Constants.parameterUrl)
+        let errorOrParameters = UploaderParameterFactory.fromInput(input: input)
 
-        let result = try BlobUploader.uploadBlobFromValidatedParameters(input: input)
+	if case .failure(let error) = errorOrParameters { reject(error.code, error.message, error.error) }
+	guard case .success(let parameters) = errorOrParameters else { return }
+
+        let result = BlobUploader.uploadBlobFromValidatedParameters(parameters: parameters)
 
         switch result {
         case .success(let success):

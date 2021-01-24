@@ -14,12 +14,14 @@ open class DownloaderParameterFactory: NSObject {
 
   // swiftlint:disable function_body_length
   static func validateParameters(input: NSDictionary) -> Result<DownloadParameters, BlobCourierError> {
-    try? Errors.assertRequiredParameter(
-      input: input, type: "String", parameterName: Constants.parameterFilename)
-    try? Errors.assertRequiredParameter(
-      input: input, type: "String", parameterName: Constants.parameterTaskId)
-    try? Errors.assertRequiredParameter(
-      input: input, type: "String", parameterName: Constants.parameterUrl)
+    guard let filename = input[Constants.parameterFilename] as? String,
+          let taskId = input[Constants.parameterTaskId] as? String,
+          let url = input[Constants.parameterUrl] as? String else {
+            return .failure(BlobCourierError(
+              code: Errors.errorMissingRequiredParameter,
+              message: "One of the required parameters is missing", // FIXME ED Use generic error handler
+              error: nil))
+          }
 
     let iosSettings =
       (input[Constants.parameterIOSSettings] as? NSDictionary) ??
@@ -53,15 +55,6 @@ open class DownloaderParameterFactory: NSObject {
         create: false) else {
           return .failure(BlobCourierError(code: "FIX_THIS_CODE", message: "FIX THIS MESSAGE", error: nil))
         }
-
-    guard let filename = input[Constants.parameterFilename] as? String,
-          let taskId = input[Constants.parameterTaskId] as? String,
-          let url = input[Constants.parameterUrl] as? String else {
-            return .failure(BlobCourierError(
-              code: Errors.errorMissingRequiredParameter,
-              message: "One of the required parameters is missing", // FIXME ED Use generic error handler
-              error: nil))
-          }
 
     let destinationFileUrl = targetUrl.appendingPathComponent(filename)
 

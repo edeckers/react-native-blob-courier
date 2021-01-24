@@ -74,21 +74,17 @@ open class BlobUploader: NSObject {
     return (request, data)
   }
 
-  static func uploadBlobFromValidatedParameters(input: NSDictionary) throws ->
+  static func uploadBlobFromValidatedParameters(parameters: UploadParameters) ->
     Result<NSDictionary, BlobCourierError> {
-    let taskId = (input[Constants.parameterTaskId] as? String) ?? ""
+    let taskId = parameters.taskId
 
-    let progressIntervalMilliseconds =
-      (input[Constants.parameterProgressInterval] as? Int) ??
-        Constants.defaultProgressIntervalMilliseconds
+    let progressIntervalMilliseconds = parameters.progressIntervalMilliseconds
 
-    let url = (input[Constants.parameterUrl] as? String) ?? ""
+    let url = parameters.url
 
-    let urlObject = URL(string: url)!
+    let parts = parameters.parts
 
-    let parts = (input[Constants.parameterParts] as? NSArray) ?? NSArray()
-
-    let returnResponse = (input[Constants.parameterReturnResponse] as? Bool) ?? false
+    let returnResponse = parameters.returnResponse
 
     let sessionConfig = URLSessionConfiguration.default
 
@@ -119,15 +115,13 @@ open class BlobUploader: NSObject {
           progressIntervalMilliseconds: progressIntervalMilliseconds,
           resolve: successfulResult,
           reject: failedResult)
+
       let session = URLSession(configuration: sessionConfig, delegate: uploaderDelegate, delegateQueue: nil)
 
-      let headers =
-        filterHeaders(unfilteredHeaders:
-          (input[Constants.parameterHeaders] as? NSDictionary) ??
-          NSDictionary())
+      let headers = parameters.headers
 
       do {
-        let (request, fileData) = try buildRequestDataForFileUpload(url: urlObject, parts: parts, headers: headers)
+        let (request, fileData) = try buildRequestDataForFileUpload(url: url, parts: parts, headers: headers)
 
         session.uploadTask(with: request, from: fileData).resume()
       } catch {
