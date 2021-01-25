@@ -39,14 +39,4 @@ open class Errors: NSObject {
       message: "Parameter `\(parameterName)` cannot be `\(value)`",
       error: nil)
   }
-
-  static func assertRequiredParameter(input: NSDictionary, type: String, parameterName: String) throws {
-    let maybeValue = input[parameterName]
-
-    if maybeValue == nil {
-      throw DeprecatedBlobCourierError.withMessage(
-        code: errorMissingRequiredParameter,
-        message: "`\(parameterName)` is a required parameter of type `\(type)`")
-    }
-  }
 }
