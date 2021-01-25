@@ -13,13 +13,13 @@ open class UploaderParameterFactory: NSObject {
   }
 
   static func validateParameters(input: NSDictionary) -> Result<UploadParameters, BlobCourierError> {
-    guard let taskId = input[Constants.parameterTaskId] as? String,
-          let url = input[Constants.parameterUrl] as? String else {
-            return .failure(BlobCourierError(
-              code: Errors.errorMissingRequiredParameter,
-              message: "One of the required parameters is missing",
-              error: nil))
-          }
+    guard let taskId = input[Constants.parameterTaskId] as? String else {
+      return .failure(Errors.createMissingParameter(parameterName: Constants.parameterTaskId, type: "String"))
+    }
+
+    guard let url = input[Constants.parameterUrl] as? String else {
+      return .failure(Errors.createMissingParameter(parameterName: Constants.parameterUrl, type: "String"))
+    }
 
     let parts = input[Constants.parameterParts] as? NSArray ?? NSArray()
 
@@ -34,10 +34,9 @@ open class UploaderParameterFactory: NSObject {
         (input[Constants.parameterHeaders] as? NSDictionary) ??
           NSDictionary())
 
-    guard let fileUrl = URL(string: url) else { return .failure(BlobCourierError(
-      code: Errors.errorMissingRequiredParameter,
-      message: "One of the required parameters is missing",
-      error: nil)) }
+    guard let fileUrl = URL(string: url) else {
+      return .failure(Errors.createInvalidValue(parameterName: Constants.parameterUrl, receivedValue: url))
+    }
 
     return .success(UploadParameters(
       headers: headers,
