@@ -38,12 +38,12 @@ open class DownloaderDelegate: NSObject, URLSessionDownloadDelegate {
   }
 
   public func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
-      if let theError = error {
-        print("session: didCompleteWithError: \(theError.localizedDescription)")
-	self.reject(Errors.createUnexpectedError(error: theError))
+      guard let error = error else { return }
 
-        session.finishTasksAndInvalidate()
-      }
+      print("session: didCompleteWithError: \(error.localizedDescription)")
+      self.reject(Errors.createUnexpectedError(error: error))
+
+      session.finishTasksAndInvalidate()
   }
 
   public func urlSession(
@@ -68,12 +68,12 @@ open class DownloaderDelegate: NSObject, URLSessionDownloadDelegate {
   }
 
   func processCompletedDownload(location: URL, response: URLResponse?, error: Error?) {
-    if let theError = error {
+    if let error = error {
       print(
-        "Error took place while downloading a file. Error description: \(theError.localizedDescription)"
+        "Error took place while downloading a file. Error description: \(error.localizedDescription)"
       )
 
-      Errors.createUnexpectedError(error: theError)
+      Errors.createUnexpectedError(error: error)
       return
     }
 

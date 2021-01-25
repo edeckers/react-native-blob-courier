@@ -22,8 +22,8 @@ open class BlobCourier: NSObject {
         switch result {
         case .success(let success):
           resolve(success)
-        case .failure(let theError):
-          reject(theError.code, theError.message, theError.error)
+        case .failure(let error):
+          reject(error.code, error.message, error.error)
         }
       } catch {
         let unexpectedError = Errors.createUnexpectedError(error: error)
