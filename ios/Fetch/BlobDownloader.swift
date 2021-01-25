@@ -14,12 +14,6 @@ open class BlobDownloader: NSObject {
 
   static func fetchBlobFromValidatedParameters(parameters: DownloadParameters) ->
     Result<NSDictionary, BlobCourierError> {
-    let taskId = parameters.taskId
-
-    let url = parameters.url
-
-    let filename = parameters.filename
-
     let sessionConfig = URLSessionConfiguration.default
 
     let group = DispatchGroup()
@@ -46,7 +40,7 @@ open class BlobDownloader: NSObject {
 
       let downloaderDelegate =
         DownloaderDelegate(
-          taskId: taskId,
+          taskId: parameters.taskId,
           destinationFileUrl: destinationFileUrl,
           progressIntervalMilliseconds: parameters.progressIntervalMilliseconds,
           resolve: succesfulResult,

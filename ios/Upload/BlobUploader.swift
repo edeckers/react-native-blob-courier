@@ -76,16 +76,6 @@ open class BlobUploader: NSObject {
 
   static func uploadBlobFromValidatedParameters(parameters: UploadParameters) ->
     Result<NSDictionary, BlobCourierError> {
-    let taskId = parameters.taskId
-
-    let progressIntervalMilliseconds = parameters.progressIntervalMilliseconds
-
-    let url = parameters.url
-
-    let parts = parameters.parts
-
-    let returnResponse = parameters.returnResponse
-
     let sessionConfig = URLSessionConfiguration.default
 
     let group = DispatchGroup()
@@ -110,9 +100,9 @@ open class BlobUploader: NSObject {
 
       let uploaderDelegate =
         UploaderDelegate(
-          taskId: taskId,
-          returnResponse: returnResponse,
-          progressIntervalMilliseconds: progressIntervalMilliseconds,
+          taskId: parameters.taskId,
+          returnResponse: parameters.returnResponse,
+          progressIntervalMilliseconds: parameters.progressIntervalMilliseconds,
           resolve: successfulResult,
           reject: failedResult)
 
@@ -121,7 +111,8 @@ open class BlobUploader: NSObject {
       let headers = parameters.headers
 
       do {
-        let (request, fileData) = try buildRequestDataForFileUpload(url: url, parts: parts, headers: headers)
+        let (request, fileData) =
+	  try buildRequestDataForFileUpload(url: parameters.url, parts: parameters.parts, headers: headers)
 
         session.uploadTask(with: request, from: fileData).resume()
       } catch {

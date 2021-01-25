@@ -14,8 +14,8 @@ open class BlobCourier: NSObject {
       do {
         let errorOrParameters = DownloaderParameterFactory.fromInput(input: input)
 
-	if case .failure(let error) = errorOrParameters { reject(error.code, error.message, error.error) }
-	guard case .success(let parameters) = errorOrParameters else { return }
+        if case .failure(let error) = errorOrParameters { reject(error.code, error.message, error.error) }
+        guard case .success(let parameters) = errorOrParameters else { return }
 
         let result = BlobDownloader.fetchBlobFromValidatedParameters(parameters: parameters)
 
@@ -43,8 +43,8 @@ open class BlobCourier: NSObject {
       do {
         let errorOrParameters = UploaderParameterFactory.fromInput(input: input)
 
-	if case .failure(let error) = errorOrParameters { reject(error.code, error.message, error.error) }
-	guard case .success(let parameters) = errorOrParameters else { return }
+        if case .failure(let error) = errorOrParameters { reject(error.code, error.message, error.error) }
+        guard case .success(let parameters) = errorOrParameters else { return }
 
         let result = BlobUploader.uploadBlobFromValidatedParameters(parameters: parameters)
 
