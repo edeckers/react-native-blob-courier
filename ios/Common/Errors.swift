@@ -21,10 +21,12 @@ struct BlobCourierError: Error {
 }
 
 open class Errors: NSObject {
-  static let errorMissingRequiredParameter = "ERROR_MISSING_REQUIRED_PARAMETER"
   static let errorUnexpectedException = "ERROR_UNEXPECTED_EXCEPTION"
-  static let errorUnexpectedValue = "ERROR_UNEXPECTED_VALUE"
+
+  static let errorEmptyValue = "ERROR_EMPTY_VALUE"
   static let errorInvalidValue = "ERROR_INVALID_VALUE"
+  static let errorMissingRequiredParameter = "ERROR_MISSING_REQUIRED_PARAMETER"
+  static let errorParameterErrorIsNull = "ERROR_PARAMETER_IS_NULL"
 
   static func createUnexpectedError(error: Error) -> BlobCourierError {
     return BlobCourierError(
@@ -33,10 +35,24 @@ open class Errors: NSObject {
       error: error)
   }
 
-  static func createInvalidValue(parameterName: String, value: String) -> BlobCourierError {
+  static func createKeyDoesNotExist(parameterName: String, type: String) -> BlobCourierError {
+    return BlobCourierError(
+      code: Errors.errorMissingRequiredParameter,
+      message: "Unexpected empty alue for `\(parameterName)`",
+      error: nil)
+  }
+
+  static func createMissingParameter(parameterName: String, type: String) -> BlobCourierError {
+    return BlobCourierError(
+      code: Errors.errorMissingRequiredParameter,
+      message: "`\(parameterName)` is a required parameter of type `\(type)`",
+      error: nil)
+  }
+
+  static func createInvalidValue(parameterName: String, receivedValue: String) -> BlobCourierError {
     return BlobCourierError(
       code: Errors.errorInvalidValue,
-      message: "Parameter `\(parameterName)` cannot be `\(value)`",
+      message: "`\(parameterName)` has incorrect value `\(receivedValue)`",
       error: nil)
   }
 }

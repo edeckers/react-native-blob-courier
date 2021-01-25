@@ -14,14 +14,17 @@ open class DownloaderParameterFactory: NSObject {
 
   // swiftlint:disable function_body_length
   static func validateParameters(input: NSDictionary) -> Result<DownloadParameters, BlobCourierError> {
-    guard let filename = input[Constants.parameterFilename] as? String,
-          let taskId = input[Constants.parameterTaskId] as? String,
-          let url = input[Constants.parameterUrl] as? String else {
-            return .failure(BlobCourierError(
-              code: Errors.errorMissingRequiredParameter,
-              message: "One of the required parameters is missing", // FIXME ED Use generic error handler
-              error: nil))
-          }
+    guard let filename = input[Constants.parameterFilename] as? String else {
+      return .failure(Errors.createMissingParameter(parameterName: Constants.parameterFilename, type: "String"))
+    }
+
+    guard let taskId = input[Constants.parameterTaskId] as? String else {
+      return .failure(Errors.createMissingParameter(parameterName: Constants.parameterTaskId, type: "String"))
+    }
+
+    guard let url = input[Constants.parameterUrl] as? String else {
+      return .failure(Errors.createMissingParameter(parameterName: Constants.parameterUrl, type: "String"))
+    }
 
     let iosSettings =
       (input[Constants.parameterIOSSettings] as? NSDictionary) ??
@@ -33,7 +36,7 @@ open class DownloaderParameterFactory: NSObject {
 
     if !isValidTargetValue(target) {
       let invalidTargetError =
-        Errors.createInvalidValue(parameterName: Constants.parameterTarget, value: target)
+        Errors.createInvalidValue(parameterName: Constants.parameterTarget, receivedValue: target)
 
       return .failure(invalidTargetError)
     }
@@ -47,29 +50,30 @@ open class DownloaderParameterFactory: NSObject {
         (input[Constants.parameterHeaders] as? NSDictionary) ??
           NSDictionary())
 
-    guard let targetUrl =
-      try? FileManager.default.url(
-        for: target == Constants.targetData ? .documentDirectory : .cachesDirectory,
-        in: .userDomainMask,
-        appropriateFor: nil,
-        create: false) else {
-          return .failure(BlobCourierError(code: "FIX_THIS_CODE", message: "FIX THIS MESSAGE", error: nil))
-        }
+    do {
+      let targetUrl =
+        try FileManager.default.url(
+          for: target == Constants.targetData ? .documentDirectory : .cachesDirectory,
+          in: .userDomainMask,
+          appropriateFor: nil,
+          create: false)
 
-    let destinationFileUrl = targetUrl.appendingPathComponent(filename)
+      let destinationFileUrl = targetUrl.appendingPathComponent(filename)
 
-    guard let fileUrl = URL(string: url) else { return .failure(BlobCourierError(
-      code: Errors.errorMissingRequiredParameter,
-      message: "One of the required parameters is missing", // FIXME ED Use generic error handler
-      error: nil)) }
+      guard let fileUrl = URL(string: url) else {
+        return .failure(Errors.createInvalidValue(parameterName: Constants.parameterUrl, receivedValue: url))
+      }
 
-    return .success(DownloadParameters(
-      filename: filename,
-      headers: headers,
-      progressIntervalMilliseconds: progressIntervalMilliseconds,
-      targetDirectory: targetUrl,
-      taskId: taskId,
-      url: fileUrl))
+      return .success(DownloadParameters(
+        filename: filename,
+        headers: headers,
+        progressIntervalMilliseconds: progressIntervalMilliseconds,
+        targetDirectory: targetUrl,
+        taskId: taskId,
+        url: fileUrl))
+    } catch let error {
+      return .failure(Errors.createUnexpectedError(error: error))
+    }
   }
   // swiftlint:enable function_body_length
 
