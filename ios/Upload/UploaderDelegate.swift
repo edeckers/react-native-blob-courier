@@ -61,11 +61,11 @@ open class UploaderDelegate: NSObject, URLSessionDataDelegate, URLSessionTaskDel
   }
 
   func processCompletedUpload(data: Data, response: URLResponse?, error: Error?) {
-     if let theError = error {
+     if let error = error {
         print(
-          "Error while uploading a file. Error description: \(theError.localizedDescription)"
+          "Error while uploading a file. Error description: \(error.localizedDescription)"
         )
-        reject(Errors.createUnexpectedError(error: theError))
+        reject(Errors.createUnexpectedError(error: error))
         return
      }
 

@@ -74,22 +74,8 @@ open class BlobUploader: NSObject {
     return (request, data)
   }
 
-  static func uploadBlobFromValidatedParameters(input: NSDictionary) throws ->
+  static func uploadBlobFromValidatedParameters(parameters: UploadParameters) ->
     Result<NSDictionary, BlobCourierError> {
-    let taskId = (input[Constants.parameterTaskId] as? String) ?? ""
-
-    let progressIntervalMilliseconds =
-      (input[Constants.parameterProgressInterval] as? Int) ??
-        Constants.defaultProgressIntervalMilliseconds
-
-    let url = (input[Constants.parameterUrl] as? String) ?? ""
-
-    let urlObject = URL(string: url)!
-
-    let parts = (input[Constants.parameterParts] as? NSArray) ?? NSArray()
-
-    let returnResponse = (input[Constants.parameterReturnResponse] as? Bool) ?? false
-
     let sessionConfig = URLSessionConfiguration.default
 
     let group = DispatchGroup()
@@ -114,20 +100,19 @@ open class BlobUploader: NSObject {
 
       let uploaderDelegate =
         UploaderDelegate(
-          taskId: taskId,
-          returnResponse: returnResponse,
-          progressIntervalMilliseconds: progressIntervalMilliseconds,
+          taskId: parameters.taskId,
+          returnResponse: parameters.returnResponse,
+          progressIntervalMilliseconds: parameters.progressIntervalMilliseconds,
           resolve: successfulResult,
           reject: failedResult)
+
       let session = URLSession(configuration: sessionConfig, delegate: uploaderDelegate, delegateQueue: nil)
 
-      let headers =
-        filterHeaders(unfilteredHeaders:
-          (input[Constants.parameterHeaders] as? NSDictionary) ??
-          NSDictionary())
+      let headers = parameters.headers
 
       do {
-        let (request, fileData) = try buildRequestDataForFileUpload(url: urlObject, parts: parts, headers: headers)
+        let (request, fileData) =
+	  try buildRequestDataForFileUpload(url: parameters.url, parts: parameters.parts, headers: headers)
 
         session.uploadTask(with: request, from: fileData).resume()
       } catch {

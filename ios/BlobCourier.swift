@@ -12,14 +12,12 @@ open class BlobCourier: NSObject {
   ) {
     DispatchQueue.global(qos: .background).async {
       do {
-        try Errors.assertRequiredParameter(
-          input: input, type: "String", parameterName: Constants.parameterFilename)
-        try Errors.assertRequiredParameter(
-          input: input, type: "String", parameterName: Constants.parameterTaskId)
-        try Errors.assertRequiredParameter(
-          input: input, type: "String", parameterName: Constants.parameterUrl)
+        let errorOrParameters = DownloaderParameterFactory.fromInput(input: input)
 
-        let result = try BlobDownloader.fetchBlobFromValidatedParameters(input: input)
+        if case .failure(let error) = errorOrParameters { reject(error.code, error.message, error.error) }
+        guard case .success(let parameters) = errorOrParameters else { return }
+
+        let result = BlobDownloader.fetchBlobFromValidatedParameters(parameters: parameters)
 
         switch result {
         case .success(let success):
@@ -43,14 +41,12 @@ open class BlobCourier: NSObject {
   ) {
     DispatchQueue.global(qos: .background).async {
       do {
-        try Errors.assertRequiredParameter(
-          input: input, type: "NSArray", parameterName: Constants.parameterParts)
-        try Errors.assertRequiredParameter(
-          input: input, type: "String", parameterName: Constants.parameterTaskId)
-        try Errors.assertRequiredParameter(
-          input: input, type: "String", parameterName: Constants.parameterUrl)
+        let errorOrParameters = UploaderParameterFactory.fromInput(input: input)
 
-        let result = try BlobUploader.uploadBlobFromValidatedParameters(input: input)
+        if case .failure(let error) = errorOrParameters { reject(error.code, error.message, error.error) }
+        guard case .success(let parameters) = errorOrParameters else { return }
+
+        let result = BlobUploader.uploadBlobFromValidatedParameters(parameters: parameters)
 
         switch result {
         case .success(let success):
