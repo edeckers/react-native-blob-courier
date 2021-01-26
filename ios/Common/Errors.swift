@@ -38,7 +38,7 @@ open class Errors: NSObject {
   static func createKeyDoesNotExist(parameterName: String, type: String) -> BlobCourierError {
     return BlobCourierError(
       code: Errors.errorMissingRequiredParameter,
-      message: "Unexpected empty alue for `\(parameterName)`",
+      message: "Unexpected empty value for `\(parameterName)`",
       error: nil)
   }
 
