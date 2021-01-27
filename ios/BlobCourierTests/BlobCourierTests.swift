@@ -85,7 +85,7 @@ class BlobCourierTests: XCTestCase {
             guard let contentType = response["CONTENT_TYPE"] as? String else { return Data("".utf8) }
 
             DataReader.read(input) { data in
-	      result = verifyBodyIsCorrect(
+              result = verifyBodyIsCorrect(
                 data: data,
                 contentType: contentType,
                 expectedParts: expectedParts) }
@@ -164,26 +164,33 @@ class BlobCourierTests: XCTestCase {
     }
 
     func testMissingRequiredFetchParametersRejectsPromise() throws {
-        var result = (false, "Unknown")
-        let input: NSDictionary = [
+        let validInput = [
+          "filename": "some-filename.png",
           "taskId": "some-task-id",
           "url": "https://github.com/edeckers/react-native-blob-courier"
         ]
 
-        let dispatchGroup = DispatchGroup()
+        for removeKey in ["filename", "taskId", "url"] {
+          var result = (false, "Unknown")
 
-        dispatchGroup.enter()
+          let input = validInput.filter({ $0.key != removeKey })
 
-        let resolve: RCTPromiseResolveBlock = { (_: Any?) -> Void in
-           result = (false, "Resolved, but expected reject"); dispatchGroup.leave() }
-        let reject: RCTPromiseRejectBlock = { (_: String?, _: String?, _: Error?) -> Void in
-           result = (true, "Success"); dispatchGroup.leave() }
+          let dispatchGroup = DispatchGroup()
 
-        sut?.fetchBlob(input: input, resolve: resolve, reject: reject)
+          dispatchGroup.enter()
 
-        dispatchGroup.wait(timeout: .now() +
-          DispatchTimeInterval.seconds(BlobCourierTests.defaultPromiseTimeoutSeconds))
-        XCTAssertTrue(result.0)
+          let resolve: RCTPromiseResolveBlock = { (_: Any?) -> Void in
+             result = (false, "Resolved, but expected reject"); dispatchGroup.leave() }
+          let reject: RCTPromiseRejectBlock = { (_: String?, _: String?, _: Error?) -> Void in
+             result = (true, "Success"); dispatchGroup.leave() }
+
+          sut?.fetchBlob(input: input as NSDictionary, resolve: resolve, reject: reject)
+
+          dispatchGroup.wait(timeout: .now() +
+            DispatchTimeInterval.seconds(BlobCourierTests.defaultPromiseTimeoutSeconds))
+
+          XCTAssertTrue(result.0)
+        }
     }
 
     func testAllRequiredUploadParametersProvidedResolvesPromise() throws {
@@ -230,43 +237,50 @@ class BlobCourierTests: XCTestCase {
 
     func testMissingRequiredUploadParametersRejectsPromise() throws {
         var result = (false, "Unknown")
-        let input: NSDictionary = [
+        let fetchInput: NSDictionary = [
           "filename": "some-filename.png",
           "taskId": "some-task-id",
           "url": "https://github.com/edeckers/react-native-blob-courier"
         ]
 
-        let dispatchGroup = DispatchGroup()
-
-        dispatchGroup.enter()
-
-        let reject: RCTPromiseRejectBlock = { (_: String?, _: String?, _: Error?) -> Void in
-          result = (true, "Success"); dispatchGroup.leave() }
-        let resolveUpload: RCTPromiseResolveBlock = { (_: Any?) -> Void in
-          result = (false, "Resoved, but expected reject"); dispatchGroup.leave() }
-        let resolve: RCTPromiseResolveBlock = { (response: Any?) -> Void in
-            let dict = response as? NSDictionary ?? [:]
-            let data = dict["data"] as? NSDictionary ?? [:]
-
-            self.sut?.uploadBlob(input: [
-             "parts": [
-               "file": [
-                 "payload": [
-                   "absoluteFilePath": data["absoluteFilePath"] ?? "",
-                   "mimeType": "image/png"
-                 ],
-                 "type": "file"
-               ]
-             ],
-             "taskId": data["taskId"] ?? ""
-           ], resolve: resolveUpload, reject: reject)
+        func createValidUploadInput(_ data: NSDictionary) -> [String: Any] {
+          return [
+            "taskId": data["taskId"] ?? "",
+            "url": "https://file.io"
+          ]
         }
 
-        sut?.fetchBlob(input: input, resolve: resolve, reject: reject)
+        for removeKey in ["taskId", "url"] {
+          let dispatchGroup = DispatchGroup()
 
-        dispatchGroup.wait(timeout: .now() +
-          DispatchTimeInterval.seconds(BlobCourierTests.defaultPromiseTimeoutSeconds))
-        XCTAssertTrue(result.0)
+          dispatchGroup.enter()
+
+          let rejectFetch: RCTPromiseRejectBlock = { (_: String?, _: String?, _: Error?) -> Void in
+            result = (false, "Rejected fetch request"); dispatchGroup.leave() }
+          let rejectUpload: RCTPromiseRejectBlock = { (_: String?, _: String?, _: Error?) -> Void in
+            result = (true, "Success"); dispatchGroup.leave() }
+          let resolveUpload: RCTPromiseResolveBlock = { (_: Any?) -> Void in
+            result = (false, "Resolved, but expected reject"); dispatchGroup.leave() }
+          let resolve: RCTPromiseResolveBlock = { (response: Any?) -> Void in
+              let dict = response as? NSDictionary ?? [:]
+              let data = dict["data"] as? NSDictionary ?? [:]
+
+              let validUploadInput = createValidUploadInput(data)
+
+              let invalidUploadInput = validUploadInput.filter({ $0.key != removeKey })
+
+              self.sut?.uploadBlob(
+                input: invalidUploadInput as NSDictionary,
+                resolve: resolveUpload,
+                reject: rejectUpload)
+          }
+
+          sut?.fetchBlob(input: fetchInput, resolve: resolve, reject: rejectFetch)
+
+          dispatchGroup.wait(timeout: .now() +
+            DispatchTimeInterval.seconds(BlobCourierTests.defaultPromiseTimeoutSeconds))
+          XCTAssertTrue(result.0)
+        }
     }
 
     func testValidTargetParametersResolvesPromise() throws {
