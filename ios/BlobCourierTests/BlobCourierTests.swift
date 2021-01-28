@@ -12,6 +12,39 @@ import MimeParser
 
 @testable import BlobCourier
 
+func verifyBodyIsCorrect(data: Data, contentType: String, expectedParts: [String]) -> (Bool, String) {
+  let body = String(data: data, encoding: .utf8) ?? ""
+
+  let httpMessage = "Content-Type: \(contentType)\r\n\(body)"
+  let bodyStartsWithBoundary = body.hasPrefix("--")
+  if !bodyStartsWithBoundary {
+    return (false, "Body must start with boundary")
+  }
+
+  do {
+    let parsedMessage = try MimeParser().parse(httpMessage)
+    if case .mixed(let mimes) = parsedMessage.content {
+      let actualParts: [String] = mimes.reduce(into: []) { acc, mime in
+        if let value = mime.header.contentDisposition?.parameters["name"] {
+          acc.append(value)
+        }
+      }
+
+      if actualParts.sorted() != expectedParts.sorted() {
+        return (false, "Did not receive all expected parts")
+      } else if actualParts != expectedParts {
+        return (false, "Received parts order differs from provided order")
+      }
+
+      return (true, "Success")
+    }
+  } catch {
+    return (false, error.localizedDescription)
+  }
+
+  return (false, "Unknown")
+}
+
 // swiftlint:disable type_body_length
 // swiftlint:disable file_length
 class BlobCourierTests: XCTestCase {
@@ -41,48 +74,21 @@ class BlobCourierTests: XCTestCase {
         let expectedParts = ["test", "file"]
 
         let router = Router()
-        router["/api/v2/users"] =
+        router["/echo"] =
           DelayResponse(DataResponse(
-            statusCode: 201,
-            statusMessage: "Created",
+            statusCode: 200,
+            statusMessage: "OK",
             contentType: "text/plain",
             headers: []) { response -> Data in
 
-            if let input = response["swsgi.input"] as? SWSGIInput {
-              let contentType = response["CONTENT_TYPE"]
+            guard let input = response["swsgi.input"] as? SWSGIInput else { return Data("".utf8) }
+            guard let contentType = response["CONTENT_TYPE"] as? String else { return Data("".utf8) }
 
-              DataReader.read(input) { data in
-                let body = String(data: data, encoding: .utf8) ?? ""
-
-                let httpMessage = "Content-Type: \(contentType!)\r\n\(body)"
-                let bodyStartsWithBoundary = body.hasPrefix("--")
-                if !bodyStartsWithBoundary {
-                  result = (false, "Body must start with boundary")
-                  return
-                }
-
-                do {
-                  let parsedMessage = try MimeParser().parse(httpMessage)
-                  if case .mixed(let mimes) = parsedMessage.content {
-                    let actualParts: [String] = mimes.reduce(into: []) { acc, mime in
-                      if let value = mime.header.contentDisposition?.parameters["name"] {
-                        acc.append(value)
-                      }
-                    }
-
-                    if actualParts.sorted() != expectedParts.sorted() {
-                      result = (false, "Did not receive all expected parts")
-                    } else if actualParts != expectedParts {
-                      result = (false, "Received parts order differs from provided order")
-                    } else {
-                      result = (true, "Success")
-                    }
-                  }
-                } catch {
-                  result = (false, error.localizedDescription)
-                }
-              }
-            }
+            DataReader.read(input) { data in
+	      result = verifyBodyIsCorrect(
+                data: data,
+                contentType: contentType,
+                expectedParts: expectedParts) }
 
             return Data("".utf8)
           })
@@ -119,7 +125,7 @@ class BlobCourierTests: XCTestCase {
                ]
              ],
              "taskId": data["taskId"] ?? "",
-             "url": "http://localhost:12345/api/v2/users"
+             "url": "http://localhost:12345/echo"
            ], resolve: resolveUpload, reject: reject)
         }
 
