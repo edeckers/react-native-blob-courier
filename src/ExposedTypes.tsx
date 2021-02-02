@@ -125,6 +125,7 @@ export declare interface BlobRequestTask {
 
 export declare interface BlobRequestSettings {
   readonly progressIntervalMilliseconds?: number;
+  readonly signal?: AbortSignal;
 }
 
 export declare interface BlobUnmanagedHttpResponse {

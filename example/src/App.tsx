@@ -144,7 +144,7 @@ const ProgressIndicator = (props: PIProps) => (
 interface UDVProps {
   buttonText: string;
   from: string;
-  isButtonEnabled: boolean;
+  isCancellationButton: boolean;
   onPress: () => void;
   progress: number;
   progressTotal?: number;
@@ -160,9 +160,8 @@ const UploadDownloadView = (props: UDVProps) => (
       <ProgressIndicator value={props.progress} total={props.progressTotal} />
       <View style={styles.container}>
         <Button
-          disabled={!props.isButtonEnabled}
           onPress={props.onPress}
-          title={props.buttonText}
+          title={props.isCancellationButton ? 'CANCEL' : props.buttonText}
         />
       </View>
     </View>
@@ -182,12 +181,13 @@ const UploaderView = (props: UVProps) => {
 
   const buttonText = isUploading ? 'Uploading...' : 'Start upload';
 
-  const startUpload = async () => {
+  const startUpload = async (signal: AbortSignal) => {
     setIsUploading(true);
 
     try {
       const uploadResult = await BlobCourier.settings({
         progressIntervalMilliseconds: DEFAULT_PROGRESS_INTERVAL_MILLISECONDS,
+        signal,
       })
         .onProgress((e: BlobProgressEvent) => {
           setReceived(e.written);
@@ -207,12 +207,19 @@ const UploaderView = (props: UVProps) => {
     }
   };
 
+  // eslint-disable-next-line no-undef
+  const abortController = new AbortController();
+
   return (
     <UploadDownloadView
       buttonText={buttonText}
       from={props.fromLocalPath}
-      isButtonEnabled={!isUploading}
-      onPress={startUpload}
+      isCancellationButton={isUploading}
+      onPress={() =>
+        isUploading
+          ? abortController.abort()
+          : startUpload(abortController.signal)
+      }
       progress={received}
       progressTotal={expected}
       to={props.toUrl}
@@ -245,6 +252,8 @@ interface DVProps {
   onFinished: (response: BlobFetchResponse) => void;
 }
 
+// eslint-disable-next-line no-undef
+const abortController = new AbortController();
 const DownloaderView = (props: DVProps) => {
   const [isDownloading, setIsDownloading] = useState(false);
   const [useAndroidDownloadManager, setUseAndroidDownloadManager] = useState(
@@ -255,7 +264,7 @@ const DownloaderView = (props: DVProps) => {
 
   const buttonText = isDownloading ? 'Downloading...' : 'Start download';
 
-  const startDownload = async () => {
+  const startDownload = async (signal: AbortSignal) => {
     setIsDownloading(true);
 
     const req0 = {
@@ -268,6 +277,7 @@ const DownloaderView = (props: DVProps) => {
     try {
       const reqSettings = BlobCourier.settings({
         progressIntervalMilliseconds: DEFAULT_PROGRESS_INTERVAL_MILLISECONDS,
+        signal,
       }).onProgress((e: BlobProgressEvent) => {
         const maybeTotal = e.total > 0 ? e.total : undefined;
 
@@ -297,8 +307,12 @@ const DownloaderView = (props: DVProps) => {
       <UploadDownloadView
         buttonText={buttonText}
         from={props.fromUrl}
-        isButtonEnabled={!isDownloading}
-        onPress={startDownload}
+        isCancellationButton={isDownloading}
+        onPress={() =>
+          isDownloading
+            ? abortController.abort()
+            : startDownload(abortController.signal)
+        }
         progress={received}
         progressTotal={expected}
         to={props.filename}

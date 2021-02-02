@@ -171,6 +171,33 @@ const sanitizeMultipartUploadData = <T extends BlobUploadMultipartNativeInput>(
   };
 };
 
+const wrapAbortListener = async <T,>(
+  taskId: string,
+  wrappedFn: () => Promise<T>,
+  signal?: AbortSignal
+) => {
+  if (!signal) {
+    console.log('NO SIGNAL');
+    return await wrappedFn;
+  }
+
+  const originalSignalOnAbort = signal.onabort;
+
+  signal.onabort = (e: AbortEvent) => {
+    if (originalSignalOnAbort) {
+      originalSignalOnAbort(e);
+    }
+
+    console.log(`Aborted ${taskId}`);
+  };
+
+  const result = await wrappedFn();
+
+  signal.onabort = originalSignalOnAbort;
+
+  return result;
+};
+
 const wrapEmitter = async <T,>(
   taskId: string,
   wrappedFn: () => Promise<T>,
@@ -188,32 +215,45 @@ const wrapEmitter = async <T,>(
 };
 
 const fetchBlob = <T extends BlobFetchNativeInput>(input: Readonly<T>) =>
-  wrapEmitter(
+  wrapAbortListener(
     input.taskId,
-    () => (BlobCourier as BlobCourierType).fetchBlob(sanitizeFetchData(input)),
-    input.onProgress
+    () =>
+      wrapEmitter(
+        input.taskId,
+        () =>
+          (BlobCourier as BlobCourierType).fetchBlob(sanitizeFetchData(input)),
+        input.onProgress
+      ),
+    input.signal
   );
 
 const uploadParts = <T extends BlobUploadMultipartInputWithTask>(
   input: Readonly<T>
 ) =>
-  wrapEmitter(
+  wrapAbortListener(
     input.taskId,
-    () => {
-      try {
-        const sanitized = sanitizeMappedMultiparts(input.parts);
+    () =>
+      wrapEmitter(
+        input.taskId,
+        () => {
+          try {
+            const sanitized = sanitizeMappedMultiparts(input.parts);
 
-        return (BlobCourier as BlobCourierType).uploadBlob(
-          sanitizeMultipartUploadData({
-            ...input,
-            parts: convertMappedMultipartsWithSymbolizedKeysToArray(sanitized),
-          })
-        );
-      } catch (e) {
-        return Promise.reject(e);
-      }
-    },
-    input.onProgress
+            return (BlobCourier as BlobCourierType).uploadBlob(
+              sanitizeMultipartUploadData({
+                ...input,
+                parts: convertMappedMultipartsWithSymbolizedKeysToArray(
+                  sanitized
+                ),
+              })
+            );
+          } catch (e) {
+            return Promise.reject(e);
+          }
+        },
+        input.onProgress
+      ),
+    input.signal
   );
 
 const uploadBlob = <T extends BlobUploadNativeInput>(input: Readonly<T>) => {
