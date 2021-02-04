@@ -178,6 +178,9 @@ const UploaderView = (props: UVProps) => {
   const [isUploading, setIsUploading] = useState(false);
   const [received, setReceived] = useState<number>(0);
   const [expected, setExpected] = useState<number | undefined>(0);
+  const [cancelDownload, setCanceller] = useState<() => void>(() => () => {
+    /* noop */
+  });
 
   const buttonText = isUploading ? 'Uploading...' : 'Start upload';
 
@@ -207,19 +210,28 @@ const UploaderView = (props: UVProps) => {
     }
   };
 
-  // eslint-disable-next-line no-undef
-  const abortController = new AbortController();
+  const onPress = async () => {
+    if (isUploading) {
+      cancelDownload();
+      return;
+    }
+
+    // eslint-disable-next-line no-undef
+    const abortController = new AbortController();
+    setCanceller(() => () => {
+      abortController.abort();
+      setIsUploading(false);
+    });
+
+    await startUpload(abortController.signal);
+  };
 
   return (
     <UploadDownloadView
       buttonText={buttonText}
       from={props.fromLocalPath}
       isCancellationButton={isUploading}
-      onPress={() =>
-        isUploading
-          ? abortController.abort()
-          : startUpload(abortController.signal)
-      }
+      onPress={onPress}
       progress={received}
       progressTotal={expected}
       to={props.toUrl}
@@ -252,8 +264,6 @@ interface DVProps {
   onFinished: (response: BlobFetchResponse) => void;
 }
 
-// eslint-disable-next-line no-undef
-const abortController = new AbortController();
 const DownloaderView = (props: DVProps) => {
   const [isDownloading, setIsDownloading] = useState(false);
   const [useAndroidDownloadManager, setUseAndroidDownloadManager] = useState(
@@ -261,6 +271,9 @@ const DownloaderView = (props: DVProps) => {
   );
   const [received, setReceived] = useState<number>(0);
   const [expected, setExpected] = useState<number | undefined>(0);
+  const [cancelDownload, setCanceller] = useState<() => void>(() => () => {
+    /* noop */
+  });
 
   const buttonText = isDownloading ? 'Downloading...' : 'Start download';
 
@@ -302,17 +315,29 @@ const DownloaderView = (props: DVProps) => {
     }
   };
 
+  const onPress = async () => {
+    if (isDownloading) {
+      cancelDownload();
+      return;
+    }
+
+    // eslint-disable-next-line no-undef
+    const abortController = new AbortController();
+    setCanceller(() => () => {
+      abortController.abort();
+      setIsDownloading(false);
+    });
+
+    await startDownload(abortController.signal);
+  };
+
   return (
     <>
       <UploadDownloadView
         buttonText={buttonText}
         from={props.fromUrl}
         isCancellationButton={isDownloading}
-        onPress={() =>
-          isDownloading
-            ? abortController.abort()
-            : startDownload(abortController.signal)
-        }
+        onPress={onPress}
         progress={received}
         progressTotal={expected}
         to={props.filename}
