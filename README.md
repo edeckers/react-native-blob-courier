@@ -36,7 +36,7 @@ cd ios && pod install
 ## Requirements
 
 - Android >= 19
-- iOS >= 7
+- iOS >= 9
 - Kotlin >= 1.4.x
 
 ## Usage
