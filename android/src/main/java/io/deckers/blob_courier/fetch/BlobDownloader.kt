@@ -45,7 +45,7 @@ class BlobDownloader(
       ManagedDownloader(reactContext, progressNotifier)
         .fetch(downloaderParameters, absoluteFilePath)
     else
-      UnmanagedDownloader(httpClient, progressNotifier)
+      UnmanagedDownloader(reactContext, httpClient, progressNotifier)
         .fetch(downloaderParameters, absoluteFilePath)
   }
 }

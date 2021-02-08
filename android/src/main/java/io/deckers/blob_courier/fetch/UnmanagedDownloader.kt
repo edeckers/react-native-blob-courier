@@ -6,16 +6,25 @@
  */
 package io.deckers.blob_courier.fetch
 
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.net.Uri
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import com.facebook.react.bridge.ReactContext
+import io.deckers.blob_courier.common.ACTION_CANCEL_REQUEST
 import io.deckers.blob_courier.common.DOWNLOAD_TYPE_UNMANAGED
 import io.deckers.blob_courier.common.ERROR_UNEXPECTED_ERROR
 import io.deckers.blob_courier.common.Failure
+import io.deckers.blob_courier.common.Logger
 import io.deckers.blob_courier.common.Result
 import io.deckers.blob_courier.common.Success
 import io.deckers.blob_courier.common.createErrorFromThrowabe
 import io.deckers.blob_courier.common.mapHeadersToMap
 import io.deckers.blob_courier.progress.BlobCourierProgressResponse
 import io.deckers.blob_courier.progress.ProgressNotifier
+import okhttp3.Call
 import java.io.File
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
@@ -24,31 +33,22 @@ import okhttp3.Response
 import okio.Okio
 import okio.Source
 
+private val TAG = ManagedDownloader::class.java.name
+
+private val logger = Logger(TAG)
+private fun li(m: String) = logger.i(m)
+private fun lv(m: String, e: Throwable? = null) = logger.v(m, e)
+
 class UnmanagedDownloader(
+  private val reactContext: ReactContext,
   private val httpClient: OkHttpClient,
   private val progressNotifier: ProgressNotifier
 ) {
-
-  private fun createDownloadProgressInterceptor(
-    progressNotifier: ProgressNotifier
-  ): (
-    Interceptor.Chain
-  ) -> Response = fun(
-    chain: Interceptor.Chain
-  ): Response {
-    val originalResponse = chain.proceed(chain.request())
-
-    return originalResponse.body()?.let {
-      originalResponse.newBuilder().body(
-        BlobCourierProgressResponse(progressNotifier, it)
-      ).build()
-    } ?: originalResponse
-  }
-
   fun fetch(
     downloaderParameters: DownloaderParameters,
     toAbsoluteFilePath: File,
   ): Result<Map<String, Any>> {
+    li("Starting unmanaged fetch")
     try {
       val request = Request.Builder()
         .method(downloaderParameters.method, null)
@@ -68,7 +68,11 @@ class UnmanagedDownloader(
           .addInterceptor(progressInterceptor)
           .build()
 
-      val response = httpClientWithInterceptor.newCall(request).execute()
+      val call = httpClientWithInterceptor.newCall(request)
+
+      registerCancellationHandler(downloaderParameters.taskId, call)
+
+      val response = call.execute()
 
       response.body()?.source().use { source ->
         Okio.buffer(Okio.sink(toAbsoluteFilePath)).use { sink ->
@@ -76,6 +80,8 @@ class UnmanagedDownloader(
           sink.writeAll(source as Source)
         }
       }
+
+      li("Finished unmanaged fetch")
 
       return Success(
         mapOf(
@@ -92,5 +98,38 @@ class UnmanagedDownloader(
     } catch (e: Throwable) {
       return Failure(createErrorFromThrowabe(ERROR_UNEXPECTED_ERROR, e))
     }
+  }
+
+  private fun registerCancellationHandler(taskId: String, call: Call) {
+    lv("Registering $ACTION_CANCEL_REQUEST receiver")
+
+    LocalBroadcastManager.getInstance(reactContext)
+      .registerReceiver(object : BroadcastReceiver() {
+        override fun onReceive(p0: Context?, p1: Intent?) {
+          if (p1?.getStringExtra("taskId") != taskId) {
+            return
+          }
+
+          call.cancel()
+        }
+      }, IntentFilter(ACTION_CANCEL_REQUEST))
+
+    lv("Registered $ACTION_CANCEL_REQUEST receiver")
+  }
+
+  private fun createDownloadProgressInterceptor(
+    progressNotifier: ProgressNotifier
+  ): (
+    Interceptor.Chain
+  ) -> Response = fun(
+    chain: Interceptor.Chain
+  ): Response {
+    val originalResponse = chain.proceed(chain.request())
+
+    return originalResponse.body()?.let {
+      originalResponse.newBuilder().body(
+        BlobCourierProgressResponse(progressNotifier, it)
+      ).build()
+    } ?: originalResponse
   }
 }

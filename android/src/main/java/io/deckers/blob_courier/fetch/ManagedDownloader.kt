@@ -13,6 +13,7 @@ import android.content.Intent
 import android.content.IntentFilter
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.facebook.react.bridge.ReactApplicationContext
+import com.facebook.react.bridge.ReactContext
 import io.deckers.blob_courier.common.ACTION_CANCEL_REQUEST
 import io.deckers.blob_courier.common.BlobCourierError
 import io.deckers.blob_courier.common.ERROR_UNEXPECTED_ERROR
@@ -37,7 +38,7 @@ private fun li(m: String) = logger.i(m)
 private fun lv(m: String, e: Throwable? = null) = logger.v(m, e)
 
 class ManagedDownloader(
-  private val reactContext: ReactApplicationContext,
+  private val reactContext: ReactContext,
   private val progressNotifier: ProgressNotifier
 ) {
   private val defaultDownloadManager =
@@ -142,7 +143,6 @@ class ManagedDownloader(
       return Failure(createErrorFromThrowabe(ERROR_UNEXPECTED_ERROR, e))
     }
   }
-
 
   private fun registerCancellationHandler(taskId: String, downloadId: Long) {
     lv("Registering $ACTION_CANCEL_REQUEST receiver")

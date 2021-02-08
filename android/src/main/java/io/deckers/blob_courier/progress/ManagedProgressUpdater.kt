@@ -7,14 +7,14 @@
 package io.deckers.blob_courier.progress
 
 import android.app.DownloadManager
-import com.facebook.react.bridge.ReactApplicationContext
+import com.facebook.react.bridge.ReactContext
 import io.deckers.blob_courier.common.createDownloadManager
 import java.io.Closeable
 import java.util.Timer
 import kotlin.concurrent.timerTask
 
 class ManagedProgressUpdater(
-  private val context: ReactApplicationContext,
+  private val context: ReactContext,
   private val downloadId: Long,
   private val progressInterval: Long,
   private val progressNotifier: ProgressNotifier
