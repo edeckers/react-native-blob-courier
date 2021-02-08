@@ -28,6 +28,7 @@ import type {
   BlobMultipartArrayUploadRequest,
   BlobNamedMultipartArray,
   BlobMultipartWithName,
+  BlobCancelResponse,
 } from './ExposedTypes';
 import {
   convertMappedMultipartsWithSymbolizedKeysToArray,
@@ -40,6 +41,8 @@ type BlobFetchInput = BlobFetchRequest &
   BlobRequestSettings &
   AndroidFetchSettings &
   IOSFetchSettings;
+
+type BlobCancelNativeInput = BlobRequestTask;
 
 type BlobFetchNativeInput = BlobFetchInput & BlobRequestTask;
 
@@ -59,6 +62,7 @@ type BlobUploadMultipartNativeInput = BlobMultipartArrayUploadRequest &
   BlobRequestTask;
 
 type BlobCourierType = {
+  cancelRequest(input: BlobCancelNativeInput): Promise<BlobCancelResponse>;
   fetchBlob(input: BlobFetchNativeInput): Promise<BlobFetchResponse>;
   uploadBlob(
     input: BlobUploadMultipartNativeInput
@@ -177,8 +181,7 @@ const wrapAbortListener = async <T,>(
   signal?: AbortSignal
 ) => {
   if (!signal) {
-    console.log('NO SIGNAL');
-    return await wrappedFn;
+    return await wrappedFn();
   }
 
   const originalSignalOnAbort = signal.onabort;
@@ -187,6 +190,8 @@ const wrapAbortListener = async <T,>(
     if (originalSignalOnAbort) {
       originalSignalOnAbort(e);
     }
+
+    (BlobCourier as BlobCourierType).cancelRequest({ taskId });
 
     console.log(`Aborted ${taskId}`);
   };

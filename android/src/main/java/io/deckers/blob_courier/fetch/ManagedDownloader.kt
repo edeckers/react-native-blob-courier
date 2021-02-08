@@ -7,9 +7,13 @@
 package io.deckers.blob_courier.fetch
 
 import android.app.DownloadManager
+import android.content.BroadcastReceiver
 import android.content.Context
+import android.content.Intent
 import android.content.IntentFilter
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.facebook.react.bridge.ReactApplicationContext
+import io.deckers.blob_courier.common.ACTION_CANCEL_REQUEST
 import io.deckers.blob_courier.common.BlobCourierError
 import io.deckers.blob_courier.common.ERROR_UNEXPECTED_ERROR
 import io.deckers.blob_courier.common.Failure
@@ -27,6 +31,7 @@ private const val DOWNLOAD_MANAGER_PARAMETER_ENABLE_NOTIFICATIONS = "enableNotif
 private const val DOWNLOAD_MANAGER_PARAMETER_TITLE = "title"
 
 private val TAG = ManagedDownloader::class.java.name
+
 private val logger = Logger(TAG)
 private fun li(m: String) = logger.i(m)
 private fun lv(m: String, e: Throwable? = null) = logger.v(m, e)
@@ -119,12 +124,8 @@ class ManagedDownloader(
             }
           }
 
-        reactContext.registerReceiver(
-          downloadReceiver,
-          IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE)
-        )
-
-        lv("Registered ${DownloadManager.ACTION_DOWNLOAD_COMPLETE} receiver")
+        registerCancellationHandler(downloaderParameters.taskId, downloadId)
+        registerDownloadCompletionHandler(downloadReceiver)
 
         lv("Waiting for completion")
 
@@ -140,5 +141,34 @@ class ManagedDownloader(
     } catch (e: Throwable) {
       return Failure(createErrorFromThrowabe(ERROR_UNEXPECTED_ERROR, e))
     }
+  }
+
+
+  private fun registerCancellationHandler(taskId: String, downloadId: Long) {
+    lv("Registering $ACTION_CANCEL_REQUEST receiver")
+
+    LocalBroadcastManager.getInstance(reactContext)
+      .registerReceiver(object : BroadcastReceiver() {
+        override fun onReceive(p0: Context?, p1: Intent?) {
+          if (p1?.getStringExtra("taskId") != taskId) {
+            return
+          }
+
+          defaultDownloadManager.remove(downloadId)
+        }
+      }, IntentFilter(ACTION_CANCEL_REQUEST))
+
+    lv("Registered $ACTION_CANCEL_REQUEST receiver")
+  }
+
+  private fun registerDownloadCompletionHandler(downloadReceiver: ManagedDownloadReceiver) {
+    lv("Registering ${DownloadManager.ACTION_DOWNLOAD_COMPLETE} receiver")
+
+    reactContext.registerReceiver(
+      downloadReceiver,
+      IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE)
+    )
+
+    lv("Registered ${DownloadManager.ACTION_DOWNLOAD_COMPLETE} receiver")
   }
 }
