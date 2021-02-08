@@ -12,7 +12,6 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.net.Uri
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
-import com.facebook.react.bridge.ReactContext
 import io.deckers.blob_courier.common.ACTION_CANCEL_REQUEST
 import io.deckers.blob_courier.common.DOWNLOAD_TYPE_UNMANAGED
 import io.deckers.blob_courier.common.ERROR_UNEXPECTED_ERROR
@@ -40,7 +39,7 @@ private fun li(m: String) = logger.i(m)
 private fun lv(m: String, e: Throwable? = null) = logger.v(m, e)
 
 class UnmanagedDownloader(
-  private val reactContext: ReactContext,
+  private val context: Context,
   private val httpClient: OkHttpClient,
   private val progressNotifier: ProgressNotifier
 ) {
@@ -103,7 +102,7 @@ class UnmanagedDownloader(
   private fun registerCancellationHandler(taskId: String, call: Call) {
     lv("Registering $ACTION_CANCEL_REQUEST receiver")
 
-    LocalBroadcastManager.getInstance(reactContext)
+    LocalBroadcastManager.getInstance(context)
       .registerReceiver(object : BroadcastReceiver() {
         override fun onReceive(p0: Context?, p1: Intent?) {
           if (p1?.getStringExtra("taskId") != taskId) {

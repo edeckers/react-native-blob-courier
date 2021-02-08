@@ -12,8 +12,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
-import com.facebook.react.bridge.ReactApplicationContext
-import com.facebook.react.bridge.ReactContext
 import io.deckers.blob_courier.common.ACTION_CANCEL_REQUEST
 import io.deckers.blob_courier.common.BlobCourierError
 import io.deckers.blob_courier.common.ERROR_UNEXPECTED_ERROR
@@ -38,11 +36,11 @@ private fun li(m: String) = logger.i(m)
 private fun lv(m: String, e: Throwable? = null) = logger.v(m, e)
 
 class ManagedDownloader(
-  private val reactContext: ReactContext,
+  private val context: Context,
   private val progressNotifier: ProgressNotifier
 ) {
   private val defaultDownloadManager =
-    reactContext.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
+    context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
 
   fun fetch(
     downloaderParameters: DownloaderParameters,
@@ -96,7 +94,7 @@ class ManagedDownloader(
 
       val progressUpdater =
         ManagedProgressUpdater(
-          reactContext,
+          context,
           downloadId,
           downloaderParameters.progressInterval.toLong(),
           progressNotifier
@@ -147,7 +145,7 @@ class ManagedDownloader(
   private fun registerCancellationHandler(taskId: String, downloadId: Long) {
     lv("Registering $ACTION_CANCEL_REQUEST receiver")
 
-    LocalBroadcastManager.getInstance(reactContext)
+    LocalBroadcastManager.getInstance(context)
       .registerReceiver(object : BroadcastReceiver() {
         override fun onReceive(p0: Context?, p1: Intent?) {
           if (p1?.getStringExtra("taskId") != taskId) {
@@ -164,7 +162,7 @@ class ManagedDownloader(
   private fun registerDownloadCompletionHandler(downloadReceiver: ManagedDownloadReceiver) {
     lv("Registering ${DownloadManager.ACTION_DOWNLOAD_COMPLETE} receiver")
 
-    reactContext.registerReceiver(
+    context.registerReceiver(
       downloadReceiver,
       IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE)
     )
