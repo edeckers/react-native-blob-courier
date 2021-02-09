@@ -2,10 +2,10 @@
   "name": "react-native-blob-courier",
   "version": "1.0.10",
   "description": "Use this library to efficiently download and upload blobs in React Native",
-  "main": "lib/commonjs/index",
-  "module": "lib/module/index",
+  "main": "lib/commonjs/index.js",
+  "module": "lib/module/index.js",
   "types": "lib/typescript/src/index.d.ts",
-  "react-native": "src/index",
+  "react-native": "src/index.tsx",
   "source": "src/index",
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"
@@ -13,14 +13,14 @@
   "files": [
     "src",
     "lib",
+    "!**/__tests__",
+    "!**/__fixtures__",
+    "!**/__mocks__",
     "android",
     "ios",
     "cpp",
     "react-native-blob-courier.podspec",
-    "!lib/typescript/example",
-    "!**/__tests__",
-    "!**/__fixtures__",
-    "!**/__mocks__"
+    "!lib/typescript/example"
   ],
   "scripts": {
     "test": "jest --ci",
@@ -46,7 +46,6 @@
   "homepage": "https://github.com/edeckers/react-native-blob-courier#readme",
   "devDependencies": {
     "@commitlint/config-conventional": "^8.3.4",
-    "@react-native-community/bob": "^0.16.2",
     "@react-native-community/eslint-config": "^2.0.0",
     "@release-it/conventional-changelog": "^1.1.4",
     "@types/jest": "^26.0.0",
@@ -63,6 +62,7 @@
     "prettier": "^2.0.5",
     "react": "16.11.0",
     "react-native": "0.62.2",
+    "react-native-builder-bob": "^0.17.1",
     "release-it": "^13.5.8",
     "typescript": "^3.8.3"
   },
@@ -138,6 +138,15 @@
     "useTabs": false
   },
   "@react-native-community/bob": {
+    "source": "src",
+    "output": "lib",
+    "targets": [
+      "commonjs",
+      "module",
+      "typescript"
+    ]
+  },
+  "react-native-builder-bob": {
     "source": "src",
     "output": "lib",
     "targets": [
