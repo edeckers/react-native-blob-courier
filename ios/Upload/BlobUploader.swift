@@ -115,6 +115,17 @@ open class BlobUploader: NSObject {
 	  try buildRequestDataForFileUpload(url: parameters.url, parts: parameters.parts, headers: headers)
 
         session.uploadTask(with: request, from: fileData).resume()
+
+        let cancelObserver = NotificationCenter.default.addObserver(
+          forName: Notification.Name(rawValue: "io.deckers.blob_courier.CancelRequest"),
+          object: nil,
+          queue: .main) { notification in
+            if let data = notification.userInfo as? [String: String] {
+              // return
+            }
+
+            session.invalidateAndCancel()
+          }
       } catch {
         failedResult(Errors.createUnexpectedError(error: error))
       }

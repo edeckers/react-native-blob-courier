@@ -50,7 +50,8 @@ open class BlobDownloader: NSObject {
         sessionConfig: sessionConfig,
         delegate: downloaderDelegate,
         fileURL: parameters.url,
-        headers: parameters.headers)
+        headers: parameters.headers,
+        taskId: parameters.taskId)
     }
 
     group.wait()
@@ -62,7 +63,8 @@ open class BlobDownloader: NSObject {
     sessionConfig: URLSessionConfiguration,
     delegate: DownloaderDelegate,
     fileURL: URL,
-    headers: NSDictionary) {
+    headers: NSDictionary,
+    taskId: String) {
     let session =
      URLSession(
        configuration: sessionConfig,
@@ -79,5 +81,16 @@ open class BlobDownloader: NSObject {
     }
 
     session.downloadTask(with: request).resume()
+
+    let cancelObserver = NotificationCenter.default.addObserver(
+      forName: Notification.Name(rawValue: "io.deckers.blob_courier.CancelRequest"),
+      object: nil,
+      queue: .main) { notification in
+        if let data = notification.userInfo as? [String: String] {
+          // return
+        }
+
+        session.invalidateAndCancel()
+      }
   }
 }

@@ -10,6 +10,28 @@ open class BlobCourier: NSObject {
     return false
   }
 
+  @objc(cancelRequest:withResolver:withRejecter:)
+  func cancelRequest(
+    input: NSDictionary, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock
+  ) {
+    DispatchQueue.global(qos: .background).async {
+      do {
+        let taskId = input["taskId"]
+
+        NotificationCenter.default.post(
+          name: Notification.Name(rawValue: "io.deckers.blob_courier.CancelRequest"),
+          object: nil,
+          userInfo: ["taskId": taskId])
+
+        resolve([String: String]())
+      } catch {
+        let unexpectedError = Errors.createUnexpectedError(error: error)
+
+        reject(unexpectedError.code, unexpectedError.message, unexpectedError.error)
+      }
+    }
+  }
+
   @objc(fetchBlob:withResolver:withRejecter:)
   func fetchBlob(
     input: NSDictionary, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock
