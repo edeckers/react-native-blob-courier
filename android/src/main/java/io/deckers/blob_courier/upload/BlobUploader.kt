@@ -15,7 +15,7 @@ import io.deckers.blob_courier.common.Result
 import io.deckers.blob_courier.common.Success
 import io.deckers.blob_courier.common.createErrorFromThrowabe
 import io.deckers.blob_courier.common.mapHeadersToMap
-import io.deckers.blob_courier.common.registerCancellationHandler
+import io.deckers.blob_courier.cancel.registerCancellationHandler
 import io.deckers.blob_courier.progress.BlobCourierProgressRequest
 import io.deckers.blob_courier.progress.ProgressNotifierFactory
 import okhttp3.OkHttpClient

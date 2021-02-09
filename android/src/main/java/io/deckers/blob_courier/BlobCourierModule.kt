@@ -14,6 +14,7 @@ import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReactMethod
 import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.modules.network.OkHttpClientProvider
+import io.deckers.blob_courier.cancel.CancellationParameterFactory
 import io.deckers.blob_courier.common.ACTION_CANCEL_REQUEST
 import io.deckers.blob_courier.common.DEFAULT_PROGRESS_TIMEOUT_MILLISECONDS
 import io.deckers.blob_courier.common.ERROR_UNEXPECTED_ERROR
@@ -60,16 +61,22 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
 
     thread {
       try {
-        val taskId = input.getString("taskId")!!
-        val cancellationIntent =
-          Intent(ACTION_CANCEL_REQUEST)
-            .putExtra("taskId", input.getString("taskId"))
+        val errorOrRequest = CancellationParameterFactory().fromInput(input)
 
-        LocalBroadcastManager.getInstance(reactContext).sendBroadcast(cancellationIntent)
+        errorOrRequest.`do`(
+          { e ->
+            lv("Something went wrong during cancellation (code=${e.code},message=${e.message})")
+            promise.reject(e.code, e.message)
+          },
+          {
+            val cancellationIntent =
+              Intent(ACTION_CANCEL_REQUEST)
+                .putExtra("taskId", it.taskId)
 
-        promise.resolve(mapOf(
-          "message" to "Sent cancellation message",
-          "taskId" to taskId).toReactMap())
+            LocalBroadcastManager.getInstance(reactContext).sendBroadcast(cancellationIntent)
+
+            promise.resolve(emptyMap<String, Any>().toReactMap())
+          })
       } catch (e: Exception) {
         le("Unexpected exception", e)
         promise.reject(ERROR_UNEXPECTED_EXCEPTION, processUnexpectedException(e).message)
@@ -79,7 +86,7 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
       }
     }
 
-    li("Called request")
+    li("Cancelled request")
   }
 
   @ReactMethod
