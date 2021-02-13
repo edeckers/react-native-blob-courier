@@ -4,38 +4,35 @@
  * This source code is licensed under the MPL-2.0 license found in the
  * LICENSE file in the root directory of this source tree.
  */
+
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.platform.app.InstrumentationRegistry
-import com.facebook.react.bridge.Arguments
-import com.facebook.react.bridge.JavaOnlyArray
-import com.facebook.react.bridge.JavaOnlyMap
-import com.facebook.react.bridge.ReactApplicationContext
+import com.facebook.react.bridge.*
 import io.deckers.blob_courier.BuildConfig.ADB_COMMAND_TIMEOUT_MILLISECONDS
 import io.deckers.blob_courier.BuildConfig.PROMISE_TIMEOUT_MILLISECONDS
 import io.deckers.blob_courier.Fixtures
+import io.deckers.blob_courier.Fixtures.createSparseFile
 import io.deckers.blob_courier.Fixtures.createValidTestFetchParameterMap
+import io.deckers.blob_courier.Fixtures.createValidUploadTestParameterMap
+import io.deckers.blob_courier.Fixtures.runCancelFetchBlobSuspend
+import io.deckers.blob_courier.Fixtures.runCancelUploadBlobSuspend
 import io.deckers.blob_courier.Fixtures.runFetchBlobSuspend
+import io.deckers.blob_courier.TestUtils
 import io.deckers.blob_courier.TestUtils.assertRequestFalse
 import io.deckers.blob_courier.TestUtils.assertRequestTrue
 import io.deckers.blob_courier.TestUtils.circumventHiddenApiExemptionsForMockk
 import io.deckers.blob_courier.TestUtils.runInstrumentedRequestToBoolean
-import io.deckers.blob_courier.common.DOWNLOAD_TYPE_MANAGED
-import io.deckers.blob_courier.common.Logger
-import io.deckers.blob_courier.common.MANAGED_DOWNLOAD_SUCCESS
-import io.deckers.blob_courier.common.left
-import io.deckers.blob_courier.common.right
+import io.deckers.blob_courier.common.*
 import io.deckers.blob_courier.react.toReactMap
 import io.mockk.every
 import io.mockk.mockkStatic
-import java.util.UUID
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.TimeoutCancellationException
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withContext
-import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.*
+import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
+import java.io.*
+import java.util.*
+
 
 private val TAG = BlobCourierInstrumentedModuleTests::class.java.name
 
@@ -194,7 +191,9 @@ class BlobCourierInstrumentedModuleTests {
           val receivedType = result.getString("type") ?: ""
           val check = receivedType == DOWNLOAD_TYPE_MANAGED
 
-          if (check) right(result) else left("Received incorrect type `$receivedType`")
+          if (check)
+            right(result)
+          else left(Fixtures.TestPromiseError(message = "Received incorrect type `$receivedType`"))
         }
     }
 
@@ -221,11 +220,54 @@ class BlobCourierInstrumentedModuleTests {
           val receivedResult = result.getMap("data")?.getString("result") ?: ""
           val check = receivedResult == MANAGED_DOWNLOAD_SUCCESS
 
-          if (check) right(result) else left("Received incorrect result `$receivedResult`")
+          if (check)
+            right(result)
+          else left(Fixtures.TestPromiseError(message = "Received incorrect result `$receivedResult`"))
         }
     }
 
     assertRequestTrue(message, succeeded)
+  }
+
+  @Test
+  fun cancel_successful_fetch_request_resolves_promise() = runBlocking {
+    val allRequiredParametersMap =
+      createValidTestFetchParameterMap().plus("url" to Fixtures.LARGE_FILE).toReactMap()
+
+    val ctx = ReactApplicationContext(ApplicationProvider.getApplicationContext())
+
+    val errorOrResult =
+      TestUtils.runRequest(
+        { runCancelFetchBlobSuspend(ctx, allRequiredParametersMap) },
+        ADB_COMMAND_TIMEOUT_MILLISECONDS)
+
+    val isError = errorOrResult.map { false }.ifLeft(true)
+    val code = errorOrResult.fold({ e -> e.code }, { _ -> "INVALID" })
+
+    Assert.assertTrue(isError)
+    Assert.assertEquals(ERROR_CANCELED_EXCEPTION, code)
+  }
+
+  @Test
+  fun cancel_successful_upload_request_resolves_promise() = runBlocking {
+    val file = createSparseFile(100 * 1024 * 1024)
+
+    val taskId = UUID.randomUUID().toString()
+
+    val allRequiredParametersMap =
+      createValidUploadTestParameterMap(taskId, file.absolutePath)
+
+    val ctx = ReactApplicationContext(ApplicationProvider.getApplicationContext())
+
+    val errorOrResult = TestUtils.runRequest(
+      { runCancelUploadBlobSuspend(ctx, allRequiredParametersMap.toReactMap()) },
+      60_000)
+
+    val isError = errorOrResult.map { false }.ifLeft(true)
+    val code = errorOrResult.fold({ e -> e.code }, { _ -> "INVALID" })
+
+    Assert.assertTrue(isError)
+    Assert.assertEquals(ERROR_CANCELED_EXCEPTION, code)
   }
 
   @Test
@@ -235,7 +277,7 @@ class BlobCourierInstrumentedModuleTests {
     val ctx = ReactApplicationContext(ApplicationProvider.getApplicationContext())
 
     val uploadParametersMap =
-      Fixtures.createValidUploadTestParameterMap(
+      createValidUploadTestParameterMap(
         UUID.randomUUID().toString(),
         someFileThatIsAlwaysAvailable
       )
@@ -254,8 +296,7 @@ class BlobCourierInstrumentedModuleTests {
     val irrelevantTaskId = UUID.randomUUID().toString()
     val someNonExistentPath = "file:///this/path/does/not/exist.png"
     val allRequiredParametersMap =
-      Fixtures.createValidUploadTestParameterMap(irrelevantTaskId, someNonExistentPath)
-
+      createValidUploadTestParameterMap(irrelevantTaskId, someNonExistentPath)
 
     val ctx = ReactApplicationContext(ApplicationProvider.getApplicationContext())
 

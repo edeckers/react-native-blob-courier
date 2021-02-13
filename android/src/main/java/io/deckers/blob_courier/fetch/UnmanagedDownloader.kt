@@ -12,15 +12,7 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.net.Uri
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
-import io.deckers.blob_courier.common.ACTION_CANCEL_REQUEST
-import io.deckers.blob_courier.common.DOWNLOAD_TYPE_UNMANAGED
-import io.deckers.blob_courier.common.ERROR_UNEXPECTED_ERROR
-import io.deckers.blob_courier.common.Failure
-import io.deckers.blob_courier.common.Logger
-import io.deckers.blob_courier.common.Result
-import io.deckers.blob_courier.common.Success
-import io.deckers.blob_courier.common.createErrorFromThrowabe
-import io.deckers.blob_courier.common.mapHeadersToMap
+import io.deckers.blob_courier.common.*
 import io.deckers.blob_courier.progress.BlobCourierProgressResponse
 import io.deckers.blob_courier.progress.ProgressNotifier
 import okhttp3.Call
@@ -31,6 +23,7 @@ import okhttp3.Request
 import okhttp3.Response
 import okio.Okio
 import okio.Source
+import java.io.IOException
 
 private val TAG = ManagedDownloader::class.java.name
 
@@ -48,27 +41,28 @@ class UnmanagedDownloader(
     toAbsoluteFilePath: File,
   ): Result<Map<String, Any>> {
     li("Starting unmanaged fetch")
-    try {
-      val request = Request.Builder()
-        .method(downloaderParameters.method, null)
-        .url(downloaderParameters.uri.toString())
-        .apply {
-          downloaderParameters.headers.forEach { e: Map.Entry<String, String> ->
-            addHeader(e.key, e.value)
-          }
+
+    val request = Request.Builder()
+      .method(downloaderParameters.method, null)
+      .url(downloaderParameters.uri.toString())
+      .apply {
+        downloaderParameters.headers.forEach { e: Map.Entry<String, String> ->
+          addHeader(e.key, e.value)
         }
+      }
+      .build()
+
+    val progressInterceptor =
+      createDownloadProgressInterceptor(progressNotifier)
+
+    val httpClientWithInterceptor =
+      httpClient.newBuilder()
+        .addInterceptor(progressInterceptor)
         .build()
 
-      val progressInterceptor =
-        createDownloadProgressInterceptor(progressNotifier)
+    val call = httpClientWithInterceptor.newCall(request)
 
-      val httpClientWithInterceptor =
-        httpClient.newBuilder()
-          .addInterceptor(progressInterceptor)
-          .build()
-
-      val call = httpClientWithInterceptor.newCall(request)
-
+    try {
       registerCancellationHandler(downloaderParameters.taskId, call)
 
       val response = call.execute()
@@ -94,8 +88,14 @@ class UnmanagedDownloader(
           )
         )
       )
+    } catch (e: IOException) {
+      if (call.isCanceled) {
+        return Failure(createErrorFromThrowable(ERROR_CANCELED_EXCEPTION, e))
+      }
+
+      return Failure(createErrorFromThrowable(ERROR_UNEXPECTED_EXCEPTION, e))
     } catch (e: Throwable) {
-      return Failure(createErrorFromThrowabe(ERROR_UNEXPECTED_ERROR, e))
+      return Failure(createErrorFromThrowable(ERROR_UNEXPECTED_ERROR, e))
     }
   }
 

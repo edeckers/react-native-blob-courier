@@ -22,7 +22,7 @@ import io.deckers.blob_courier.common.MANAGED_DOWNLOAD_SUCCESS
 import io.deckers.blob_courier.common.Result
 import io.deckers.blob_courier.common.Success
 import io.deckers.blob_courier.common.createDownloadManager
-import io.deckers.blob_courier.common.createErrorFromThrowabe
+import io.deckers.blob_courier.common.createErrorFromThrowable
 import io.deckers.blob_courier.progress.ManagedProgressUpdater
 import java.io.Closeable
 import java.io.File
@@ -56,7 +56,7 @@ class ManagedDownloadReceiver(
       processDownloadCompleteAction(downloadManager, context)
     } catch (e: Exception) {
       lv("Processing completed error: ${e.message}")
-      processCompletedOrError(Failure(createErrorFromThrowabe(ERROR_UNEXPECTED_EXCEPTION, e)))
+      processCompletedOrError(Failure(createErrorFromThrowable(ERROR_UNEXPECTED_EXCEPTION, e)))
     } finally {
       context.unregisterReceiver(this)
       close()
@@ -84,7 +84,7 @@ class ManagedDownloadReceiver(
     val status = cursor.getInt(columnIndex)
     val isStatusSuccessful = status == DownloadManager.STATUS_SUCCESSFUL
 
-    lv("Received status (status=$status, isStatusSuccesful=$isStatusSuccessful)")
+    lv("Received status (status=$status, isStatusSuccessful=$isStatusSuccessful)")
 
     if (isStatusSuccessful) {
       val localFileUri =

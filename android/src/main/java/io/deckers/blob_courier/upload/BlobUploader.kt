@@ -7,19 +7,14 @@
 package io.deckers.blob_courier.upload
 
 import android.content.Context
-import io.deckers.blob_courier.common.ERROR_UNEXPECTED_ERROR
-import io.deckers.blob_courier.common.ERROR_UNEXPECTED_EXCEPTION
-import io.deckers.blob_courier.common.Failure
-import io.deckers.blob_courier.common.Logger
-import io.deckers.blob_courier.common.Result
-import io.deckers.blob_courier.common.Success
-import io.deckers.blob_courier.common.createErrorFromThrowabe
-import io.deckers.blob_courier.common.mapHeadersToMap
 import io.deckers.blob_courier.cancel.registerCancellationHandler
+import io.deckers.blob_courier.common.*
 import io.deckers.blob_courier.progress.BlobCourierProgressRequest
 import io.deckers.blob_courier.progress.ProgressNotifierFactory
+import okhttp3.Call
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import java.io.IOException
 
 private val TAG = BlobUploader::class.java.name
 
@@ -50,9 +45,9 @@ class BlobUploader(
       }
       .build()
 
-    try {
-      val call = httpClient.newCall(requestBuilder)
+    val call = httpClient.newCall(requestBuilder)
 
+    try {
       registerCancellationHandler(context, uploaderParameters.taskId, call)
 
       val response = call.execute()
@@ -70,10 +65,16 @@ class BlobUploader(
           )
         )
       )
+    } catch (e: IOException) {
+      if (call.isCanceled) {
+        return Failure(createErrorFromThrowable(ERROR_CANCELED_EXCEPTION, e))
+      }
+
+      return Failure(createErrorFromThrowable(ERROR_UNEXPECTED_EXCEPTION, e))
     } catch (e: Exception) {
-      return Failure(createErrorFromThrowabe(ERROR_UNEXPECTED_EXCEPTION, e))
+      return Failure(createErrorFromThrowable(ERROR_UNEXPECTED_EXCEPTION, e))
     } catch (e: Error) {
-      return Failure(createErrorFromThrowabe(ERROR_UNEXPECTED_ERROR, e))
+      return Failure(createErrorFromThrowable(ERROR_UNEXPECTED_ERROR, e))
     }
   }
 }
