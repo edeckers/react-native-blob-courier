@@ -24,6 +24,8 @@ open class BlobDownloader: NSObject {
     print("Entering group (id=\(groupId))")
     group.enter()
 
+    var cancelObserver: NSObjectProtocol?
+
     DispatchQueue.global(qos: .background).async {
       let successfulResult = { (theResult: NSDictionary) -> Void in
         result = .success(theResult)
@@ -61,6 +63,8 @@ open class BlobDownloader: NSObject {
     group.wait()
     print("Left group (id=\(groupId))")
 
+    NotificationCenter.default.removeObserver(cancelObserver)
+
     return result
   }
 
@@ -69,7 +73,7 @@ open class BlobDownloader: NSObject {
     delegate: DownloaderDelegate,
     fileURL: URL,
     headers: NSDictionary,
-    taskId: String) {
+    taskId: String) -> NSObjectProtocol? {
     let session =
      URLSession(
        configuration: sessionConfig,
@@ -89,7 +93,7 @@ open class BlobDownloader: NSObject {
 
     task.resume()
 
-    let cancelObserver = NotificationCenter.default.addObserver(
+    return NotificationCenter.default.addObserver(
       forName: Notification.Name(rawValue: "io.deckers.blob_courier.CancelRequest"),
       object: nil,
       queue: nil) { notification in

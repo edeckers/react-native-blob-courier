@@ -89,6 +89,8 @@ open class BlobUploader: NSObject {
     print("Entering group (id=\(groupId))")
     group.enter()
 
+    var cancelObserver: NSObjectProtocol?
+
     queue.async(group: group) {
       let successfulResult = { (theResult: NSDictionary) -> Void in
         result = .success(theResult)
@@ -122,7 +124,7 @@ open class BlobUploader: NSObject {
 
         session.uploadTask(with: request, from: fileData).resume()
 
-        let cancelObserver = NotificationCenter.default.addObserver(
+        cancelObserver = NotificationCenter.default.addObserver(
           forName: Notification.Name(rawValue: "io.deckers.blob_courier.CancelRequest"),
           object: nil,
           queue: nil) { notification in
@@ -151,6 +153,8 @@ open class BlobUploader: NSObject {
     print("Waiting for group (id=\(groupId))")
     group.wait()
     print("Left group (id=\(groupId))")
+
+    NotificationCenter.default.removeObserver(cancelObserver)
 
     return result
   }
