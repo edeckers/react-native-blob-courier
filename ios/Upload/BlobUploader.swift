@@ -74,27 +74,33 @@ open class BlobUploader: NSObject {
     return (request, data)
   }
 
+  // swiftlint:disable function_body_length
   static func uploadBlobFromValidatedParameters(parameters: UploadParameters) ->
     Result<NSDictionary, BlobCourierError> {
     let sessionConfig = URLSessionConfiguration.default
 
     let group = DispatchGroup()
+    let groupId = UUID().uuidString
+
     let queue = DispatchQueue.global()
 
     var result: Result<NSDictionary, BlobCourierError> = .success([:])
 
+    print("Entering group (id=\(groupId))")
     group.enter()
 
     queue.async(group: group) {
       let successfulResult = { (theResult: NSDictionary) -> Void in
         result = .success(theResult)
 
+        print("Leaving group (id=\(groupId),status=resolve)")
         group.leave()
       }
 
       let failedResult = { (error: BlobCourierError) -> Void in
         result = .failure(error)
 
+        print("Leaving group (id=\(groupId),status=reject)")
         group.leave()
       }
 
@@ -119,19 +125,32 @@ open class BlobUploader: NSObject {
         let cancelObserver = NotificationCenter.default.addObserver(
           forName: Notification.Name(rawValue: "io.deckers.blob_courier.CancelRequest"),
           object: nil,
-          queue: .main) { notification in
-            if let data = notification.userInfo as? [String: String] {
-              // return
+          queue: nil) { notification in
+            guard let data = notification.userInfo as? [String: String] else { return }
+            guard let needleId = data["taskId"] else { return }
+
+	    let taskId = parameters.taskId
+
+            if needleId != taskId {
+              print("Not cancelling task (id=\(taskId),needleId=\(needleId))")
+              return
             }
 
-            session.invalidateAndCancel()
+            print("Cancelling task (id=\(taskId))")
+
+            DispatchQueue.global(qos: .background).async {
+              session.invalidateAndCancel()
+              print("Cancelled task (id=\(taskId))")
+            }
           }
       } catch {
         failedResult(Errors.createUnexpectedError(error: error))
       }
     }
 
+    print("Waiting for group (id=\(groupId))")
     group.wait()
+    print("Left group (id=\(groupId))")
 
     return result
   }

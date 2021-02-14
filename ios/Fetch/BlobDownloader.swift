@@ -17,22 +17,25 @@ open class BlobDownloader: NSObject {
     let sessionConfig = URLSessionConfiguration.default
 
     let group = DispatchGroup()
-    let queue = DispatchQueue.global()
+    let groupId = UUID().uuidString
 
     var result: Result<NSDictionary, BlobCourierError> = .success([:])
 
+    print("Entering group (id=\(groupId))")
     group.enter()
 
-    queue.async(group: group) {
-      let succesfulResult = { (theResult: NSDictionary) -> Void in
+    DispatchQueue.global(qos: .background).async {
+      let successfulResult = { (theResult: NSDictionary) -> Void in
         result = .success(theResult)
 
+        print("Leaving group (id=\(groupId),status=resolve)")
         group.leave()
       }
 
       let failedResult = { (error: BlobCourierError) -> Void in
         result = .failure(error)
 
+        print("Leaving group (id=\(groupId),status=reject)")
         group.leave()
       }
 
@@ -43,7 +46,7 @@ open class BlobDownloader: NSObject {
           taskId: parameters.taskId,
           destinationFileUrl: destinationFileUrl,
           progressIntervalMilliseconds: parameters.progressIntervalMilliseconds,
-          resolve: succesfulResult,
+          resolve: successfulResult,
           reject: failedResult)
 
       startFetchBlob(
@@ -54,7 +57,9 @@ open class BlobDownloader: NSObject {
         taskId: parameters.taskId)
     }
 
+    print("Waiting for group (id=\(groupId))")
     group.wait()
+    print("Left group (id=\(groupId))")
 
     return result
   }
@@ -80,17 +85,28 @@ open class BlobDownloader: NSObject {
       }
     }
 
-    session.downloadTask(with: request).resume()
+    let task = session.downloadTask(with: request)
+
+    task.resume()
 
     let cancelObserver = NotificationCenter.default.addObserver(
       forName: Notification.Name(rawValue: "io.deckers.blob_courier.CancelRequest"),
       object: nil,
-      queue: .main) { notification in
-        if let data = notification.userInfo as? [String: String] {
-          // return
-        }
+      queue: nil) { notification in
+        guard let data = notification.userInfo as? [String: String] else { return }
+        guard let needleId = data["taskId"] else { return }
 
-        session.invalidateAndCancel()
+	if needleId != taskId {
+          print("Not cancelling task (id=\(taskId),needleId=\(needleId))")
+          return
+	}
+
+        print("Cancelling task (id=\(taskId))")
+
+	DispatchQueue.global(qos: .background).async {
+          session.invalidateAndCancel()
+          print("Cancelled task (id=\(taskId))")
+	}
       }
   }
 }

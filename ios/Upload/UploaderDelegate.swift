@@ -42,7 +42,12 @@ open class UploaderDelegate: NSObject, URLSessionDataDelegate, URLSessionTaskDel
   }
 
   public func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
+    guard let theError = error else {
       processCompletedUpload(data: self.receivedData, response: task.response, error: error)
+      return
+    }
+
+    processFailedUpload(error: theError)
   }
 
   public func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive data: Data) {
@@ -58,6 +63,16 @@ open class UploaderDelegate: NSObject, URLSessionDataDelegate, URLSessionTaskDel
     self.eventEmitter.notifyBridgeOfProgress(
       totalBytesWritten: totalBytesSent,
       totalBytesExpectedToWrite: totalBytesExpectedToSend)
+  }
+
+  func processFailedUpload(error: Error) {
+    if (error as NSError).code == NSURLErrorCancelled {
+      self.reject(BlobCourierError(code: "ERROR_CANCELLED_EXCEPTION", message: "Request was cancelled", error: error))
+
+      return
+    }
+
+    self.reject(Errors.createUnexpectedError(error: error))
   }
 
   func processCompletedUpload(data: Data, response: URLResponse?, error: Error?) {
