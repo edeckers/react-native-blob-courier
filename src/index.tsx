@@ -73,7 +73,7 @@ const { BlobCourier, BlobCourierEventEmitter } = NativeModules;
 
 const EventEmitter = new NativeEventEmitter(BlobCourierEventEmitter);
 
-export const createTaskId = () => `rnbc-req-${uuid()}`;
+const createTaskId = () => `rnbc-req-${uuid()}`;
 
 const addProgressListener = (
   taskId: string,
@@ -359,6 +359,8 @@ const settings = (taskId: string, requestSettings: BlobRequestSettings) => ({
       requestSettings
     ),
 });
+
+export const ERROR_CANCELED_EXCEPTION = 'ERROR_CANCELED_EXCEPTION';
 
 export default {
   fetchBlob: (input: BlobFetchInput) =>

@@ -22,6 +22,8 @@ import BlobCourier, {
 const DEFAULT_MARGIN = 10;
 const DEFAULT_PROGRESS_INTERVAL_MILLISECONDS = 200;
 
+const ERROR_CANCELED_EXCEPTION = 'ERROR_CANCELED_EXCEPTION';
+
 const styles = StyleSheet.create({
   container: {
     marginVertical: DEFAULT_MARGIN,
@@ -206,6 +208,10 @@ const UploaderView = (props: UVProps) => {
 
       props.onFinished(uploadResult);
     } catch (e) {
+      if (e.code === ERROR_CANCELED_EXCEPTION) {
+        return;
+      }
+
       console.warn(e);
     }
   };
@@ -311,6 +317,10 @@ const DownloaderView = (props: DVProps) => {
         DEFAULT_PROGRESS_INTERVAL_MILLISECONDS * 2 // Allow progress indicator to finish / prevent 'glitchy' ui
       );
     } catch (e) {
+      if (e.code === ERROR_CANCELED_EXCEPTION) {
+        return;
+      }
+
       console.warn(e);
     }
   };
