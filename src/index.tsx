@@ -189,6 +189,7 @@ const wrapAbortListener = async <T,>(
   // @ts-ignore: TS2345
   signal.onabort = (ev: Event) => {
     if (originalSignalOnAbort) {
+      // @ts-ignore: TS2345
       originalSignalOnAbort.call(signal, ev);
     }
 
