@@ -186,21 +186,18 @@ const wrapAbortListener = async <T,>(
 
   const originalSignalOnAbort = signal.onabort;
 
-  signal.onabort = (e: AbortEvent) => {
+  // @ts-ignore: TS2345
+  signal.onabort = (ev: Event) => {
     if (originalSignalOnAbort) {
-      originalSignalOnAbort(e);
+      originalSignalOnAbort.call(signal, ev);
     }
 
     (BlobCourier as BlobCourierType).cancelRequest({ taskId });
 
-    console.log(`Aborted ${taskId}`);
+    console.debug(`Aborted ${taskId}`);
   };
 
-  const result = await wrappedFn();
-
-  signal.onabort = originalSignalOnAbort;
-
-  return result;
+  return await wrappedFn();
 };
 
 const wrapEmitter = async <T,>(

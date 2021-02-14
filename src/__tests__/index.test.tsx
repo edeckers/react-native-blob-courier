@@ -22,6 +22,8 @@ import {
 import { dict } from '../Extensions';
 import { NativeEventEmitter, NativeModules } from 'react-native';
 import BlobCourier from '../index';
+import { AbortController } from 'abort-controller';
+
 import type {
   BlobMultipartArrayUploadRequest,
   BlobMultipartMapUploadRequest,
@@ -137,6 +139,7 @@ jest.mock(
 
 jest.mock('react-native/Libraries/BatchedBridge/NativeModules', () => ({
   BlobCourier: {
+    cancelRequest: jest.fn(),
     fetchBlob: jest.fn(),
     uploadBlob: jest.fn(),
   },
@@ -148,6 +151,7 @@ jest.mock('react-native/Libraries/BatchedBridge/NativeModules', () => ({
 }));
 
 beforeEach(() => {
+  BlobCourierNative.cancelRequest.mockReset();
   BlobCourierNative.fetchBlob.mockReset();
   BlobCourierNative.uploadBlob.mockReset();
   (BlobCourierEventEmitter as any).addListener.mockReset();
@@ -266,6 +270,61 @@ describe('Given a regular fetch request', () => {
       );
 
       expect(overriddenValues.headers).toBeDefined();
+    });
+  });
+
+  describe('And abort controller is provided', () => {
+    testAsync(
+      'The native module is called with abort controller signal',
+      async () => {
+        const abortcontroller = new AbortController();
+        const signal = abortcontroller.signal;
+
+        const defaultRequestAndSignal = {
+          ...DEFAULT_FETCH_REQUEST,
+          signal,
+        };
+
+        // @ts-ignore: TS2345
+        await BlobCourier.fetchBlob(defaultRequestAndSignal);
+
+        abortcontroller.abort();
+
+        const fetchCalledWithParameters = getLastMockCallFirstParameter(
+          BlobCourierNative.fetchBlob
+        );
+
+        const cancelCalledWithParameters = getLastMockCallFirstParameter(
+          BlobCourierNative.cancelRequest
+        );
+
+        expect(cancelCalledWithParameters).toMatchObject({
+          taskId: fetchCalledWithParameters.taskId,
+        });
+        verifyPropertyExistsAndIsDefined(cancelCalledWithParameters, 'taskId');
+      }
+    );
+
+    testAsync('The abort controller signal can be decorated', async () => {
+      const abortcontroller = new AbortController();
+      const signal = abortcontroller.signal;
+
+      const defaultRequestAndSignal = {
+        ...DEFAULT_FETCH_REQUEST,
+        signal,
+      };
+
+      var isDecoratorCalled = false;
+      const decorator = () => (isDecoratorCalled = true);
+
+      signal.onabort = decorator;
+
+      // @ts-ignore: TS2345
+      await BlobCourier.fetchBlob(defaultRequestAndSignal);
+
+      abortcontroller.abort();
+
+      expect(isDecoratorCalled).toBeTruthy();
     });
   });
 });
@@ -500,6 +559,60 @@ describe('Given a regular upload request', () => {
     ).toBeDefined();
   });
 
+  describe('And abort controller is provided', () => {
+    testAsync(
+      'The native module is called with abort controller signal',
+      async () => {
+        const abortcontroller = new AbortController();
+        const signal = abortcontroller.signal;
+
+        const defaultRequestAndSignal = {
+          ...DEFAULT_UPLOAD_REQUEST,
+          signal,
+        };
+
+        // @ts-ignore: TS2345
+        await BlobCourier.uploadBlob(defaultRequestAndSignal);
+
+        abortcontroller.abort();
+
+        const fetchCalledWithParameters = getLastMockCallFirstParameter(
+          BlobCourierNative.uploadBlob
+        );
+
+        const cancelCalledWithParameters = getLastMockCallFirstParameter(
+          BlobCourierNative.cancelRequest
+        );
+
+        expect(cancelCalledWithParameters).toMatchObject({
+          taskId: fetchCalledWithParameters.taskId,
+        });
+        verifyPropertyExistsAndIsDefined(cancelCalledWithParameters, 'taskId');
+      }
+    );
+
+    testAsync('The abort controller signal can be decorated', async () => {
+      const abortcontroller = new AbortController();
+      const signal = abortcontroller.signal;
+
+      const defaultRequestAndSignal = {
+        ...DEFAULT_UPLOAD_REQUEST,
+        signal,
+      };
+
+      var isDecoratorCalled = false;
+      const decorator = () => (isDecoratorCalled = true);
+
+      signal.onabort = decorator;
+
+      // @ts-ignore: TS2345
+      await BlobCourier.uploadBlob(defaultRequestAndSignal);
+
+      abortcontroller.abort();
+
+      expect(isDecoratorCalled).toBeTruthy();
+    });
+  });
   describe('And multipart fields are sent to native code', () => {
     describe('And they are strings', () => {
       testAsync('they arrive in the order they were provided', async () => {
