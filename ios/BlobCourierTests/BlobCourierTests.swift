@@ -371,7 +371,7 @@ class BlobCourierTests: XCTestCase {
       DispatchTimeInterval.seconds(BlobCourierTests.defaultPromiseTimeoutSeconds))
 
     XCTAssertTrue(result.0)
-    XCTAssertTrue(result.1 == "ERROR_CANCELLED_EXCEPTION")
+    XCTAssertTrue(result.1 == Errors.errorCanceledException)
   }
 
    func testUploadCancellationRejectsPromise() throws {
@@ -430,7 +430,7 @@ class BlobCourierTests: XCTestCase {
        DispatchTimeInterval.seconds(BlobCourierTests.defaultPromiseTimeoutSeconds))
 
      XCTAssertTrue(result.0)
-     XCTAssertTrue(result.1 == "ERROR_CANCELLED_EXCEPTION")
+     XCTAssertTrue(result.1 == Errors.errorCanceledException)
   }
 
   func testInvalidTargetParametersRejectsPromise() throws {

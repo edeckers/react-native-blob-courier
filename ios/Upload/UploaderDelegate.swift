@@ -67,7 +67,7 @@ open class UploaderDelegate: NSObject, URLSessionDataDelegate, URLSessionTaskDel
 
   func processFailedUpload(error: Error) {
     if (error as NSError).code == NSURLErrorCancelled {
-      self.reject(BlobCourierError(code: "ERROR_CANCELLED_EXCEPTION", message: "Request was cancelled", error: error))
+      self.reject(BlobCourierError(code: Errors.errorCanceledException, message: "Request was cancelled", error: error))
 
       return
     }

@@ -42,7 +42,7 @@ open class DownloaderDelegate: NSObject, URLSessionDownloadDelegate, URLSessionD
       guard let error = error else { return }
 
       if (error as NSError).code == NSURLErrorCancelled {
-        self.reject(BlobCourierError(code: "ERROR_CANCELLED_EXCEPTION", message: "Request was cancelled", error: error))
+        self.reject(BlobCourierError(code: Errors.errorCanceledException, message: "Request was cancelled", error: error))
 
 	return
       }

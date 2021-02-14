@@ -22,6 +22,7 @@ struct BlobCourierError: Error {
 
 open class Errors: NSObject {
   static let errorUnexpectedException = "ERROR_UNEXPECTED_EXCEPTION"
+  static let errorCanceledException = "ERROR_CANCELED_EXCEPTION"
 
   static let errorEmptyValue = "ERROR_EMPTY_VALUE"
   static let errorInvalidValue = "ERROR_INVALID_VALUE"
