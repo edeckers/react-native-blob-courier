@@ -10,7 +10,7 @@ open class BlobCourierEventEmitter: RCTEventEmitter {
 
   public static var shared: BlobCourierEventEmitter?
 
-  public override static func requiresMainQueueSetup() -> Bool {
+  @objc public override static func requiresMainQueueSetup() -> Bool {
     return false
   }
 

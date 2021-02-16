@@ -6,6 +6,10 @@ import Foundation
 
 @objc(BlobCourier)
 open class BlobCourier: NSObject {
+  @objc static func requiresMainQueueSetup() -> Bool {
+    return false
+  }
+
   @objc(fetchBlob:withResolver:withRejecter:)
   func fetchBlob(
     input: NSDictionary, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock
