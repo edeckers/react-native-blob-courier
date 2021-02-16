@@ -467,4 +467,13 @@ class BlobCourierTests: XCTestCase {
       DispatchTimeInterval.seconds(BlobCourierTests.defaultPromiseTimeoutSeconds))
     XCTAssertTrue(result.0)
   }
+
+  func testMainQueueSetupIsNotRequired() throws {
+    let blobCourierResult = BlobCourier.requiresMainQueueSetup()
+    let blobCourierEventEmitterResult = BlobCourierEventEmitter.requiresMainQueueSetup()
+
+    XCTAssertFalse(blobCourierResult)
+    XCTAssertFalse(blobCourierEventEmitterResult)
+  }
+
 }
