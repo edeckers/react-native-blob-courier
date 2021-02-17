@@ -6,8 +6,6 @@
  */
 package io.deckers.blob_courier
 
-import android.content.Intent
-import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactContextBaseJavaModule
@@ -15,7 +13,7 @@ import com.facebook.react.bridge.ReactMethod
 import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.modules.network.OkHttpClientProvider
 import io.deckers.blob_courier.cancel.CancellationParameterFactory
-import io.deckers.blob_courier.common.ACTION_CANCEL_REQUEST
+import io.deckers.blob_courier.cancel.RequestCanceller
 import io.deckers.blob_courier.common.DEFAULT_PROGRESS_TIMEOUT_MILLISECONDS
 import io.deckers.blob_courier.common.ERROR_UNEXPECTED_ERROR
 import io.deckers.blob_courier.common.ERROR_UNEXPECTED_EXCEPTION
@@ -57,26 +55,24 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
 
   @ReactMethod
   fun cancelRequest(input: ReadableMap, promise: Promise) {
-    li("Cancelling request")
+    li("Calling cancelRequest")
 
     thread {
       try {
-        val errorOrRequest = CancellationParameterFactory().fromInput(input)
+        val errorOrCancelResult =
+          CancellationParameterFactory()
+            .fromInput(input)
+            .fold(::Failure, ::Success)
+            .map { RequestCanceller(reactContext).cancel(it.taskId) }
 
-        errorOrRequest.`do`(
-          { e ->
-            lv("Something went wrong during cancellation (code=${e.code},message=${e.message})")
-            promise.reject(e.code, e.message)
-          },
-          {
-            val cancellationIntent =
-              Intent(ACTION_CANCEL_REQUEST)
-                .putExtra("taskId", it.taskId)
-
-            LocalBroadcastManager.getInstance(reactContext).sendBroadcast(cancellationIntent)
-
-            promise.resolve(emptyMap<String, Any>().toReactMap())
-          })
+        errorOrCancelResult
+          .fmap { Success(emptyMap<String, Any>()) }
+          .`do`(
+            { e ->
+              lv("Something went wrong during cancellation (code=${e.code},message=${e.message})")
+              promise.reject(e.code, e.message)
+            },
+            promise::resolve)
       } catch (e: Exception) {
         le("Unexpected exception", e)
         promise.reject(ERROR_UNEXPECTED_EXCEPTION, processUnexpectedException(e).message)
@@ -86,7 +82,7 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
       }
     }
 
-    li("Cancelled request")
+    li("Called cancelRequest")
   }
 
   @ReactMethod
