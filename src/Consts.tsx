@@ -1,11 +1,11 @@
-import type { TargetType } from './ExposedTypes';
-
 /**
  * Copyright (c) Ely Deckers.
  *
  * This source code is licensed under the MPL-2.0 license found in the
  * LICENSE file in the root directory of this source tree.
  */
+import type { TargetType } from './ExposedTypes';
+
 export const ANDROID_DOWNLOAD_MANAGER_FALLBACK_PARAMETERS = {
   description: undefined,
   enableNotifications: true,

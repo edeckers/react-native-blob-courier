@@ -360,8 +360,6 @@ const settings = (taskId: string, requestSettings: BlobRequestSettings) => ({
     ),
 });
 
-export const ERROR_CANCELED_EXCEPTION = 'ERROR_CANCELED_EXCEPTION';
-
 export default {
   fetchBlob: (input: BlobFetchInput) =>
     fetchBlob({ ...input, taskId: createTaskId() }),
@@ -378,3 +376,4 @@ export default {
 };
 
 export * from './ExposedTypes';
+export * from './ExposedConsts';
