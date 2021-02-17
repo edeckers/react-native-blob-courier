@@ -66,7 +66,7 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
             .map { RequestCanceller(reactContext).cancel(it.taskId) }
 
         errorOrCancelResult
-          .fmap { Success(emptyMap<String, Any>()) }
+          .fmap { Success(emptyMap<String, Any>().toReactMap()) }
           .`do`(
             { e ->
               lv("Something went wrong during cancellation (code=${e.code},message=${e.message})")
