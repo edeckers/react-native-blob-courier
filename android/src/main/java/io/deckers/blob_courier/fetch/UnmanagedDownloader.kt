@@ -35,7 +35,7 @@ import okio.Okio
 import okio.Source
 import java.io.IOException
 
-private val TAG = ManagedDownloader::class.java.name
+private val TAG = UnmanagedDownloader::class.java.name
 
 private val logger = Logger(TAG)
 private fun li(m: String) = logger.i(m)
