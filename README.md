@@ -277,7 +277,7 @@ try {
 
   abortController.abort();
 } catch (e) {
-  if (e.code === "ERROR_CANCELED_EXCEPTION") {
+  if (e.code === ERROR_CANCELED_EXCEPTION) {
     // ...
   }
 }

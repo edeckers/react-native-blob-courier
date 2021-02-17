@@ -17,12 +17,11 @@ import BlobCourier, {
   BlobUploadResponse,
   BlobFetchRequest,
   BlobProgressEvent,
+  ERROR_CANCELED_EXCEPTION,
 } from 'react-native-blob-courier';
 
 const DEFAULT_MARGIN = 10;
 const DEFAULT_PROGRESS_INTERVAL_MILLISECONDS = 200;
-
-const ERROR_CANCELED_EXCEPTION = 'ERROR_CANCELED_EXCEPTION';
 
 const styles = StyleSheet.create({
   container: {

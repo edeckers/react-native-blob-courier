@@ -22,13 +22,13 @@ import type {
   AndroidDownloadManagerSettings,
   BlobProgressEvent,
   BlobRequestOnProgress,
-  AndroidFetchSettings,
-  IOSFetchSettings,
   BlobMultipartMapUploadRequest,
   BlobMultipartArrayUploadRequest,
   BlobNamedMultipartArray,
   BlobMultipartWithName,
   BlobCancelResponse,
+  BlobFetchInput,
+  BlobUploadInput,
 } from './ExposedTypes';
 import {
   convertMappedMultipartsWithSymbolizedKeysToArray,
@@ -37,16 +37,9 @@ import {
 } from './Utils';
 import { dict } from './Extensions';
 
-type BlobFetchInput = BlobFetchRequest &
-  BlobRequestSettings &
-  AndroidFetchSettings &
-  IOSFetchSettings;
-
 type BlobCancelNativeInput = BlobRequestTask;
 
 type BlobFetchNativeInput = BlobFetchInput & BlobRequestTask;
-
-type BlobUploadInput = BlobUploadRequest & BlobRequestSettings;
 
 type BlobUploadNativeInput = BlobUploadInput & BlobRequestTask;
 
