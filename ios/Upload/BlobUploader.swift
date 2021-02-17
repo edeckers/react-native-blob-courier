@@ -120,7 +120,7 @@ open class BlobUploader: NSObject {
 
       do {
         let (request, fileData) =
-	  try buildRequestDataForFileUpload(url: parameters.url, parts: parameters.parts, headers: headers)
+          try buildRequestDataForFileUpload(url: parameters.url, parts: parameters.parts, headers: headers)
 
         session.uploadTask(with: request, from: fileData).resume()
 
@@ -131,7 +131,7 @@ open class BlobUploader: NSObject {
             guard let data = notification.userInfo as? [String: String] else { return }
             guard let needleId = data["taskId"] else { return }
 
-	    let taskId = parameters.taskId
+            let taskId = parameters.taskId
 
             if needleId != taskId {
               print("Not cancelling task (id=\(taskId),needleId=\(needleId))")

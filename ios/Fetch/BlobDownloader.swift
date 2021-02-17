@@ -100,17 +100,17 @@ open class BlobDownloader: NSObject {
         guard let data = notification.userInfo as? [String: String] else { return }
         guard let needleId = data["taskId"] else { return }
 
-	if needleId != taskId {
+        if needleId != taskId {
           print("Not cancelling task (id=\(taskId),needleId=\(needleId))")
           return
-	}
+        }
 
         print("Cancelling task (id=\(taskId))")
 
-	DispatchQueue.global(qos: .background).async {
+        DispatchQueue.global(qos: .background).async {
           session.invalidateAndCancel()
           print("Cancelled task (id=\(taskId))")
-	}
+        }
       }
   }
 }
