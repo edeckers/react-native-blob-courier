@@ -11,7 +11,6 @@
   "dependencies": {
     "react": "16.13.1",
     "react-native": "0.63.4",
-    "react-native-blob-courier": "file:..",
     "react-native-progress": "^4.1.2"
   },
   "devDependencies": {
