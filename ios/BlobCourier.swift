@@ -19,7 +19,7 @@ open class BlobCourier: NSObject {
         let taskId = input["taskId"]
 
         NotificationCenter.default.post(
-          name: Notification.Name(rawValue: "io.deckers.blob_courier.CancelRequest"),
+          name: Notification.Name(rawValue: Constants.messageCancelRequest),
           object: nil,
           userInfo: ["taskId": taskId])
 
