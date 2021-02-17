@@ -9,6 +9,8 @@ open class Constants: NSObject {
 
   static let libraryDomain  = "io.deckers.blob_courier"
 
+  static let messageCancelRequest = "\(libraryDomain).CancelRequest"
+
   static let parameterFilename = "filename"
   static let parameterAbsoluteFilePath = "absoluteFilePath"
   static let parameterHeaders = "headers"

@@ -125,7 +125,7 @@ open class BlobUploader: NSObject {
         session.uploadTask(with: request, from: fileData).resume()
 
         cancelObserver = NotificationCenter.default.addObserver(
-          forName: Notification.Name(rawValue: "io.deckers.blob_courier.CancelRequest"),
+          forName: Notification.Name(rawValue: Constants.messageCancelRequest),
           object: nil,
           queue: nil) { notification in
             guard let data = notification.userInfo as? [String: String] else { return }
