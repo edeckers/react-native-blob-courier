@@ -12,11 +12,18 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
-import io.deckers.blob_courier.common.*
+import io.deckers.blob_courier.common.ACTION_CANCEL_REQUEST
+import io.deckers.blob_courier.common.BlobCourierError
+import io.deckers.blob_courier.common.ERROR_UNEXPECTED_ERROR
+import io.deckers.blob_courier.common.Failure
+import io.deckers.blob_courier.common.Logger
+import io.deckers.blob_courier.common.Result
+import io.deckers.blob_courier.common.MANAGED_DOWNLOAD_FAILURE
+import io.deckers.blob_courier.common.createErrorFromThrowable
+import io.deckers.blob_courier.common.fold
 import io.deckers.blob_courier.progress.ManagedProgressUpdater
 import io.deckers.blob_courier.progress.ProgressNotifier
 import java.io.File
-import java.io.IOException
 
 private const val DOWNLOAD_MANAGER_PARAMETER_DESCRIPTION = "description"
 private const val DOWNLOAD_MANAGER_PARAMETER_ENABLE_NOTIFICATIONS = "enableNotifications"

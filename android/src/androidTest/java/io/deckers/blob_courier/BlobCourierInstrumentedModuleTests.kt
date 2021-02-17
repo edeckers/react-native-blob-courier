@@ -7,7 +7,10 @@
 
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.platform.app.InstrumentationRegistry
-import com.facebook.react.bridge.*
+import com.facebook.react.bridge.Arguments
+import com.facebook.react.bridge.JavaOnlyArray
+import com.facebook.react.bridge.JavaOnlyMap
+import com.facebook.react.bridge.ReactApplicationContext
 import io.deckers.blob_courier.BuildConfig.ADB_COMMAND_TIMEOUT_MILLISECONDS
 import io.deckers.blob_courier.BuildConfig.PROMISE_TIMEOUT_MILLISECONDS
 import io.deckers.blob_courier.Fixtures
@@ -22,16 +25,27 @@ import io.deckers.blob_courier.TestUtils.assertRequestFalse
 import io.deckers.blob_courier.TestUtils.assertRequestTrue
 import io.deckers.blob_courier.TestUtils.circumventHiddenApiExemptionsForMockk
 import io.deckers.blob_courier.TestUtils.runInstrumentedRequestToBoolean
-import io.deckers.blob_courier.common.*
+import io.deckers.blob_courier.common.DOWNLOAD_TYPE_MANAGED
+import io.deckers.blob_courier.common.ERROR_CANCELED_EXCEPTION
+import io.deckers.blob_courier.common.Logger
+import io.deckers.blob_courier.common.MANAGED_DOWNLOAD_SUCCESS
+import io.deckers.blob_courier.common.fold
+import io.deckers.blob_courier.common.ifLeft
+import io.deckers.blob_courier.common.left
+import io.deckers.blob_courier.common.right
 import io.deckers.blob_courier.react.toReactMap
 import io.mockk.every
 import io.mockk.mockkStatic
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
-import java.io.*
-import java.util.*
+import java.util.UUID
 
 
 private val TAG = BlobCourierInstrumentedModuleTests::class.java.name

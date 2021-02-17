@@ -8,10 +8,17 @@ package io.deckers.blob_courier.upload
 
 import android.content.Context
 import io.deckers.blob_courier.cancel.registerCancellationHandler
-import io.deckers.blob_courier.common.*
+import io.deckers.blob_courier.common.ERROR_CANCELED_EXCEPTION
+import io.deckers.blob_courier.common.ERROR_UNEXPECTED_ERROR
+import io.deckers.blob_courier.common.ERROR_UNEXPECTED_EXCEPTION
+import io.deckers.blob_courier.common.Failure
+import io.deckers.blob_courier.common.Logger
+import io.deckers.blob_courier.common.Result
+import io.deckers.blob_courier.common.Success
+import io.deckers.blob_courier.common.createErrorFromThrowable
+import io.deckers.blob_courier.common.mapHeadersToMap
 import io.deckers.blob_courier.progress.BlobCourierProgressRequest
 import io.deckers.blob_courier.progress.ProgressNotifierFactory
-import okhttp3.Call
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.io.IOException
