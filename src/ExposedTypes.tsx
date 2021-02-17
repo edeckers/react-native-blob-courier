@@ -150,11 +150,6 @@ export enum BlobResponseType {
   Unmanaged,
 }
 
-export declare interface BlobCancelResponse {
-  readonly message: string;
-  readonly taskId: string;
-}
-
 export declare interface BlobFetchResponse {
   readonly type: BlobResponseType;
   readonly data: BlobUnmanagedData | BlobManagedData;

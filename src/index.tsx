@@ -26,7 +26,6 @@ import type {
   BlobMultipartArrayUploadRequest,
   BlobNamedMultipartArray,
   BlobMultipartWithName,
-  BlobCancelResponse,
   BlobFetchInput,
   BlobUploadInput,
 } from './ExposedTypes';
@@ -55,7 +54,7 @@ type BlobUploadMultipartNativeInput = BlobMultipartArrayUploadRequest &
   BlobRequestTask;
 
 type BlobCourierType = {
-  cancelRequest(input: BlobCancelNativeInput): Promise<BlobCancelResponse>;
+  cancelRequest(input: BlobCancelNativeInput): Promise<{}>;
   fetchBlob(input: BlobFetchNativeInput): Promise<BlobFetchResponse>;
   uploadBlob(
     input: BlobUploadMultipartNativeInput
