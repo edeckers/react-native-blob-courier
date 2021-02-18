@@ -74,7 +74,6 @@ open class BlobUploader: NSObject {
     return (request, data)
   }
 
-  // swiftlint:disable function_body_length
   static func uploadBlobFromValidatedParameters(parameters: UploadParameters) ->
     Result<NSDictionary, BlobCourierError> {
     let sessionConfig = URLSessionConfiguration.default
@@ -124,27 +123,8 @@ open class BlobUploader: NSObject {
 
         session.uploadTask(with: request, from: fileData).resume()
 
-        cancelObserver = NotificationCenter.default.addObserver(
-          forName: Notification.Name(rawValue: Constants.messageCancelRequest),
-          object: nil,
-          queue: nil) { notification in
-            guard let data = notification.userInfo as? [String: String] else { return }
-            guard let needleId = data["taskId"] else { return }
-
-            let taskId = parameters.taskId
-
-            if needleId != taskId {
-              print("Not cancelling task (id=\(taskId),needleId=\(needleId))")
-              return
-            }
-
-            print("Cancelling task (id=\(taskId))")
-
-            DispatchQueue.global(qos: .background).async {
-              session.invalidateAndCancel()
-              print("Cancelled task (id=\(taskId))")
-            }
-          }
+        cancelObserver = CancelController.registerCancelObserver(
+            session: session, taskId: parameters.taskId)
       } catch {
         failedResult(Errors.createUnexpectedError(error: error))
       }

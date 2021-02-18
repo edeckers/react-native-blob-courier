@@ -16,14 +16,20 @@ open class BlobCourier: NSObject {
   ) {
     DispatchQueue.global(qos: .background).async {
       do {
-        let taskId = input["taskId"]
+        let errorOrParameters = CancelParameterFactory.fromInput(input: input)
 
-        NotificationCenter.default.post(
-          name: Notification.Name(rawValue: Constants.messageCancelRequest),
-          object: nil,
-          userInfo: ["taskId": taskId])
+        if case .failure(let error) = errorOrParameters { reject(error.code, error.message, error.error) }
+        guard case .success(let parameters) = errorOrParameters else { return }
 
-        resolve([String: String]())
+        let result = RequestCanceller.cancelRequestFromValidatedParameters(parameters: parameters)
+
+        switch result {
+        case .success(let success):
+          resolve(success)
+          // resolve([String: String]())
+        case .failure(let error):
+          reject(error.code, error.message, error.error)
+        }
       } catch {
         let unexpectedError = Errors.createUnexpectedError(error: error)
 

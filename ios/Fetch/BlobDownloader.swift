@@ -75,10 +75,10 @@ open class BlobDownloader: NSObject {
     headers: NSDictionary,
     taskId: String) -> NSObjectProtocol? {
     let session =
-     URLSession(
-       configuration: sessionConfig,
-       delegate: delegate,
-       delegateQueue: nil)
+      URLSession(
+        configuration: sessionConfig,
+        delegate: delegate,
+        delegateQueue: nil)
 
     var request = URLRequest(url: fileURL)
     for (key, value) in headers {
@@ -93,24 +93,6 @@ open class BlobDownloader: NSObject {
 
     task.resume()
 
-    return NotificationCenter.default.addObserver(
-      forName: Notification.Name(rawValue: Constants.messageCancelRequest),
-      object: nil,
-      queue: nil) { notification in
-        guard let data = notification.userInfo as? [String: String] else { return }
-        guard let needleId = data["taskId"] else { return }
-
-        if needleId != taskId {
-          print("Not cancelling task (id=\(taskId),needleId=\(needleId))")
-          return
-        }
-
-        print("Cancelling task (id=\(taskId))")
-
-        DispatchQueue.global(qos: .background).async {
-          session.invalidateAndCancel()
-          print("Cancelled task (id=\(taskId))")
-        }
-      }
+    return CancelController.registerCancelObserver(session: session, taskId: taskId)
   }
 }
