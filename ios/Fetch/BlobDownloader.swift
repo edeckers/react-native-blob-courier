@@ -51,7 +51,7 @@ open class BlobDownloader: NSObject {
           resolve: successfulResult,
           reject: failedResult)
 
-      startFetchBlob(
+      cancelObserver = startFetchBlob(
         sessionConfig: sessionConfig,
         delegate: downloaderDelegate,
         fileURL: parameters.url,
