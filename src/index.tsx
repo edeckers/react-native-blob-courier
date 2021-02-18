@@ -209,45 +209,50 @@ const wrapEmitter = async <T,>(
   return result;
 };
 
+const emitterWrappedFetch = <T extends BlobFetchNativeInput>(
+  input: Readonly<T>
+) =>
+  wrapEmitter(
+    input.taskId,
+    () => (BlobCourier as BlobCourierType).fetchBlob(sanitizeFetchData(input)),
+    input.onProgress
+  );
+
+const emitterWrappedUpload = <T extends BlobUploadMultipartInputWithTask>(
+  input: Readonly<T>
+) =>
+  wrapEmitter(input.taskId, () => uploadBlobFromParts(input), input.onProgress);
+
 const fetchBlob = <T extends BlobFetchNativeInput>(input: Readonly<T>) =>
   wrapAbortListener(
     input.taskId,
-    () =>
-      wrapEmitter(
-        input.taskId,
-        () =>
-          (BlobCourier as BlobCourierType).fetchBlob(sanitizeFetchData(input)),
-        input.onProgress
-      ),
+    () => emitterWrappedFetch(input),
     input.signal
   );
+
+const uploadBlobFromParts = <T extends BlobUploadMultipartInputWithTask>(
+  input: Readonly<T>
+) => {
+  try {
+    const sanitized = sanitizeMappedMultiparts(input.parts);
+
+    return (BlobCourier as BlobCourierType).uploadBlob(
+      sanitizeMultipartUploadData({
+        ...input,
+        parts: convertMappedMultipartsWithSymbolizedKeysToArray(sanitized),
+      })
+    );
+  } catch (e) {
+    return Promise.reject(e);
+  }
+};
 
 const uploadParts = <T extends BlobUploadMultipartInputWithTask>(
   input: Readonly<T>
 ) =>
   wrapAbortListener(
     input.taskId,
-    () =>
-      wrapEmitter(
-        input.taskId,
-        () => {
-          try {
-            const sanitized = sanitizeMappedMultiparts(input.parts);
-
-            return (BlobCourier as BlobCourierType).uploadBlob(
-              sanitizeMultipartUploadData({
-                ...input,
-                parts: convertMappedMultipartsWithSymbolizedKeysToArray(
-                  sanitized
-                ),
-              })
-            );
-          } catch (e) {
-            return Promise.reject(e);
-          }
-        },
-        input.onProgress
-      ),
+    () => emitterWrappedUpload(input),
     input.signal
   );
 
