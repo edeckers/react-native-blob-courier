@@ -52,14 +52,14 @@ class BlobUploader(
       }
       .build()
 
-    val call = httpClient.newCall(requestBuilder)
+    val uploadRequestCall = httpClient.newCall(requestBuilder)
 
     try {
-      registerCancellationHandler(context, uploaderParameters.taskId, call)
+      registerCancellationHandler(context, uploaderParameters.taskId, uploadRequestCall)
 
-      val response = call.execute()
+      val response = uploadRequestCall.execute()
 
-      val b = response.body()?.string().orEmpty()
+      val responseBody = response.body()?.string().orEmpty()
 
       li("Finished unmanaged upload")
 
@@ -67,13 +67,13 @@ class BlobUploader(
         mapOf(
           "response" to mapOf(
             "code" to response.code(),
-            "data" to if (uploaderParameters.returnResponse) b else "",
+            "data" to if (uploaderParameters.returnResponse) responseBody else "",
             "headers" to mapHeadersToMap(response.headers())
           )
         )
       )
     } catch (e: IOException) {
-      if (call.isCanceled) {
+      if (uploadRequestCall.isCanceled) {
         return Failure(createErrorFromThrowable(ERROR_CANCELED_EXCEPTION, e))
       }
 
