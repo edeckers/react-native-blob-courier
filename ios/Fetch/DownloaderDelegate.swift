@@ -77,7 +77,8 @@ open class DownloaderDelegate: NSObject, URLSessionDownloadDelegate, URLSessionD
   func processCompletedDownload(location: URL, response: URLResponse?, error: Error?) {
     if let error = error {
       print(
-        "Error took place while downloading a file from \(location). Error description: \(error.localizedDescription)"
+        "Error took place while downloading a file from \(response?.url). " +
+	"Error description: \(error.localizedDescription)"
       )
 
       self.reject(Errors.createUnexpectedError(error: error))

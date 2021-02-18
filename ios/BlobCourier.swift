@@ -26,7 +26,6 @@ open class BlobCourier: NSObject {
         switch result {
         case .success(let success):
           resolve(success)
-          // resolve([String: String]())
         case .failure(let error):
           reject(error.code, error.message, error.error)
         }
