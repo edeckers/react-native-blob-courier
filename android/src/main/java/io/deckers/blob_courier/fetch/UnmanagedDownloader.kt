@@ -6,17 +6,12 @@
  */
 package io.deckers.blob_courier.fetch
 
-import android.content.BroadcastReceiver
 import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
 import android.net.Uri
-import androidx.localbroadcastmanager.content.LocalBroadcastManager
-import io.deckers.blob_courier.common.ACTION_CANCEL_REQUEST
+import io.deckers.blob_courier.cancel.registerCancellationHandler
 import io.deckers.blob_courier.common.DOWNLOAD_TYPE_UNMANAGED
 import io.deckers.blob_courier.common.ERROR_CANCELED_EXCEPTION
 import io.deckers.blob_courier.common.ERROR_UNEXPECTED_ERROR
-import io.deckers.blob_courier.common.ERROR_UNEXPECTED_EXCEPTION
 import io.deckers.blob_courier.common.Failure
 import io.deckers.blob_courier.common.Logger
 import io.deckers.blob_courier.common.Result
@@ -25,7 +20,6 @@ import io.deckers.blob_courier.common.createErrorFromThrowable
 import io.deckers.blob_courier.common.mapHeadersToMap
 import io.deckers.blob_courier.progress.BlobCourierProgressResponse
 import io.deckers.blob_courier.progress.ProgressNotifier
-import okhttp3.Call
 import java.io.File
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
@@ -39,7 +33,6 @@ private val TAG = UnmanagedDownloader::class.java.name
 
 private val logger = Logger(TAG)
 private fun li(m: String) = logger.i(m)
-private fun lv(m: String, e: Throwable? = null) = logger.v(m, e)
 
 class UnmanagedDownloader(
   private val context: Context,
@@ -73,7 +66,7 @@ class UnmanagedDownloader(
     val call = httpClientWithInterceptor.newCall(request)
 
     try {
-      registerCancellationHandler(downloaderParameters.taskId, call)
+      registerCancellationHandler(context, downloaderParameters.taskId, call)
 
       val response = call.execute()
 
@@ -105,23 +98,6 @@ class UnmanagedDownloader(
     } catch (e: Throwable) {
       return Failure(createErrorFromThrowable(ERROR_UNEXPECTED_ERROR, e))
     }
-  }
-
-  private fun registerCancellationHandler(taskId: String, call: Call) {
-    lv("Registering $ACTION_CANCEL_REQUEST receiver")
-
-    LocalBroadcastManager.getInstance(context)
-      .registerReceiver(object : BroadcastReceiver() {
-        override fun onReceive(p0: Context?, p1: Intent?) {
-          if (p1?.getStringExtra("taskId") != taskId) {
-            return
-          }
-
-          call.cancel()
-        }
-      }, IntentFilter(ACTION_CANCEL_REQUEST))
-
-    lv("Registered $ACTION_CANCEL_REQUEST receiver")
   }
 
   private fun createDownloadProgressInterceptor(
