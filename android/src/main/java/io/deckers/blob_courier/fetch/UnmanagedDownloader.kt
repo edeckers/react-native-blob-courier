@@ -99,11 +99,9 @@ class UnmanagedDownloader(
         )
       )
     } catch (e: IOException) {
-      if (call.isCanceled) {
-        return Failure(createErrorFromThrowable(ERROR_CANCELED_EXCEPTION, e))
-      }
+      val code = if (call.isCanceled) ERROR_CANCELED_EXCEPTION else ERROR_UNEXPECTED_ERROR
 
-      return Failure(createErrorFromThrowable(ERROR_UNEXPECTED_EXCEPTION, e))
+      return Failure(createErrorFromThrowable(code, e))
     } catch (e: Throwable) {
       return Failure(createErrorFromThrowable(ERROR_UNEXPECTED_ERROR, e))
     }
