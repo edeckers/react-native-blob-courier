@@ -36,8 +36,8 @@ import io.deckers.blob_courier.upload.UploaderParameterFactory
 import io.deckers.blob_courier.upload.toMultipartBody
 import io.mockk.every
 import io.mockk.mockkStatic
-import java.util.UUID
 import kotlinx.coroutines.runBlocking
+import java.util.UUID
 import okhttp3.MediaType
 import okhttp3.MultipartBody
 import org.junit.Assert.assertArrayEquals
@@ -173,6 +173,7 @@ class BlobCourierModuleTests {
 
     assertRequestTrue(message, succeeded)
   }
+
 
   @Category(EndToEnd::class)
   @Test
@@ -506,10 +507,10 @@ class BlobCourierModuleTests {
 
   private fun createErrorReportForMissingParameter(availableParameters: Map<*, *>, result: String) =
     "(missingKeys=${
-    retrieveMissingKeys(
-      createValidUploadTestParameterMap("", "").toMap(),
-      availableParameters
-    ).joinToString(";")
+      retrieveMissingKeys(
+        createValidUploadTestParameterMap("", "").toMap(),
+        availableParameters
+      ).joinToString(";")
     }; result=$result)"
 
   private fun assert_missing_required_fetch_parameter_rejects_promise(
@@ -522,7 +523,7 @@ class BlobCourierModuleTests {
     val (succeeded, message) = runRequest({
       runFetchBlobSuspend(ctx, availableParametersAsMap)
     }).fold(
-      { Pair(false, createErrorReportForMissingParameter(availableParameters, it)) },
+      { Pair(false, createErrorReportForMissingParameter(availableParameters, it.message ?: "")) },
       { Pair(true, createErrorReportForMissingParameter(availableParameters, "$it")) }
     )
 
@@ -550,7 +551,7 @@ class BlobCourierModuleTests {
         }
       }
     }).fold(
-      { Pair(false, createErrorReportForMissingParameter(availableParameters, it)) },
+      { Pair(false, createErrorReportForMissingParameter(availableParameters, it.message ?: "")) },
       { Pair(true, createErrorReportForMissingParameter(availableParameters, "$it")) }
     )
 

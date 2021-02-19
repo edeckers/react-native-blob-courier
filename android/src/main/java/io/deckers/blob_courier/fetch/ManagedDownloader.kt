@@ -7,16 +7,19 @@
 package io.deckers.blob_courier.fetch
 
 import android.app.DownloadManager
+import android.content.BroadcastReceiver
 import android.content.Context
+import android.content.Intent
 import android.content.IntentFilter
-import com.facebook.react.bridge.ReactApplicationContext
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import io.deckers.blob_courier.common.ACTION_CANCEL_REQUEST
 import io.deckers.blob_courier.common.BlobCourierError
 import io.deckers.blob_courier.common.ERROR_UNEXPECTED_ERROR
 import io.deckers.blob_courier.common.Failure
 import io.deckers.blob_courier.common.Logger
-import io.deckers.blob_courier.common.MANAGED_DOWNLOAD_FAILURE
 import io.deckers.blob_courier.common.Result
-import io.deckers.blob_courier.common.createErrorFromThrowabe
+import io.deckers.blob_courier.common.MANAGED_DOWNLOAD_FAILURE
+import io.deckers.blob_courier.common.createErrorFromThrowable
 import io.deckers.blob_courier.common.fold
 import io.deckers.blob_courier.progress.ManagedProgressUpdater
 import io.deckers.blob_courier.progress.ProgressNotifier
@@ -27,16 +30,17 @@ private const val DOWNLOAD_MANAGER_PARAMETER_ENABLE_NOTIFICATIONS = "enableNotif
 private const val DOWNLOAD_MANAGER_PARAMETER_TITLE = "title"
 
 private val TAG = ManagedDownloader::class.java.name
+
 private val logger = Logger(TAG)
 private fun li(m: String) = logger.i(m)
 private fun lv(m: String, e: Throwable? = null) = logger.v(m, e)
 
 class ManagedDownloader(
-  private val reactContext: ReactApplicationContext,
+  private val context: Context,
   private val progressNotifier: ProgressNotifier
 ) {
   private val defaultDownloadManager =
-    reactContext.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
+    context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
 
   fun fetch(
     downloaderParameters: DownloaderParameters,
@@ -90,7 +94,7 @@ class ManagedDownloader(
 
       val progressUpdater =
         ManagedProgressUpdater(
-          reactContext,
+          context,
           downloadId,
           downloaderParameters.progressInterval.toLong(),
           progressNotifier
@@ -119,12 +123,8 @@ class ManagedDownloader(
             }
           }
 
-        reactContext.registerReceiver(
-          downloadReceiver,
-          IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE)
-        )
-
-        lv("Registered ${DownloadManager.ACTION_DOWNLOAD_COMPLETE} receiver")
+        registerCancellationHandler(downloaderParameters.taskId, downloadId)
+        registerDownloadCompletionHandler(downloadReceiver)
 
         lv("Waiting for completion")
 
@@ -138,7 +138,35 @@ class ManagedDownloader(
           ?: Failure(BlobCourierError(MANAGED_DOWNLOAD_FAILURE, "Result was never set"))
       }
     } catch (e: Throwable) {
-      return Failure(createErrorFromThrowabe(ERROR_UNEXPECTED_ERROR, e))
+      return Failure(createErrorFromThrowable(ERROR_UNEXPECTED_ERROR, e))
     }
+  }
+
+  private fun registerCancellationHandler(taskId: String, downloadId: Long) {
+    lv("Registering $ACTION_CANCEL_REQUEST receiver")
+
+    LocalBroadcastManager.getInstance(context)
+      .registerReceiver(object : BroadcastReceiver() {
+        override fun onReceive(p0: Context?, p1: Intent?) {
+          if (p1?.getStringExtra("taskId") != taskId) {
+            return
+          }
+
+          defaultDownloadManager.remove(downloadId)
+        }
+      }, IntentFilter(ACTION_CANCEL_REQUEST))
+
+    lv("Registered $ACTION_CANCEL_REQUEST receiver")
+  }
+
+  private fun registerDownloadCompletionHandler(downloadReceiver: ManagedDownloadReceiver) {
+    lv("Registering ${DownloadManager.ACTION_DOWNLOAD_COMPLETE} receiver")
+
+    context.registerReceiver(
+      downloadReceiver,
+      IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE)
+    )
+
+    lv("Registered ${DownloadManager.ACTION_DOWNLOAD_COMPLETE} receiver")
   }
 }

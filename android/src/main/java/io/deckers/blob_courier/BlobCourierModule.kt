@@ -12,6 +12,8 @@ import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReactMethod
 import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.modules.network.OkHttpClientProvider
+import io.deckers.blob_courier.cancel.CancellationParameterFactory
+import io.deckers.blob_courier.cancel.RequestCanceller
 import io.deckers.blob_courier.common.DEFAULT_PROGRESS_TIMEOUT_MILLISECONDS
 import io.deckers.blob_courier.common.ERROR_UNEXPECTED_ERROR
 import io.deckers.blob_courier.common.ERROR_UNEXPECTED_EXCEPTION
@@ -52,6 +54,38 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
   override fun getName(): String = LIBRARY_NAME
 
   @ReactMethod
+  fun cancelRequest(input: ReadableMap, promise: Promise) {
+    li("Calling cancelRequest")
+
+    thread {
+      try {
+        val errorOrCancelResult =
+          CancellationParameterFactory()
+            .fromInput(input)
+            .fold(::Failure, ::Success)
+            .map { RequestCanceller(reactContext).cancel(it.taskId) }
+
+        errorOrCancelResult
+          .fmap { Success(emptyMap<String, Any>().toReactMap()) }
+          .`do`(
+            { e ->
+              lv("Something went wrong during cancellation (code=${e.code},message=${e.message})")
+              promise.reject(e.code, e.message)
+            },
+            promise::resolve)
+      } catch (e: Exception) {
+        le("Unexpected exception", e)
+        promise.reject(ERROR_UNEXPECTED_EXCEPTION, processUnexpectedException(e).message)
+      } catch (e: Error) {
+        le("Unexpected error", e)
+        promise.reject(ERROR_UNEXPECTED_ERROR, processUnexpectedError(e).message)
+      }
+    }
+
+    li("Called cancelRequest")
+  }
+
+  @ReactMethod
   fun fetchBlob(input: ReadableMap, promise: Promise) {
     li("Calling fetchBlob")
     thread {
@@ -64,7 +98,7 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
               BlobDownloader(
                 reactContext,
                 createHttpClient(),
-                createProgressFactory(reactContext)
+                createProgressFactory(reactContext),
               )::download
             )
 

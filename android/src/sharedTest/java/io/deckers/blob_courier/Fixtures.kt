@@ -17,8 +17,12 @@ import io.deckers.blob_courier.react.toReactMap
 import kotlin.coroutines.coroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
+import java.io.File
+import java.io.RandomAccessFile
 
 object Fixtures {
+
+  const val LARGE_FILE = "http://ipv4.download.thinkbroadband.com/100MB.zip"
 
   fun createValidTestFetchParameterMap(): Map<String, String> = mapOf(
     "taskId" to "some-task-id",
@@ -44,18 +48,84 @@ object Fixtures {
     "https://file.io"
   )
 
-  suspend fun runFetchBlobSuspend(
+  @Suppress("SameParameterValue")
+  fun createSparseFile(fileSize: Long): File {
+    val file = File.createTempFile("blob_courier.", ".bin")
+
+    val f = RandomAccessFile(file.absoluteFile, "rw")
+    f.setLength(fileSize)
+
+    return file
+  }
+
+  suspend fun runCancelFetchBlobSuspend(
     context: ReactApplicationContext,
     input: ReadableMap,
-  ): Either<String, ReadableMap> {
+  ): Either<TestPromiseError, ReadableMap> {
     val m = BlobCourierModule(context)
 
-    var result: Either<String, ReadableMap>? = null
+    var result: Either<TestPromiseError, ReadableMap>? = null
 
     m.fetchBlob(
       input,
       EitherPromise(
-        { e -> result = left(e ?: "Request failed without a message") },
+        { e -> result = left(e) },
+        { v -> result = right(v ?: emptyMap<String, Any>().toReactMap()) }
+      )
+    )
+
+    val taskId = input.getString("taskId")
+    val cancelInputParameters = mapOf("taskId" to taskId)
+
+    while (result == null) {
+      coroutineContext.ensureActive()
+      runCancelBlobSuspend(context, cancelInputParameters.toReactMap())
+      delay(1)
+    }
+
+    return result ?: left(TestPromiseError(message = "Did not receive a response in time"))
+  }
+
+  suspend fun runCancelUploadBlobSuspend(
+    context: ReactApplicationContext,
+    input: ReadableMap,
+  ): Either<TestPromiseError, ReadableMap> {
+    val m = BlobCourierModule(context)
+
+    var result: Either<TestPromiseError, ReadableMap>? = null
+
+    m.uploadBlob(
+      input,
+      EitherPromise(
+        { e -> result = left(e) },
+        { v -> result = right(v ?: emptyMap<String, Any>().toReactMap()) }
+      )
+    )
+
+    val taskId = input.getString("taskId")
+    val cancelInputParameters = mapOf("taskId" to taskId)
+
+    while (result == null) {
+      coroutineContext.ensureActive()
+      runCancelBlobSuspend(context, cancelInputParameters.toReactMap())
+      delay(1)
+    }
+
+    return result ?: left(TestPromiseError(message = "Did not receive a response in time"))
+  }
+
+  suspend fun runFetchBlobSuspend(
+    context: ReactApplicationContext,
+    input: ReadableMap,
+  ): Either<TestPromiseError, ReadableMap> {
+    val m = BlobCourierModule(context)
+
+    var result: Either<TestPromiseError, ReadableMap>? = null
+
+    m.fetchBlob(
+      input,
+      EitherPromise(
+        { e -> result = left(e) },
         { v -> result = right(v ?: emptyMap<String, Any>().toReactMap()) }
       )
     )
@@ -65,21 +135,21 @@ object Fixtures {
       delay(1)
     }
 
-    return result ?: left("Did not receive a response in time")
+    return result ?: left(TestPromiseError(message = "Did not receive a response in time"))
   }
 
   suspend fun runUploadBlobSuspend(
     context: ReactApplicationContext,
     input: ReadableMap
-  ): Either<String, ReadableMap> {
+  ): Either<TestPromiseError, ReadableMap> {
     val m = BlobCourierModule(context)
 
-    var result: Either<String, ReadableMap>? = null
+    var result: Either<TestPromiseError, ReadableMap>? = null
 
     m.uploadBlob(
       input,
       EitherPromise(
-        { e -> result = left(e ?: "Request failed without a message") },
+        { e -> result = left(e) },
         { v -> result = right(v ?: emptyMap<String, Any>().toReactMap()) }
       )
     )
@@ -89,11 +159,40 @@ object Fixtures {
       delay(1)
     }
 
-    return result ?: left("Did not receive a response in time")
+    return result ?: left(TestPromiseError(message = "Did not receive a response in time"))
   }
 
+  suspend fun runCancelBlobSuspend(
+    context: ReactApplicationContext,
+    input: ReadableMap
+  ): Either<TestPromiseError, ReadableMap> {
+    val m = BlobCourierModule(context)
+
+    var result: Either<TestPromiseError, ReadableMap>? = null
+
+    m.cancelRequest(
+      input,
+      EitherPromise(
+        { e -> result = left(e) },
+        { v -> result = right(v ?: emptyMap<String, Any>().toReactMap()) }
+      )
+    )
+
+    while (result == null) {
+      coroutineContext.ensureActive()
+      delay(1)
+    }
+
+    return result ?: left(TestPromiseError(message = "Did not receive a response in time"))
+  }
+
+  data class TestPromiseError(
+    val code: String? = null,
+    val message: String?,
+    val throwable: Throwable? = null)
+
   class EitherPromise(
-    val left: (message: String?) -> Unit,
+    val left: (error: TestPromiseError) -> Unit,
     val right: (v: ReadableMap?) -> Unit
   ) : Promise {
     override fun resolve(v: Any?) {
@@ -102,23 +201,28 @@ object Fixtures {
       right(maybeValue)
     }
 
-    override fun reject(code: String?, message: String?) = left(message)
+    override fun reject(code: String?, message: String?) = left(TestPromiseError(code, message))
 
-    override fun reject(code: String?, throwable: Throwable?) = left(throwable?.localizedMessage)
+    override fun reject(code: String?, throwable: Throwable?) =
+      left(TestPromiseError(throwable?.javaClass?.typeName, throwable?.localizedMessage))
 
-    override fun reject(code: String?, message: String?, throwable: Throwable?) = left(message)
+    override fun reject(code: String?, message: String?, throwable: Throwable?) =
+      left(TestPromiseError(code, message, throwable))
 
-    override fun reject(throwable: Throwable?) = left(throwable?.localizedMessage)
+    override fun reject(throwable: Throwable?) =
+      left(TestPromiseError(throwable?.javaClass?.typeName, throwable?.localizedMessage, throwable))
 
     override fun reject(throwable: Throwable?, userInfo: WritableMap?) =
-      left(throwable?.localizedMessage)
+      left(TestPromiseError(throwable?.javaClass?.typeName, throwable?.localizedMessage, throwable))
 
-    override fun reject(code: String?, userInfo: WritableMap) = left(code ?: "")
+    override fun reject(code: String?, userInfo: WritableMap) =
+      left(TestPromiseError(code, code ?: ""))
 
     override fun reject(code: String?, throwable: Throwable?, userInfo: WritableMap?) =
-      left(throwable?.localizedMessage)
+      left(TestPromiseError(code, throwable?.localizedMessage, throwable))
 
-    override fun reject(code: String?, message: String?, userInfo: WritableMap) = left(message)
+    override fun reject(code: String?, message: String?, userInfo: WritableMap) =
+      left(TestPromiseError(code, message))
 
     override fun reject(
       code: String?,
@@ -126,8 +230,9 @@ object Fixtures {
       throwable: Throwable?,
       userInfo: WritableMap?
     ) =
-      left(message)
+      left(TestPromiseError(code, message, throwable))
 
-    override fun reject(message: String?) = left(message ?: "")
+    override fun reject(message: String?) =
+      left(TestPromiseError(null, message ?: ""))
   }
 }

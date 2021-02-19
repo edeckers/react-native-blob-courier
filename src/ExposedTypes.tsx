@@ -125,6 +125,7 @@ export declare interface BlobRequestTask {
 
 export declare interface BlobRequestSettings {
   readonly progressIntervalMilliseconds?: number;
+  readonly signal?: AbortSignal;
 }
 
 export declare interface BlobUnmanagedHttpResponse {
@@ -155,3 +156,10 @@ export declare interface BlobFetchResponse {
 }
 
 export declare interface BlobUploadResponse extends BlobUnmanagedData {}
+
+export type BlobFetchInput = BlobFetchRequest &
+  BlobRequestSettings &
+  AndroidFetchSettings &
+  IOSFetchSettings;
+
+export type BlobUploadInput = BlobUploadRequest & BlobRequestSettings;

@@ -4,7 +4,7 @@
 // LICENSE file in the root directory of this source tree.
 import Foundation
 
-open class DownloaderDelegate: NSObject, URLSessionDownloadDelegate {
+open class DownloaderDelegate: NSObject, URLSessionDownloadDelegate, URLSessionDelegate {
   typealias SuccessHandler = (NSDictionary) -> Void
   typealias FailureHandler = (BlobCourierError) -> Void
 
@@ -26,6 +26,7 @@ open class DownloaderDelegate: NSObject, URLSessionDownloadDelegate {
     self.destinationFileUrl = destinationFileUrl
     self.resolve = resolve
     self.reject = reject
+
     self.taskId = taskId
 
     self.eventEmitter =
@@ -40,10 +41,16 @@ open class DownloaderDelegate: NSObject, URLSessionDownloadDelegate {
   public func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
       guard let error = error else { return }
 
-      print("session: didCompleteWithError: \(error.localizedDescription)")
-      self.reject(Errors.createUnexpectedError(error: error))
+      if (error as NSError).code == NSURLErrorCancelled {
+        self.reject(BlobCourierError(
+          code: Errors.errorCanceledException,
+          message: "Request was cancelled",
+          error: error))
 
-      session.finishTasksAndInvalidate()
+	return
+      }
+
+      self.reject(Errors.createUnexpectedError(error: error))
   }
 
   public func urlSession(
@@ -70,10 +77,11 @@ open class DownloaderDelegate: NSObject, URLSessionDownloadDelegate {
   func processCompletedDownload(location: URL, response: URLResponse?, error: Error?) {
     if let error = error {
       print(
-        "Error took place while downloading a file. Error description: \(error.localizedDescription)"
+        "Error took place while downloading a file from \(response?.url). " +
+	"Error description: \(error.localizedDescription)"
       )
 
-      Errors.createUnexpectedError(error: error)
+      self.reject(Errors.createUnexpectedError(error: error))
       return
     }
 
@@ -88,7 +96,7 @@ open class DownloaderDelegate: NSObject, URLSessionDownloadDelegate {
         ]
       ]
 
-      print("Successfully downloaded. Status code: \(statusCode)")
+      print("Successfully downloaded \(self.destinationFileUrl). Status code: \(statusCode)")
       do {
         try? FileManager.default.removeItem(at: self.destinationFileUrl)
         try FileManager.default.copyItem(at: location, to: self.destinationFileUrl)

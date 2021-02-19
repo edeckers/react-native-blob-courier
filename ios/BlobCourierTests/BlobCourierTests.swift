@@ -45,6 +45,21 @@ func verifyBodyIsCorrect(data: Data, contentType: String, expectedParts: [String
   return (false, "Unknown")
 }
 
+func createTemporaryFile(fileSize: Int) -> URL? {
+  let directory = NSTemporaryDirectory()
+  let fileName = NSUUID().uuidString
+
+  let bytes = [UInt8](repeating: 0, count: fileSize)
+
+  guard let fullURL = NSURL.fileURL(withPathComponents: [directory, fileName]) else { return nil }
+
+  let pointer = UnsafeBufferPointer(start: bytes, count: bytes.count)
+  let data = Data(buffer: pointer)
+  try? data.write(to: fullURL)
+
+  return fullURL
+}
+
 // swiftlint:disable type_body_length
 // swiftlint:disable file_length
 class BlobCourierTests: XCTestCase {
@@ -311,6 +326,111 @@ class BlobCourierTests: XCTestCase {
         DispatchTimeInterval.seconds(BlobCourierTests.defaultPromiseTimeoutSeconds))
       XCTAssertTrue(result.0)
     }
+  }
+
+  func testFetchCancellationRejectsPromise() throws {
+    var result = (false, "Unknown")
+
+    let taskId = "task-\(NSUUID().uuidString)"
+
+    let input: NSDictionary = [
+      "filename": "100MB.zip",
+      "taskId": taskId,
+      "url": "http://ipv4.download.thinkbroadband.com/100MB.zip"
+    ]
+
+    let cancelInput: NSDictionary = [
+      "taskId": taskId
+    ]
+
+    let dispatchGroup = DispatchGroup()
+
+    let resolveNone: RCTPromiseResolveBlock = { (_: Any?) -> Void in
+      result = (false, "Request succeeded but it should have failed")
+
+      dispatchGroup.leave()
+    }
+
+    let rejectNone: RCTPromiseRejectBlock = { (code: String?, _: String?, error: Error?) -> Void in
+      result = (true, code ?? "")
+
+      dispatchGroup.leave()
+    }
+
+    let resolve: RCTPromiseResolveBlock = { (_: Any?) -> Void in }
+    let reject: RCTPromiseRejectBlock = { (_: String?, _: String?, error: Error?) -> Void in }
+
+    dispatchGroup.enter()
+
+    sut?.fetchBlob(input: input, resolve: resolveNone, reject: rejectNone)
+    sleep(1) // Allow request to initialize
+
+    sut?.cancelRequest(input: cancelInput, resolve: resolve, reject: reject)
+
+    dispatchGroup.wait(timeout: .now() +
+      DispatchTimeInterval.seconds(BlobCourierTests.defaultPromiseTimeoutSeconds))
+
+    XCTAssertTrue(result.0)
+    XCTAssertTrue(result.1 == Errors.errorCanceledException)
+  }
+
+   func testUploadCancellationRejectsPromise() throws {
+     var result = (false, "Unknown")
+     let taskId = "task-\(NSUUID().uuidString)"
+
+     guard let filePath = createTemporaryFile(fileSize: 100 * 1024 * 1024) else {
+       XCTAssertTrue(false)
+       return
+     }
+
+     let input: NSDictionary = [
+       "parts": [
+         [
+           "name": "file",
+           "payload": [
+              "absoluteFilePath": filePath.absoluteString,
+              "mimeType": "image/png"
+           ],
+           "type": "file"
+         ]
+       ],
+       "taskId": taskId,
+       "url": "https://file.io"
+     ]
+
+     let cancelInput: NSDictionary = [
+       "taskId": taskId
+     ]
+
+     let dispatchGroup = DispatchGroup()
+
+     let resolveNone: RCTPromiseResolveBlock = { (_: Any?) -> Void in
+       result = (false, "Request succeeded but it should have failed")
+
+       dispatchGroup.leave()
+     }
+
+     let rejectNone: RCTPromiseRejectBlock = { (code: String?, _: String?, error: Error?) -> Void in
+       result = (true, code ?? "")
+
+       dispatchGroup.leave()
+     }
+
+     let resolve: RCTPromiseResolveBlock = { (_: Any?) -> Void in }
+     let reject: RCTPromiseRejectBlock = { (_: String?, _: String?, error: Error?) -> Void in }
+
+     dispatchGroup.enter()
+
+     sut?.uploadBlob(input: input, resolve: resolveNone, reject: rejectNone)
+     sleep(1) // Allow request to initialize
+
+     sut?.cancelRequest(input: cancelInput, resolve: resolve, reject: reject)
+
+     dispatchGroup.wait(timeout: .now() +
+       DispatchTimeInterval.seconds(BlobCourierTests.defaultPromiseTimeoutSeconds))
+
+     XCTAssertTrue(result.0)
+     XCTAssertTrue(result.1 == Errors.errorCanceledException)
   }
 
   func testInvalidTargetParametersRejectsPromise() throws {

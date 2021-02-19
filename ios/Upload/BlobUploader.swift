@@ -79,22 +79,29 @@ open class BlobUploader: NSObject {
     let sessionConfig = URLSessionConfiguration.default
 
     let group = DispatchGroup()
+    let groupId = UUID().uuidString
+
     let queue = DispatchQueue.global()
 
     var result: Result<NSDictionary, BlobCourierError> = .success([:])
 
+    print("Entering group (id=\(groupId))")
     group.enter()
+
+    var cancelObserver: NSObjectProtocol?
 
     queue.async(group: group) {
       let successfulResult = { (theResult: NSDictionary) -> Void in
         result = .success(theResult)
 
+        print("Leaving group (id=\(groupId),status=resolve)")
         group.leave()
       }
 
       let failedResult = { (error: BlobCourierError) -> Void in
         result = .failure(error)
 
+        print("Leaving group (id=\(groupId),status=reject)")
         group.leave()
       }
 
@@ -112,15 +119,22 @@ open class BlobUploader: NSObject {
 
       do {
         let (request, fileData) =
-	  try buildRequestDataForFileUpload(url: parameters.url, parts: parameters.parts, headers: headers)
+          try buildRequestDataForFileUpload(url: parameters.url, parts: parameters.parts, headers: headers)
 
         session.uploadTask(with: request, from: fileData).resume()
+
+        cancelObserver = CancelController.registerCancelObserver(
+            session: session, taskId: parameters.taskId)
       } catch {
         failedResult(Errors.createUnexpectedError(error: error))
       }
     }
 
+    print("Waiting for group (id=\(groupId))")
     group.wait()
+    print("Left group (id=\(groupId))")
+
+    NotificationCenter.default.removeObserver(cancelObserver)
 
     return result
   }

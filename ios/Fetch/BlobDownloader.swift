@@ -17,22 +17,27 @@ open class BlobDownloader: NSObject {
     let sessionConfig = URLSessionConfiguration.default
 
     let group = DispatchGroup()
-    let queue = DispatchQueue.global()
+    let groupId = UUID().uuidString
 
     var result: Result<NSDictionary, BlobCourierError> = .success([:])
 
+    print("Entering group (id=\(groupId))")
     group.enter()
 
-    queue.async(group: group) {
-      let succesfulResult = { (theResult: NSDictionary) -> Void in
+    var cancelObserver: NSObjectProtocol?
+
+    DispatchQueue.global(qos: .background).async {
+      let successfulResult = { (theResult: NSDictionary) -> Void in
         result = .success(theResult)
 
+        print("Leaving group (id=\(groupId),status=resolve)")
         group.leave()
       }
 
       let failedResult = { (error: BlobCourierError) -> Void in
         result = .failure(error)
 
+        print("Leaving group (id=\(groupId),status=reject)")
         group.leave()
       }
 
@@ -43,17 +48,22 @@ open class BlobDownloader: NSObject {
           taskId: parameters.taskId,
           destinationFileUrl: destinationFileUrl,
           progressIntervalMilliseconds: parameters.progressIntervalMilliseconds,
-          resolve: succesfulResult,
+          resolve: successfulResult,
           reject: failedResult)
 
-      startFetchBlob(
+      cancelObserver = startFetchBlob(
         sessionConfig: sessionConfig,
         delegate: downloaderDelegate,
         fileURL: parameters.url,
-        headers: parameters.headers)
+        headers: parameters.headers,
+        taskId: parameters.taskId)
     }
 
+    print("Waiting for group (id=\(groupId))")
     group.wait()
+    print("Left group (id=\(groupId))")
+
+    NotificationCenter.default.removeObserver(cancelObserver)
 
     return result
   }
@@ -62,12 +72,13 @@ open class BlobDownloader: NSObject {
     sessionConfig: URLSessionConfiguration,
     delegate: DownloaderDelegate,
     fileURL: URL,
-    headers: NSDictionary) {
+    headers: NSDictionary,
+    taskId: String) -> NSObjectProtocol? {
     let session =
-     URLSession(
-       configuration: sessionConfig,
-       delegate: delegate,
-       delegateQueue: nil)
+      URLSession(
+        configuration: sessionConfig,
+        delegate: delegate,
+        delegateQueue: nil)
 
     var request = URLRequest(url: fileURL)
     for (key, value) in headers {
@@ -78,6 +89,10 @@ open class BlobDownloader: NSObject {
       }
     }
 
-    session.downloadTask(with: request).resume()
+    let task = session.downloadTask(with: request)
+
+    task.resume()
+
+    return CancelController.registerCancelObserver(session: session, taskId: taskId)
   }
 }

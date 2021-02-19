@@ -256,6 +256,34 @@ Object.getOwnPropertySymbols({
 
 ```
 
+### Cancel request
+
+```tsx
+import BlobCourier from 'react-native-blob-courier';
+
+// ...
+
+const abortController = new AbortController();
+
+const { signal } = abortController;
+
+const request0 = {
+  // ...
+  signal,
+};
+
+try {
+  BlobCourier.fetchBlob(request0);
+
+  abortController.abort();
+} catch (e) {
+  if (e.code === ERROR_CANCELED_EXCEPTION) {
+    // ...
+  }
+}
+
+// ...
+```
 
 ## Fluent interface
 
@@ -298,10 +326,11 @@ Optional
 | ------------ | -------------------------------- | ----------------------------------------- | ---------------------------------------------------- |
 | `android`    | `AndroidSettings`                | Settings to be used on Android            | `{ downloadManager: {}, target: 'cache', useDownloadManager: false }` |
 | `headers`    | `{ [key: string]: string }`      | Map of headers to send with the request   | `{}`                                                 |
-| `ios`        | `IOSSettings`                    | Settings to be used on iOS                | `{ target: 'cache' }` |
+| `ios`        | `IOSSettings`                    | Settings to be used on iOS                | `{ target: 'cache' }`                                |
 | `headers`    | `{ [key: string]: string }`      | Map of headers to send with the request   | `{}`                                                 |
 | `method`     | `string`                         | Representing the HTTP method              | `GET`                                                |
 | `onProgress` | `(e: BlobProgressEvent) => void` | Function handling progress updates        | `() => { }`                                          |
+| `signal`     | `AbortSignal`                    | Request cancellation manager              | `null`                                               |
 
 Response
 
@@ -354,6 +383,7 @@ Optional
 | `multipartName`  | `string`                         | Name for the file multipart               | `"file"`                            |
 | `onProgress`     | `(e: BlobProgressEvent) => void` | Function handling progress updates        | `() => { }`                         |
 | `returnResponse` | `boolean`                        | Return the HTTP response body?            | `false`                             |
+| `signal`         | `AbortSignal`                    | Request cancellation manager              | `null`                              | 
 
 ### `uploadParts(input: BlobMultipartUploadRequest)`
 
@@ -369,9 +399,10 @@ Optional
 | **Field**        | **Type**                         | **Description**                           | **Default** |
 | ---------------- | -------------------------------- | ----------------------------------------- | ----------- |
 | `headers`        | `{ [key: string]: string }`      | Map of headers to send with the request   | `{}`        |
-| `method`         | `string`                         | The HTTP method to be used in the request | `"POST"`      |
+| `method`         | `string`                         | The HTTP method to be used in the request | `"POST"`    |
 | `onProgress`     | `(e: BlobProgressEvent) => void` | Function handling progress updates        | `() => { }` |
 | `returnResponse` | `boolean`                        | Return the HTTP response body?            | `false`     |
+| `signal`         | `AbortSignal`                    | Request cancellation manager              | `null`      |
 
 Response
 

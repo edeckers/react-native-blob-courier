@@ -22,12 +22,12 @@ import type {
   AndroidDownloadManagerSettings,
   BlobProgressEvent,
   BlobRequestOnProgress,
-  AndroidFetchSettings,
-  IOSFetchSettings,
   BlobMultipartMapUploadRequest,
   BlobMultipartArrayUploadRequest,
   BlobNamedMultipartArray,
   BlobMultipartWithName,
+  BlobFetchInput,
+  BlobUploadInput,
 } from './ExposedTypes';
 import {
   convertMappedMultipartsWithSymbolizedKeysToArray,
@@ -36,14 +36,9 @@ import {
 } from './Utils';
 import { dict } from './Extensions';
 
-type BlobFetchInput = BlobFetchRequest &
-  BlobRequestSettings &
-  AndroidFetchSettings &
-  IOSFetchSettings;
+type BlobCancelNativeInput = BlobRequestTask;
 
 type BlobFetchNativeInput = BlobFetchInput & BlobRequestTask;
-
-type BlobUploadInput = BlobUploadRequest & BlobRequestSettings;
 
 type BlobUploadNativeInput = BlobUploadInput & BlobRequestTask;
 
@@ -59,6 +54,7 @@ type BlobUploadMultipartNativeInput = BlobMultipartArrayUploadRequest &
   BlobRequestTask;
 
 type BlobCourierType = {
+  cancelRequest(input: BlobCancelNativeInput): Promise<{}>;
   fetchBlob(input: BlobFetchNativeInput): Promise<BlobFetchResponse>;
   uploadBlob(
     input: BlobUploadMultipartNativeInput
@@ -69,7 +65,7 @@ const { BlobCourier, BlobCourierEventEmitter } = NativeModules;
 
 const EventEmitter = new NativeEventEmitter(BlobCourierEventEmitter);
 
-export const createTaskId = () => `rnbc-req-${uuid()}`;
+const createTaskId = () => `rnbc-req-${uuid()}`;
 
 const addProgressListener = (
   taskId: string,
@@ -171,6 +167,32 @@ const sanitizeMultipartUploadData = <T extends BlobUploadMultipartNativeInput>(
   };
 };
 
+const wrapAbortListener = async <T,>(
+  taskId: string,
+  wrappedFn: () => Promise<T>,
+  signal?: AbortSignal
+) => {
+  if (!signal) {
+    return await wrappedFn();
+  }
+
+  const originalSignalOnAbort = signal.onabort;
+
+  // @ts-ignore: TS2345
+  signal.onabort = (ev: Event) => {
+    if (originalSignalOnAbort) {
+      // @ts-ignore: TS2345
+      originalSignalOnAbort.call(signal, ev);
+    }
+
+    (BlobCourier as BlobCourierType).cancelRequest({ taskId });
+
+    console.debug(`Aborted ${taskId}`);
+  };
+
+  return await wrappedFn();
+};
+
 const wrapEmitter = async <T,>(
   taskId: string,
   wrappedFn: () => Promise<T>,
@@ -187,33 +209,51 @@ const wrapEmitter = async <T,>(
   return result;
 };
 
-const fetchBlob = <T extends BlobFetchNativeInput>(input: Readonly<T>) =>
+const emitterWrappedFetch = <T extends BlobFetchNativeInput>(
+  input: Readonly<T>
+) =>
   wrapEmitter(
     input.taskId,
     () => (BlobCourier as BlobCourierType).fetchBlob(sanitizeFetchData(input)),
     input.onProgress
   );
 
+const emitterWrappedUpload = <T extends BlobUploadMultipartInputWithTask>(
+  input: Readonly<T>
+) =>
+  wrapEmitter(input.taskId, () => uploadBlobFromParts(input), input.onProgress);
+
+const fetchBlob = <T extends BlobFetchNativeInput>(input: Readonly<T>) =>
+  wrapAbortListener(
+    input.taskId,
+    () => emitterWrappedFetch(input),
+    input.signal
+  );
+
+const uploadBlobFromParts = <T extends BlobUploadMultipartInputWithTask>(
+  input: Readonly<T>
+) => {
+  try {
+    const sanitized = sanitizeMappedMultiparts(input.parts);
+
+    return (BlobCourier as BlobCourierType).uploadBlob(
+      sanitizeMultipartUploadData({
+        ...input,
+        parts: convertMappedMultipartsWithSymbolizedKeysToArray(sanitized),
+      })
+    );
+  } catch (e) {
+    return Promise.reject(e);
+  }
+};
+
 const uploadParts = <T extends BlobUploadMultipartInputWithTask>(
   input: Readonly<T>
 ) =>
-  wrapEmitter(
+  wrapAbortListener(
     input.taskId,
-    () => {
-      try {
-        const sanitized = sanitizeMappedMultiparts(input.parts);
-
-        return (BlobCourier as BlobCourierType).uploadBlob(
-          sanitizeMultipartUploadData({
-            ...input,
-            parts: convertMappedMultipartsWithSymbolizedKeysToArray(sanitized),
-          })
-        );
-      } catch (e) {
-        return Promise.reject(e);
-      }
-    },
-    input.onProgress
+    () => emitterWrappedUpload(input),
+    input.signal
   );
 
 const uploadBlob = <T extends BlobUploadNativeInput>(input: Readonly<T>) => {
@@ -333,3 +373,4 @@ export default {
 };
 
 export * from './ExposedTypes';
+export * from './ExposedConsts';

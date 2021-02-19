@@ -8,6 +8,9 @@
 
 @interface RCT_EXTERN_MODULE(BlobCourier, NSObject)
 
+RCT_EXTERN_METHOD(cancelRequest:(NSDictionary *)input
+                 withResolver:(RCTPromiseResolveBlock)resolve
+                 withRejecter:(RCTPromiseRejectBlock)reject)
 RCT_EXTERN_METHOD(fetchBlob:(NSDictionary *)input
                  withResolver:(RCTPromiseResolveBlock)resolve
                  withRejecter:(RCTPromiseRejectBlock)reject)

@@ -6,29 +6,39 @@
  */
 package io.deckers.blob_courier.upload
 
-import com.facebook.react.bridge.ReactApplicationContext
+import android.content.Context
+import io.deckers.blob_courier.cancel.registerCancellationHandler
+import io.deckers.blob_courier.common.ERROR_CANCELED_EXCEPTION
 import io.deckers.blob_courier.common.ERROR_UNEXPECTED_ERROR
 import io.deckers.blob_courier.common.ERROR_UNEXPECTED_EXCEPTION
 import io.deckers.blob_courier.common.Failure
+import io.deckers.blob_courier.common.Logger
 import io.deckers.blob_courier.common.Result
 import io.deckers.blob_courier.common.Success
-import io.deckers.blob_courier.common.createErrorFromThrowabe
+import io.deckers.blob_courier.common.createErrorFromThrowable
 import io.deckers.blob_courier.common.mapHeadersToMap
 import io.deckers.blob_courier.progress.BlobCourierProgressRequest
 import io.deckers.blob_courier.progress.ProgressNotifierFactory
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import java.io.IOException
+
+private val TAG = BlobUploader::class.java.name
+
+private val logger = Logger(TAG)
+private fun li(m: String) = logger.i(m)
 
 class BlobUploader(
-  private val reactContext: ReactApplicationContext,
+  private val context: Context,
   private val httpClient: OkHttpClient,
   private val progressNotifierFactory: ProgressNotifierFactory
 ) {
 
   fun upload(uploaderParameters: UploaderParameters): Result<Map<String, Any>> {
+    li("Starting unmanaged upload")
 
     val requestBody = BlobCourierProgressRequest(
-      uploaderParameters.toMultipartBody(reactContext.contentResolver),
+      uploaderParameters.toMultipartBody(context.contentResolver),
       progressNotifierFactory.create(uploaderParameters.taskId)
     )
 
@@ -42,26 +52,36 @@ class BlobUploader(
       }
       .build()
 
-    try {
-      val response = httpClient.newCall(
-        requestBuilder
-      ).execute()
+    val uploadRequestCall = httpClient.newCall(requestBuilder)
 
-      val b = response.body()?.string().orEmpty()
+    try {
+      registerCancellationHandler(context, uploaderParameters.taskId, uploadRequestCall)
+
+      val response = uploadRequestCall.execute()
+
+      val responseBody = response.body()?.string().orEmpty()
+
+      li("Finished unmanaged upload")
 
       return Success(
         mapOf(
           "response" to mapOf(
             "code" to response.code(),
-            "data" to if (uploaderParameters.returnResponse) b else "",
+            "data" to if (uploaderParameters.returnResponse) responseBody else "",
             "headers" to mapHeadersToMap(response.headers())
           )
         )
       )
+    } catch (e: IOException) {
+      if (uploadRequestCall.isCanceled) {
+        return Failure(createErrorFromThrowable(ERROR_CANCELED_EXCEPTION, e))
+      }
+
+      return Failure(createErrorFromThrowable(ERROR_UNEXPECTED_EXCEPTION, e))
     } catch (e: Exception) {
-      return Failure(createErrorFromThrowabe(ERROR_UNEXPECTED_EXCEPTION, e))
+      return Failure(createErrorFromThrowable(ERROR_UNEXPECTED_EXCEPTION, e))
     } catch (e: Error) {
-      return Failure(createErrorFromThrowabe(ERROR_UNEXPECTED_ERROR, e))
+      return Failure(createErrorFromThrowable(ERROR_UNEXPECTED_ERROR, e))
     }
   }
 }

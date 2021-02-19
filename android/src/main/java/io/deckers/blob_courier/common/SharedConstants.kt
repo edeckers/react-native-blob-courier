@@ -6,6 +6,8 @@
  */
 package io.deckers.blob_courier.common
 
+const val ACTION_CANCEL_REQUEST = "io.deckers.blob_courier.intent.action.ACTION_CANCEL_REQUEST"
+
 const val DEFAULT_FETCH_METHOD = "GET"
 const val DEFAULT_UPLOAD_METHOD = "POST"
 
