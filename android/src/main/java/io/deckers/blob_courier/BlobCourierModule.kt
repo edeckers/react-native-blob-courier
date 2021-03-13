@@ -11,6 +11,7 @@ import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReactMethod
 import com.facebook.react.bridge.ReadableMap
+import com.facebook.react.module.annotations.ReactModule
 import com.facebook.react.modules.network.OkHttpClientProvider
 import io.deckers.blob_courier.cancel.CancellationParameterFactory
 import io.deckers.blob_courier.cancel.RequestCanceller
@@ -48,6 +49,7 @@ private fun le(m: String, e: Throwable? = null) = logger.e(m, e)
 private fun li(m: String) = logger.i(m)
 private fun lv(m: String, e: Throwable? = null) = logger.v(m, e)
 
+@ReactModule(name=LIBRARY_NAME)
 class BlobCourierModule(private val reactContext: ReactApplicationContext) :
   ReactContextBaseJavaModule(reactContext) {
 
