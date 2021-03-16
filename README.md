@@ -36,7 +36,7 @@ cd ios && pod install
 ## Requirements
 
 - Android >= 19
-- iOS >= 9
+- iOS >= 9 *Changing to iOS 10.x in July 2021*
 - Kotlin >= 1.4.x
 
 ## Usage
