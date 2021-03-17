@@ -132,11 +132,6 @@ const testAsync = (name: string, testableFunction: () => Promise<void>) => {
   });
 };
 
-jest.mock(
-  'react-native/Libraries/EventEmitter/NativeEventEmitter',
-  () => require('../__mocks__/NativeEventEmitter.mock').default
-);
-
 jest.mock('react-native/Libraries/BatchedBridge/NativeModules', () => ({
   BlobCourier: {
     cancelRequest: jest.fn(),
