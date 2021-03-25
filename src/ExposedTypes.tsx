@@ -104,6 +104,14 @@ export declare interface BlobUploadRequest
   readonly multipartName?: string;
 }
 
+export declare interface BlobSendRequest
+  extends BlobBaseRequest,
+    BlobRequestMimeType,
+    BlobRequestMethod,
+    BlobRequestReturnResponse {
+  readonly absoluteFilePath: string;
+}
+
 export declare interface BlobMultipartBaseRequest
   extends BlobBaseRequest,
     BlobRequestMethod,
@@ -161,5 +169,7 @@ export type BlobFetchInput = BlobFetchRequest &
   BlobRequestSettings &
   AndroidFetchSettings &
   IOSFetchSettings;
+
+export type BlobSendInput = BlobSendRequest & BlobRequestSettings;
 
 export type BlobUploadInput = BlobUploadRequest & BlobRequestSettings;
