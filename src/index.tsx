@@ -28,6 +28,7 @@ import type {
   BlobMultipartWithName,
   BlobFetchInput,
   BlobUploadInput,
+  BlobSendInput,
 } from './ExposedTypes';
 import {
   convertMappedMultipartsWithSymbolizedKeysToArray,
@@ -39,6 +40,8 @@ import { dict } from './Extensions';
 type BlobCancelNativeInput = BlobRequestTask;
 
 type BlobFetchNativeInput = BlobFetchInput & BlobRequestTask;
+
+type BlobSendNativeInput = BlobSendInput & BlobRequestTask;
 
 type BlobUploadNativeInput = BlobUploadInput & BlobRequestTask;
 
@@ -56,6 +59,7 @@ type BlobUploadMultipartNativeInput = BlobMultipartArrayUploadRequest &
 type BlobCourierType = {
   cancelRequest(input: BlobCancelNativeInput): Promise<{}>;
   fetchBlob(input: BlobFetchNativeInput): Promise<BlobFetchResponse>;
+  sendBlob(input: BlobSendNativeInput): Promise<BlobUploadResponse>;
   uploadBlob(
     input: BlobUploadMultipartNativeInput
   ): Promise<BlobUploadResponse>;
@@ -142,6 +146,42 @@ const sanitizeMultipartUploadData = <T extends BlobUploadMultipartNativeInput>(
   const request = {
     mimeType: 'multipart/form-data',
     parts: stringifyPartsValues(parts),
+    url,
+  };
+
+  const optionalRequestParameters = dict({
+    headers,
+    method,
+    returnResponse,
+  }).fallback(BLOB_MULTIPART_UPLOAD_FALLBACK_PARAMETERS);
+
+  return {
+    ...settings,
+    ...optionalRequestParameters,
+    ...request,
+    taskId,
+  };
+};
+
+const sanitizeSendData = <T extends BlobSendNativeInput>(
+  input: Readonly<T>
+): BlobSendNativeInput => {
+  const {
+    absoluteFilePath,
+    headers,
+    method,
+    mimeType,
+    returnResponse,
+    url,
+  } = input;
+
+  const { taskId } = input;
+
+  const settings = sanitizeSettingsData(input);
+
+  const request = {
+    absoluteFilePath,
+    mimeType,
     url,
   };
 
@@ -248,6 +288,10 @@ const uploadParts = <T extends BlobUploadMultipartInputWithTask>(
     input.signal
   );
 
+const sendBlob = <T extends BlobSendNativeInput>(input: Readonly<T>) => {
+  return (BlobCourier as BlobCourierType).sendBlob(sanitizeSendData(input));
+};
+
 const uploadBlob = <T extends BlobUploadNativeInput>(input: Readonly<T>) => {
   const { absoluteFilePath, filename, mimeType, multipartName } = input;
 
@@ -273,6 +317,13 @@ const onProgress = (
 ) => ({
   fetchBlob: (input: BlobFetchRequest) =>
     fetchBlob({
+      ...input,
+      ...requestSettings,
+      onProgress: fn,
+      taskId,
+    }),
+  sendBlob: (input: BlobSendInput) =>
+    sendBlob({
       ...input,
       ...requestSettings,
       onProgress: fn,
@@ -327,6 +378,12 @@ const settings = (taskId: string, requestSettings: BlobRequestSettings) => ({
     }),
   onProgress: (fn: (e: BlobProgressEvent) => void) =>
     onProgress(taskId, fn, requestSettings),
+  sendBlob: (input: BlobSendInput) =>
+    sendBlob({
+      ...input,
+      ...requestSettings,
+      taskId,
+    }),
   uploadBlob: (input: BlobUploadRequest) =>
     uploadBlob({
       ...input,
@@ -354,6 +411,8 @@ export default {
     fetchBlob({ ...input, taskId: createTaskId() }),
   onProgress: (fn: (e: BlobProgressEvent) => void) =>
     onProgress(createTaskId(), fn),
+  sendBlob: (input: BlobSendInput) =>
+    sendBlob({ ...input, taskId: createTaskId() }),
   settings: (input: BlobRequestSettings) => settings(createTaskId(), input),
   uploadBlob: (input: BlobUploadInput) =>
     uploadBlob({ ...input, taskId: createTaskId() }),
