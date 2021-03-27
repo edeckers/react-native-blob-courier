@@ -14,7 +14,7 @@ Pod::Spec.new do |s|
   s.source       = { :git => "https://github.com/edeckers/react-native-blob-courier.git", :tag => "#{s.version}" }
 
   
-  s.source_files = "ios/*.{h,m,mm,swift}", "ios/Cancel/*.{h,m,swift}", "ios/Common/*.{h,m,swift}", "ios/Fetch/*.{h,m,swift}", "ios/Progress/*.{h,m,swift}", "ios/React/*.{h,m,swift}", "ios/Upload/*.{h,m,swift}"
+  s.source_files = "ios/*.{h,m,mm,swift}", "ios/Cancel/*.{h,m,swift}", "ios/Common/*.{h,m,swift}", "ios/Fetch/*.{h,m,swift}", "ios/Progress/*.{h,m,swift}", "ios/React/*.{h,m,swift}", "ios/Send/*.{h,m,swift}", "ios/Upload/*.{h,m,swift}"
 
   s.dependency "React"
 end
