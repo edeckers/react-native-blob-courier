@@ -33,6 +33,10 @@
 		B96A993E25BE166900F42B65 /* UploaderParameterFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = B96A993B25BE166900F42B65 /* UploaderParameterFactory.swift */; };
 		B96A993F25BE166900F42B65 /* UploadParameters.swift in Sources */ = {isa = PBXBuildFile; fileRef = B96A993C25BE166900F42B65 /* UploadParameters.swift */; };
 		B96A994025BE166900F42B65 /* UploadParameters.swift in Sources */ = {isa = PBXBuildFile; fileRef = B96A993C25BE166900F42B65 /* UploadParameters.swift */; };
+		B9854CDA261269B10054135B /* BlobSender.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9854CD5261269350054135B /* BlobSender.swift */; };
+		B9854CDD261269B60054135B /* SenderDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9854CD6261269350054135B /* SenderDelegate.swift */; };
+		B9854CE0261269BB0054135B /* SendParameters.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9854CD8261269350054135B /* SendParameters.swift */; };
+		B9854CE3261269C10054135B /* SenderParameterFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9854CD9261269350054135B /* SenderParameterFactory.swift */; };
 		B9AF759125DF263E00B68816 /* CancelController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9AF756E25DF203800B68816 /* CancelController.swift */; };
 		B9AF759925DF264E00B68816 /* RequestCanceller.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9AF756F25DF203800B68816 /* RequestCanceller.swift */; };
 		B9AF75BF25DF29DF00B68816 /* CancelParameters.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9AF75BD25DF29DF00B68816 /* CancelParameters.swift */; };
@@ -87,6 +91,10 @@
 		B96A96FF25BDEA7D00F42B65 /* DownloaderParameterFactory.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DownloaderParameterFactory.swift; sourceTree = "<group>"; };
 		B96A993B25BE166900F42B65 /* UploaderParameterFactory.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UploaderParameterFactory.swift; sourceTree = "<group>"; };
 		B96A993C25BE166900F42B65 /* UploadParameters.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UploadParameters.swift; sourceTree = "<group>"; };
+		B9854CD5261269350054135B /* BlobSender.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlobSender.swift; sourceTree = "<group>"; };
+		B9854CD6261269350054135B /* SenderDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SenderDelegate.swift; sourceTree = "<group>"; };
+		B9854CD8261269350054135B /* SendParameters.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SendParameters.swift; sourceTree = "<group>"; };
+		B9854CD9261269350054135B /* SenderParameterFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SenderParameterFactory.swift; sourceTree = "<group>"; };
 		B9AF756E25DF203800B68816 /* CancelController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CancelController.swift; sourceTree = "<group>"; };
 		B9AF756F25DF203800B68816 /* RequestCanceller.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RequestCanceller.swift; sourceTree = "<group>"; };
 		B9AF75BD25DF29DF00B68816 /* CancelParameters.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CancelParameters.swift; sourceTree = "<group>"; };
@@ -162,6 +170,7 @@
 				B96A888C25BC566300F42B65 /* Fetch */,
 				B96A88AE25BC5EB800F42B65 /* Progress */,
 				B96A945D25BD86AB00F42B65 /* React */,
+				B9854CD4261269350054135B /* Send */,
 				B96A889425BC567000F42B65 /* Upload */,
 				B96829E6254EC872002B4B04 /* BlobCourierTests */,
 				134814211AA4EA7D00B7C361 /* Products */,
@@ -226,6 +235,17 @@
 				B96A940A25BD847C00F42B65 /* BlobCourierEventEmitter.swift */,
 			);
 			path = React;
+			sourceTree = "<group>";
+		};
+		B9854CD4261269350054135B /* Send */ = {
+			isa = PBXGroup;
+			children = (
+				B9854CD5261269350054135B /* BlobSender.swift */,
+				B9854CD6261269350054135B /* SenderDelegate.swift */,
+				B9854CD8261269350054135B /* SendParameters.swift */,
+				B9854CD9261269350054135B /* SenderParameterFactory.swift */,
+			);
+			path = Send;
 			sourceTree = "<group>";
 		};
 		B9AF756D25DF203800B68816 /* Cancel */ = {
@@ -402,6 +422,7 @@
 				B96A954A25BD8D3B00F42B65 /* BlobCourierEventEmitter.swift in Sources */,
 				F4FF95D7245B92E800C19C63 /* BlobCourier.swift in Sources */,
 				B96A993D25BE166900F42B65 /* UploaderParameterFactory.swift in Sources */,
+				B9854CDA261269B10054135B /* BlobSender.swift in Sources */,
 				B96829DF254EC736002B4B04 /* DownloaderDelegate.swift in Sources */,
 				B96A8FEC25BCB87E00F42B65 /* BlobCourierEventEmitter.m in Sources */,
 				B96A8F0925BCB1DA00F42B65 /* BlobCourier.m in Sources */,
@@ -410,12 +431,15 @@
 				B96A8E3925BCA76300F42B65 /* BlobCourierDelayedEventEmitter.swift in Sources */,
 				B9AF75BF25DF29DF00B68816 /* CancelParameters.swift in Sources */,
 				B96A889625BC567000F42B65 /* BlobUploader.swift in Sources */,
+				B9854CE3261269C10054135B /* SenderParameterFactory.swift in Sources */,
 				B96A96D825BDE55900F42B65 /* DownloadParameters.swift in Sources */,
 				B9AF759125DF263E00B68816 /* CancelController.swift in Sources */,
 				B9AF75C025DF29DF00B68816 /* CancelParameterFactory.swift in Sources */,
+				B9854CE0261269BB0054135B /* SendParameters.swift in Sources */,
 				B96A888625BC565300F42B65 /* Errors.swift in Sources */,
 				B96A888425BC565300F42B65 /* Constants.swift in Sources */,
 				B96829D9254EC727002B4B04 /* UploaderDelegate.swift in Sources */,
+				B9854CDD261269B60054135B /* SenderDelegate.swift in Sources */,
 				B9AF759925DF264E00B68816 /* RequestCanceller.swift in Sources */,
 				B96A993F25BE166900F42B65 /* UploadParameters.swift in Sources */,
 			);
