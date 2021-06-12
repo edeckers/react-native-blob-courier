@@ -271,9 +271,8 @@ interface DVProps {
 
 const DownloaderView = (props: DVProps) => {
   const [isDownloading, setIsDownloading] = useState(false);
-  const [useAndroidDownloadManager, setUseAndroidDownloadManager] = useState(
-    false
-  );
+  const [useAndroidDownloadManager, setUseAndroidDownloadManager] =
+    useState(false);
   const [received, setReceived] = useState<number>(0);
   const [expected, setExpected] = useState<number | undefined>(0);
   const [cancelDownload, setCanceller] = useState<() => void>(() => () => {

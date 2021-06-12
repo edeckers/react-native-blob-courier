@@ -95,16 +95,8 @@ const sanitizeSettingsData = <T extends BlobRequestSettings>(
 const sanitizeFetchData = <T extends BlobFetchNativeInput>(
   input: Readonly<T>
 ): BlobFetchNativeInput => {
-  const {
-    android,
-    filename,
-    headers,
-    ios,
-    method,
-    mimeType,
-    taskId,
-    url,
-  } = input;
+  const { android, filename, headers, ios, method, mimeType, taskId, url } =
+    input;
 
   const settings = sanitizeSettingsData(input);
 
