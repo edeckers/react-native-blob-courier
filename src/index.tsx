@@ -166,14 +166,8 @@ const sanitizeMultipartUploadData = <T extends BlobUploadMultipartNativeInput>(
 const sanitizeSendData = <T extends BlobSendNativeInput>(
   input: Readonly<T>
 ): BlobSendNativeInput => {
-  const {
-    absoluteFilePath,
-    headers,
-    method,
-    mimeType,
-    returnResponse,
-    url,
-  } = input;
+  const { absoluteFilePath, headers, method, mimeType, returnResponse, url } =
+    input;
 
   const { taskId } = input;
 
