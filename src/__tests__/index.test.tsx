@@ -30,10 +30,8 @@ import type {
   TargetType,
 } from 'src/ExposedTypes';
 
-const {
-  BlobCourier: BlobCourierNative,
-  BlobCourierEventEmitter,
-} = NativeModules;
+const { BlobCourier: BlobCourierNative, BlobCourierEventEmitter } =
+  NativeModules;
 
 const NATIVE_EVENT_EMITTER_SINGLETON = new NativeEventEmitter(
   BlobCourierEventEmitter
@@ -65,12 +63,13 @@ const DEFAULT_MULTIPART_UPLOAD_REQUEST: BlobMultipartMapUploadRequest = {
   url: 'https://github.com/edeckers/react-native-blob-courier',
 };
 
-const DEFAULT_MULTIPART_ARRAY_UPLOAD_REQUEST: BlobMultipartArrayUploadRequest = {
-  ...DEFAULT_MULTIPART_UPLOAD_REQUEST,
-  parts: convertMappedMultipartsWithSymbolizedKeysToArray(
-    sanitizeMappedMultiparts(DEFAULT_MULTIPART_UPLOAD_REQUEST.parts)
-  ),
-};
+const DEFAULT_MULTIPART_ARRAY_UPLOAD_REQUEST: BlobMultipartArrayUploadRequest =
+  {
+    ...DEFAULT_MULTIPART_UPLOAD_REQUEST,
+    parts: convertMappedMultipartsWithSymbolizedKeysToArray(
+      sanitizeMappedMultiparts(DEFAULT_MULTIPART_UPLOAD_REQUEST.parts)
+    ),
+  };
 
 const RANDOM_VALUE_GENERATORS: { [key: string]: () => any } = {
   boolean: () => Math.random() >= 0.5,
@@ -165,7 +164,8 @@ describe('Given fallback parameters are provided through a constant', () => {
         target: DEFAULT_FETCH_TARGET,
       },
       method: 'GET',
-      progressIntervalMilliseconds: DEFAULT_PROGRESS_UPDATE_INTERVAL_MILLISECONDS,
+      progressIntervalMilliseconds:
+        DEFAULT_PROGRESS_UPDATE_INTERVAL_MILLISECONDS,
     });
   });
 
@@ -329,7 +329,8 @@ describe('Given a fluent fetch request', () => {
     testAsync(
       'The native module is called with all required values and the provided settings',
       async () => {
-        const progressIntervalMilliseconds = DEFAULT_PROGRESS_UPDATE_INTERVAL_MILLISECONDS;
+        const progressIntervalMilliseconds =
+          DEFAULT_PROGRESS_UPDATE_INTERVAL_MILLISECONDS;
 
         await BlobCourier.settings({
           progressIntervalMilliseconds,
@@ -454,9 +455,8 @@ describe('Given a fluent fetch request', () => {
             },
           };
 
-          const parameterIntersection = dict(calledWithParameters).intersect(
-            expectedParameters
-          );
+          const parameterIntersection =
+            dict(calledWithParameters).intersect(expectedParameters);
 
           expect(expectedParameters).toEqual(parameterIntersection);
           expect(BlobCourierEventEmitter.addListener).toHaveBeenCalled();
@@ -493,9 +493,8 @@ describe('Given a fluent fetch request', () => {
           },
         };
 
-        const parameterIntersection = dict(calledWithParameters).intersect(
-          expectedParameters
-        );
+        const parameterIntersection =
+          dict(calledWithParameters).intersect(expectedParameters);
 
         expect(expectedParameters).toEqual(parameterIntersection);
         verifyPropertyExistsAndIsDefined(calledWithParameters, 'taskId');
