@@ -64,6 +64,35 @@ open class BlobCourier: NSObject {
     }
   }
 
+  @objc(sendBlob:withResolver:withRejecter:)
+  func sendBlob(
+    input: NSDictionary,
+    resolve: @escaping RCTPromiseResolveBlock,
+    reject: @escaping RCTPromiseRejectBlock
+  ) {
+    DispatchQueue.global(qos: .background).async {
+      do {
+        let errorOrParameters = SenderParameterFactory.fromInput(input: input)
+
+        if case .failure(let error) = errorOrParameters { reject(error.code, error.message, error.error) }
+        guard case .success(let parameters) = errorOrParameters else { return }
+
+        let result = BlobSender.sendBlobFromValidatedParameters(parameters: parameters)
+
+        switch result {
+        case .success(let success):
+          resolve(success)
+        case .failure(let error):
+          reject(error.code, error.message, error.error)
+        }
+      } catch {
+        let unexpectedError = Errors.createUnexpectedError(error: error)
+
+        reject(unexpectedError.code, unexpectedError.message, unexpectedError.error)
+      }
+    }
+  }
+
   @objc(uploadBlob:withResolver:withRejecter:)
   func uploadBlob(
     input: NSDictionary,

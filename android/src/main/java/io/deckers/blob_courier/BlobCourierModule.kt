@@ -31,6 +31,8 @@ import io.deckers.blob_courier.react.CongestionAvoidingProgressNotifierFactory
 import io.deckers.blob_courier.react.processUnexpectedError
 import io.deckers.blob_courier.react.processUnexpectedException
 import io.deckers.blob_courier.react.toReactMap
+import io.deckers.blob_courier.send.BlobSender
+import io.deckers.blob_courier.send.SenderParameterFactory
 import io.deckers.blob_courier.upload.BlobUploader
 import io.deckers.blob_courier.upload.UploaderParameterFactory
 import java.net.UnknownHostException
@@ -125,6 +127,43 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
       }
     }
     li("Called fetchBlob")
+  }
+
+  @ReactMethod
+  fun sendBlob(input: ReadableMap, promise: Promise) {
+    li("Calling sendBlob")
+    thread {
+      try {
+        SenderParameterFactory()
+          .fromInput(input)
+          .fold(::Failure, ::Success)
+          .fmap(
+            BlobSender(
+              reactContext,
+              createHttpClient(),
+              createProgressFactory(reactContext)
+            )::send
+          )
+          .map { it.toReactMap() }
+          .`do`(
+            { f ->
+              lv("Something went wrong during send (code=${f.code},message=${f.message})")
+              promise.reject(f.code, f.message)
+            },
+            promise::resolve
+          )
+      } catch (e: UnknownHostException) {
+        lv("Unknown host", e)
+        promise.reject(ERROR_UNKNOWN_HOST, e)
+      } catch (e: Exception) {
+        le("Unexpected exception", e)
+        promise.reject(ERROR_UNEXPECTED_EXCEPTION, processUnexpectedException(e).message)
+      } catch (e: Error) {
+        le("Unexpected error", e)
+        promise.reject(ERROR_UNEXPECTED_ERROR, processUnexpectedError(e).message)
+      }
+    }
+    li("Called sendBlob")
   }
 
   @ReactMethod

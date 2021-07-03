@@ -31,7 +31,7 @@ import io.deckers.blob_courier.common.isNotNull
 import io.deckers.blob_courier.common.isNotNullOrEmptyString
 import io.deckers.blob_courier.common.validate
 import io.deckers.blob_courier.react.toReactMap
-import io.deckers.blob_courier.upload.InputStreamRequestBody
+import io.deckers.blob_courier.common.InputStreamRequestBody
 import io.deckers.blob_courier.upload.UploaderParameterFactory
 import io.deckers.blob_courier.upload.toMultipartBody
 import io.mockk.every

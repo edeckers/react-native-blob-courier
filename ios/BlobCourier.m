@@ -14,6 +14,9 @@ RCT_EXTERN_METHOD(cancelRequest:(NSDictionary *)input
 RCT_EXTERN_METHOD(fetchBlob:(NSDictionary *)input
                  withResolver:(RCTPromiseResolveBlock)resolve
                  withRejecter:(RCTPromiseRejectBlock)reject)
+RCT_EXTERN_METHOD(sendBlob:(NSDictionary *)input
+                 withResolver:(RCTPromiseResolveBlock)resolve
+                 withRejecter:(RCTPromiseRejectBlock)reject)
 RCT_EXTERN_METHOD(uploadBlob:(NSDictionary *)input
                  withResolver:(RCTPromiseResolveBlock)resolve
                  withRejecter:(RCTPromiseRejectBlock)reject)
