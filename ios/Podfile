@@ -14,9 +14,10 @@ target 'BlobCourier' do
 
   target 'BlobCourierTests' do
       inherit! :complete
+
       # Pods for testing
       pod 'Embassy', '~> 4.1'
       pod 'EnvoyAmbassador', '~> 4.0'
-      pod 'MimeParser', '~> 0.2'
+      pod 'MimeParser', :git => "https://github.com/edeckers/MimeParser.git", :branch => "elydeckers/feature/change-deployment-target"
   end
 end

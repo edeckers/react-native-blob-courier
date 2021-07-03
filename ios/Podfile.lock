@@ -280,7 +280,7 @@ DEPENDENCIES:
   - FBLazyVector (from `../node_modules/react-native/Libraries/FBLazyVector`)
   - FBReactNativeSpec (from `../node_modules/react-native/React/FBReactNativeSpec`)
   - glog (from `../node_modules/react-native/third-party-podspecs/glog.podspec`)
-  - MimeParser (~> 0.2)
+  - MimeParser (from `https://github.com/edeckers/MimeParser.git`, branch `elydeckers/feature/change-deployment-target`)
   - RCT-Folly (from `../node_modules/react-native/third-party-podspecs/RCT-Folly.podspec`)
   - RCTRequired (from `../node_modules/react-native/Libraries/RCTRequired`)
   - RCTTypeSafety (from `../node_modules/react-native/Libraries/TypeSafety`)
@@ -313,7 +313,6 @@ SPEC REPOS:
     - boost-for-react-native
     - Embassy
     - EnvoyAmbassador
-    - MimeParser
 
 EXTERNAL SOURCES:
   DoubleConversion:
@@ -324,6 +323,9 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/React/FBReactNativeSpec"
   glog:
     :podspec: "../node_modules/react-native/third-party-podspecs/glog.podspec"
+  MimeParser:
+    :branch: elydeckers/feature/change-deployment-target
+    :git: https://github.com/edeckers/MimeParser.git
   RCT-Folly:
     :podspec: "../node_modules/react-native/third-party-podspecs/RCT-Folly.podspec"
   RCTRequired:
@@ -373,15 +375,20 @@ EXTERNAL SOURCES:
   Yoga:
     :path: "../node_modules/react-native/ReactCommon/yoga"
 
+CHECKOUT OPTIONS:
+  MimeParser:
+    :commit: 333745e65f4dff3fc366e38ebd69767d72efb8de
+    :git: https://github.com/edeckers/MimeParser.git
+
 SPEC CHECKSUMS:
   boost-for-react-native: 39c7adb57c4e60d6c5479dd8623128eb5b3f0f2c
-  DoubleConversion: 5805e889d232975c086db112ece9ed034df7a0b2
+  DoubleConversion: cf9b38bf0b2d048436d9a82ad2abe1404f11e7de
   Embassy: eb36dc783ea20b792426461bbaff8c3f256e0331
   EnvoyAmbassador: 21cef10e70d003801c68ba5281948684a4e25486
   FBLazyVector: e686045572151edef46010a6f819ade377dfeb4b
   FBReactNativeSpec: 4845dfb84771a81998df86ea79fead860999efd6
-  glog: 1f3da668190260b06b429bb211bfbee5cd790c28
-  MimeParser: 3e8d62150367f4627b7a36e564232e358c48c480
+  glog: 73c2498ac6884b13ede40eda8228cb1eee9d9d62
+  MimeParser: f6083b818cd8ff3fbac62c5950d76e17e5a384d8
   RCT-Folly: ec7a233ccc97cc556cf7237f0db1ff65b986f27c
   RCTRequired: 6d3e854f0e7260a648badd0d44fc364bc9da9728
   RCTTypeSafety: c1f31d19349c6b53085766359caac425926fafaa
@@ -407,6 +414,6 @@ SPEC CHECKSUMS:
   ReactCommon: 149906e01aa51142707a10665185db879898e966
   Yoga: 575c581c63e0d35c9a83f4b46d01d63abc1100ac
 
-PODFILE CHECKSUM: 3d53860fb8af7804e9540c834e3ac56c6df6c97f
+PODFILE CHECKSUM: 6f6d3510535bb248fbc8a828a1424eb5b17ef0a5
 
 COCOAPODS: 1.10.1
