@@ -36,7 +36,7 @@ cd ios && pod install
 ## Requirements
 
 - Android >= 19
-- iOS >= 9 *Changing to iOS 10.x in July 2021*
+- iOS >= 10
 - Kotlin >= 1.4.x
 
 ## Usage
@@ -217,7 +217,7 @@ console.log(fetchedResult);
 
 ## Multipart upload
 
-Sometimes order of multipart fields matters, and Blob Courier respects the order in which parts are provided. There is a catch though: when object keys are regular strings they are kept in the order they were added _unless_ the keys are strings containing numbers, e.g.:
+Sometimes order of multipart fields matters, and Blob Courier respects the order in which parts are provided. There is a catch though: due to how JavaScript works, when object keys are regular strings they are kept in the order they were added _unless_ the keys are strings containing numbers, e.g.:
 
 ```tsx
 Object.keys({
