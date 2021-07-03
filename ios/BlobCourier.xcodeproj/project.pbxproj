@@ -7,8 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		4FE57FA32AB062D2C02046FC /* Pods_BlobCourier.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3E7061D9BB42686E43B842F1 /* Pods_BlobCourier.framework */; };
-		9E7ACE2A91119EDFBE772FAC /* Pods_BlobCourier_BlobCourierTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 664603EE079B6D1526FE70F8 /* Pods_BlobCourier_BlobCourierTests.framework */; };
+		9680D246CC6912A0F7F9720D /* libPods-BlobCourier.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F5D915D2927F8ED7959650CD /* libPods-BlobCourier.a */; };
 		B92C3A1025935C2700630464 /* EmbeddedHttpServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = B92C3A0F25935C2700630464 /* EmbeddedHttpServer.swift */; };
 		B96829D9254EC727002B4B04 /* UploaderDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9409539253E1F5800A58583 /* UploaderDelegate.swift */; };
 		B96829DF254EC736002B4B04 /* DownloaderDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B940948F253DFC0800A58583 /* DownloaderDelegate.swift */; };
@@ -38,6 +37,7 @@
 		B9AF759925DF264E00B68816 /* RequestCanceller.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9AF756F25DF203800B68816 /* RequestCanceller.swift */; };
 		B9AF75BF25DF29DF00B68816 /* CancelParameters.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9AF75BD25DF29DF00B68816 /* CancelParameters.swift */; };
 		B9AF75C025DF29DF00B68816 /* CancelParameterFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9AF75BE25DF29DF00B68816 /* CancelParameterFactory.swift */; };
+		BE0E549333476E45A6A9B51A /* libPods-BlobCourier-BlobCourierTests.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D6D9B8DA0062D673652779C6 /* libPods-BlobCourier-BlobCourierTests.a */; };
 		F4FF95D7245B92E800C19C63 /* BlobCourier.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4FF95D6245B92E800C19C63 /* BlobCourier.swift */; };
 /* End PBXBuildFile section */
 
@@ -68,8 +68,6 @@
 		134814201AA4EA6300B7C361 /* libBlobCourier.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libBlobCourier.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		1F84521322E35DA71243F60F /* Pods-BlobCourier-BlobCourierTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BlobCourier-BlobCourierTests.debug.xcconfig"; path = "Target Support Files/Pods-BlobCourier-BlobCourierTests/Pods-BlobCourier-BlobCourierTests.debug.xcconfig"; sourceTree = "<group>"; };
 		28F8FA1CE36E51660EA2B020 /* Pods-BlobCourierTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BlobCourierTests.release.xcconfig"; path = "Target Support Files/Pods-BlobCourierTests/Pods-BlobCourierTests.release.xcconfig"; sourceTree = "<group>"; };
-		3E7061D9BB42686E43B842F1 /* Pods_BlobCourier.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_BlobCourier.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		664603EE079B6D1526FE70F8 /* Pods_BlobCourier_BlobCourierTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_BlobCourier_BlobCourierTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		7487E74E1A0C30B41CC57453 /* Pods-BlobCourier-BlobCourierTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BlobCourier-BlobCourierTests.release.xcconfig"; path = "Target Support Files/Pods-BlobCourier-BlobCourierTests/Pods-BlobCourier-BlobCourierTests.release.xcconfig"; sourceTree = "<group>"; };
 		B92C3A0F25935C2700630464 /* EmbeddedHttpServer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EmbeddedHttpServer.swift; sourceTree = "<group>"; };
 		B940948F253DFC0800A58583 /* DownloaderDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloaderDelegate.swift; sourceTree = "<group>"; };
@@ -93,10 +91,12 @@
 		B9AF756F25DF203800B68816 /* RequestCanceller.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RequestCanceller.swift; sourceTree = "<group>"; };
 		B9AF75BD25DF29DF00B68816 /* CancelParameters.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CancelParameters.swift; sourceTree = "<group>"; };
 		B9AF75BE25DF29DF00B68816 /* CancelParameterFactory.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CancelParameterFactory.swift; sourceTree = "<group>"; };
+		D6D9B8DA0062D673652779C6 /* libPods-BlobCourier-BlobCourierTests.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-BlobCourier-BlobCourierTests.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		E431917845347E135BAF189E /* Pods-BlobCourier.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BlobCourier.release.xcconfig"; path = "Target Support Files/Pods-BlobCourier/Pods-BlobCourier.release.xcconfig"; sourceTree = "<group>"; };
 		F0F8F7008E715FB238D44E2E /* Pods-BlobCourier.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BlobCourier.debug.xcconfig"; path = "Target Support Files/Pods-BlobCourier/Pods-BlobCourier.debug.xcconfig"; sourceTree = "<group>"; };
 		F4FF95D5245B92E700C19C63 /* BlobCourier-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "BlobCourier-Bridging-Header.h"; sourceTree = "<group>"; };
 		F4FF95D6245B92E800C19C63 /* BlobCourier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlobCourier.swift; sourceTree = "<group>"; };
+		F5D915D2927F8ED7959650CD /* libPods-BlobCourier.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-BlobCourier.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -104,7 +104,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4FE57FA32AB062D2C02046FC /* Pods_BlobCourier.framework in Frameworks */,
+				9680D246CC6912A0F7F9720D /* libPods-BlobCourier.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -113,7 +113,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				B96829EA254EC872002B4B04 /* libBlobCourier.a in Frameworks */,
-				9E7ACE2A91119EDFBE772FAC /* Pods_BlobCourier_BlobCourierTests.framework in Frameworks */,
+				BE0E549333476E45A6A9B51A /* libPods-BlobCourier-BlobCourierTests.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -144,8 +144,8 @@
 		36229AAD7F0D4D71473C5335 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				3E7061D9BB42686E43B842F1 /* Pods_BlobCourier.framework */,
-				664603EE079B6D1526FE70F8 /* Pods_BlobCourier_BlobCourierTests.framework */,
+				F5D915D2927F8ED7959650CD /* libPods-BlobCourier.a */,
+				D6D9B8DA0062D673652779C6 /* libPods-BlobCourier-BlobCourierTests.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -268,7 +268,7 @@
 				B96829E1254EC872002B4B04 /* Sources */,
 				B96829E2254EC872002B4B04 /* Frameworks */,
 				B96829E3254EC872002B4B04 /* Resources */,
-				2798E2500A18D096D7C2E004 /* [CP] Embed Pods Frameworks */,
+				4630EF98E44D3DCE07AD6BEE /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -330,68 +330,22 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		2798E2500A18D096D7C2E004 /* [CP] Embed Pods Frameworks */ = {
+		4630EF98E44D3DCE07AD6BEE /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			inputPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-BlobCourier-BlobCourierTests/Pods-BlobCourier-BlobCourierTests-frameworks.sh",
-				"${BUILT_PRODUCTS_DIR}/DoubleConversion/DoubleConversion.framework",
-				"${BUILT_PRODUCTS_DIR}/FBReactNativeSpec/FBReactNativeSpec.framework",
-				"${BUILT_PRODUCTS_DIR}/Folly/folly.framework",
-				"${BUILT_PRODUCTS_DIR}/RCTTypeSafety/RCTTypeSafety.framework",
-				"${BUILT_PRODUCTS_DIR}/React-Core/React.framework",
-				"${BUILT_PRODUCTS_DIR}/React-CoreModules/CoreModules.framework",
-				"${BUILT_PRODUCTS_DIR}/React-RCTAnimation/RCTAnimation.framework",
-				"${BUILT_PRODUCTS_DIR}/React-RCTBlob/RCTBlob.framework",
-				"${BUILT_PRODUCTS_DIR}/React-RCTImage/RCTImage.framework",
-				"${BUILT_PRODUCTS_DIR}/React-RCTLinking/RCTLinking.framework",
-				"${BUILT_PRODUCTS_DIR}/React-RCTNetwork/RCTNetwork.framework",
-				"${BUILT_PRODUCTS_DIR}/React-RCTSettings/RCTSettings.framework",
-				"${BUILT_PRODUCTS_DIR}/React-RCTText/RCTText.framework",
-				"${BUILT_PRODUCTS_DIR}/React-RCTVibration/RCTVibration.framework",
-				"${BUILT_PRODUCTS_DIR}/React-cxxreact/cxxreact.framework",
-				"${BUILT_PRODUCTS_DIR}/React-jsi/jsi.framework",
-				"${BUILT_PRODUCTS_DIR}/React-jsiexecutor/jsireact.framework",
-				"${BUILT_PRODUCTS_DIR}/React-jsinspector/jsinspector.framework",
-				"${BUILT_PRODUCTS_DIR}/ReactCommon/ReactCommon.framework",
-				"${BUILT_PRODUCTS_DIR}/Yoga/yoga.framework",
-				"${BUILT_PRODUCTS_DIR}/glog/glog.framework",
-				"${BUILT_PRODUCTS_DIR}/Embassy/Embassy.framework",
-				"${BUILT_PRODUCTS_DIR}/EnvoyAmbassador/EnvoyAmbassador.framework",
-				"${BUILT_PRODUCTS_DIR}/MimeParser/MimeParser.framework",
+				"${PODS_ROOT}/Target Support Files/Pods-BlobCourier-BlobCourierTests/Pods-BlobCourier-BlobCourierTests-resources.sh",
+				"${PODS_CONFIGURATION_BUILD_DIR}/React-Core/AccessibilityResources.bundle",
 			);
-			name = "[CP] Embed Pods Frameworks";
+			name = "[CP] Copy Pods Resources";
 			outputPaths = (
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/DoubleConversion.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/FBReactNativeSpec.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/folly.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/RCTTypeSafety.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/React.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/CoreModules.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/RCTAnimation.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/RCTBlob.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/RCTImage.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/RCTLinking.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/RCTNetwork.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/RCTSettings.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/RCTText.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/RCTVibration.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/cxxreact.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/jsi.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/jsireact.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/jsinspector.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/ReactCommon.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/yoga.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/glog.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Embassy.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/EnvoyAmbassador.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/MimeParser.framework",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/AccessibilityResources.bundle",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-BlobCourier-BlobCourierTests/Pods-BlobCourier-BlobCourierTests-frameworks.sh\"\n";
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-BlobCourier-BlobCourierTests/Pods-BlobCourier-BlobCourierTests-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 		499C0CEEE765BAEB706A9434 /* [CP] Check Pods Manifest.lock */ = {
