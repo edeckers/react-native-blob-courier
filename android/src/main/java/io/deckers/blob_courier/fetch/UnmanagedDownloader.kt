@@ -25,8 +25,9 @@ import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
-import okio.Okio
 import okio.Source
+import okio.buffer
+import okio.sink
 import java.io.IOException
 
 private val TAG = UnmanagedDownloader::class.java.name
@@ -70,8 +71,8 @@ class UnmanagedDownloader(
 
       val response = call.execute()
 
-      response.body()?.source().use { source ->
-        Okio.buffer(Okio.sink(toAbsoluteFilePath)).use { sink ->
+      response.body?.source().use { source ->
+        toAbsoluteFilePath.sink().buffer().use { sink ->
 
           sink.writeAll(source as Source)
         }
@@ -85,14 +86,14 @@ class UnmanagedDownloader(
           "data" to mapOf(
             "absoluteFilePath" to Uri.fromFile(toAbsoluteFilePath),
             "response" to mapOf(
-              "code" to response.code(),
-              "headers" to mapHeadersToMap(response.headers())
+              "code" to response.code,
+              "headers" to mapHeadersToMap(response.headers)
             )
           )
         )
       )
     } catch (e: IOException) {
-      val code = if (call.isCanceled) ERROR_CANCELED_EXCEPTION else ERROR_UNEXPECTED_ERROR
+      val code = if (call.isCanceled()) ERROR_CANCELED_EXCEPTION else ERROR_UNEXPECTED_ERROR
 
       return Failure(createErrorFromThrowable(code, e))
     } catch (e: Throwable) {
@@ -109,7 +110,7 @@ class UnmanagedDownloader(
   ): Response {
     val originalResponse = chain.proceed(chain.request())
 
-    return originalResponse.body()?.let {
+    return originalResponse.body?.let {
       originalResponse.newBuilder().body(
         BlobCourierProgressResponse(progressNotifier, it)
       ).build()
