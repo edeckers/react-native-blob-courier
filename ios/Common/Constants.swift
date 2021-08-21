@@ -29,7 +29,7 @@ open class Constants: NSObject {
   static let targetData = "data"
   static let targetValues = [targetCache, targetData]
 
-  static let defaultMethod = "GET"
+  static let defaultUploadMethod = "POST"
   static let defaultMimeType = "application/octet-stream"
   static let defaultProgressIntervalMilliseconds = 500
   static let defaultTarget = targetCache

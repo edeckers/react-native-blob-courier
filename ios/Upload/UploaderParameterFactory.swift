@@ -21,6 +21,8 @@ open class UploaderParameterFactory: NSObject {
       return .failure(Errors.createMissingParameter(parameterName: Constants.parameterUrl, type: "String"))
     }
 
+    let method = input[Constants.parameterMethod] as? String ?? Constants.defaultUploadMethod
+
     let parts = input[Constants.parameterParts] as? NSArray ?? NSArray()
 
     let progressIntervalMilliseconds =
@@ -40,6 +42,7 @@ open class UploaderParameterFactory: NSObject {
 
     return .success(UploadParameters(
       headers: headers,
+      method: method,
       parts: parts,
       progressIntervalMilliseconds: progressIntervalMilliseconds,
       returnResponse: returnResponse,
