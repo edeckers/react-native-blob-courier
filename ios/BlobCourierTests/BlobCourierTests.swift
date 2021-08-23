@@ -78,6 +78,83 @@ class BlobCourierTests: XCTestCase {
   }
 
   // swiftlint:disable function_body_length
+  func verifyUploadMethodIsRespected(method: String) throws {
+    var result = (false, "Unknown")
+    let input: NSDictionary = [
+      "filename": "some-filename.png",
+      "taskId": "some-task-id",
+      "url": "https://github.com/edeckers/react-native-blob-courier"
+    ]
+
+    let router = Router()
+    router["/echo"] =
+      DelayResponse(DataResponse(
+        statusCode: 200,
+        statusMessage: "OK",
+        contentType: "text/plain",
+        headers: []) { response -> Data in
+
+        let receivedHttpMethod: String = (response["REQUEST_METHOD"] as? String) ?? ""
+
+        result = (receivedHttpMethod == method, "HttpMethod")
+
+        return Data("".utf8)
+      })
+
+    let httpServer = EmbeddedHttpServer(withRouter: router)
+
+    let dispatchGroup = DispatchGroup()
+
+    dispatchGroup.enter()
+
+    let reject: RCTPromiseRejectBlock = { (_: String?, _: String?, error: Error?) -> Void in
+      result = (false, error?.localizedDescription ?? ""); dispatchGroup.leave() }
+    let resolveUpload: RCTPromiseResolveBlock = { (_: Any?) -> Void in print(""); dispatchGroup.leave() }
+    let resolve: RCTPromiseResolveBlock = { (response: Any?) -> Void in
+      let dict = response as? NSDictionary ?? [:]
+      let data = dict["data"] as? NSDictionary ?? [:]
+
+      try? httpServer.start()
+
+      self.sut?.uploadBlob(input: [
+	"method": method,
+        "parts": [
+          [
+            "name": "test",
+            "payload": "SOME_TEST_STRING",
+            "type": "string"
+          ],
+          [
+            "name": "file",
+            "payload": [
+               "absoluteFilePath": data["absoluteFilePath"] ?? "",
+               "mimeType": "image/png"
+            ],
+            "type": "file"
+          ]
+        ],
+        "taskId": data["taskId"] ?? "",
+        "url": "http://localhost:12345/echo"
+      ], resolve: resolveUpload, reject: reject)
+    }
+
+    sut?.fetchBlob(input: input, resolve: resolve, reject: reject)
+
+    dispatchGroup.wait(timeout: .now() +
+      DispatchTimeInterval.seconds(BlobCourierTests.defaultPromiseTimeoutSeconds))
+
+    httpServer.stop()
+
+    XCTAssertTrue(result.0)
+  }
+  // swiftlint:enable function_body_length
+
+  func testUploadMethodIsRespected() throws {
+    try! verifyUploadMethodIsRespected(method: "PUT")
+    try! verifyUploadMethodIsRespected(method: "POST")
+  }
+
+  // swiftlint:disable function_body_length
   func testUploadMultipartMessageIsValid() throws {
     var result = (false, "Unknown")
     let input: NSDictionary = [

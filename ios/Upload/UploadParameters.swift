@@ -6,6 +6,7 @@ import Foundation
 
 struct UploadParameters {
   let headers: NSDictionary
+  let method: String
   let parts: NSArray
   let progressIntervalMilliseconds: Int
   let returnResponse: Bool
@@ -14,12 +15,14 @@ struct UploadParameters {
 
   init(
     headers: NSDictionary,
+    method: String,
     parts: NSArray,
     progressIntervalMilliseconds: Int,
     returnResponse: Bool,
     taskId: String,
     url: URL) {
     self.headers = headers
+    self.method = method
     self.parts = parts
     self.progressIntervalMilliseconds = progressIntervalMilliseconds
     self.returnResponse = returnResponse

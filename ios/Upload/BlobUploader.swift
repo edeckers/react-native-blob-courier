@@ -18,12 +18,13 @@ open class BlobUploader: NSObject {
 
   static func buildRequestDataForFileUpload(
     url: URL,
+    method: String,
     parts: NSArray,
     headers: NSDictionary) throws -> (URLRequest, Data) {
     let boundary = UUID().uuidString
 
     var request = URLRequest(url: url)
-    request.httpMethod = "POST"
+    request.httpMethod = method
 
     request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
     for (key, value) in headers {
@@ -119,7 +120,8 @@ open class BlobUploader: NSObject {
 
       do {
         let (request, fileData) =
-          try buildRequestDataForFileUpload(url: parameters.url, parts: parameters.parts, headers: headers)
+          try buildRequestDataForFileUpload(
+            url: parameters.url, method: parameters.method, parts: parameters.parts, headers: headers)
 
         session.uploadTask(with: request, from: fileData).resume()
 
