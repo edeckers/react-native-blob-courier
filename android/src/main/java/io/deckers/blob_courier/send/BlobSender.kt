@@ -59,21 +59,21 @@ class BlobSender(
 
       val response = sendRequestCall.execute()
 
-      val responseBody = response.body()?.string().orEmpty()
+      val responseBody = response.body?.string().orEmpty()
 
       li("Finished unmanaged send")
 
       return Success(
         mapOf(
           "response" to mapOf(
-            "code" to response.code(),
+            "code" to response.code,
             "data" to if (senderParameters.returnResponse) responseBody else "",
-            "headers" to mapHeadersToMap(response.headers())
+            "headers" to mapHeadersToMap(response.headers)
           )
         )
       )
     } catch (e: IOException) {
-      if (sendRequestCall.isCanceled) {
+      if (sendRequestCall.isCanceled()) {
         return Failure(createErrorFromThrowable(ERROR_CANCELED_EXCEPTION, e))
       }
 

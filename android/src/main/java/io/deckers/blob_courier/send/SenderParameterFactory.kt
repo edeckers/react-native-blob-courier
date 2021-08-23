@@ -32,11 +32,8 @@ import io.deckers.blob_courier.common.maybe
 import io.deckers.blob_courier.common.right
 import io.deckers.blob_courier.common.testKeep
 import io.deckers.blob_courier.common.validationContext
-import io.deckers.blob_courier.upload.FilePayload
-import io.deckers.blob_courier.upload.StringPayload
-import io.deckers.blob_courier.upload.UploaderParameters
-import okhttp3.MediaType
-import okhttp3.MultipartBody
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody
 import java.net.URL
 
@@ -61,8 +58,8 @@ data class SenderParameters(
 
 fun SenderParameters.toRequestBody(contentResolver: ContentResolver): RequestBody =
   InputStreamRequestBody(
-    mediaType.let(MediaType::parse)
-      ?: MediaType.get(DEFAULT_MIME_TYPE),
+    mediaType.toMediaTypeOrNull()
+      ?: DEFAULT_MIME_TYPE.toMediaType(),
     contentResolver,
     absoluteFilePath
   )
