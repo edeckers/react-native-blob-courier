@@ -149,13 +149,10 @@ class BlobCourierTests: XCTestCase {
   }
   // swiftlint:enable function_body_length
 
-  // swiftlint:disable function_body_length
   func testUploadMethodIsRespected() throws {
-    try? verifyUploadMethodIsRespected(method: "POST")
-    try? verifyUploadMethodIsRespected(method: "PUT")
+    try! verifyUploadMethodIsRespected(method: "PUT")
+    try! verifyUploadMethodIsRespected(method: "POST")
   }
-  // swiftlint:enable function_body_length
-
 
   // swiftlint:disable function_body_length
   func testUploadMultipartMessageIsValid() throws {
