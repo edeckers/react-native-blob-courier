@@ -38,7 +38,7 @@ import io.mockk.every
 import io.mockk.mockkStatic
 import kotlinx.coroutines.runBlocking
 import java.util.UUID
-import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MultipartBody
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
@@ -62,7 +62,7 @@ private fun mapMultipartsToNames(parts: List<MultipartBody.Part>) =
   parts.fold(
     emptyArray(),
     { names: Array<String>, part: MultipartBody.Part ->
-      val contentDisposition = part.headers()?.get("Content-Disposition")
+      val contentDisposition = part.headers?.get("Content-Disposition")
 
       val matches = contentDisposition?.let(Regex("name=\"(\\w+)\"")::find)
 
@@ -320,7 +320,7 @@ class BlobCourierModuleTests {
       .registerInputStream(fileUri, someFileContent.byteInputStream())
 
     val requestBody =
-      InputStreamRequestBody(MediaType.get("text/plain"), ctx.contentResolver, fileUri)
+      InputStreamRequestBody("text/plain".toMediaType(), ctx.contentResolver, fileUri)
 
     assertEquals(
       "Returned length differs from expected length",
@@ -412,7 +412,7 @@ class BlobCourierModuleTests {
         val uploaderMultipartBody =
           errorOrUploaderParameters.v.toMultipartBody(ctx.contentResolver)
 
-        val names = mapMultipartsToNames(uploaderMultipartBody.parts())
+        val names = mapMultipartsToNames(uploaderMultipartBody.parts)
 
         assertArrayEquals(
           "Sent array of upload part names differs from provided part names",

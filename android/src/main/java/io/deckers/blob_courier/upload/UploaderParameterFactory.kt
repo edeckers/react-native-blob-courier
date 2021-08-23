@@ -48,7 +48,8 @@ import io.deckers.blob_courier.common.testKeep
 import io.deckers.blob_courier.common.toEither
 import io.deckers.blob_courier.common.validationContext
 import java.net.URL
-import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 
 private const val PARAMETER_PARTS = "parts"
@@ -83,8 +84,8 @@ fun UploaderParameters.toMultipartBody(contentResolver: ContentResolver): Multip
               part.name,
               payload.filename,
               InputStreamRequestBody(
-                payload.mimeType.let(MediaType::parse)
-                  ?: MediaType.get(DEFAULT_MIME_TYPE),
+                payload.mimeType.toMediaTypeOrNull()
+                  ?: DEFAULT_MIME_TYPE.toMediaType(),
                 contentResolver,
                 payload.absoluteFilePath
               )

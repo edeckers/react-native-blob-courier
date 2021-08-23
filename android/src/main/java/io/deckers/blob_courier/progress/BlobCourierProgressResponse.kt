@@ -10,7 +10,7 @@ import java.io.IOException
 import okhttp3.ResponseBody
 import okio.Buffer
 import okio.BufferedSource
-import okio.Okio
+import okio.buffer
 import okio.Source
 import okio.Timeout
 
@@ -24,7 +24,7 @@ class BlobCourierProgressResponse(
 
   override fun contentLength() = totalNumberOfBytes
 
-  override fun source(): BufferedSource = Okio.buffer(ProgressReportingSource())
+  override fun source(): BufferedSource = ProgressReportingSource().buffer()
 
   private inner class ProgressReportingSource : Source {
     private var totalNumberOfBytesRead: Long = 0
