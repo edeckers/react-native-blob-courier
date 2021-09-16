@@ -21,7 +21,7 @@ jobs:
       - run: TARGET=typescript make clean build
         if: steps.node_modules.outputs.cache-hit != 'true'
   build-typescript-macos:
-    runs-on: self-hosted
+    runs-on: m1
     steps: 
       - uses: actions/checkout@v2
       - uses: actions/cache@v2
@@ -107,7 +107,7 @@ jobs:
   run-android-instrumented-tests:
     needs: run-android-lint
     continue-on-error: true
-    runs-on: self-hosted
+    runs-on: m1
     steps: 
       - uses: actions/checkout@v2
       - name: set up JDK 1.8
@@ -145,7 +145,7 @@ jobs:
     needs:
       - build-typescript-linux
       - build-typescript-macos
-    runs-on: self-hosted
+    runs-on: m1
     steps: 
       - uses: actions/checkout@v2
       - uses: actions/cache@v2
@@ -156,7 +156,7 @@ jobs:
       - run: TARGET=ios make lint
   run-ios-tests:
     needs: run-ios-lint
-    runs-on: self-hosted
+    runs-on: m1
     steps: 
       - uses: actions/checkout@v2
       - run: xcrun simctl boot "iPhone 11" || true
