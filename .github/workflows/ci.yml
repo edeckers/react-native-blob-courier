@@ -114,8 +114,6 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: 1.8
-      # - name: Setup Android SDK
-      #   uses: android-actions/setup-android@v2
       - uses: actions/cache@v2
         id: node_modules
         with:
@@ -123,6 +121,7 @@ jobs:
           key: yarn-${{ hashFiles('**/yarn.lock') }}
       - uses: reactivecircus/android-emulator-runner@v2.20.0
         env:
+          ANDROID_SDK_ROOT: ${{ secrets.ANDROID_SDK_ROOT }}
           ORG_GRADLE_PROJECT_ADB_COMMAND_TIMEOUT_MILLISECONDS: ${{ secrets.ORG_GRADLE_PROJECT_ADB_COMMAND_TIMEOUT_MILLISECONDS }}
           ORG_GRADLE_PROJECT_PROMISE_TIMEOUT_MILLISECONDS: ${{ secrets.ORG_GRADLE_PROJECT_PROMISE_TIMEOUT_MILLISECONDS }}
           TARGET: android:instrumented
@@ -137,7 +136,7 @@ jobs:
             adb logcat -c
             adb logcat | tee android_instrumented_logcat.log | grep 'io.deckers.blob_courier' &
             make clean test
-          target: google_apis_playstore
+          target: google_apis
       - uses: actions/upload-artifact@v2
         with:
           name: android-instrumented-test-results
