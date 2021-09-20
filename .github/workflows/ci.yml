@@ -3,7 +3,7 @@ on: push
 
 env: 
   node-version: 12
-  android-api-level: 30
+  android-api-level: 31
 
 jobs:
   build-typescript-linux:
@@ -21,7 +21,7 @@ jobs:
       - run: TARGET=typescript make clean build
         if: steps.node_modules.outputs.cache-hit != 'true'
   build-typescript-macos:
-    runs-on: self-hosted
+    runs-on: m1
     steps: 
       - uses: actions/checkout@v2
       - uses: actions/cache@v2
@@ -107,7 +107,7 @@ jobs:
   run-android-instrumented-tests:
     needs: run-android-lint
     continue-on-error: true
-    runs-on: self-hosted
+    runs-on: m1
     steps: 
       - uses: actions/checkout@v2
       - name: set up JDK 1.8
@@ -119,13 +119,19 @@ jobs:
         with:
           path: node_modules
           key: yarn-${{ hashFiles('**/yarn.lock') }}
-      - uses: reactivecircus/android-emulator-runner@v2.13.0
+      - uses: reactivecircus/android-emulator-runner@v2.20.0
         env:
+          ANDROID_SDK_ROOT: ${{ secrets.ANDROID_SDK_ROOT }}
           ORG_GRADLE_PROJECT_ADB_COMMAND_TIMEOUT_MILLISECONDS: ${{ secrets.ORG_GRADLE_PROJECT_ADB_COMMAND_TIMEOUT_MILLISECONDS }}
           ORG_GRADLE_PROJECT_PROMISE_TIMEOUT_MILLISECONDS: ${{ secrets.ORG_GRADLE_PROJECT_PROMISE_TIMEOUT_MILLISECONDS }}
           TARGET: android:instrumented
         with:
           api-level: ${{ env.android-api-level }}
+          arch: arm64-v8a
+          avd-name: ${{ secrets.ANDROID_AVD_NAME }}
+          emulator-options: -no-snapshot -noaudio -no-boot-anim
+          force-avd-creation: false
+          ram-size: ${{ secrets.ANDROID_AVD_RAM_SIZE }}
           script: |
             adb logcat -c
             adb logcat | tee android_instrumented_logcat.log | grep 'io.deckers.blob_courier' &
@@ -145,7 +151,7 @@ jobs:
     needs:
       - build-typescript-linux
       - build-typescript-macos
-    runs-on: self-hosted
+    runs-on: m1
     steps: 
       - uses: actions/checkout@v2
       - uses: actions/cache@v2
@@ -156,7 +162,7 @@ jobs:
       - run: TARGET=ios make lint
   run-ios-tests:
     needs: run-ios-lint
-    runs-on: self-hosted
+    runs-on: m1
     steps: 
       - uses: actions/checkout@v2
       - run: xcrun simctl boot "iPhone 11" || true
