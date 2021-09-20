@@ -128,10 +128,10 @@ jobs:
         with:
           api-level: ${{ env.android-api-level }}
           arch: arm64-v8a
-          avd-name: Pixel_3_API_S_1
+          avd-name: ${{ secrets.ANDROID_AVD_NAME }}
           emulator-options: -no-snapshot -noaudio -no-boot-anim
           force-avd-creation: false
-          ram-size: 1024M
+          ram-size: ${{ secrets.ANDROID_AVD_RAM_SIZE }}
           script: |
             adb logcat -c
             adb logcat | tee android_instrumented_logcat.log | grep 'io.deckers.blob_courier' &
