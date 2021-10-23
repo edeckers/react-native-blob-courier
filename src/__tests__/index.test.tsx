@@ -120,14 +120,10 @@ const verifyPropertyExistsAndIsDefined = (o: any, key: string) => {
 };
 
 const testAsync = (name: string, testableFunction: () => Promise<void>) => {
-  test(name, async (done) => {
-    try {
-      await testableFunction();
+  test(name, (done) => {
+    const f = testableFunction();
 
-      done();
-    } catch (e) {
-      done(e);
-    }
+    f.then(done).catch((e) => done(e));
   });
 };
 
@@ -752,7 +748,7 @@ describe('Given a regular upload request', () => {
               },
             },
           });
-        } catch (e) {
+        } catch (e: any) {
           expect(e.message).toBeDefined();
           expect(e.message.length).toBeGreaterThan(0);
           return;
@@ -785,7 +781,7 @@ describe('Given a regular upload request', () => {
               },
             },
           });
-        } catch (e) {
+        } catch (e: any) {
           expect(e.message).toBeDefined();
           expect(e.message.length).toBeGreaterThan(0);
           return;
