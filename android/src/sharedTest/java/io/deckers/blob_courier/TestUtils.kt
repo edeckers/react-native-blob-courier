@@ -6,52 +6,15 @@
  */
 package io.deckers.blob_courier
 
-import android.os.Build
 import com.facebook.react.bridge.ReadableMap
 import io.deckers.blob_courier.BuildConfig.PROMISE_TIMEOUT_MILLISECONDS
 import io.deckers.blob_courier.common.Either
 import io.deckers.blob_courier.common.fold
-import java.lang.reflect.Method
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.withTimeout
 import org.junit.Assert
 
 object TestUtils {
-  private const val vmRuntimeClassName = "dalvik.system.VMRuntime"
-  private const val getDeclaredMethodMethodName = "getDeclaredMethod"
-  private const val getRuntimeMethodName = "getRuntime"
-  private const val setHiddenApiExemptionsMethodName = "setHiddenApiExemptions"
-
-  fun circumventHiddenApiExemptionsForMockk() {
-    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
-      return
-    }
-
-    // https://github.com/mockk/mockk/pull/442
-    try {
-      val vmRuntimeClass = Class.forName(vmRuntimeClassName)
-      val getDeclaredMethod = Class::class.java.getDeclaredMethod(
-        getDeclaredMethodMethodName,
-        String::class.java,
-        arrayOf<Class<*>>()::class.java
-      ) as Method
-      val getRuntime = getDeclaredMethod(
-        vmRuntimeClass,
-        getRuntimeMethodName,
-        null
-      ) as Method
-      val setHiddenApiExemptions = getDeclaredMethod(
-        vmRuntimeClass,
-        setHiddenApiExemptionsMethodName,
-        arrayOf(arrayOf<String>()::class.java)
-      ) as Method
-
-      setHiddenApiExemptions(getRuntime(null), arrayOf("L"))
-    } catch (ex: Exception) {
-      throw Exception("Could not set up hiddenApiExemptions")
-    }
-  }
-
   suspend fun runRequest(
     block: suspend CoroutineScope.() -> Either<Fixtures.TestPromiseError, ReadableMap>,
     timeoutMilliseconds: Long = PROMISE_TIMEOUT_MILLISECONDS

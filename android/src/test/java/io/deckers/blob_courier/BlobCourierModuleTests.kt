@@ -24,18 +24,26 @@ import io.deckers.blob_courier.category.EndToEnd
 import io.deckers.blob_courier.category.Isolated
 import io.deckers.blob_courier.category.Regression
 import io.deckers.blob_courier.category.Slow
+import io.deckers.blob_courier.common.DEFAULT_PROGRESS_TIMEOUT_MILLISECONDS
 import io.deckers.blob_courier.common.Either
+import io.deckers.blob_courier.common.PARAMETER_SETTINGS_PROGRESS_INTERVAL
 import io.deckers.blob_courier.common.ValidationError
 import io.deckers.blob_courier.common.fold
 import io.deckers.blob_courier.common.isNotNull
 import io.deckers.blob_courier.common.isNotNullOrEmptyString
 import io.deckers.blob_courier.common.validate
+import io.deckers.blob_courier.react.CongestionAvoidingProgressNotifier
+import io.deckers.blob_courier.react.CongestionAvoidingProgressNotifierFactory
 import io.deckers.blob_courier.react.toReactMap
 import io.deckers.blob_courier.upload.InputStreamRequestBody
 import io.deckers.blob_courier.upload.UploaderParameterFactory
 import io.deckers.blob_courier.upload.toMultipartBody
+import io.mockk.EqMatcher
+import io.mockk.OfTypeMatcher
 import io.mockk.every
+import io.mockk.mockkConstructor
 import io.mockk.mockkStatic
+import io.mockk.verify
 import kotlinx.coroutines.runBlocking
 import java.util.UUID
 import okhttp3.MediaType.Companion.toMediaType
@@ -141,6 +149,7 @@ class BlobCourierModuleTests {
 
     assertRequestTrue(message, succeeded)
   }
+
 
   @Category(EndToEnd::class)
   @Test
@@ -486,6 +495,94 @@ class BlobCourierModuleTests {
 
     assertSame("Object doesn't match the provided object", someObject, rightObject.v)
   }
+
+  @Category(EndToEnd::class, Regression::class)
+  @Test
+  fun congestion_avoiding_progress_updater_is_instantiated_with_correct_interval_for_download() =
+    runBlocking {
+      val irrelevantTaskId = UUID.randomUUID().toString()
+      val someTimeOutValueThatIsNotDefault = DEFAULT_PROGRESS_TIMEOUT_MILLISECONDS * 2
+
+      val requiredParametersAndProgressInterval = createValidTestFetchParameterMap()
+        .plus(
+          PARAMETER_SETTINGS_PROGRESS_INTERVAL to someTimeOutValueThatIsNotDefault
+        ).toReactMap()
+
+      mockkConstructor(CongestionAvoidingProgressNotifierFactory::class)
+
+      val ctx = ReactApplicationContext(ApplicationProvider.getApplicationContext())
+
+      every {
+        constructedWith<CongestionAvoidingProgressNotifierFactory>(
+          OfTypeMatcher<ReactApplicationContext>(ReactApplicationContext::class),
+          EqMatcher(someTimeOutValueThatIsNotDefault),
+        ).create(any())
+      } returns CongestionAvoidingProgressNotifier(
+        ctx,
+        irrelevantTaskId,
+        someTimeOutValueThatIsNotDefault
+      )
+
+      val (succeeded, message) =
+        runRequestToBoolean({ runFetchBlobSuspend(ctx, requiredParametersAndProgressInterval) })
+
+      verify {
+        constructedWith<CongestionAvoidingProgressNotifierFactory>(
+          OfTypeMatcher<ReactApplicationContext>(ReactApplicationContext::class),
+          EqMatcher(someTimeOutValueThatIsNotDefault),
+        ).create(any())
+      }
+
+      assertRequestTrue(message, succeeded)
+    }
+
+  @Category(EndToEnd::class, Regression::class)
+  @Test
+  fun congestion_avoiding_progress_updater_is_instantiated_with_correct_interval_for_upload() =
+    runBlocking {
+      val irrelevantTaskId = UUID.randomUUID().toString()
+      val someTimeOutValueThatIsNotDefault = DEFAULT_PROGRESS_TIMEOUT_MILLISECONDS * 2
+
+      val ctx = ReactApplicationContext(ApplicationProvider.getApplicationContext())
+
+      Shadows.shadowOf(ctx.contentResolver)
+        .registerInputStream(Uri.parse(SOME_FILE_THAT_IS_ALWAYS_AVAILABLE), "".byteInputStream())
+
+      val uploadParametersMap =
+        createValidUploadTestParameterMap(
+          UUID.randomUUID().toString(),
+          SOME_FILE_THAT_IS_ALWAYS_AVAILABLE
+        ).toMap()
+          .plus(
+            PARAMETER_SETTINGS_PROGRESS_INTERVAL to someTimeOutValueThatIsNotDefault
+          ).toReactMap()
+
+      mockkConstructor(CongestionAvoidingProgressNotifierFactory::class)
+
+      every {
+        constructedWith<CongestionAvoidingProgressNotifierFactory>(
+          OfTypeMatcher<ReactApplicationContext>(ReactApplicationContext::class),
+          EqMatcher(someTimeOutValueThatIsNotDefault),
+        ).create(any())
+      } returns CongestionAvoidingProgressNotifier(
+        ctx,
+        irrelevantTaskId,
+        someTimeOutValueThatIsNotDefault
+      )
+
+      val (succeeded, message) = runRequestToBoolean({
+        runUploadBlobSuspend(ctx, uploadParametersMap)
+      })
+
+      verify {
+        constructedWith<CongestionAvoidingProgressNotifierFactory>(
+          OfTypeMatcher<ReactApplicationContext>(ReactApplicationContext::class),
+          EqMatcher(someTimeOutValueThatIsNotDefault),
+        ).create(any())
+      }
+
+      assertRequestTrue(message, succeeded)
+    }
 
   private fun assert_correct_target_parameter_resolves_promise(correctTarget: String) =
     runBlocking {

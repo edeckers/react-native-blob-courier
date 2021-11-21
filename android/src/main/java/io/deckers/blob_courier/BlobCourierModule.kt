@@ -37,10 +37,13 @@ import java.net.UnknownHostException
 import kotlin.concurrent.thread
 
 private fun createHttpClient() = OkHttpClientProvider.getOkHttpClient()
-private fun createProgressFactory(reactContext: ReactApplicationContext) =
+private fun createProgressFactory(
+  reactContext: ReactApplicationContext,
+  progressTimeoutMilliseconds: Int = DEFAULT_PROGRESS_TIMEOUT_MILLISECONDS
+) =
   CongestionAvoidingProgressNotifierFactory(
     reactContext,
-    DEFAULT_PROGRESS_TIMEOUT_MILLISECONDS
+    progressTimeoutMilliseconds
   )
 
 private val TAG = BlobCourierModule::class.java.name
@@ -49,7 +52,7 @@ private fun le(m: String, e: Throwable? = null) = logger.e(m, e)
 private fun li(m: String) = logger.i(m)
 private fun lv(m: String, e: Throwable? = null) = logger.v(m, e)
 
-@ReactModule(name=LIBRARY_NAME)
+@ReactModule(name = LIBRARY_NAME)
 class BlobCourierModule(private val reactContext: ReactApplicationContext) :
   ReactContextBaseJavaModule(reactContext) {
 
@@ -74,7 +77,8 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
               lv("Something went wrong during cancellation (code=${e.code},message=${e.message})")
               promise.reject(e.code, e.message)
             },
-            promise::resolve)
+            promise::resolve
+          )
       } catch (e: Exception) {
         le("Unexpected exception", e)
         promise.reject(ERROR_UNEXPECTED_EXCEPTION, processUnexpectedException(e).message)
@@ -96,13 +100,16 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
           DownloaderParameterFactory()
             .fromInput(input)
             .fold(::Failure, ::Success)
-            .fmap(
+            .fmap { pxs ->
               BlobDownloader(
                 reactContext,
                 createHttpClient(),
-                createProgressFactory(reactContext),
-              )::download
-            )
+                createProgressFactory(
+                  reactContext,
+                  pxs.progressInterval
+                ),
+              ).download(pxs)
+            }
 
         errorOrDownloadResult
           .fmap { Success(it.toReactMap()) }
@@ -135,13 +142,16 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
         UploaderParameterFactory()
           .fromInput(input)
           .fold(::Failure, ::Success)
-          .fmap(
+          .fmap { pxs ->
             BlobUploader(
               reactContext,
               createHttpClient(),
-              createProgressFactory(reactContext)
-            )::upload
-          )
+              createProgressFactory(
+                reactContext,
+                pxs.progressInterval
+              )
+            ).upload(pxs)
+          }
           .map { it.toReactMap() }
           .`do`(
             { f ->

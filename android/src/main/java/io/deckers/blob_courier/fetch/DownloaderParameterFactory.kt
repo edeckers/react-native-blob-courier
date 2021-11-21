@@ -31,7 +31,6 @@ import io.deckers.blob_courier.common.isNotNull
 import io.deckers.blob_courier.common.maybe
 import io.deckers.blob_courier.common.testKeep
 import io.deckers.blob_courier.common.validationContext
-import java.util.Locale
 
 private const val PARAMETER_ANDROID_SETTINGS = "android"
 private const val PARAMETER_DOWNLOAD_MANAGER_SETTINGS = "downloadManager"
@@ -91,8 +90,7 @@ private fun validateParameters(
     BlobDownloader.TargetDirectoryEnum
       .values()
       .firstOrNull { t ->
-        t.name.toLowerCase(Locale.getDefault()) ==
-          targetDirectoryOrFallback.toLowerCase(Locale.getDefault())
+        t.name.equals(targetDirectoryOrFallback, ignoreCase = true)
       }
 
   val downloadManagerSettings =
