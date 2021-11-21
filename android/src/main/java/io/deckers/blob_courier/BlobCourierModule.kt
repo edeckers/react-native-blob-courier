@@ -22,11 +22,9 @@ import io.deckers.blob_courier.common.ERROR_UNKNOWN_HOST
 import io.deckers.blob_courier.common.Failure
 import io.deckers.blob_courier.common.LIBRARY_NAME
 import io.deckers.blob_courier.common.Logger
-import io.deckers.blob_courier.common.PARAMETER_SETTINGS_PROGRESS_INTERVAL
 import io.deckers.blob_courier.common.Success
 import io.deckers.blob_courier.common.`do`
 import io.deckers.blob_courier.common.fold
-import io.deckers.blob_courier.common.getMapInt
 import io.deckers.blob_courier.fetch.BlobDownloader
 import io.deckers.blob_courier.fetch.DownloaderParameterFactory
 import io.deckers.blob_courier.react.CongestionAvoidingProgressNotifierFactory
@@ -59,12 +57,6 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
   ReactContextBaseJavaModule(reactContext) {
 
   override fun getName(): String = LIBRARY_NAME
-
-  private fun getProgressInterval(input: ReadableMap) = getMapInt(
-    input,
-    PARAMETER_SETTINGS_PROGRESS_INTERVAL,
-    DEFAULT_PROGRESS_TIMEOUT_MILLISECONDS
-  )
 
   @ReactMethod
   fun cancelRequest(input: ReadableMap, promise: Promise) {
