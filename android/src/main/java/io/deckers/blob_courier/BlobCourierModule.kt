@@ -59,6 +59,11 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
 
   override fun getName(): String = LIBRARY_NAME
 
+  private fun getProgressInterval(input: ReadableMap) =
+    if (input.hasKey(PARAMETER_SETTINGS_PROGRESS_INTERVAL)) input.getInt(
+      PARAMETER_SETTINGS_PROGRESS_INTERVAL
+    ) else DEFAULT_PROGRESS_TIMEOUT_MILLISECONDS
+
   @ReactMethod
   fun cancelRequest(input: ReadableMap, promise: Promise) {
     li("Calling cancelRequest")
@@ -106,9 +111,8 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
                 reactContext,
                 createHttpClient(),
                 createProgressFactory(
-                  reactContext, input.getInt(
-                    PARAMETER_SETTINGS_PROGRESS_INTERVAL
-                  )
+                  reactContext,
+                  getProgressInterval(input)
                 ),
               )::download
             )
@@ -149,9 +153,8 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
               reactContext,
               createHttpClient(),
               createProgressFactory(
-                reactContext, input.getInt(
-                  PARAMETER_SETTINGS_PROGRESS_INTERVAL
-                )
+                reactContext,
+                getProgressInterval(input)
               )
             )::upload
           )
