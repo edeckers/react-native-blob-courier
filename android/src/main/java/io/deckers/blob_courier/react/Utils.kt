@@ -70,6 +70,8 @@ fun Map<*, *>.toReactMap(): WritableMap {
         (v is Boolean) -> {
           putBoolean(k.toString(), v)
         }
+        (v is Int) ->
+          putInt(k.toString(), v)
         (v is String) ->
           putString(k.toString(), v)
         (v is Map<*, *>) -> {

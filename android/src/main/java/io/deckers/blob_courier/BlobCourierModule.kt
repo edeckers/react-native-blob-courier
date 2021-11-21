@@ -26,6 +26,7 @@ import io.deckers.blob_courier.common.PARAMETER_SETTINGS_PROGRESS_INTERVAL
 import io.deckers.blob_courier.common.Success
 import io.deckers.blob_courier.common.`do`
 import io.deckers.blob_courier.common.fold
+import io.deckers.blob_courier.common.getMapInt
 import io.deckers.blob_courier.fetch.BlobDownloader
 import io.deckers.blob_courier.fetch.DownloaderParameterFactory
 import io.deckers.blob_courier.react.CongestionAvoidingProgressNotifierFactory
@@ -59,10 +60,11 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
 
   override fun getName(): String = LIBRARY_NAME
 
-  private fun getProgressInterval(input: ReadableMap) =
-    if (input.hasKey(PARAMETER_SETTINGS_PROGRESS_INTERVAL)) input.getInt(
-      PARAMETER_SETTINGS_PROGRESS_INTERVAL
-    ) else DEFAULT_PROGRESS_TIMEOUT_MILLISECONDS
+  private fun getProgressInterval(input: ReadableMap) = getMapInt(
+    input,
+    PARAMETER_SETTINGS_PROGRESS_INTERVAL,
+    DEFAULT_PROGRESS_TIMEOUT_MILLISECONDS
+  )
 
   @ReactMethod
   fun cancelRequest(input: ReadableMap, promise: Promise) {
@@ -106,16 +108,16 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
           DownloaderParameterFactory()
             .fromInput(input)
             .fold(::Failure, ::Success)
-            .fmap(
+            .fmap { pxs ->
               BlobDownloader(
                 reactContext,
                 createHttpClient(),
                 createProgressFactory(
                   reactContext,
-                  getProgressInterval(input)
+                  pxs.progressInterval
                 ),
-              )::download
-            )
+              ).download(pxs)
+            }
 
         errorOrDownloadResult
           .fmap { Success(it.toReactMap()) }
@@ -148,16 +150,16 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
         UploaderParameterFactory()
           .fromInput(input)
           .fold(::Failure, ::Success)
-          .fmap(
+          .fmap { pxs ->
             BlobUploader(
               reactContext,
               createHttpClient(),
               createProgressFactory(
                 reactContext,
-                getProgressInterval(input)
+                pxs.progressInterval
               )
-            )::upload
-          )
+            ).upload(pxs)
+          }
           .map { it.toReactMap() }
           .`do`(
             { f ->

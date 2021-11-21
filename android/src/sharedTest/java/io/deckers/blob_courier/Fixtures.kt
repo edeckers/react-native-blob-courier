@@ -19,12 +19,13 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
 import java.io.File
 import java.io.RandomAccessFile
+import java.io.Serializable
 
 object Fixtures {
 
   const val LARGE_FILE = "http://ipv4.download.thinkbroadband.com/100MB.zip"
 
-  fun createValidTestFetchParameterMap(): Map<String, String> = mapOf(
+  fun createValidTestFetchParameterMap(): Map<String, Serializable> = mapOf(
     "taskId" to "some-task-id",
     "filename" to "some-filename.png",
     "url" to "https://github.com/edeckers/react-native-blob-courier"
