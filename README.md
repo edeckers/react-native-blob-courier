@@ -35,7 +35,7 @@ cd ios && pod install
 
 ## Requirements
 
-- Android >= 19
+- Android >= 21
 - iOS >= 10
 - Kotlin >= 1.4.x
 
@@ -496,7 +496,7 @@ You can find an example of how to use the library in the [example](example) dire
 
 ### Permissions
 
-### Android 5.0 and below (API level < 23)
+### Android 5.1 and below (API level < 23)
 
 Add the following line to `AndroidManifest.xml`.
 
