@@ -23,7 +23,6 @@ import io.deckers.blob_courier.Fixtures.runFetchBlobSuspend
 import io.deckers.blob_courier.TestUtils
 import io.deckers.blob_courier.TestUtils.assertRequestFalse
 import io.deckers.blob_courier.TestUtils.assertRequestTrue
-import io.deckers.blob_courier.TestUtils.circumventHiddenApiExemptionsForMockk
 import io.deckers.blob_courier.TestUtils.runInstrumentedRequestToBoolean
 import io.deckers.blob_courier.common.DOWNLOAD_TYPE_MANAGED
 import io.deckers.blob_courier.common.ERROR_CANCELED_EXCEPTION
@@ -147,8 +146,6 @@ class BlobCourierInstrumentedModuleTests {
   @Before
   fun mockSomeNativeOnlyMethods() {
     li("Restore method mocks")
-
-    circumventHiddenApiExemptionsForMockk()
 
     mockkStatic(Arguments::class)
 
