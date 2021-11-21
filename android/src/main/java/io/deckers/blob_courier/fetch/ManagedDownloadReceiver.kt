@@ -87,8 +87,13 @@ class ManagedDownloadReceiver(
     lv("Received status (status=$status, isStatusSuccessful=$isStatusSuccessful)")
 
     if (isStatusSuccessful) {
-      val localFileUri =
-        Uri.parse(cursor.getString(cursor.getColumnIndex(DownloadManager.COLUMN_LOCAL_URI)))
+      val columnLocalUri = cursor.getColumnIndex(DownloadManager.COLUMN_LOCAL_URI)
+      val isExistingColumn = columnLocalUri > 0
+      if (!isExistingColumn) {
+        return
+      }
+
+      val localFileUri = Uri.parse(cursor.getString(columnLocalUri))
 
       onDownloadDone(context, localFileUri)
 

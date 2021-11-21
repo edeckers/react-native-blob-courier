@@ -54,10 +54,17 @@ class ManagedProgressUpdater(
           return
         }
 
-        val numberOfBytes =
-          cursor.getLong(cursor.getColumnIndex(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR))
-        val totalSizeBytes =
-          cursor.getLong(cursor.getColumnIndex(DownloadManager.COLUMN_TOTAL_SIZE_BYTES))
+        val columnBytesDownloadedSoFar =
+          cursor.getColumnIndex(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR)
+        val columnTotalSizeBytes = cursor.getColumnIndex(DownloadManager.COLUMN_TOTAL_SIZE_BYTES)
+
+        val areExistingColumns = columnBytesDownloadedSoFar > 0 && columnTotalSizeBytes > 0
+        if (!areExistingColumns) {
+          return
+        }
+
+        val numberOfBytes = cursor.getLong(columnBytesDownloadedSoFar)
+        val totalSizeBytes = cursor.getLong(columnTotalSizeBytes)
 
         progressNotifier.notify(numberOfBytes, totalSizeBytes)
       }
