@@ -2,5 +2,30 @@
 
 cd `dirname ${0}`/updates
 
-./run-npm-updates
-./run-pod-updates
+upgrade_typescript() {
+  ./run-npm-updates
+}
+
+upgrade_android() {
+  echo "Not implemented"
+  exit 1
+}
+
+upgrade_ios() {
+  ./run-pod-updates
+}
+
+case ${TARGET} in
+  android)
+    upgrade_android
+    ;;
+  ios)
+    upgrade_ios
+    ;;
+  typescript)
+    upgrade_typescript
+    ;;
+esac
+
+exit 0
+

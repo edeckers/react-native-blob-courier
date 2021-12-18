@@ -1,0 +1,45 @@
+name: Upgrade all dependencies
+on:
+  workflow_dispatch:
+    inputs:
+      logLevel:
+        description: 'Log level'     
+        required: true
+        default: 'warning'
+      tags:
+        description: 'Test scenario tags'  
+  schedule:
+    - cron:  '*/5 * * * *'
+
+env: 
+  node-version: 12
+  android-api-level: 31
+
+jobs:
+  upgrade-npm-packages:
+    runs-on: ubuntu-latest
+    steps: 
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2-beta
+        with:
+          node-version: ${{ env.node-version }}
+      - run: TARGET=typescript make clean upgrade
+  upgrade-pods:
+    runs-on: m1
+    needs:
+      - upgrade-npm-packages
+    steps: 
+      - uses: actions/setup-node@v2-beta
+        with:
+          node-version: ${{ env.node-version }}
+      - run: TARGET=ios make clean upgrade
+  create-pull-request:
+    needs:
+      - run-ios-tests
+    runs-on: ubuntu-latest
+    steps: 
+      - uses: peter-evans/create-pull-request@v3
+        with:
+          add-paths: |
+            *.lock
+            ios/*.lock

@@ -34,4 +34,7 @@ endif
 test: build
 	bin/run-tests
 
+upgrade:
+	bin/run-all-updates
+
 .PHONY: build ci clean help lint run test
