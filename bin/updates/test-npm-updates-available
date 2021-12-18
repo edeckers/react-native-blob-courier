@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+
+PROJECT_DIRECTORY=${PROJECT_DIRECTORY:-../..}
+
+NPM_OUTDATED_OUTPUT=$(yarn outdated --cwd=${PROJECT_DIRECTORY})
+
+NPM_UPDATES_OUTPUT=$(echo "${NPM_OUTDATED_OUTPUT}" | grep "[0-9]\+.[0-9]\+.[0-9]\+")
+
+NPMS_KEPT_BACK=$(echo "${NPM_UPDATES_OUTPUT}" | awk 'NR>1 {if ($2 == $3) { print $1" "$2} }')
+NPMS_UPDATE_AVAILABLE=$(echo "${NPM_UPDATES_OUTPUT}" | awk 'NR>1 {if ($2 != $3) { print $1" "$2" -> "$3} }')
+
+NUMBER_OF_UPDATES_AVAILABLE=$(echo ${NPMS_UPDATE_AVAILABLE} | wc -l)
+
+printf "Kept back:\n${NPMS_KEPT_BACK:-None}"
+printf "\n\n"
+printf "Updates available:\n${NPMS_UPDATE_AVAILABLE:-None}\n"
+
+[[ $NPMS_UPDATE_AVAILABLE && $NUMBER_OF_UPDATES_AVAILABLE -ge 1 ]]
+

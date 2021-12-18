@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+cd `dirname ${0}`
+
+./test-npm-updates-available
+ARE_UPDATES_AVAILABLE=$?
+
+if [[ $ARE_UPDATES_AVAILABLE -eq 1 ]]; then
+  echo "No updates available"
+  exit 0
+fi
+
+./update-npm-packages
+

@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+PROJECT_DIRECTORY=${PROJECT_DIRECTORY:-../../ios}
+
+arch -x86_64 pod update --project-directory=${PROJECT_DIRECTORY} --repo-update
+

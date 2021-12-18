@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+cd `dirname ${0}`/updates
+
+./run-npm-updates
+./run-pod-updates
