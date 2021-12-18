@@ -1,5 +1,6 @@
 name: Upgrade all dependencies
 on:
+  push:
   workflow_dispatch:
     inputs:
       logLevel:
@@ -35,7 +36,7 @@ jobs:
       - run: TARGET=ios make clean upgrade
   create-pull-request:
     needs:
-      - run-ios-tests
+      - upgrade-pods
     runs-on: ubuntu-latest
     steps: 
       - uses: peter-evans/create-pull-request@v3
