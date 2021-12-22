@@ -1,16 +1,18 @@
 name: Upgrade all dependencies
 on:
-  push:
-  workflow_dispatch:
-    inputs:
-      logLevel:
-        description: 'Log level'     
-        required: true
-        default: 'warning'
-      tags:
-        description: 'Test scenario tags'  
+  # push:
+  # workflow_dispatch:
+  #   inputs:
+  #     logLevel:
+  #       description: 'Log level'     
+  #       required: true
+  #       default: 'warning'
+  #     tags:
+  #       description: 'Test scenario tags'  
+  #
+
   schedule:
-    - cron:  '*/5 * * * *'
+    - cron:  '* * * * *'
 
 env: 
   node-version: 12
@@ -25,6 +27,10 @@ jobs:
         with:
           node-version: ${{ env.node-version }}
       - run: TARGET=typescript make clean upgrade
+      - uses: actions/upload-artifact@v2
+        with:
+          name: npm-package-changes
+          path: yarn.lock
   upgrade-pods:
     runs-on: m1
     needs:
@@ -34,13 +40,35 @@ jobs:
         with:
           node-version: ${{ env.node-version }}
       - run: TARGET=ios make clean upgrade
+      - uses: actions/upload-artifact@v2
+        with:
+          name: pod-changes
+          path: ios/Podfile.lock
   create-pull-request:
     needs:
       - upgrade-pods
     runs-on: ubuntu-latest
     steps: 
+      - name: Checkout repo
+        uses: actions/checkout@v2
+      - uses: actions/download-artifact@v2
+        with:
+          name: npm-package-changes
+      - uses: actions/download-artifact@v2
+        with:
+          name: pod-changes
       - uses: peter-evans/create-pull-request@v3
         with:
           add-paths: |
-            *.lock
-            ios/*.lock
+            yarn.lock
+            ios/Podfile.lock
+          assignees: edeckers
+          base: main
+          commit-message: "chore: update dependencies"
+          delete-branch: true
+          draft: true
+          labels: |
+            dependencies
+          title: "[Automated] update dependencies"
+
+
