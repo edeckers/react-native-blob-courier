@@ -1,7 +1,8 @@
 name: Upgrade all dependencies
 on:
+  push:
   schedule:
-  - cron: "47 19 * * *"
+    - cron:  '0 1 * * *'
 
 env: 
   node-version: 12
