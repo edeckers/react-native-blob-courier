@@ -7,8 +7,13 @@ on:
       - develop
 
 env: 
-  node-version: 12
   android-api-level: 31
+  android-avd-name: Pixel_3_API_S_1
+  android-avd-ram-size: 1024M
+  android-sdk-root: /Users/ely/Library/Android/sdk
+  android-adb-command-timeout-milliseconds: 20_000L
+  android-promise-timeout-milliseconds: 75_000L
+  node-version: 12
 
 jobs:
   build-typescript-linux:
@@ -124,19 +129,20 @@ jobs:
         with:
           path: node_modules
           key: yarn-${{ hashFiles('**/yarn.lock') }}
-      - uses: reactivecircus/android-emulator-runner@v2.20.0
+      - uses: reactivecircus/android-emulator-runner@v2.21.0
         env:
-          ANDROID_SDK_ROOT: ${{ secrets.ANDROID_SDK_ROOT }}
-          ORG_GRADLE_PROJECT_ADB_COMMAND_TIMEOUT_MILLISECONDS: ${{ secrets.ORG_GRADLE_PROJECT_ADB_COMMAND_TIMEOUT_MILLISECONDS }}
-          ORG_GRADLE_PROJECT_PROMISE_TIMEOUT_MILLISECONDS: ${{ secrets.ORG_GRADLE_PROJECT_PROMISE_TIMEOUT_MILLISECONDS }}
+          ANDROID_SDK_ROOT: ${{ env.android-sdk-root }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ORG_GRADLE_PROJECT_ADB_COMMAND_TIMEOUT_MILLISECONDS: ${{ env.android-adb-command-timeout-milliseconds }}
+          ORG_GRADLE_PROJECT_PROMISE_TIMEOUT_MILLISECONDS: ${{ env.android-promise-timeout-milliseconds }}
           TARGET: android:instrumented
         with:
           api-level: ${{ env.android-api-level }}
           arch: arm64-v8a
-          avd-name: ${{ secrets.ANDROID_AVD_NAME }}
+          avd-name: ${{ env.android-avd-name }}
           emulator-options: -no-snapshot -noaudio -no-boot-anim
           force-avd-creation: false
-          ram-size: ${{ secrets.ANDROID_AVD_RAM_SIZE }}
+          ram-size: ${{ env.android-avd-ram-size }}
           script: |
             adb logcat -c
             adb logcat | tee android_instrumented_logcat.log | grep 'io.deckers.blob_courier' &
@@ -181,71 +187,3 @@ jobs:
         with:
           name: ios-test-results
           path: build/reports/**/*.xml
-  publish-typescript-test-results:
-    needs:
-      - run-typescript-tests
-    runs-on: ubuntu-latest
-    steps: 
-      - uses: actions/download-artifact@v2
-        with:
-          name: ts-test-results
-          path: report-ts
-      - uses: EnricoMi/publish-unit-test-result-action@v1.6
-        with:
-          check_name: "Tests: TypeScript"
-          comment_title: TypeScript Test Report
-          deduplicate_classes_by_file_name: false
-          files: report-ts/**/*.xml
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          hide_comments: all but latest
-          report_individual_runs: true
-  publish-android-test-results:
-    needs:
-      - run-android-unit-tests
-      - run-android-instrumented-tests
-    runs-on: ubuntu-latest
-    steps: 
-      - uses: actions/download-artifact@v2
-        with:
-          name: android-unit-test-results
-          path: report-android-unit
-      - uses: actions/download-artifact@v2
-        with:
-          name: android-instrumented-test-results
-          path: report-android-instrument
-      - uses: EnricoMi/publish-unit-test-result-action@v1.6
-        with:
-          check_name: "Tests: Android - Unit"
-          comment_title: Android Unit Test Report
-          deduplicate_classes_by_file_name: false
-          files: report-android-unit/**/*.xml
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          hide_comments: all but latest
-          report_individual_runs: true
-      - uses: EnricoMi/publish-unit-test-result-action@v1.6
-        with:
-          check_name: "Tests: Android - Instrumented"
-          comment_title: Android Instrumented Test Report
-          deduplicate_classes_by_file_name: false
-          files: report-android-instrument/**/*.xml
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          hide_comments: all but latest
-          report_individual_runs: true
-  publish-ios-test-results:
-    needs:
-      - run-ios-tests
-    runs-on: ubuntu-latest
-    steps: 
-      - uses: actions/download-artifact@v2
-        with:
-          name: ios-test-results
-          path: report-ios
-      - uses: EnricoMi/publish-unit-test-result-action@v1.6
-        with:
-          check_name: "Tests: iOS"
-          comment_title: iOS Test Report
-          deduplicate_classes_by_file_name: false
-          files: report-ios/**/*.xml
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          hide_comments: all but latest
-          report_individual_runs: true
