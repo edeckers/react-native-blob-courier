@@ -110,7 +110,7 @@ private fun filterReadableMapsFromReadableArray(parts: ReadableArray): Array<Rea
     emptyArray(),
     { p, i ->
       if (parts.getType(i) == ReadableType.Map)
-        p.plus(parts.getMap(i))
+        p.plus(parts.getMap(i)!!)
       else p
     }
   )
