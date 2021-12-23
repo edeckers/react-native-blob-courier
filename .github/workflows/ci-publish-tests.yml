@@ -1,0 +1,74 @@
+name: Publish test results
+on:
+  workflow_run:
+    workflows: ["Build and test"]
+    types:
+      - completed
+
+jobs:
+  publish-typescript-test-results:
+    runs-on: ubuntu-latest
+    steps: 
+      - uses: actions/download-artifact@v2
+        with:
+          name: ts-test-results
+          path: report-ts
+      - uses: EnricoMi/publish-unit-test-result-action@v1.6
+        with:
+          check_name: "Tests: TypeScript"
+          comment_title: TypeScript Test Report
+          deduplicate_classes_by_file_name: false
+          files: report-ts/**/*.xml
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          hide_comments: all but latest
+          report_individual_runs: true
+  publish-android-test-results:
+    needs:
+      - run-android-unit-tests
+      - run-android-instrumented-tests
+    runs-on: ubuntu-latest
+    steps: 
+      - uses: actions/download-artifact@v2
+        with:
+          name: android-unit-test-results
+          path: report-android-unit
+      - uses: actions/download-artifact@v2
+        with:
+          name: android-instrumented-test-results
+          path: report-android-instrument
+      - uses: EnricoMi/publish-unit-test-result-action@v1.6
+        with:
+          check_name: "Tests: Android - Unit"
+          comment_title: Android Unit Test Report
+          deduplicate_classes_by_file_name: false
+          files: report-android-unit/**/*.xml
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          hide_comments: all but latest
+          report_individual_runs: true
+      - uses: EnricoMi/publish-unit-test-result-action@v1.6
+        with:
+          check_name: "Tests: Android - Instrumented"
+          comment_title: Android Instrumented Test Report
+          deduplicate_classes_by_file_name: false
+          files: report-android-instrument/**/*.xml
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          hide_comments: all but latest
+          report_individual_runs: true
+  publish-ios-test-results:
+    needs:
+      - run-ios-tests
+    runs-on: ubuntu-latest
+    steps: 
+      - uses: actions/download-artifact@v2
+        with:
+          name: ios-test-results
+          path: report-ios
+      - uses: EnricoMi/publish-unit-test-result-action@v1.6
+        with:
+          check_name: "Tests: iOS"
+          comment_title: iOS Test Report
+          deduplicate_classes_by_file_name: false
+          files: report-ios/**/*.xml
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          hide_comments: all but latest
+          report_individual_runs: true
