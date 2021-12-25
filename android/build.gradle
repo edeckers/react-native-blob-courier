@@ -20,10 +20,9 @@ apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 
 android {
-  apply from: "versions.gradle"
-
   compileSdkVersion rootProject.ext.compile_sdk_version
   buildToolsVersion rootProject.ext.build_tools_version
+
   defaultConfig {
     minSdkVersion rootProject.ext.min_sdk_version
     targetSdkVersion rootProject.ext.target_sdk_version
