@@ -143,7 +143,7 @@ dependencies {
   // noinspection GradleDynamicVersion
   api "com.facebook.react:react-native:+"
   implementation "androidx.localbroadcastmanager:localbroadcastmanager:$localbroadcastmanager_version"
-  implementation "com.android.support:multidex:$multidex_version"
+  implementation "androidx.multidex:multidex:$multidex_version"
   implementation "com.squareup.okhttp3:okhttp:$okhttp_version"
   implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
   testImplementation "androidx.test:core:$test_core_version"
