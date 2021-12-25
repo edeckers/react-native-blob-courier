@@ -1,5 +1,5 @@
 buildscript {
-  apply from: "versions.gradle"
+  apply from: file("versions.gradle")
 
   repositories {
     google()
@@ -20,12 +20,12 @@ apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 
 android {
-  compileSdkVersion rootProject.ext.compile_sdk_version
-  buildToolsVersion rootProject.ext.build_tools_version
+  compileSdkVersion project.ext.compile_sdk_version
+  buildToolsVersion project.ext.build_tools_version
 
   defaultConfig {
-    minSdkVersion rootProject.ext.min_sdk_version
-    targetSdkVersion rootProject.ext.target_sdk_version
+    minSdkVersion project.ext.min_sdk_version
+    targetSdkVersion project.ext.target_sdk_version
     versionCode 1
     versionName "1.0"
     testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
