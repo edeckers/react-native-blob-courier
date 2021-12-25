@@ -50,8 +50,8 @@ class UnmanagedDownloader(
       .method(downloaderParameters.method, null)
       .url(downloaderParameters.uri.toString())
       .apply {
-        downloaderParameters.headers.forEach { e: Map.Entry<String, String> ->
-          addHeader(e.key, e.value)
+        downloaderParameters.headers.forEach { (name, value) ->
+          addHeader(name, value)
         }
       }
       .build()
