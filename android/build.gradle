@@ -13,7 +13,7 @@ buildscript {
 }
 
 plugins {
-  id "com.adarshr.test-logger" version "2.1.1"
+  id "com.adarshr.test-logger" version "$test_logger_version"
 }
 
 apply plugin: 'com.android.library'

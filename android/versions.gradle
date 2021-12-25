@@ -18,6 +18,7 @@ ext.okhttp_version = getExtOrDefault('okhttpVersion')
 ext.robolectric_version = getExtOrDefault('robolectricVersion')
 ext.test_core_version = getExtOrDefault('testCoreVersion')
 ext.test_ext_version = getExtOrDefault('testExtVersion')
+ext.test_logger_version = getExtOrDefault('testLoggerVersion')
 
 ext.compile_sdk_version = getExtOrIntegerDefault('compileSdkVersion')
 ext.build_tools_version = getExtOrDefault('buildToolsVersion')
