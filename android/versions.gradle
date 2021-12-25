@@ -8,6 +8,7 @@ ext.getExtOrIntegerDefault = {name ->
 
 ext.coroutines_version = getExtOrDefault('coroutinesVersion')
 ext.espresso_version = getExtOrDefault('espressoVersion')
+ext.gradle_tools_version = getExtOrDefault('gradleToolsVersion')
 ext.junit_version = getExtOrDefault('junitVersion')
 ext.kotlin_version = getExtOrDefault('kotlinVersion')
 ext.localbroadcastmanager_version = getExtOrDefault('localbroadcastmanagerVersion')
