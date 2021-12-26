@@ -189,6 +189,10 @@ android {
     }
 }
 
+dependencyLocking {
+  lockAllConfigurations()
+}
+
 dependencies {
     implementation fileTree(dir: "libs", include: ["*.jar"])
     //noinspection GradleDynamicVersion
