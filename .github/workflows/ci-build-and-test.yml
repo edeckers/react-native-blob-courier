@@ -7,12 +7,12 @@ on:
       - develop
 
 env: 
+  android-adb-command-timeout-milliseconds: 20_000L
   android-api-level: 31
   android-avd-name: Pixel_3_API_S_1
   android-avd-ram-size: 1024M
-  android-sdk-root: /Users/ely/Library/Android/sdk
-  android-adb-command-timeout-milliseconds: 20_000L
   android-promise-timeout-milliseconds: 75_000L
+  android-sdk-root: /Users/ely/Library/Android/sdk
   node-version: 12
 
 jobs:
@@ -151,7 +151,7 @@ jobs:
       - uses: actions/upload-artifact@v2
         with:
           name: android-instrumented-test-results
-          path: android/build/outputs/androidTest-results/connected/flavors/debugAndroidTest/*.xml
+          path: android/build/outputs/androidTest-results/connected/**/*.xml
         if: always()
       - uses: actions/upload-artifact@v2
         with:
