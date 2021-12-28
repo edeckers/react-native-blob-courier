@@ -81,8 +81,8 @@ class ManagedDownloader(
         .let { requestBuilder
           ->
           requestBuilder.apply {
-            downloaderParameters.headers.forEach { e: Map.Entry<String, String> ->
-              addRequestHeader(e.key, e.value)
+            downloaderParameters.headers.forEach { (name, value) ->
+              addRequestHeader(name, value)
             }
           }
 

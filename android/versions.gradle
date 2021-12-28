@@ -1,0 +1,26 @@
+ext.getExtOrDefault = {name ->
+  return rootProject.ext.has(name) ? rootProject.ext.get(name) : project.properties['BlobCourier_' + name]
+}
+
+ext.getExtOrIntegerDefault = {name ->
+  return rootProject.ext.has(name) ? rootProject.ext.get(name) : (project.properties['BlobCourier_' + name]).toInteger()
+}
+
+ext.coroutines_version = getExtOrDefault('coroutinesVersion')
+ext.espresso_version = getExtOrDefault('espressoVersion')
+ext.gradle_tools_version = getExtOrDefault('gradleToolsVersion')
+ext.junit_version = getExtOrDefault('junitVersion')
+ext.kotlin_version = getExtOrDefault('kotlinVersion')
+ext.localbroadcastmanager_version = getExtOrDefault('localbroadcastmanagerVersion')
+ext.mockk_version = getExtOrDefault('mockkVersion')
+ext.multidex_version = getExtOrDefault('multidexVersion')
+ext.okhttp_version = getExtOrDefault('okhttpVersion')
+ext.robolectric_version = getExtOrDefault('robolectricVersion')
+ext.test_core_version = getExtOrDefault('testCoreVersion')
+ext.test_ext_version = getExtOrDefault('testExtVersion')
+ext.test_logger_version = getExtOrDefault('testLoggerVersion')
+
+ext.compile_sdk_version = getExtOrIntegerDefault('compileSdkVersion')
+ext.build_tools_version = getExtOrDefault('buildToolsVersion')
+ext.min_sdk_version = getExtOrIntegerDefault('minSdkVersion')
+ext.target_sdk_version = getExtOrIntegerDefault('targetSdkVersion')

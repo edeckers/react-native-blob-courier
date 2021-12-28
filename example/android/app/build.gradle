@@ -140,6 +140,12 @@ android {
         versionCode 1
         versionName "1.0"
     }
+
+    lintOptions {
+      abortOnError false
+      checkReleaseBuilds false
+    }
+
     splits {
         abi {
             reset()
@@ -187,6 +193,10 @@ android {
 
         }
     }
+}
+
+dependencyLocking {
+  lockAllConfigurations()
 }
 
 dependencies {

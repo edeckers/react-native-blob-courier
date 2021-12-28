@@ -25,6 +25,11 @@ allprojects {
         mavenCentral()
         mavenLocal()
         maven {
+            // All of React Native (JS, Obj-C sources, Android binaries) is installed from npm; app and library 
+            // versions are allowed to differ, hence two different react-native includes
+            url("$rootDir/../../node_modules/react-native/android")
+        }
+        maven {
             // All of React Native (JS, Obj-C sources, Android binaries) is installed from npm
             url("$rootDir/../node_modules/react-native/android")
         }

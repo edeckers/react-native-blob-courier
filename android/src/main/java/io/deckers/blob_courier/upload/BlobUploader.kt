@@ -46,8 +46,8 @@ class BlobUploader(
       .url(uploaderParameters.uri)
       .method(uploaderParameters.method, requestBody)
       .apply {
-        uploaderParameters.headers.forEach { e: Map.Entry<String, String> ->
-          addHeader(e.key, e.value)
+        uploaderParameters.headers.forEach { (name, value) ->
+          addHeader(name, value)
         }
       }
       .build()
