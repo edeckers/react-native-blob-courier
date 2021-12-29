@@ -1,13 +1,8 @@
 #!/usr/bin/env bash
 
+PROJECT_DIRECTORY=${PROJECT_DIRECTORY:-../../android}
+
 cd `dirname ${0}`
+cd ${PROJECT_DIRECTORY}
 
-./test-gradle-upgrades-available
-ARE_UPGRADES_AVAILABLE=$?
-
-if [[ $ARE_UPGRADES_AVAILABLE -eq 1 ]]; then
-  echo "No upgrades available"
-  exit 0
-fi
-
-./upgrade-gradle-packages
+./gradlew -q dependencies --write-locks
