@@ -76,6 +76,7 @@ jobs:
             yarn.lock
           assignees: edeckers
           base: develop
+          body: "This PR contains automated dependency upgrades for Cocoapods, Gradle and TypeScript"
           commit-message: "chore: upgrade dependencies"
           delete-branch: true
           draft: false
