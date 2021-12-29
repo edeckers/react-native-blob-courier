@@ -1,0 +1,87 @@
+name: Upgrade all dependencies
+on:
+  schedule:
+    - cron:  '0 1 * * *'
+
+env: 
+  node-version: 12
+  android-api-level: 31
+
+jobs:
+  upgrade-npm-packages:
+    runs-on: ubuntu-latest
+    steps: 
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2-beta
+        with:
+          node-version: ${{ env.node-version }}
+      - run: TARGET=typescript make clean upgrade-dependencies
+      - uses: actions/upload-artifact@v2
+        with:
+          name: npm-package-changes
+          path: yarn.lock
+  upgrade-gradle-packages:
+    runs-on: ubuntu-latest
+    needs:
+      - upgrade-npm-packages
+    steps: 
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2-beta
+        with:
+          node-version: ${{ env.node-version }}
+      - uses: actions/download-artifact@v2
+        with:
+          name: npm-package-changes
+      - run: TARGET=android make clean upgrade-dependencies
+      - uses: actions/upload-artifact@v2
+        with:
+          name: gradle-package-changes
+          path: android/gradle.lockfile
+  upgrade-pods:
+    runs-on: m1
+    needs:
+      - upgrade-npm-packages
+    steps: 
+      - uses: actions/setup-node@v2-beta
+        with:
+          node-version: ${{ env.node-version }}
+      - uses: actions/download-artifact@v2
+        with:
+          name: npm-package-changes
+      - run: TARGET=ios make clean upgrade-dependencies
+      - uses: actions/upload-artifact@v2
+        with:
+          name: pod-changes
+          path: ios/Podfile.lock
+  create-pull-request:
+    needs:
+      - upgrade-gradle-packages
+      - upgrade-pods
+    runs-on: ubuntu-latest
+    steps: 
+      - name: Checkout repo
+        uses: actions/checkout@v2
+      - uses: actions/download-artifact@v2
+        with:
+          name: npm-package-changes
+      - uses: actions/download-artifact@v2
+        with:
+          name: pod-changes
+      - uses: actions/download-artifact@v2
+        with:
+          name: gradle-package-changes
+      - uses: peter-evans/create-pull-request@v3
+        with:
+          add-paths: |
+            android/gradle.lockfile
+            ios/Podfile.lock
+            yarn.lock
+          assignees: edeckers
+          base: develop
+          body: "This PR contains automated dependency upgrades for Cocoapods, Gradle and TypeScript"
+          commit-message: "chore: upgrade dependencies"
+          delete-branch: true
+          draft: false
+          labels: |
+            dependencies
+          title: "[Automated] Upgrade dependencies"

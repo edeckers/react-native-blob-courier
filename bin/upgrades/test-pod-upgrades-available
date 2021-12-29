@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+
+PROJECT_DIRECTORY=${PROJECT_DIRECTORY:-../../ios}
+
+POD_OUTDATED_OUTPUT=$(arch -x86_64 pod outdated --project-directory=${PROJECT_DIRECTORY})
+
+POD_UPGRADES_OUTPUT=$(echo "${POD_OUTDATED_OUTPUT}" | grep "[0-9]\+.[0-9]\+.[0-9]\+ ->")
+
+PODS_KEPT_BACK=$(echo "${POD_UPGRADES_OUTPUT}" | awk '{if ($3 == $5) { print $2" "$3} }')
+PODS_UPGRADE_AVAILABLE=$(echo "${POD_UPGRADES_OUTPUT}" | awk '{if ($3 != $5) { print $2" "$3" -> "$5} }')
+
+NUMBER_OF_UPGRADES_AVAILABLE=$(echo ${PODS_UPGRADE_AVAILABLE} | wc -l)
+
+printf "Kept back:\n${PODS_KEPT_BACK:-None}"
+printf "\n\n"
+printf "Upgrades available:\n${PODS_UPGRADE_AVAILABLE:-None}\n"
+
+[[ $PODS_UPGRADE_AVAILABLE && $NUMBER_OF_UPGRADES_AVAILABLE -ge 1 ]]

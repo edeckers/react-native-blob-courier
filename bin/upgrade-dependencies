@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+
+cd `dirname ${0}`/upgrades
+
+upgrade_typescript() {
+  ./run-npm-upgrades
+}
+
+upgrade_android() {
+  ./run-gradle-upgrades
+}
+
+upgrade_ios() {
+  ./run-pod-upgrades
+}
+
+case ${TARGET} in
+  android)
+    upgrade_android
+    ;;
+  ios)
+    upgrade_ios
+    ;;
+  typescript)
+    upgrade_typescript
+    ;;
+esac
+
+exit 0

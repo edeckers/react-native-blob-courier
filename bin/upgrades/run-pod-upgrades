@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+cd `dirname ${0}`
+
+./test-pod-upgrades-available
+ARE_UPGRADES_AVAILABLE=$?
+
+if [[ $ARE_UPGRADES_AVAILABLE -eq 1 ]]; then
+  echo "No upgrades available"
+  exit 0
+fi
+
+./upgrade-pods
