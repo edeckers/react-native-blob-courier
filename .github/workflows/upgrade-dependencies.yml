@@ -79,5 +79,3 @@ jobs:
           labels: |
             dependencies
           title: "[Automated] Upgrade dependencies"
-
-

@@ -11,4 +11,3 @@ if [[ $ARE_UPGRADES_AVAILABLE -eq 1 ]]; then
 fi
 
 ./upgrade-pods
-

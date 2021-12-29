@@ -3,4 +3,3 @@
 PROJECT_DIRECTORY=${PROJECT_DIRECTORY:-../..}
 
 yarn upgrade --cwd=${PROJECT_DIRECTORY}
-
