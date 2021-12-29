@@ -23,6 +23,8 @@ jobs:
           path: yarn.lock
   upgrade-gradle-packages:
     runs-on: ubuntu-latest
+    needs:
+      - upgrade-npm-packages
     steps: 
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2-beta
@@ -54,6 +56,7 @@ jobs:
           path: ios/Podfile.lock
   create-pull-request:
     needs:
+      - upgrade-gradle-packages
       - upgrade-pods
     runs-on: ubuntu-latest
     steps: 
