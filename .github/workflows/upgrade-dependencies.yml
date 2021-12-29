@@ -68,6 +68,9 @@ jobs:
       - uses: actions/download-artifact@v2
         with:
           name: pod-changes
+      - uses: actions/download-artifact@v2
+        with:
+          name: gradle-package-changes
       - uses: peter-evans/create-pull-request@v3
         with:
           add-paths: |
