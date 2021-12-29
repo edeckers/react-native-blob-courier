@@ -110,6 +110,14 @@ private fun filterReadableMapsFromReadableArray(parts: ReadableArray): Array<Rea
     emptyArray(),
     { p, i ->
       if (parts.getType(i) == ReadableType.Map)
+        // Added linter suppression because from RN0.63 -> RN0.64 the interface changes from
+        // @Nullable to @NonNullable, see:
+        // https://github.com/edeckers/react-native-blob-courier/issues/180
+        //
+        // A better solution would probably be to pin the RN version, but that isn't as
+        // straight-forward as just pinning a particular Gradle dependency:
+        // https://github.com/facebook/react-native/issues/13094#issuecomment-288616901
+        @Suppress("UNNECESSARY_NOT_NULL_ASSERTION")
         p.plus(parts.getMap(i)!!)
       else p
     }
