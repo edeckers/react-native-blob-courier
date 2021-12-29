@@ -28,6 +28,9 @@ jobs:
       - uses: actions/setup-node@v2-beta
         with:
           node-version: ${{ env.node-version }}
+      - uses: actions/download-artifact@v2
+        with:
+          name: npm-package-changes
       - run: TARGET=android make clean upgrade
       - uses: actions/upload-artifact@v2
         with:
@@ -41,6 +44,9 @@ jobs:
       - uses: actions/setup-node@v2-beta
         with:
           node-version: ${{ env.node-version }}
+      - uses: actions/download-artifact@v2
+        with:
+          name: npm-package-changes
       - run: TARGET=ios make clean upgrade
       - uses: actions/upload-artifact@v2
         with:
