@@ -1,18 +1,17 @@
 #!/usr/bin/env bash
 
-cd `dirname ${0}`/updates
+cd `dirname ${0}`/upgrades
 
 upgrade_typescript() {
-  ./run-npm-updates
+  ./run-npm-upgrades
 }
 
 upgrade_android() {
-  echo "Not implemented"
-  exit 1
+  ./run-gradle-upgrades
 }
 
 upgrade_ios() {
-  ./run-pod-updates
+  ./run-pod-upgrades
 }
 
 case ${TARGET} in

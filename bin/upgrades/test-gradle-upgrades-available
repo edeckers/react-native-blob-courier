@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+
+exit 0
+
+PROJECT_DIRECTORY=${PROJECT_DIRECTORY:-../../android}
+
+GRADLE_OUTDATED_OUTPUT=$(arch -x86_64 pod outdated --project-directory=${PROJECT_DIRECTORY})
+
+GRADLE_UPGRADES_OUTPUT=$(echo "${GRADLE_OUTDATED_OUTPUT}" | grep "[0-9]\+.[0-9]\+.[0-9]\+ ->")
+
+PACKAGES_KEPT_BACK=$(echo "${GRADLE_UPGRADES_OUTPUT}" | awk '{if ($3 == $5) { print $2" "$3} }')
+PACKAGES_UPGRADE_AVAILABLE=$(echo "${GRADLE_UPGRADES_OUTPUT}" | awk '{if ($3 != $5) { print $2" "$3" -> "$5} }')
+
+NUMBER_OF_UPGRADES_AVAILABLE=$(echo ${PACKAGES_UPGRADE_AVAILABLE} | wc -l)
+
+printf "Kept back:\n${PACKAGES_KEPT_BACK:-None}"
+printf "\n\n"
+printf "Upgrades available:\n${PACKAGES_UPGRADE_AVAILABLE:-None}\n"
+
+[[ $PACKAGES_UPGRADE_AVAILABLE && $NUMBER_OF_UPGRADES_AVAILABLE -ge 1 ]]

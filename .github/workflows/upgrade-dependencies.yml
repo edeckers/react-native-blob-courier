@@ -21,6 +21,18 @@ jobs:
         with:
           name: npm-package-changes
           path: yarn.lock
+  upgrade-gradle-packages:
+    runs-on: ubuntu-latest
+    steps: 
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2-beta
+        with:
+          node-version: ${{ env.node-version }}
+      - run: TARGET=android make clean upgrade
+      - uses: actions/upload-artifact@v2
+        with:
+          name: gradle-package-changes
+          path: android/gradle.lockfile
   upgrade-pods:
     runs-on: m1
     needs:
@@ -50,15 +62,16 @@ jobs:
       - uses: peter-evans/create-pull-request@v3
         with:
           add-paths: |
-            yarn.lock
+            android/gradle.lockfile
             ios/Podfile.lock
+            yarn.lock
           assignees: edeckers
-          base: main
-          commit-message: "chore: update dependencies"
+          base: develop
+          commit-message: "chore: upgrade dependencies"
           delete-branch: true
           draft: true
           labels: |
             dependencies
-          title: "[Automated] update dependencies"
+          title: "[Automated] Upgrade dependencies"
 
 

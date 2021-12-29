@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+PROJECT_DIRECTORY=${PROJECT_DIRECTORY:-../../android}
+
+cd `dirname ${0}`
+cd ${PROJECT_DIRECTORY}
+
+./gradlew dependencies --write-locks
