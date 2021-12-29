@@ -16,7 +16,7 @@ jobs:
       - uses: actions/setup-node@v2-beta
         with:
           node-version: ${{ env.node-version }}
-      - run: TARGET=typescript make clean upgrade
+      - run: TARGET=typescript make clean upgrade-dependencies
       - uses: actions/upload-artifact@v2
         with:
           name: npm-package-changes
@@ -33,7 +33,7 @@ jobs:
       - uses: actions/download-artifact@v2
         with:
           name: npm-package-changes
-      - run: TARGET=android make clean upgrade
+      - run: TARGET=android make clean upgrade-dependencies
       - uses: actions/upload-artifact@v2
         with:
           name: gradle-package-changes
@@ -49,7 +49,7 @@ jobs:
       - uses: actions/download-artifact@v2
         with:
           name: npm-package-changes
-      - run: TARGET=ios make clean upgrade
+      - run: TARGET=ios make clean upgrade-dependencies
       - uses: actions/upload-artifact@v2
         with:
           name: pod-changes
