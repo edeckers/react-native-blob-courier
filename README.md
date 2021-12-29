@@ -19,25 +19,12 @@ Or install using _npm_
 npm install react-native-blob-courier
 ```
 
-Link the library:
-
-NB. Linking can be skipped when the project uses React Native 0.60 or greater, because [autolinking](https://reactnative.dev/blog/2019/07/03/version-60#native-modules-are-now-autolinked) will take care of it
-
-```sh
-react-native link react-native-blob-courier
-```
-
-If _CocoaPods_ is used in the project, make sure to install the pod:
-
-```sh
-cd ios && pod install
-```
-
 ## Requirements
 
 - Android >= 21
 - iOS >= 10
 - Kotlin >= 1.4.x
+- React Native >= 0.63.x
 
 ## Usage
 
