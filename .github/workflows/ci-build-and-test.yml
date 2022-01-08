@@ -3,8 +3,9 @@ on:
   pull_request:
   push:
     branches:
-      - main
+      - bot/maintenance/upgrade-dependencies
       - develop
+      - main
 
 env: 
   android-adb-command-timeout-milliseconds: 20_000L

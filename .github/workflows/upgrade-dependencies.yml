@@ -79,6 +79,7 @@ jobs:
           assignees: edeckers
           base: develop
           body: "This PR contains automated dependency upgrades for Cocoapods, Gradle and TypeScript"
+          branch: bot/maintenance/upgrade-dependencies
           commit-message: "chore: upgrade dependencies"
           delete-branch: true
           draft: false
