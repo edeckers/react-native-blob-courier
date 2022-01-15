@@ -23,7 +23,7 @@ npm install react-native-blob-courier
 
 - Android >= 21
 - iOS >= 10
-- Kotlin >= 1.4.x
+- JDK >= 11
 - React Native >= 0.63.x
 
 ## Usage
