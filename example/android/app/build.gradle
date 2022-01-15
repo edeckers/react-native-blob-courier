@@ -77,6 +77,7 @@ import com.android.build.OutputFile
 
 project.ext.react = [
     enableHermes: false,  // clean and rebuild if changing
+    bundleInRelease: true, // whether to bundle JS and assets in release mode
 ]
 
 apply from: "../../node_modules/react-native/react.gradle"
@@ -129,8 +130,8 @@ android {
     compileSdkVersion rootProject.ext.compileSdkVersion
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
     }
 
     defaultConfig {
@@ -142,8 +143,8 @@ android {
     }
 
     lintOptions {
-      abortOnError false
-      checkReleaseBuilds false
+      abortOnError true
+      checkReleaseBuilds true
     }
 
     splits {
@@ -230,7 +231,7 @@ dependencies {
 // Run this once to be able to run the application with BUCK
 // puts all compile dependencies into folder libs for BUCK to use
 task copyDownloadableDepsToLibs(type: Copy) {
-    from configurations.compile
+    from configurations.implementation
     into 'libs'
 }
 
