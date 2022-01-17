@@ -42,6 +42,8 @@ type BlobFetchNativeInput = BlobFetchInput & BlobRequestTask;
 
 type BlobUploadNativeInput = BlobUploadInput & BlobRequestTask;
 
+type BlobUploadType = 'raw' | 'multipart';
+
 type BlobUploadMultipartInput = BlobMultipartMapUploadRequest &
   BlobRequestSettings;
 
@@ -248,8 +250,15 @@ const uploadParts = <T extends BlobUploadMultipartInputWithTask>(
     input.signal
   );
 
-const uploadBlob = <T extends BlobUploadNativeInput>(input: Readonly<T>) => {
+const uploadBlob = <T extends BlobUploadNativeInput>(
+  input: Readonly<T>,
+  type: BlobUploadType
+) => {
   const { absoluteFilePath, filename, mimeType, multipartName } = input;
+
+  if (type !== 'multipart') {
+    throw new Error('Raw uploadBlob not implemented');
+  }
 
   return uploadParts({
     ...input,
@@ -265,7 +274,6 @@ const uploadBlob = <T extends BlobUploadNativeInput>(input: Readonly<T>) => {
     },
   });
 };
-
 const onProgress = (
   taskId: string,
   fn: (e: BlobProgressEvent) => void,
@@ -278,13 +286,19 @@ const onProgress = (
       onProgress: fn,
       taskId,
     }),
-  uploadBlob: (input: BlobUploadRequest) =>
-    uploadBlob({
-      ...input,
-      ...requestSettings,
-      onProgress: fn,
-      taskId,
-    }),
+  /**
+   * @deprecated This behavior of this method will change from multipart to raw in a future version. For multipart upload use `uploadBlobMultipart` instead.
+   */
+  uploadBlob: (input: BlobUploadRequest, type: BlobUploadType = 'multipart') =>
+    uploadBlob(
+      {
+        ...input,
+        ...requestSettings,
+        onProgress: fn,
+        taskId,
+      },
+      type
+    ),
   uploadParts: (input: BlobUploadMultipartInput) =>
     uploadParts({
       ...input,
@@ -327,12 +341,18 @@ const settings = (taskId: string, requestSettings: BlobRequestSettings) => ({
     }),
   onProgress: (fn: (e: BlobProgressEvent) => void) =>
     onProgress(taskId, fn, requestSettings),
-  uploadBlob: (input: BlobUploadRequest) =>
-    uploadBlob({
-      ...input,
-      ...requestSettings,
-      taskId,
-    }),
+  /**
+   * @deprecated This behavior of this method will change from multipart to raw in a future version. For multipart upload use `uploadBlobMultipart` instead.
+   */
+  uploadBlob: (input: BlobUploadRequest, type: BlobUploadType = 'multipart') =>
+    uploadBlob(
+      {
+        ...input,
+        ...requestSettings,
+        taskId,
+      },
+      type
+    ),
   uploadParts: (input: BlobUploadMultipartInput) =>
     uploadParts({
       ...input,
@@ -355,8 +375,11 @@ export default {
   onProgress: (fn: (e: BlobProgressEvent) => void) =>
     onProgress(createTaskId(), fn),
   settings: (input: BlobRequestSettings) => settings(createTaskId(), input),
-  uploadBlob: (input: BlobUploadInput) =>
-    uploadBlob({ ...input, taskId: createTaskId() }),
+  /**
+   * @deprecated This behavior of this method will change from multipart to raw in a future version. For multipart upload use `uploadBlobMultipart` instead.
+   */
+  uploadBlob: (input: BlobUploadInput, type: BlobUploadType = 'multipart') =>
+    uploadBlob({ ...input, taskId: createTaskId() }, type),
   uploadParts: (input: BlobUploadMultipartInput) =>
     uploadParts({ ...input, taskId: createTaskId() }),
   useDownloadManagerOnAndroid: (
