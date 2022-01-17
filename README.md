@@ -26,6 +26,8 @@ npm install react-native-blob-courier
 - JDK >= 11
 - React Native >= 0.63.x
 
+_Note: you may have success with earlier versions of React Native but these are neither tested nor supported._
+
 ## Usage
 
 The library provides both a fluent and a more concise interface. In the examples the concise approach is applied; fluent interface is demonstrated later in this document.
