@@ -1,19 +1,17 @@
 require_relative '../node_modules/react-native/scripts/react_native_pods'
 require_relative '../node_modules/@react-native-community/cli-platform-ios/native_modules'
 
-platform :ios, '10.0'
-
 target 'BlobCourier' do
-  config = use_native_modules!
-
-  use_react_native!(
-    :path => config["reactNativePath"],
-    # to enable hermes on iOS, change `false` to `true` and then install pods
-    :hermes_enabled => false
-  )
-
   target 'BlobCourierTests' do
-      inherit! :complete
+     platform :ios, '11.0'
+
+     config = use_native_modules!
+
+     use_react_native!(
+       :path => config["reactNativePath"],
+       # to enable hermes on iOS, change `false` to `true` and then install pods
+       :hermes_enabled => false
+     )
 
       # Pods for testing
       pod 'Embassy', '~> 4.1'
@@ -21,3 +19,4 @@ target 'BlobCourier' do
       pod 'MimeParser', :git => "https://github.com/edeckers/MimeParser.git", :branch => "elydeckers/feature/change-deployment-target"
   end
 end
+
