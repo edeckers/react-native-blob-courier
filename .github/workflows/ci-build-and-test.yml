@@ -3,9 +3,13 @@ on:
   pull_request:
   push:
     branches:
-      - bot/maintenance/upgrade-dependencies
       - develop
       - main
+  workflow_dispatch:
+  workflow_run:
+    workflows: ["Upgrade all dependencies"]
+    types:
+      - completed
 
 env: 
   android-adb-command-timeout-milliseconds: 20_000L
