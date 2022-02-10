@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 export declare interface BlobRequestBody {
-  readonly body?: string;
+  readonly body?: BlobBodyData;
 }
 
 export declare interface BlobRequestHeaders {
@@ -37,14 +37,26 @@ export declare interface BlobBaseRequest
     BlobRequestOnProgress,
     BlobRequestUrl {}
 
-export declare interface BlobFetchRequest
+export declare interface BlobRawFetchRequest
   extends BlobBaseRequest,
+    BlobRequestBody,
     BlobRequestMimeType,
     BlobRequestMethod,
-    AndroidFetchSettings,
+    AndroidFetchWithoutManagerSettings,
     IOSFetchSettings {
   readonly filename: string;
 }
+
+export declare interface BlobAndroidManagerFetchRequest
+  extends BlobBaseRequest,
+    AndroidFetchWithManagerSettings,
+    IOSFetchSettings {
+  readonly filename: string;
+}
+
+export type BlobFetchRequest =
+  | BlobRawFetchRequest
+  | BlobAndroidManagerFetchRequest;
 
 export declare interface AndroidDownloadManagerToggle {
   readonly useDownloadManager?: boolean;
@@ -64,10 +76,15 @@ export type TargetType = 'cache' | 'data';
 export declare interface TargetSettings {
   target?: TargetType;
 }
-export declare interface AndroidFetchSettings {
+
+export declare interface AndroidFetchWithManagerSettings {
   readonly android?: AndroidDownloadManagerToggle &
     AndroidDownloadManager &
     TargetSettings;
+}
+
+export declare interface AndroidFetchWithoutManagerSettings {
+  readonly android?: TargetSettings;
 }
 
 export declare interface IOSFetchSettings {
@@ -80,6 +97,7 @@ export declare interface BlobProgressEvent {
 }
 
 export declare type BlobMultipartFormData = string | { [key: string]: any };
+export declare type BlobBodyData = string | { [key: string]: any };
 export declare type BlobMultipartType = 'file' | 'string';
 export declare type BlobMultipart = {
   payload: BlobMultipartFormData | BlobMultipartFormDataFile;
@@ -100,6 +118,7 @@ export declare interface BlobMultipartFormDataFile {
 
 export declare interface BlobUploadRequest
   extends BlobBaseRequest,
+    BlobRequestBody,
     BlobRequestMimeType,
     BlobRequestMethod,
     BlobRequestReturnResponse {
@@ -163,7 +182,6 @@ export declare interface BlobUploadResponse extends BlobUnmanagedData {}
 
 export type BlobFetchInput = BlobFetchRequest &
   BlobRequestSettings &
-  AndroidFetchSettings &
   IOSFetchSettings;
 
 export type BlobUploadInput = BlobUploadRequest & BlobRequestSettings;
