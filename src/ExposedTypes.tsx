@@ -37,22 +37,25 @@ export declare interface BlobBaseRequest
     BlobRequestOnProgress,
     BlobRequestUrl {}
 
-export declare interface BlobRawFetchRequest
-  extends BlobBaseRequest,
-    BlobRequestBody,
-    BlobRequestMimeType,
-    BlobRequestMethod,
-    AndroidFetchWithoutManagerSettings,
-    IOSFetchSettings {
+export declare interface BlobRequestFilename {
   readonly filename: string;
 }
 
+export declare interface BlobRawFetchRequest
+  extends BlobBaseRequest,
+    BlobRequestBody,
+    BlobRequestFilename,
+    BlobRequestMethod,
+    BlobRequestMimeType,
+    AndroidFetchWithoutManagerSettings,
+    IOSFetchSettings {}
+
 export declare interface BlobAndroidManagerFetchRequest
   extends BlobBaseRequest,
+    BlobRequestFilename,
+    BlobRequestMimeType,
     AndroidFetchWithManagerSettings,
-    IOSFetchSettings {
-  readonly filename: string;
-}
+    IOSFetchSettings {}
 
 export type BlobFetchRequest =
   | BlobRawFetchRequest
