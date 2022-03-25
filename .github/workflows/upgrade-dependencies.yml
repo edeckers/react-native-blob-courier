@@ -5,7 +5,7 @@ on:
     - cron:  '0 1 * * *'
 
 env: 
-  node-version: 12
+  node-version: 14
   android-api-level: 31
 
 jobs:

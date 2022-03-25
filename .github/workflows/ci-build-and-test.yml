@@ -18,7 +18,7 @@ env:
   android-avd-ram-size: 1024M
   android-promise-timeout-milliseconds: 75_000L
   android-sdk-root: /Users/ely/Library/Android/sdk
-  node-version: 12
+  node-version: 14
 
 jobs:
   build-typescript-linux:

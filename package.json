@@ -25,14 +25,17 @@
     "!**/__mocks__"
   ],
   "scripts": {
-    "test": "jest --ci",
-    "typescript": "tsc --noEmit",
-    "lint": "eslint \"**/*.{js,ts,tsx}\"",
-    "prepare": "bob build",
-    "release": "release-it",
+    "bootstrap": "yarn example && yarn && yarn pods",
+    "compile": "bob build",
     "example": "yarn --cwd example",
+    "lint": "eslint \"**/*.{js,ts,tsx}\"",
+    "lint:fix": "yarn run lint --fix",
     "pods": "cd example && pod-install --quiet",
-    "bootstrap": "yarn example && yarn && yarn pods"
+    "prepare": "npx husky install && yarn compile",
+    "prettier": "npx prettier src --check",
+    "prettier:fix": "yarn run prettier --write",
+    "test": "jest --ci --config .jestrc.json",
+    "typescript": "tsc --noEmit"
   },
   "keywords": [
     "react-native",
@@ -49,18 +52,21 @@
   "devDependencies": {
     "@babel/core": "^7.12.9",
     "@babel/preset-env": "^7.1.6",
-    "@commitlint/config-conventional": "^12.0.1",
+    "@commitlint/config-conventional": "^16.2.1",
     "@react-native-community/eslint-config": "^2.0.0",
-    "@release-it/conventional-changelog": "^3.0.1",
+    "@semantic-release/git": "^10.0.1",
+    "@semantic-release/github": "^8.0.2",
+    "@semantic-release/npm": "^9.0.1",
+    "@semantic-release/release-notes-generator": "^10.0.3",
     "@types/jest": "^26.0.0",
     "@types/react": "17.0.1",
     "@types/react-native": "0.64.10",
     "abort-controller": "^3.0.0",
-    "commitlint": "^12.0.1",
+    "commitlint": "^16.2.3",
     "eslint": "^7.22.0",
     "eslint-config-prettier": "^7.0.0",
     "eslint-plugin-prettier": "^3.1.3",
-    "husky": "^4.2.5",
+    "husky": "^7.0.4",
     "jest": "^27.3.1",
     "jest-junit": "^13.0.0",
     "pod-install": "^0.1.0",
@@ -69,71 +75,12 @@
     "react-native": "0.65.1",
     "react-native-builder-bob": "^0.18.0",
     "react-native-codegen": "^0.0.12",
-    "release-it": "^14.10.0",
+    "semantic-release": "^19.0.2",
     "typescript": "4.0.8"
   },
   "peerDependencies": {
     "react": "*",
     "react-native": "*"
-  },
-  "husky": {
-    "hooks": {
-      "commit-msg": "commitlint -E HUSKY_GIT_PARAMS",
-      "pre-commit": "yarn lint && yarn typescript"
-    }
-  },
-  "commitlint": {
-    "extends": [
-      "@commitlint/config-conventional"
-    ]
-  },
-  "release-it": {
-    "git": {
-      "commitMessage": "chore: release ${version}",
-      "tagName": "v${version}"
-    },
-    "npm": {
-      "publish": true
-    },
-    "github": {
-      "release": true
-    },
-    "plugins": {
-      "@release-it/conventional-changelog": {
-        "preset": "angular"
-      }
-    }
-  },
-  "eslintConfig": {
-    "extends": [
-      "@react-native-community",
-      "prettier"
-    ],
-    "rules": {
-      "prettier/prettier": [
-        "error",
-        {
-          "quoteProps": "consistent",
-          "singleQuote": true,
-          "tabWidth": 2,
-          "trailingComma": "es5",
-          "useTabs": false
-        }
-      ]
-    }
-  },
-  "eslintIgnore": [
-    "android/",
-    "lib/",
-    "node_modules/",
-    "output/"
-  ],
-  "prettier": {
-    "quoteProps": "consistent",
-    "singleQuote": true,
-    "tabWidth": 2,
-    "trailingComma": "es5",
-    "useTabs": false
   },
   "@react-native-community/bob": {
     "source": "src",
