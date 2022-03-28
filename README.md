@@ -579,6 +579,10 @@ CameraRoll.save(cageLocalPath);
 
 See the [contributing guide](CONTRIBUTING.md) to learn how to contribute to the  repository and the development workflow.
 
+## Code of Conduct
+
+[Contributor Code of Conduct](CODE_OF_CONDUCT.md). By participating in this project you agree to abide by its terms.
+
 ## License
 
 MPL-2.0
