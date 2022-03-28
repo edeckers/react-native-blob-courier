@@ -22,7 +22,7 @@ help:
 lint: build
 	bin/run-lint
 
-release: build
+release:
 	bin/run-release
 
 run: build

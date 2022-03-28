@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 function cd_to_root_directory () {
-  cd `dirname ${0}`/../../
+  cd `dirname ${0}`/../
 }
 
 function publish_semantic_release () {
@@ -27,4 +27,5 @@ function build_dist () {
 
 cd_to_root_directory
 
+build_dist
 publish_semantic_release
