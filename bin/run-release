@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+
+function cd_to_root_directory () {
+  cd `dirname ${0}`/../../
+}
+
+function publish_semantic_release () {
+  echo "Publishing release"
+
+  publish_result=`yarn semantic-release`
+  echo "${publish_result}"
+  
+  no_release_count=`echo "${publish_result}" | grep -cim1 "no new version"`
+  is_release=`[ ${no_release_count} -eq 0 ] && echo 1 || echo 0`
+
+  if [[ ${is_release} -ne 1 ]]; then
+    echo "No release was created. Aborting."
+    exit 0
+  fi
+
+  echo "Published release"
+}
+
+function build_dist () {
+  yarn
+}
+
+cd_to_root_directory
+
+publish_semantic_release

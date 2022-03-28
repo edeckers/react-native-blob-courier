@@ -22,6 +22,9 @@ help:
 lint: build
 	bin/run-lint
 
+release: build
+	bin/run-release
+
 run: build
 	cd example && yarn && yarn start
 

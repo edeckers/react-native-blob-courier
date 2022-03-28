@@ -7,8 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		5F84771B5E443D02DACF06B9 /* libPods-BlobCourierTests.a in Frameworks */ = {isa = PBXBuildFile; fileRef = AFE83B27012D9C89DE2AA201 /* libPods-BlobCourierTests.a */; };
 		B4D246CE99CE282849547A91 /* libPods-BlobCourier.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 28FF03FEEF6E261B6C03FBF0 /* libPods-BlobCourier.a */; };
-		B8CB3FC309023B2A7FAF9671 /* libPods-BlobCourier-BlobCourierTests.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A36783EDD120C6992821F367 /* libPods-BlobCourier-BlobCourierTests.a */; };
 		B92C3A1025935C2700630464 /* EmbeddedHttpServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = B92C3A0F25935C2700630464 /* EmbeddedHttpServer.swift */; };
 		B96829D9254EC727002B4B04 /* UploaderDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9409539253E1F5800A58583 /* UploaderDelegate.swift */; };
 		B96829DF254EC736002B4B04 /* DownloaderDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B940948F253DFC0800A58583 /* DownloaderDelegate.swift */; };
@@ -66,9 +66,10 @@
 /* Begin PBXFileReference section */
 		0656379707A557E375019BF3 /* Pods-BlobCourier-BlobCourierTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BlobCourier-BlobCourierTests.release.xcconfig"; path = "Target Support Files/Pods-BlobCourier-BlobCourierTests/Pods-BlobCourier-BlobCourierTests.release.xcconfig"; sourceTree = "<group>"; };
 		09C65277E35A21C959D625EC /* Pods-BlobCourier.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BlobCourier.release.xcconfig"; path = "Target Support Files/Pods-BlobCourier/Pods-BlobCourier.release.xcconfig"; sourceTree = "<group>"; };
+		0B3E67BEB08C4283A6BA0AEF /* Pods-BlobCourierTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BlobCourierTests.release.xcconfig"; path = "Target Support Files/Pods-BlobCourierTests/Pods-BlobCourierTests.release.xcconfig"; sourceTree = "<group>"; };
 		134814201AA4EA6300B7C361 /* libBlobCourier.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libBlobCourier.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		28FF03FEEF6E261B6C03FBF0 /* libPods-BlobCourier.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-BlobCourier.a"; sourceTree = BUILT_PRODUCTS_DIR; };
-		A36783EDD120C6992821F367 /* libPods-BlobCourier-BlobCourierTests.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-BlobCourier-BlobCourierTests.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		AFE83B27012D9C89DE2AA201 /* libPods-BlobCourierTests.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-BlobCourierTests.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		B582B99CFA330E8B9AA72A84 /* Pods-BlobCourier.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BlobCourier.debug.xcconfig"; path = "Target Support Files/Pods-BlobCourier/Pods-BlobCourier.debug.xcconfig"; sourceTree = "<group>"; };
 		B92C3A0F25935C2700630464 /* EmbeddedHttpServer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EmbeddedHttpServer.swift; sourceTree = "<group>"; };
 		B940948F253DFC0800A58583 /* DownloaderDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloaderDelegate.swift; sourceTree = "<group>"; };
@@ -93,6 +94,7 @@
 		B9AF75BD25DF29DF00B68816 /* CancelParameters.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CancelParameters.swift; sourceTree = "<group>"; };
 		B9AF75BE25DF29DF00B68816 /* CancelParameterFactory.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CancelParameterFactory.swift; sourceTree = "<group>"; };
 		D8C2198A611AEEDA6D5347D4 /* Pods-BlobCourier-BlobCourierTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BlobCourier-BlobCourierTests.debug.xcconfig"; path = "Target Support Files/Pods-BlobCourier-BlobCourierTests/Pods-BlobCourier-BlobCourierTests.debug.xcconfig"; sourceTree = "<group>"; };
+		EC1CE78A005E7D5559E04E80 /* Pods-BlobCourierTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BlobCourierTests.debug.xcconfig"; path = "Target Support Files/Pods-BlobCourierTests/Pods-BlobCourierTests.debug.xcconfig"; sourceTree = "<group>"; };
 		F4FF95D5245B92E700C19C63 /* BlobCourier-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "BlobCourier-Bridging-Header.h"; sourceTree = "<group>"; };
 		F4FF95D6245B92E800C19C63 /* BlobCourier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlobCourier.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -111,7 +113,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				B96829EA254EC872002B4B04 /* libBlobCourier.a in Frameworks */,
-				B8CB3FC309023B2A7FAF9671 /* libPods-BlobCourier-BlobCourierTests.a in Frameworks */,
+				5F84771B5E443D02DACF06B9 /* libPods-BlobCourierTests.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -125,6 +127,8 @@
 				09C65277E35A21C959D625EC /* Pods-BlobCourier.release.xcconfig */,
 				D8C2198A611AEEDA6D5347D4 /* Pods-BlobCourier-BlobCourierTests.debug.xcconfig */,
 				0656379707A557E375019BF3 /* Pods-BlobCourier-BlobCourierTests.release.xcconfig */,
+				EC1CE78A005E7D5559E04E80 /* Pods-BlobCourierTests.debug.xcconfig */,
+				0B3E67BEB08C4283A6BA0AEF /* Pods-BlobCourierTests.release.xcconfig */,
 			);
 			path = Pods;
 			sourceTree = "<group>";
@@ -162,7 +166,7 @@
 			isa = PBXGroup;
 			children = (
 				28FF03FEEF6E261B6C03FBF0 /* libPods-BlobCourier.a */,
-				A36783EDD120C6992821F367 /* libPods-BlobCourier-BlobCourierTests.a */,
+				AFE83B27012D9C89DE2AA201 /* libPods-BlobCourierTests.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -341,7 +345,7 @@
 			outputFileListPaths = (
 			);
 			outputPaths = (
-				"$(DERIVED_FILE_DIR)/Pods-BlobCourier-BlobCourierTests-checkManifestLockResult.txt",
+				"$(DERIVED_FILE_DIR)/Pods-BlobCourierTests-checkManifestLockResult.txt",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -376,7 +380,7 @@
 			files = (
 			);
 			inputPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-BlobCourier-BlobCourierTests/Pods-BlobCourier-BlobCourierTests-resources.sh",
+				"${PODS_ROOT}/Target Support Files/Pods-BlobCourierTests/Pods-BlobCourierTests-resources.sh",
 				"${PODS_CONFIGURATION_BUILD_DIR}/React-Core/AccessibilityResources.bundle",
 			);
 			name = "[CP] Copy Pods Resources";
@@ -385,7 +389,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-BlobCourier-BlobCourierTests/Pods-BlobCourier-BlobCourierTests-resources.sh\"\n";
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-BlobCourierTests/Pods-BlobCourierTests-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
@@ -581,7 +585,7 @@
 		};
 		B96829EE254EC872002B4B04 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = D8C2198A611AEEDA6D5347D4 /* Pods-BlobCourier-BlobCourierTests.debug.xcconfig */;
+			baseConfigurationReference = EC1CE78A005E7D5559E04E80 /* Pods-BlobCourierTests.debug.xcconfig */;
 			buildSettings = {
 				BUNDLE_LOADER = "";
 				CLANG_ANALYZER_NONNULL = YES;
@@ -613,7 +617,7 @@
 		};
 		B96829EF254EC872002B4B04 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 0656379707A557E375019BF3 /* Pods-BlobCourier-BlobCourierTests.release.xcconfig */;
+			baseConfigurationReference = 0B3E67BEB08C4283A6BA0AEF /* Pods-BlobCourierTests.release.xcconfig */;
 			buildSettings = {
 				BUNDLE_LOADER = "";
 				CLANG_ANALYZER_NONNULL = YES;

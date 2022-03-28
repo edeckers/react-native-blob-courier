@@ -272,7 +272,7 @@ PODS:
   - React-jsinspector (0.66.1)
   - React-logger (0.66.1):
     - glog
-  - react-native-blob-courier (3.0.3):
+  - react-native-blob-courier (3.0.4):
     - React
   - React-perflogger (0.66.1)
   - React-RCTActionSheet (0.66.1):
@@ -511,7 +511,7 @@ SPEC CHECKSUMS:
   React-jsiexecutor: db2f6e22a534d466fc0e34e622df47d9d20bab2f
   React-jsinspector: 8c0517dee5e8c70cd6c3066f20213ff7ce54f176
   React-logger: bfddd3418dc1d45b77b822958f3e31422e2c179b
-  react-native-blob-courier: c84f6dc41cec5652f50aaf272f93a623975bf4c2
+  react-native-blob-courier: 050eb1228bb23e450613f9f74f31a695cf4ddfbd
   React-perflogger: fcac6090a80e3d967791b4c7f1b1a017f9d4a398
   React-RCTActionSheet: caf5913d9f9e605f5467206cf9d1caa6d47d7ad6
   React-RCTAnimation: 6539e3bf594f6a529cd861985ba6548286ae1ead
