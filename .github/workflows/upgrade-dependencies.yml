@@ -6,7 +6,6 @@ on:
 
 env: 
   node-version: 14
-  android-api-level: 31
 
 jobs:
   upgrade-npm-packages:
@@ -21,23 +20,6 @@ jobs:
         with:
           name: npm-package-changes
           path: yarn.lock
-  upgrade-gradle-packages:
-    runs-on: ubuntu-latest
-    needs:
-      - upgrade-npm-packages
-    steps: 
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2-beta
-        with:
-          node-version: ${{ env.node-version }}
-      - uses: actions/download-artifact@v2
-        with:
-          name: npm-package-changes
-      - run: TARGET=android make clean upgrade-dependencies
-      - uses: actions/upload-artifact@v2
-        with:
-          name: gradle-package-changes
-          path: android/gradle.lockfile
   upgrade-pods:
     runs-on: m1
     needs:
@@ -56,7 +38,6 @@ jobs:
           path: ios/Podfile.lock
   create-pull-request:
     needs:
-      - upgrade-gradle-packages
       - upgrade-pods
     runs-on: ubuntu-latest
     steps: 
@@ -69,19 +50,14 @@ jobs:
         with:
           name: pod-changes
           path: ios
-      - uses: actions/download-artifact@v2
-        with:
-          name: gradle-package-changes
-          path: android
       - uses: peter-evans/create-pull-request@v3
         with:
           add-paths: |
-            android/gradle.lockfile
             ios/Podfile.lock
             yarn.lock
           assignees: edeckers
           base: develop
-          body: "This PR contains automated dependency upgrades for Cocoapods, Gradle and TypeScript"
+          body: "This PR contains automated dependency upgrades for Cocoapods and TypeScript"
           branch: bot/maintenance/upgrade-dependencies
           commit-message: "chore: upgrade dependencies"
           delete-branch: true
