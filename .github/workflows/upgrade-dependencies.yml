@@ -59,7 +59,7 @@ jobs:
           base: develop
           body: "This PR contains automated dependency upgrades for Cocoapods and TypeScript"
           branch: bot/maintenance/upgrade-dependencies
-          commit-message: "chore: upgrade dependencies"
+          commit-message: "fix(deps): upgrade dependencies"
           delete-branch: true
           draft: false
           labels: |
