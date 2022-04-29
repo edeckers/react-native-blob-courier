@@ -19,9 +19,9 @@ import com.facebook.react.fabric.CoreComponentsRegistry;
 import com.facebook.react.fabric.FabricJSIModuleProvider;
 import com.facebook.react.fabric.ReactNativeConfig;
 import com.facebook.react.uimanager.ViewManagerRegistry;
-import io.deckers.blob_courier.BuildConfig;
-import io.deckers.blob_courier.newarchitecture.components.MainComponentsRegistry;
-import io.deckers.blob_courier.newarchitecture.modules.MainApplicationTurboModuleManagerDelegate;
+import io.deckers.blob_courier_example.BuildConfig;
+import io.deckers.blob_courier_example.newarchitecture.components.MainComponentsRegistry;
+import io.deckers.blob_courier_example.newarchitecture.modules.MainApplicationTurboModuleManagerDelegate;
 import java.util.ArrayList;
 import java.util.List;
 
