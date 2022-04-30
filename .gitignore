@@ -1,5 +1,6 @@
 *.log
 *.hprof
+bin
 
 # OSX
 #

@@ -12,16 +12,18 @@ buildscript {
   }
 }
 
+def isNewArchitectureEnabled() {
+    return project.hasProperty("newArchEnabled") && project.newArchEnabled == "true"
+}
+
+
 plugins {
   id "com.adarshr.test-logger" version "$test_logger_version"
 }
 
+apply plugin: 'com.facebook.react'
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
-
-dependencyLocking {
-    lockAllConfigurations()
-}
 
 android {
   compileSdkVersion project.ext.compile_sdk_version
@@ -68,6 +70,15 @@ android {
   }
   kotlinOptions {
     jvmTarget = JavaVersion.VERSION_11.toString()
+  }
+  sourceSets.main {
+      java {
+          if (!isNewArchitectureEnabled()) {
+              srcDirs += [
+                  "build/generated/source/codegen/java"
+              ]
+          }
+      }
   }
 }
 
@@ -144,6 +155,7 @@ repositories {
 dependencies {
   // noinspection GradleDynamicVersion
   api "com.facebook.react:react-native:+"
+  implementation project(':ReactAndroid')
   implementation "androidx.localbroadcastmanager:localbroadcastmanager:$localbroadcastmanager_version"
   implementation "androidx.multidex:multidex:$multidex_version"
   implementation "com.squareup.okhttp3:okhttp:$okhttp_version"
@@ -161,6 +173,11 @@ dependencies {
   androidTestImplementation "org.jetbrains.kotlinx:kotlinx-coroutines-test:$coroutines_version"
 }
 
-dependencyLocking {
-    lockAllConfigurations()
+if (isNewArchitectureEnabled()) {
+    react {
+        codegenJavaPackageName = "io.deckers.blob_courier.spec"
+        jsRootDir = file("../src/")
+        reactRoot = rootProject.file("../node_modules/react-native/")
+        codegenDir = rootProject.file("../node_modules/react-native-codegen/")
+    }
 }
