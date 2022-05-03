@@ -6,18 +6,38 @@
  */
 package io.deckers.blob_courier
 
-import com.facebook.react.ReactPackage
-import com.facebook.react.bridge.NativeModule
+import com.facebook.react.TurboReactPackage
 import com.facebook.react.bridge.ReactApplicationContext
-import com.facebook.react.uimanager.ViewManager
-import java.util.Arrays
+import com.facebook.react.bridge.NativeModule
+import io.deckers.blob_courier.common.LIBRARY_NAME
+import com.facebook.react.module.model.ReactModuleInfoProvider
+import com.facebook.react.module.model.ReactModuleInfo
+import java.util.HashMap
 
-class BlobCourierPackage : ReactPackage {
-  override fun createNativeModules(reactContext: ReactApplicationContext): List<NativeModule> {
-    return Arrays.asList<NativeModule>(BlobCourierModule(reactContext))
-  }
+class BlobCourierPackage : TurboReactPackage() {
+    override fun getModule(name: String, reactContext: ReactApplicationContext): NativeModule? {
+        return if (name == LIBRARY_NAME) {
+            BlobCourierModule(reactContext)
+        } else {
+            null
+        }
+    }
 
-  override fun createViewManagers(reactContext: ReactApplicationContext): List<ViewManager<*, *>> {
-    return emptyList()
-  }
+    override fun getReactModuleInfoProvider(): ReactModuleInfoProvider {
+        return ReactModuleInfoProvider {
+            val moduleInfos: MutableMap<String, ReactModuleInfo> = HashMap()
+            // val isTurboModule: Boolean = BuildConfig.IS_NEW_ARCHITECTURE_ENABLED
+            val isTurboModule = true
+            moduleInfos[LIBRARY_NAME] = ReactModuleInfo(
+                LIBRARY_NAME,
+                LIBRARY_NAME,
+                false,  // canOverrideExistingModule
+                false,  // needsEagerInit
+                true,  // hasConstants
+                false,  // isCxxModule
+                isTurboModule // isTurboModule
+            )
+            moduleInfos
+        }
+    }
 }

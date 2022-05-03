@@ -60,7 +60,7 @@
     "@semantic-release/release-notes-generator": "^10.0.3",
     "@types/jest": "^26.0.0",
     "@types/react": "17.0.1",
-    "@types/react-native": "0.64.10",
+    "@types/react-native": "0.67.6",
     "abort-controller": "^3.0.0",
     "commitlint": "^16.2.3",
     "eslint": "^7.22.0",

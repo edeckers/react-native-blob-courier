@@ -13,7 +13,8 @@ buildscript {
 }
 
 def isNewArchitectureEnabled() {
-    return project.hasProperty("newArchEnabled") && project.newArchEnabled == "true"
+    // return project.hasProperty("newArchEnabled") && project.newArchEnabled == "true"
+    return true
 }
 
 
@@ -21,9 +22,12 @@ plugins {
   id "com.adarshr.test-logger" version "$test_logger_version"
 }
 
-apply plugin: 'com.facebook.react'
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
+
+if (isNewArchitectureEnabled()) {
+    apply plugin: 'com.facebook.react'
+}
 
 android {
   compileSdkVersion project.ext.compile_sdk_version
@@ -73,11 +77,12 @@ android {
   }
   sourceSets.main {
       java {
-          if (!isNewArchitectureEnabled()) {
+          // if (!isNewArchitectureEnabled()) {
+          // if (isNewArchitectureEnabled()) {
               srcDirs += [
                   "build/generated/source/codegen/java"
               ]
-          }
+          // }
       }
   }
 }
@@ -155,7 +160,6 @@ repositories {
 dependencies {
   // noinspection GradleDynamicVersion
   api "com.facebook.react:react-native:+"
-  implementation project(':ReactAndroid')
   implementation "androidx.localbroadcastmanager:localbroadcastmanager:$localbroadcastmanager_version"
   implementation "androidx.multidex:multidex:$multidex_version"
   implementation "com.squareup.okhttp3:okhttp:$okhttp_version"
@@ -176,6 +180,7 @@ dependencies {
 if (isNewArchitectureEnabled()) {
     react {
         codegenJavaPackageName = "io.deckers.blob_courier.spec"
+        libraryName = "blob_courier"
         jsRootDir = file("../src/")
         reactRoot = rootProject.file("../node_modules/react-native/")
         codegenDir = rootProject.file("../node_modules/react-native-codegen/")

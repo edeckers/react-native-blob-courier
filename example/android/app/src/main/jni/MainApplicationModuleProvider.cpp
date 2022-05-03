@@ -1,4 +1,5 @@
 #include "MainApplicationModuleProvider.h"
+#include <blob_courier.h>
 
 #include <rncore.h>
 
@@ -17,6 +18,11 @@ std::shared_ptr<TurboModule> MainApplicationModuleProvider(
   //    return module;
   // }
   // return rncore_ModuleProvider(moduleName, params);
+  auto module = blob_courier_ModuleProvider(moduleName, params);
+  if (module != nullptr) {
+      return module;
+  }
+
   return rncore_ModuleProvider(moduleName, params);
 }
 
