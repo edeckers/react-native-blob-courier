@@ -25,6 +25,8 @@ import io.deckers.blob_courier_example.newarchitecture.modules.MainApplicationTu
 import java.util.ArrayList;
 import java.util.List;
 
+import io.deckers.blob_courier.BlobCourierPackage;
+
 /**
  * A {@link ReactNativeHost} that helps you load everything needed for the New Architecture, both
  * TurboModule delegates and the Fabric Renderer.
@@ -49,6 +51,9 @@ public class MainApplicationReactNativeHost extends ReactNativeHost {
     //     packages.add(new MyReactNativePackage());
     // TurboModules must also be loaded here providing a valid TurboReactPackage implementation:
     //     packages.add(new TurboReactPackage() { ... });
+
+    packages.add(new BlobCourierPackage());
+
     // If you have custom Fabric Components, their ViewManagers should also be loaded here
     // inside a ReactPackage.
     return packages;

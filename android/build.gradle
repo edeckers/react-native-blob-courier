@@ -40,6 +40,7 @@ android {
     versionName "1.0"
     testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     multiDexEnabled true
+    buildConfigField "boolean", "IS_NEW_ARCHITECTURE_ENABLED", isNewArchitectureEnabled().toString()
     buildConfigField "Long", "ADB_COMMAND_TIMEOUT_MILLISECONDS", ADB_COMMAND_TIMEOUT_MILLISECONDS
     buildConfigField "Long", "PROMISE_TIMEOUT_MILLISECONDS", PROMISE_TIMEOUT_MILLISECONDS
   }
@@ -179,10 +180,10 @@ dependencies {
 
 if (isNewArchitectureEnabled()) {
     react {
-        codegenJavaPackageName = "io.deckers.blob_courier.spec"
+        codegenJavaPackageName = "io.deckers.blob_courier"
         libraryName = "blob_courier"
         jsRootDir = file("../src/")
-        reactRoot = rootProject.file("../node_modules/react-native/")
-        codegenDir = rootProject.file("../node_modules/react-native-codegen/")
+        // reactRoot = rootProject.file("../node_modules/react-native/")
+        // codegenDir = rootProject.file("../node_modules/react-native-codegen/")
     }
 }

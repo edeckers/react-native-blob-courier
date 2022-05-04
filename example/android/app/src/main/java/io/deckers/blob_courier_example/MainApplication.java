@@ -2,6 +2,7 @@ package io.deckers.blob_courier_example;
 
 import androidx.annotation.NonNull;
 
+import android.util.Log;
 import android.app.Application;
 import android.content.Context;
 import com.facebook.react.PackageList;
@@ -17,9 +18,10 @@ import io.deckers.blob_courier_example.newarchitecture.modules.MainApplicationTu
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 
-// import io.deckers.blob_courier.BlobCourierPackage;
+import io.deckers.blob_courier.BlobCourierPackage;
 
 public class MainApplication extends Application implements ReactApplication {
+  private static final String TAG = "BlobCourier";
 
   private final ReactNativeHost mReactNativeHost =
       new ReactNativeHost(this) {
@@ -34,7 +36,7 @@ public class MainApplication extends Application implements ReactApplication {
           List<ReactPackage> packages = new PackageList(this).getPackages();
           // Packages that cannot be autolinked yet can be added manually here, for example:
           // packages.add(new MyReactNativePackage());
-          // packages.add(new BlobCourierPackage());
+          packages.add(new BlobCourierPackage());
           return packages;
         }
 
@@ -42,12 +44,12 @@ public class MainApplication extends Application implements ReactApplication {
         protected String getJSMainModuleName() {
           return "index";
         }
-      
-        @NonNull
-        @Override
-        protected ReactPackageTurboModuleManagerDelegate.Builder getReactPackageTurboModuleManagerDelegateBuilder() {
-            return new MainApplicationTurboModuleManagerDelegate.Builder();
-        }
+
+        // @NonNull
+        // @Override
+        // protected ReactPackageTurboModuleManagerDelegate.Builder getReactPackageTurboModuleManagerDelegateBuilder() {
+        //     return new MainApplicationTurboModuleManagerDelegate.Builder();
+        // }
       };
 
   private final ReactNativeHost mNewArchitectureNativeHost =
@@ -55,16 +57,17 @@ public class MainApplication extends Application implements ReactApplication {
 
   @Override
   public ReactNativeHost getReactNativeHost() {
-    if (BuildConfig.IS_NEW_ARCHITECTURE_ENABLED) {
+    // if (BuildConfig.IS_NEW_ARCHITECTURE_ENABLED) {
       return mNewArchitectureNativeHost;
-    } else {
-      return mReactNativeHost;
-    }
+    // } else {
+    //  return mReactNativeHost;
+    // }
   }
 
   @Override
   public void onCreate() {
     super.onCreate();
+    Log.i(TAG,"CCCCCCCCCCCCCCCCCCCCCCCCCCC");
     // If you opted-in for the New Architecture, we enable the TurboModule system
     // ReactFeatureFlags.useTurboModules = BuildConfig.IS_NEW_ARCHITECTURE_ENABLED;
     ReactFeatureFlags.useTurboModules = true;

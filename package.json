@@ -99,5 +99,14 @@
       "module",
       "typescript"
     ]
+  },
+  "codegenConfig": {
+    "libraries": [
+      {
+        "name": "RNBlobCourierSpec",
+        "type": "modules",
+        "jsSrcsDir": "src"
+      }
+    ]
   }
 }

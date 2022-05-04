@@ -8,10 +8,7 @@ package io.deckers.blob_courier
 
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
-import com.facebook.react.bridge.ReactContextBaseJavaModule
-import com.facebook.react.bridge.ReactMethod
 import com.facebook.react.bridge.ReadableMap
-import com.facebook.react.module.annotations.ReactModule
 import com.facebook.react.modules.network.OkHttpClientProvider
 import io.deckers.blob_courier.cancel.CancellationParameterFactory
 import io.deckers.blob_courier.cancel.RequestCanceller
@@ -33,7 +30,6 @@ import io.deckers.blob_courier.react.processUnexpectedException
 import io.deckers.blob_courier.react.toReactMap
 import io.deckers.blob_courier.upload.BlobUploader
 import io.deckers.blob_courier.upload.UploaderParameterFactory
-import io.deckers.blob_courier.spec.NativeBlobCourierSpec
 import java.net.UnknownHostException
 import kotlin.concurrent.thread
 
@@ -58,10 +54,6 @@ class TurboBlobCourierModule(private val reactContext: ReactApplicationContext) 
 
   companion object {
     const val NAME = LIBRARY_NAME
-
-    init {
-        System.loadLibrary("blob_courier_example_appmodules")
-    }
   }
 
   override fun getName(): String = LIBRARY_NAME

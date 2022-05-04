@@ -10,4 +10,4 @@ export interface Spec extends TurboModule {
   uploadBlob(input: Object): Promise<Object>;
 }
 
-export default TurboModuleRegistry.get<Spec>('BlobCourier');
+export default TurboModuleRegistry.getEnforcing<Spec>('BlobCourier');

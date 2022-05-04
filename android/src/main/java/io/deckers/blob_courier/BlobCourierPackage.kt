@@ -6,6 +6,7 @@
  */
 package io.deckers.blob_courier
 
+import android.util.Log
 import com.facebook.react.TurboReactPackage
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.NativeModule
@@ -14,18 +15,29 @@ import com.facebook.react.module.model.ReactModuleInfoProvider
 import com.facebook.react.module.model.ReactModuleInfo
 import java.util.HashMap
 
+private val TAG = "BlobCourier"
+
 class BlobCourierPackage : TurboReactPackage() {
+    init {
+      Log.i(TAG,"YYYYYYYYYYYYYYYYYY")
+    }
+
     override fun getModule(name: String, reactContext: ReactApplicationContext): NativeModule? {
-        return if (name == LIBRARY_NAME) {
-            BlobCourierModule(reactContext)
-        } else {
-            null
-        }
+        Log.i(TAG,"XXXXXXXXXXXXXXXXXXXXXXX")
+        return TurboBlobCourierModule(reactContext)
+
+        // return if (name == LIBRARY_NAME) {
+        //     TurboBlobCourierModule(reactContext)
+        // } else {
+        //     null
+        // }
     }
 
     override fun getReactModuleInfoProvider(): ReactModuleInfoProvider {
-        return ReactModuleInfoProvider {
+      Log.i(TAG,"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
+      return ReactModuleInfoProvider {
             val moduleInfos: MutableMap<String, ReactModuleInfo> = HashMap()
+            Log.i(TAG,"BBBBBBBBBBBBBBBBBBBBBBBBBBBBBB")
             // val isTurboModule: Boolean = BuildConfig.IS_NEW_ARCHITECTURE_ENABLED
             val isTurboModule = true
             moduleInfos[LIBRARY_NAME] = ReactModuleInfo(
