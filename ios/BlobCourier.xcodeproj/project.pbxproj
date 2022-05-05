@@ -18,8 +18,8 @@
 		B96A888E25BC566300F42B65 /* BlobDownloader.swift in Sources */ = {isa = PBXBuildFile; fileRef = B96A888D25BC566300F42B65 /* BlobDownloader.swift */; };
 		B96A889625BC567000F42B65 /* BlobUploader.swift in Sources */ = {isa = PBXBuildFile; fileRef = B96A889525BC567000F42B65 /* BlobUploader.swift */; };
 		B96A8E3925BCA76300F42B65 /* BlobCourierDelayedEventEmitter.swift in Sources */ = {isa = PBXBuildFile; fileRef = B96A8E3725BCA76300F42B65 /* BlobCourierDelayedEventEmitter.swift */; };
-		B96A8F0925BCB1DA00F42B65 /* BlobCourier.m in Sources */ = {isa = PBXBuildFile; fileRef = B96A8F0825BCB1DA00F42B65 /* BlobCourier.m */; };
-		B96A8F0A25BCB1DA00F42B65 /* BlobCourier.m in Sources */ = {isa = PBXBuildFile; fileRef = B96A8F0825BCB1DA00F42B65 /* BlobCourier.m */; };
+		B96A8F0925BCB1DA00F42B65 /* RNBlobCourier.mm in Sources */ = {isa = PBXBuildFile; fileRef = B96A8F0825BCB1DA00F42B65 /* RNBlobCourier.mm */; };
+		B96A8F0A25BCB1DA00F42B65 /* RNBlobCourier.mm in Sources */ = {isa = PBXBuildFile; fileRef = B96A8F0825BCB1DA00F42B65 /* RNBlobCourier.mm */; };
 		B96A8FEC25BCB87E00F42B65 /* BlobCourierEventEmitter.m in Sources */ = {isa = PBXBuildFile; fileRef = B96A8FEB25BCB87E00F42B65 /* BlobCourierEventEmitter.m */; };
 		B96A8FED25BCB87E00F42B65 /* BlobCourierEventEmitter.m in Sources */ = {isa = PBXBuildFile; fileRef = B96A8FEB25BCB87E00F42B65 /* BlobCourierEventEmitter.m */; };
 		B96A954A25BD8D3B00F42B65 /* BlobCourierEventEmitter.swift in Sources */ = {isa = PBXBuildFile; fileRef = B96A940A25BD847C00F42B65 /* BlobCourierEventEmitter.swift */; };
@@ -80,7 +80,7 @@
 		B96A888D25BC566300F42B65 /* BlobDownloader.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BlobDownloader.swift; sourceTree = "<group>"; };
 		B96A889525BC567000F42B65 /* BlobUploader.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BlobUploader.swift; sourceTree = "<group>"; };
 		B96A8E3725BCA76300F42B65 /* BlobCourierDelayedEventEmitter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BlobCourierDelayedEventEmitter.swift; sourceTree = "<group>"; };
-		B96A8F0825BCB1DA00F42B65 /* BlobCourier.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BlobCourier.m; sourceTree = "<group>"; };
+		B96A8F0825BCB1DA00F42B65 /* RNBlobCourier.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RNBlobCourier.mm; sourceTree = "<group>"; };
 		B96A8FEB25BCB87E00F42B65 /* BlobCourierEventEmitter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BlobCourierEventEmitter.m; sourceTree = "<group>"; };
 		B96A940A25BD847C00F42B65 /* BlobCourierEventEmitter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlobCourierEventEmitter.swift; sourceTree = "<group>"; };
 		B96A96D725BDE55900F42B65 /* DownloadParameters.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadParameters.swift; sourceTree = "<group>"; };
@@ -141,7 +141,7 @@
 			isa = PBXGroup;
 			children = (
 				F4FF95D5245B92E700C19C63 /* BlobCourier-Bridging-Header.h */,
-				B96A8F0825BCB1DA00F42B65 /* BlobCourier.m */,
+				B96A8F0825BCB1DA00F42B65 /* RNBlobCourier.mm */,
 				F4FF95D6245B92E800C19C63 /* BlobCourier.swift */,
 				B96A8FEB25BCB87E00F42B65 /* BlobCourierEventEmitter.m */,
 				B9AF756D25DF203800B68816 /* Cancel */,
@@ -400,7 +400,7 @@
 				B96A993D25BE166900F42B65 /* UploaderParameterFactory.swift in Sources */,
 				B96829DF254EC736002B4B04 /* DownloaderDelegate.swift in Sources */,
 				B96A8FEC25BCB87E00F42B65 /* BlobCourierEventEmitter.m in Sources */,
-				B96A8F0925BCB1DA00F42B65 /* BlobCourier.m in Sources */,
+				B96A8F0925BCB1DA00F42B65 /* RNBlobCourier.mm in Sources */,
 				B96A888E25BC566300F42B65 /* BlobDownloader.swift in Sources */,
 				B96A970025BDEA7D00F42B65 /* DownloaderParameterFactory.swift in Sources */,
 				B96A8E3925BCA76300F42B65 /* BlobCourierDelayedEventEmitter.swift in Sources */,
@@ -430,7 +430,7 @@
 				B96A970125BDEA7D00F42B65 /* DownloaderParameterFactory.swift in Sources */,
 				B96829E8254EC872002B4B04 /* BlobCourierTests.swift in Sources */,
 				B92C3A1025935C2700630464 /* EmbeddedHttpServer.swift in Sources */,
-				B96A8F0A25BCB1DA00F42B65 /* BlobCourier.m in Sources */,
+				B96A8F0A25BCB1DA00F42B65 /* RNBlobCourier.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
