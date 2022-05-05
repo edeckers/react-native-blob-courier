@@ -15,12 +15,8 @@ import com.facebook.react.module.model.ReactModuleInfoProvider
 import com.facebook.react.module.model.ReactModuleInfo
 import java.util.HashMap
 
-private val TAG = "BlobCourier"
-
 class BlobCourierPackage : TurboReactPackage() {
     override fun getModule(name: String, reactContext: ReactApplicationContext): NativeModule? {
-        return TurboBlobCourierModule(reactContext)
-
         return if (name == LIBRARY_NAME) {
             TurboBlobCourierModule(reactContext)
         } else {

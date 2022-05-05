@@ -77,14 +77,13 @@ android {
     jvmTarget = JavaVersion.VERSION_11.toString()
   }
   sourceSets.main {
-      java {
-          // if (!isNewArchitectureEnabled()) {
-          // if (isNewArchitectureEnabled()) {
-              srcDirs += [
-                  "build/generated/source/codegen/java"
-              ]
-          // }
+    java {
+      if (isNewArchitectureEnabled()) {
+        srcDirs += [
+          "build/generated/source/codegen/java"
+        ]
       }
+    }
   }
 }
 
@@ -183,7 +182,5 @@ if (isNewArchitectureEnabled()) {
         codegenJavaPackageName = "io.deckers.blob_courier"
         libraryName = "blob_courier"
         jsRootDir = file("../src/")
-        // reactRoot = rootProject.file("../node_modules/react-native/")
-        // codegenDir = rootProject.file("../node_modules/react-native-codegen/")
     }
 }
