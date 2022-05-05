@@ -21,8 +21,6 @@ import java.util.List;
 import io.deckers.blob_courier.BlobCourierPackage;
 
 public class MainApplication extends Application implements ReactApplication {
-  private static final String TAG = "BlobCourier";
-
   private final ReactNativeHost mReactNativeHost =
       new ReactNativeHost(this) {
         @Override
@@ -67,7 +65,6 @@ public class MainApplication extends Application implements ReactApplication {
   @Override
   public void onCreate() {
     super.onCreate();
-    Log.i(TAG,"CCCCCCCCCCCCCCCCCCCCCCCCCCC");
     // If you opted-in for the New Architecture, we enable the TurboModule system
     // ReactFeatureFlags.useTurboModules = BuildConfig.IS_NEW_ARCHITECTURE_ENABLED;
     ReactFeatureFlags.useTurboModules = true;
