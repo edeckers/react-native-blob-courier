@@ -221,7 +221,6 @@ const UploaderView = (props: UVProps) => {
       return;
     }
 
-    // eslint-disable-next-line no-undef
     const abortController = new AbortController();
     setCanceller(() => () => {
       abortController.abort();
@@ -329,7 +328,6 @@ const DownloaderView = (props: DVProps) => {
       return;
     }
 
-    // eslint-disable-next-line no-undef
     const abortController = new AbortController();
     setCanceller(() => () => {
       abortController.abort();

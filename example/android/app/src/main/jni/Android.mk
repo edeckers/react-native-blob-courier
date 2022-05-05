@@ -8,6 +8,7 @@ include $(REACT_ANDROID_DIR)/Android-prebuilt.mk
 
 # Includes the MK file for `example-library`
 
+# FIXME Replace with relative path
 include /home/ely/Projects/react-native-blob-courier/android/build/generated/source/codegen/jni/Android.mk
 
 include $(CLEAR_VARS)

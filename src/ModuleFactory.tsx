@@ -1,4 +1,4 @@
-// import { NativeModules } from 'react-native';
+import { NativeModules } from 'react-native';
 import type {
   BlobFetchInput,
   BlobFetchResponse,
@@ -7,10 +7,6 @@ import type {
   BlobRequestTask,
   BlobUploadResponse,
 } from './ExposedTypes';
-import NativeBlobCourier from './NativeBlobCourier';
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-// const { BlobCourier } = NativeModules;
 
 export type BlobCancelNativeInput = BlobRequestTask;
 
@@ -29,6 +25,13 @@ export type BlobCourierType = {
 };
 
 export const createModule = () => {
-  return NativeBlobCourier as any as BlobCourierType;
-  // return BlobCourier as BlobCourierType;
+  const isTurboModuleEnabled = (global as any).__turboModuleProxy != null;
+
+  if (isTurboModuleEnabled) {
+    const NativeBlobCourier = require('./NativeBlobCourier').default;
+
+    return NativeBlobCourier as any as BlobCourierType;
+  }
+
+  return NativeModules.BlobCourier;
 };

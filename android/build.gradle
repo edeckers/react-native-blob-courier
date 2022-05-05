@@ -13,8 +13,7 @@ buildscript {
 }
 
 def isNewArchitectureEnabled() {
-    // return project.hasProperty("newArchEnabled") && project.newArchEnabled == "true"
-    return true
+    return project.hasProperty("newArchEnabled") && project.newArchEnabled == "true"
 }
 
 
@@ -76,12 +75,13 @@ android {
   kotlinOptions {
     jvmTarget = JavaVersion.VERSION_11.toString()
   }
-  sourceSets.main {
-    java {
+  sourceSets {
+    main {
       if (isNewArchitectureEnabled()) {
-        srcDirs += [
-          "build/generated/source/codegen/java"
-        ]
+        java.srcDirs += ['src/newarch']
+        java.srcDirs += ['build/generated/source/codegen/java']
+      } else {
+        java.srcDirs += ['src/oldarch']
       }
     }
   }

@@ -18,7 +18,7 @@ import java.util.HashMap
 class BlobCourierPackage : TurboReactPackage() {
     override fun getModule(name: String, reactContext: ReactApplicationContext): NativeModule? {
         return if (name == LIBRARY_NAME) {
-            TurboBlobCourierModule(reactContext)
+            BlobCourierModule(reactContext)
         } else {
             null
         }
