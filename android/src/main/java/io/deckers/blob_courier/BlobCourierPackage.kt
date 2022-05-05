@@ -21,18 +21,17 @@ class BlobCourierPackage : TurboReactPackage() {
     override fun getModule(name: String, reactContext: ReactApplicationContext): NativeModule? {
         return TurboBlobCourierModule(reactContext)
 
-        // return if (name == LIBRARY_NAME) {
-        //     TurboBlobCourierModule(reactContext)
-        // } else {
-        //     null
-        // }
+        return if (name == LIBRARY_NAME) {
+            TurboBlobCourierModule(reactContext)
+        } else {
+            null
+        }
     }
 
     override fun getReactModuleInfoProvider(): ReactModuleInfoProvider {
       return ReactModuleInfoProvider {
             val moduleInfos: MutableMap<String, ReactModuleInfo> = HashMap()
-            // val isTurboModule: Boolean = BuildConfig.IS_NEW_ARCHITECTURE_ENABLED
-            val isTurboModule = true
+            val isTurboModule: Boolean = BuildConfig.IS_NEW_ARCHITECTURE_ENABLED
             moduleInfos[LIBRARY_NAME] = ReactModuleInfo(
                 LIBRARY_NAME,
                 LIBRARY_NAME,
