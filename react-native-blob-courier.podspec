@@ -17,10 +17,10 @@ Pod::Spec.new do |s|
   s.source       = { :git => "https://github.com/edeckers/react-native-blob-courier.git", :tag => "#{s.version}" }
 
   
-  s.source_files = "ios/*.{h,m,mm,swift}", "ios/Cancel/*.{h,m,swift}", "ios/Common/*.{h,m,swift}", "ios/Fetch/*.{h,m,swift}", "ios/Progress/*.{h,m,swift}", "ios/React/*.{h,m,swift}", "ios/Upload/*.{h,m,swift}"
+  s.source_files = "ios/*.{h,m,mm,swift}", "ios/build/generated/ios/RNBlobCourierSpec/*.{h,mm}", "ios/Cancel/*.{h,m,swift}", "ios/Common/*.{h,m,swift}", "ios/Fetch/*.{h,m,swift}", "ios/Progress/*.{h,m,swift}", "ios/React/*.{h,m,swift}", "ios/Upload/*.{h,m,swift}"
 
   s.dependency "React-Core"
- 
+
   if ENV['RCT_NEW_ARCH_ENABLED'] == '1' then
     s.compiler_flags = folly_compiler_flags + " -DRCT_NEW_ARCH_ENABLED=1"
     s.pod_target_xcconfig    = {

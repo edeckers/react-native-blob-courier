@@ -4,11 +4,20 @@ require_relative '../node_modules/@react-native-community/cli-platform-ios/nativ
 platform :ios, '12.4'
 install! 'cocoapods', :deterministic_uuids => false
 
+<<<<<<< HEAD
 production = ENV["PRODUCTION"] == "0"
 
+=======
+# use_frameworks! :linkage => :static
+use_modular_headers!
+
+pod 'glog', :podspec => '../node_modules/react-native/third-party-podspecs/glog.podspec', :modular_headers => false
+>>>>>>> chore: add a few necessary iOS changes
 
 target 'BlobCourierExample' do
   config = use_native_modules!
+
+  pod 'react-native-blob-courier', :path => '../..', :modular_headers => true
 
   # Flags change depending on the env values.
   flags = get_default_flags()
