@@ -33,6 +33,8 @@ static NSString *const kRNConcurrentRoot = @"concurrentRoot";
 {
   RCTAppSetupPrepareApp(application);
 
+  RCTEnableTurboModule(NO);
+
   RCTBridge *bridge = [[RCTBridge alloc] initWithDelegate:self launchOptions:launchOptions];
 
 #if RCT_NEW_ARCH_ENABLED
@@ -97,10 +99,44 @@ static NSString *const kRNConcurrentRoot = @"concurrentRoot";
 
 - (std::unique_ptr<facebook::react::JSExecutorFactory>)jsExecutorFactoryForBridge:(RCTBridge *)bridge
 {
-  _turboModuleManager = [[RCTTurboModuleManager alloc] initWithBridge:bridge
-                                                             delegate:self
-                                                            jsInvoker:bridge.jsCallInvoker];
-  return RCTAppSetupDefaultJsExecutorFactory(bridge, _turboModuleManager);
+  // Add these lines to create a TurboModuleManager
+  if (RCTTurboModuleEnabled()) {
+    _turboModuleManager =
+        [[RCTTurboModuleManager alloc] initWithBridge:bridge
+                                             delegate:self
+                                            jsInvoker:bridge.jsCallInvoker];
+
+    // Necessary to allow NativeModules to lookup TurboModules
+    [bridge setRCTTurboModuleRegistry:_turboModuleManager];
+
+    if (!RCTTurboModuleEagerInitEnabled()) {
+      /**
+       * Instantiating DevMenu has the side-effect of registering
+       * shortcuts for CMD + d, CMD + i,  and CMD + n via RCTDevMenu.
+       * Therefore, when TurboModules are enabled, we must manually create this
+       * NativeModule.
+       */
+       [_turboModuleManager moduleForName:"DevMenu"];
+    }
+  }
+
+  __weak __typeof(self) weakSelf = self;
+
+  // If you want to use the `JSCExecutorFactory`, remember to add the `#import <React/JSCExecutorFactory.h>`
+  // import statement on top.
+  return std::make_unique<facebook::react::HermesExecutorFactory>(
+    facebook::react::RCTJSIExecutorRuntimeInstaller([weakSelf, bridge](facebook::jsi::Runtime &runtime) {
+      if (!bridge) {
+        return;
+      }
+
+      __typeof(self) strongSelf = weakSelf;
+      if (strongSelf) {
+        facebook::react::RuntimeExecutor syncRuntimeExecutor =
+            [&](std::function<void(facebook::jsi::Runtime & runtime_)> &&callback) { callback(runtime); };
+        [strongSelf->_turboModuleManager installJSBindingWithRuntimeExecutor:syncRuntimeExecutor];
+      }
+    }));
 }
 
 #pragma mark RCTTurboModuleManagerDelegate
@@ -125,7 +161,28 @@ static NSString *const kRNConcurrentRoot = @"concurrentRoot";
 
 - (id<RCTTurboModule>)getModuleInstanceFromClass:(Class)moduleClass
 {
-  return RCTAppSetupDefaultModuleFromClass(moduleClass);
+  // Set up the default RCTImageLoader and RCTNetworking modules.
+  if (moduleClass == RCTImageLoader.class) {
+    return [[moduleClass alloc] initWithRedirectDelegate:nil
+        loadersProvider:^NSArray<id<RCTImageURLLoader>> *(RCTModuleRegistry * moduleRegistry) {
+          return @ [[RCTLocalAssetImageLoader new]];
+        }
+        decodersProvider:^NSArray<id<RCTImageDataDecoder>> *(RCTModuleRegistry * moduleRegistry) {
+          return @ [[RCTGIFImageDecoder new]];
+        }];
+  } else if (moduleClass == RCTNetworking.class) {
+     return [[moduleClass alloc]
+        initWithHandlersProvider:^NSArray<id<RCTURLRequestHandler>> *(
+            RCTModuleRegistry *moduleRegistry) {
+          return @[
+            [RCTHTTPRequestHandler new],
+            [RCTDataRequestHandler new],
+            [RCTFileRequestHandler new],
+          ];
+        }];
+  }
+
+  return [moduleClass new];
 }
 
 #endif
