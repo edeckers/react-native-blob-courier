@@ -6,14 +6,16 @@ install! 'cocoapods', :deterministic_uuids => false
 
 production = ENV["PRODUCTION"] == "0"
 
+# Required b/c podspec Swift dependencies on Folly, etc.
 use_modular_headers!
 
+# Required b/c duplicate module headers
 pod 'glog', :podspec => '../node_modules/react-native/third-party-podspecs/glog.podspec', :modular_headers => false
 
 target 'BlobCourierExample' do
   config = use_native_modules!
 
-  # pod 'react-native-blob-courier', :path => '../..', :modular_headers => true
+  pod 'React-RCTFabric', :path => '../node_modules/react-native/React', :modular_headers => false
 
   # Flags change depending on the env values.
   flags = get_default_flags()

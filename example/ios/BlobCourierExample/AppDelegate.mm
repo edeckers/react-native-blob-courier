@@ -129,23 +129,7 @@ static NSString *const kRNConcurrentRoot = @"concurrentRoot";
     }
   }
 
-  __weak __typeof(self) weakSelf = self;
-
-  // If you want to use the `JSCExecutorFactory`, remember to add the `#import <React/JSCExecutorFactory.h>`
-  // import statement on top.
-  return std::make_unique<facebook::react::HermesExecutorFactory>(
-    facebook::react::RCTJSIExecutorRuntimeInstaller([weakSelf, bridge](facebook::jsi::Runtime &runtime) {
-      if (!bridge) {
-        return;
-      }
-
-      __typeof(self) strongSelf = weakSelf;
-      if (strongSelf) {
-        facebook::react::RuntimeExecutor syncRuntimeExecutor =
-            [&](std::function<void(facebook::jsi::Runtime & runtime_)> &&callback) { callback(runtime); };
-        [strongSelf->_turboModuleManager installJSBindingWithRuntimeExecutor:syncRuntimeExecutor];
-      }
-    }));
+  return RCTAppSetupDefaultJsExecutorFactory(bridge, _turboModuleManager);
 }
 
 #pragma mark RCTTurboModuleManagerDelegate
