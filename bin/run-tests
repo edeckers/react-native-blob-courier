@@ -23,7 +23,7 @@ run_all_android_tests() {
 
 run_ios_tests() {
   jump_to_root_directory
-  xcodebuild test -scheme BlobCourierTests -destination "${IOS_DESTINATION}" -workspace 'ios/BlobCourier.xcworkspace' | xcpretty --report junit
+  arch -arm64 xcodebuild test -scheme BlobCourierTests -destination "${IOS_DESTINATION}" -workspace 'ios/BlobCourier.xcworkspace' | xcpretty --report junit
 }
 
 run_typescript_tests() {
