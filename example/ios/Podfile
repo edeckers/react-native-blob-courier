@@ -6,10 +6,13 @@ platform :ios, '11.0'
 target 'BlobCourierExample' do
   config = use_native_modules!
 
+  flags = get_default_flags()
+
   use_react_native!(
     :path => config[:reactNativePath],
-    # to enable hermes on iOS, change `false` to `true` and then install pods
-    :hermes_enabled => false
+    :hermes_enabled => false,
+    :fabric_enabled => false,
+    :app_path => "#{Pod::Config.instance.installation_root}/.."
   )
 
   pod 'react-native-blob-courier', :path => '../..'
