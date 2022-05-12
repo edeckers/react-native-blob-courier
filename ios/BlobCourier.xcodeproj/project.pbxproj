@@ -264,7 +264,6 @@
 				B96829E1254EC872002B4B04 /* Sources */,
 				B96829E2254EC872002B4B04 /* Frameworks */,
 				B96829E3254EC872002B4B04 /* Resources */,
-				5DD56AD7C6458FECBE352E54 /* [CP] Embed Pods Frameworks */,
 				4F4B22363CDCD897D70D62BC /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
@@ -343,24 +342,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-BlobCourierTests/Pods-BlobCourierTests-resources.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
-		5DD56AD7C6458FECBE352E54 /* [CP] Embed Pods Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-BlobCourierTests/Pods-BlobCourierTests-frameworks.sh",
-				"${PODS_XCFRAMEWORKS_BUILD_DIR}/hermes-engine/hermes.framework/hermes",
-			);
-			name = "[CP] Embed Pods Frameworks";
-			outputPaths = (
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/hermes.framework",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-BlobCourierTests/Pods-BlobCourierTests-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 		B486C55974A0A2FB83113108 /* [CP] Check Pods Manifest.lock */ = {

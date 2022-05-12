@@ -3,6 +3,9 @@ require_relative '../node_modules/@react-native-community/cli-platform-ios/nativ
 
 use_modular_headers!
 
+# Required b/c duplicate module headers
+pod 'glog', :podspec => '../node_modules/react-native/third-party-podspecs/glog.podspec', :modular_headers => false
+
 target 'BlobCourier' do
   target 'BlobCourierTests' do
      platform :ios, '11.0'
