@@ -35,9 +35,7 @@ android {
   defaultConfig {
     minSdkVersion project.ext.min_sdk_version
     targetSdkVersion project.ext.target_sdk_version
-    versionCode 1
-    versionName "1.0"
-    testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+      testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     multiDexEnabled true
     buildConfigField "boolean", "IS_NEW_ARCHITECTURE_ENABLED", isNewArchitectureEnabled().toString()
     buildConfigField "Long", "ADB_COMMAND_TIMEOUT_MILLISECONDS", ADB_COMMAND_TIMEOUT_MILLISECONDS
