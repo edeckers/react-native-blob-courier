@@ -315,7 +315,6 @@ Optional
 | **Field**    | **Type**                         | **Description**                           | **Default** |
 | ------------ | -------------------------------- | ----------------------------------------- | ---------------------------------------------------- |
 | `android`    | `AndroidSettings`                | Settings to be used on Android            | `{ downloadManager: {}, target: 'cache', useDownloadManager: false }` |
-| `headers`    | `{ [key: string]: string }`      | Map of headers to send with the request   | `{}`                                                 |
 | `ios`        | `IOSSettings`                    | Settings to be used on iOS                | `{ target: 'cache' }`                                |
 | `headers`    | `{ [key: string]: string }`      | Map of headers to send with the request   | `{}`                                                 |
 | `method`     | `string`                         | Representing the HTTP method              | `GET`                                                |
@@ -367,7 +366,7 @@ Optional
 
 | **Field**        | **Type**                         | **Description**                           | **Default**                         |
 | ---------------- | -------------------------------- | ----------------------------------------- | ----------------------------------- |
-| `filename`       | `string`                         | Map of headers to send with the request   | `<name part of 'absoluteFilePath'>` |
+| `filename`       | `string`                         | Name of the file on disk                  | `<name part of 'absoluteFilePath'>` |
 | `headers`        | `{ [key: string]: string }`      | Map of headers to send with the request   | `{}`                                |
 | `method`         | `string`                         | The HTTP method to be used in the request | `"POST"`                            |
 | `multipartName`  | `string`                         | Name for the file multipart               | `"file"`                            |
@@ -449,7 +448,7 @@ Optional
 
 | **Field**        | **Type** | **Description**                           | **Default**                         |
 | ---------------- | ---------| ----------------------------------------- | ----------------------------------- |
-| `filename`       | `string` | Map of headers to send with the request   | `<name part of 'absoluteFilePath'>` |
+| `filename`       | `string` | Name of the file on disk                  | `<name part of 'absoluteFilePath'>` |
 
 #### `BlobProgressEvent`
 
@@ -553,7 +552,7 @@ To enable the download manager, simply set the request's `useDownloadManager` pr
 
 ## Shared directories
 
-As this library is focussed on transferring files, it only supports storage to the app's _cache_ and _data_ directories. To move files from these app specific directories to other locations on the filesystem, use another library like [@react-native-community/cameraroll](https://github.com/react-native-community/react-native-cameraroll), e.g.:
+As this library is focused on transferring files, it only supports storage to the app's _cache_ and _data_ directories. To move files from these app specific directories to other locations on the filesystem, use another library like [@react-native-community/cameraroll](https://github.com/react-native-community/react-native-cameraroll), e.g.:
 
 ```tsx
 import BlobCourier from 'react-native-blob-courier';
