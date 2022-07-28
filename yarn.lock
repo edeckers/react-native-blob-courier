@@ -2009,10 +2009,10 @@
   resolved "https://registry.yarnpkg.com/@react-native/normalize-color/-/normalize-color-1.0.0.tgz#c52a99d4fe01049102d47dc45d40cbde4f720ab6"
   integrity sha512-xUNRvNmCl3UGCPbbHvfyFMnpvLPoOjDCcp5bT9m2k+TF/ZBklEQwhPZlkrxRx2NhgFh1X3a5uL7mJ7ZR+8G7Qg==
 
-"@react-native/polyfills@1.0.0":
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/@react-native/polyfills/-/polyfills-1.0.0.tgz#05bb0031533598f9458cf65a502b8df0eecae780"
-  integrity sha512-0jbp4RxjYopTsIdLl+/Fy2TiwVYHy4mgeu07DG4b/LyM0OS/+lPP5c9sbnt/AMlnF6qz2JRZpPpGw1eMNS6A4w==
+"@react-native/polyfills@2.0.0":
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/@react-native/polyfills/-/polyfills-2.0.0.tgz#4c40b74655c83982c8cf47530ee7dc13d957b6aa"
+  integrity sha512-K0aGNn1TjalKj+65D7ycc1//H9roAQ51GJVk5ZJQFb2teECGmzd86bYDC0aYdbRf7gtovescq4Zt6FR0tgXiHQ==
 
 "@semantic-release/commit-analyzer@^9.0.2":
   version "9.0.2"
@@ -2252,9 +2252,9 @@
   integrity sha512-jhuKLIRrhvCPLqwPcx6INqmKeiA5EWrsCOPhrlFSrbrmU4ZMPjj5Ul/oLCMDO98XRUIwVm78xICz4EPCektzeQ==
 
 "@types/node@*", "@types/node@>=12":
-  version "18.6.1"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-18.6.1.tgz#828e4785ccca13f44e2fb6852ae0ef11e3e20ba5"
-  integrity sha512-z+2vB6yDt1fNwKOeGbckpmirO+VBDuQqecXkgeIqDlaOtmKn6hPR/viQ8cxCfqLU4fTlvM3+YjM367TukWdxpg==
+  version "18.6.2"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-18.6.2.tgz#ffc5f0f099d27887c8d9067b54e55090fcd54126"
+  integrity sha512-KcfkBq9H4PI6Vpu5B/KoPeuVDAbmi+2mDBqGPGUgoL7yXQtcWGu2vJWmmRkneWK3Rh0nIAX192Aa87AqKHYChQ==
 
 "@types/normalize-package-data@^2.4.0":
   version "2.4.1"
@@ -3121,9 +3121,9 @@ camelcase@^6.0.0, camelcase@^6.2.0:
   integrity sha512-Gmy6FhYlCY7uOElZUSbxo2UCDH8owEk996gkbrpsgGtrJLM3J7jGxl9Ic7Qwwj4ivOE5AWZWRMecDdF7hqGjFA==
 
 caniuse-lite@^1.0.30001370:
-  version "1.0.30001370"
-  resolved "https://registry.yarnpkg.com/caniuse-lite/-/caniuse-lite-1.0.30001370.tgz#0a30d4f20d38b9e108cc5ae7cc62df9fe66cd5ba"
-  integrity sha512-3PDmaP56wz/qz7G508xzjx8C+MC2qEm4SYhSEzC9IBROo+dGXFWRuaXkWti0A9tuI00g+toiriVqxtWMgl350g==
+  version "1.0.30001373"
+  resolved "https://registry.yarnpkg.com/caniuse-lite/-/caniuse-lite-1.0.30001373.tgz#2dc3bc3bfcb5d5a929bec11300883040d7b4b4be"
+  integrity sha512-pJYArGHrPp3TUqQzFYRmP/lwJlj8RCbVe3Gd3eJQkAV8SAC6b19XS9BjMvRdvaS8RMkaTN8ZhoHP6S1y8zzwEQ==
 
 capture-exit@^2.0.0:
   version "2.0.0"
@@ -3851,9 +3851,9 @@ ee-first@1.1.1:
   integrity sha512-WMwm9LhRUo+WUaRN+vRuETqG89IgZphVSNkdFgeb6sS/E4OrDIN7t48CAewSHXc6C8lefD8KKfr5vY61brQlow==
 
 electron-to-chromium@^1.4.202:
-  version "1.4.203"
-  resolved "https://registry.yarnpkg.com/electron-to-chromium/-/electron-to-chromium-1.4.203.tgz#335ee9ef97ac538624fe1e694c0e4a8b15428020"
-  integrity sha512-EG+Llo8SZGZCgErY+PzE9N+Ld/O80243hTufTeg4GbZ1U+Xn92n6ewxKhZjt/bxdF7aS5OXEU7QlRs5uRoTVKw==
+  version "1.4.204"
+  resolved "https://registry.yarnpkg.com/electron-to-chromium/-/electron-to-chromium-1.4.204.tgz#aae069adea642c066ea95faf5121262b0842e262"
+  integrity sha512-5Ojjtw9/c9HCXtMVE6SXVSHSNjmbFOXpKprl6mY/5moLSxLeWatuYA7KTD+RzJMxLRH6yNNQrqGz9p6IoNBMgw==
 
 emittery@^0.8.1:
   version "0.8.1"
@@ -4868,10 +4868,10 @@ has@^1.0.3:
   dependencies:
     function-bind "^1.1.1"
 
-hermes-engine@~0.8.1:
-  version "0.8.1"
-  resolved "https://registry.yarnpkg.com/hermes-engine/-/hermes-engine-0.8.1.tgz#b6d0d70508ac5add2d198304502fb968cdecb8b2"
-  integrity sha512-as9Iccj/qrqqtDmfYUHbOIjt5xsQbUB6pjNIW3i1+RVr+pCAdz5S8/Jry778mz3rJWplYzHWdR1u1xQSYfBRYw==
+hermes-engine@~0.9.0:
+  version "0.9.0"
+  resolved "https://registry.yarnpkg.com/hermes-engine/-/hermes-engine-0.9.0.tgz#84d9cfe84e8f6b1b2020d6e71b350cec84ed982f"
+  integrity sha512-r7U+Y4P2Qg/igFVZN+DpT7JFfXUn1MM4dFne8aW+cCrF6RRymof+VqrUHs1kl07j8h8V2CNesU19RKgWbr3qPw==
 
 hermes-parser@0.4.7:
   version "0.4.7"
@@ -8109,7 +8109,7 @@ rc@1.2.8, rc@^1.2.8:
     minimist "^1.2.0"
     strip-json-comments "~2.0.1"
 
-react-devtools-core@^4.6.0:
+react-devtools-core@^4.13.0:
   version "4.25.0"
   resolved "https://registry.yarnpkg.com/react-devtools-core/-/react-devtools-core-4.25.0.tgz#78b11a2c9f81dd9ebff3745ab4ee2147cc96c12a"
   integrity sha512-iewRrnu0ZnmfL+jJayKphXj04CFh6i3ezVnpCtcnZbTPSQgN09XqHAzXbKbqNDl7aTg9QLNkQRP6M3DvdrinWA==
@@ -8163,10 +8163,19 @@ react-native-codegen@^0.0.12:
     jscodeshift "^0.11.0"
     nullthrows "^1.1.1"
 
-react-native@0.65.1:
-  version "0.65.1"
-  resolved "https://registry.yarnpkg.com/react-native/-/react-native-0.65.1.tgz#bd8cd313e0eb8ddcf08e61e3f8b54b7fc31a418c"
-  integrity sha512-0UOVSnlssweQZjuaUtzViCifE/4tXm8oRbxwakopc8GavPu9vLulde145GOw6QVYiOy4iL50f+2XXRdX9NmMeQ==
+react-native-codegen@^0.0.7:
+  version "0.0.7"
+  resolved "https://registry.yarnpkg.com/react-native-codegen/-/react-native-codegen-0.0.7.tgz#86651c5c5fec67a8077ef7f4e36f7ed459043e14"
+  integrity sha512-dwNgR8zJ3ALr480QnAmpTiqvFo+rDtq6V5oCggKhYFlRjzOmVSFn3YD41u8ltvKS5G2nQ8gCs2vReFFnRGLYng==
+  dependencies:
+    flow-parser "^0.121.0"
+    jscodeshift "^0.11.0"
+    nullthrows "^1.1.1"
+
+react-native@0.66.4:
+  version "0.66.4"
+  resolved "https://registry.yarnpkg.com/react-native/-/react-native-0.66.4.tgz#bf89a5fb18bd23046d889fb4de4ea2822a4d7805"
+  integrity sha512-9vx5dlSfQlKbbDtr8+xMon6qsmSu7jvjdXWZpEKh3XVKpUidbbODv7048gwVKX8YAel1egeR7hN8vzSeI6ssTw==
   dependencies:
     "@jest/create-cache-key-function" "^27.0.1"
     "@react-native-community/cli" "^6.0.0"
@@ -8174,12 +8183,12 @@ react-native@0.65.1:
     "@react-native-community/cli-platform-ios" "^6.0.0"
     "@react-native/assets" "1.0.0"
     "@react-native/normalize-color" "1.0.0"
-    "@react-native/polyfills" "1.0.0"
+    "@react-native/polyfills" "2.0.0"
     abort-controller "^3.0.0"
     anser "^1.4.9"
     base64-js "^1.1.2"
     event-target-shim "^5.0.1"
-    hermes-engine "~0.8.1"
+    hermes-engine "~0.9.0"
     invariant "^2.2.4"
     jsc-android "^250230.2.1"
     metro-babel-register "0.66.2"
@@ -8190,7 +8199,8 @@ react-native@0.65.1:
     pretty-format "^26.5.2"
     promise "^8.0.3"
     prop-types "^15.7.2"
-    react-devtools-core "^4.6.0"
+    react-devtools-core "^4.13.0"
+    react-native-codegen "^0.0.7"
     react-refresh "^0.4.0"
     regenerator-runtime "^0.13.2"
     scheduler "^0.20.2"
