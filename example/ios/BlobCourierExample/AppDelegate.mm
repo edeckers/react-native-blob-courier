@@ -68,7 +68,7 @@ static NSString *const kRNConcurrentRoot = @"concurrentRoot";
 - (BOOL)concurrentRootEnabled
 {
   // Switch this bool to turn on and off the concurrent root
-  return false;
+  return true;
 }
 
 - (NSDictionary *)prepareInitialProps
