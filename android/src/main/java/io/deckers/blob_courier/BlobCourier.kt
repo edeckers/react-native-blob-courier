@@ -46,19 +46,14 @@ private fun createProgressFactory(
     progressTimeoutMilliseconds
   )
 
-private val TAG = BlobCourierModule::class.java.name
+private val TAG = BlobCourier::class.java.name
 private val logger = Logger(TAG)
 private fun le(m: String, e: Throwable? = null) = logger.e(m, e)
 private fun li(m: String) = logger.i(m)
 private fun lv(m: String, e: Throwable? = null) = logger.v(m, e)
 
-@ReactModule(name = LIBRARY_NAME)
-class BlobCourierModule(private val reactContext: ReactApplicationContext) :
-  ReactContextBaseJavaModule(reactContext) {
+class BlobCourier(private val reactContext: ReactApplicationContext) {
 
-  override fun getName(): String = LIBRARY_NAME
-
-  @ReactMethod
   fun cancelRequest(input: ReadableMap, promise: Promise) {
     li("Calling cancelRequest")
 
@@ -91,7 +86,6 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
     li("Called cancelRequest")
   }
 
-  @ReactMethod
   fun fetchBlob(input: ReadableMap, promise: Promise) {
     li("Calling fetchBlob")
     thread {
@@ -134,7 +128,6 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
     li("Called fetchBlob")
   }
 
-  @ReactMethod
   fun uploadBlob(input: ReadableMap, promise: Promise) {
     li("Calling uploadBlob")
     thread {

@@ -16,14 +16,11 @@ import type {
   BlobFetchRequest,
   BlobRequestSettings,
   BlobRequestTask,
-  BlobFetchResponse,
   BlobUploadRequest,
-  BlobUploadResponse,
   AndroidDownloadManagerSettings,
   BlobProgressEvent,
   BlobRequestOnProgress,
   BlobMultipartMapUploadRequest,
-  BlobMultipartArrayUploadRequest,
   BlobNamedMultipartArray,
   BlobMultipartWithName,
   BlobFetchInput,
@@ -35,10 +32,12 @@ import {
   uuid,
 } from './Utils';
 import { dict } from './Extensions';
-
-type BlobCancelNativeInput = BlobRequestTask;
-
-type BlobFetchNativeInput = BlobFetchInput & BlobRequestTask;
+import type {
+  BlobCourierType,
+  BlobFetchNativeInput,
+  BlobUploadMultipartNativeInput,
+} from './ModuleFactory';
+import { createModule } from './ModuleFactory';
 
 type BlobUploadNativeInput = BlobUploadInput & BlobRequestTask;
 
@@ -49,19 +48,8 @@ type BlobUploadMultipartInputWithTask = BlobMultipartMapUploadRequest &
   BlobRequestSettings &
   BlobRequestTask;
 
-type BlobUploadMultipartNativeInput = BlobMultipartArrayUploadRequest &
-  BlobRequestSettings &
-  BlobRequestTask;
-
-type BlobCourierType = {
-  cancelRequest(input: BlobCancelNativeInput): Promise<{}>;
-  fetchBlob(input: BlobFetchNativeInput): Promise<BlobFetchResponse>;
-  uploadBlob(
-    input: BlobUploadMultipartNativeInput
-  ): Promise<BlobUploadResponse>;
-};
-
-const { BlobCourier, BlobCourierEventEmitter } = NativeModules;
+const { BlobCourierEventEmitter } = NativeModules;
+const BlobCourier = createModule();
 
 const EventEmitter = new NativeEventEmitter(BlobCourierEventEmitter);
 

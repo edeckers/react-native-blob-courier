@@ -1,4 +1,4 @@
-package io.deckers.blob_courier.newarchitecture.components;
+package io.deckers.blob_courier_example.newarchitecture.components;
 
 import com.facebook.jni.HybridData;
 import com.facebook.proguard.annotations.DoNotStrip;

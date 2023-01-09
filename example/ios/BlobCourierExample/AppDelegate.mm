@@ -7,8 +7,17 @@
 #import <React/RCTAppSetupUtils.h>
 
 #if RCT_NEW_ARCH_ENABLED
+#import <React/RCTDataRequestHandler.h>
+#import <React/RCTHTTPRequestHandler.h>
+#import <React/RCTFileRequestHandler.h>
+#import <React/RCTNetworking.h>
+#import <React/RCTImageLoader.h>
+#import <React/RCTGIFImageDecoder.h>
+#import <React/RCTLocalAssetImageLoader.h>
+
 #import <React/CoreModulesPlugins.h>
 #import <React/RCTCxxBridgeDelegate.h>
+#import <React/RCTJSIExecutorRuntimeInstaller.h>
 #import <React/RCTFabricSurfaceHostingProxyRootView.h>
 #import <React/RCTSurfacePresenter.h>
 #import <React/RCTSurfacePresenterBridgeAdapter.h>
@@ -32,6 +41,8 @@ static NSString *const kRNConcurrentRoot = @"concurrentRoot";
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
   RCTAppSetupPrepareApp(application);
+
+  RCTEnableTurboModule(YES);
 
   RCTBridge *bridge = [[RCTBridge alloc] initWithDelegate:self launchOptions:launchOptions];
 
@@ -97,9 +108,27 @@ static NSString *const kRNConcurrentRoot = @"concurrentRoot";
 
 - (std::unique_ptr<facebook::react::JSExecutorFactory>)jsExecutorFactoryForBridge:(RCTBridge *)bridge
 {
-  _turboModuleManager = [[RCTTurboModuleManager alloc] initWithBridge:bridge
-                                                             delegate:self
-                                                            jsInvoker:bridge.jsCallInvoker];
+  // Add these lines to create a TurboModuleManager
+  if (RCTTurboModuleEnabled()) {
+    _turboModuleManager =
+        [[RCTTurboModuleManager alloc] initWithBridge:bridge
+                                             delegate:self
+                                            jsInvoker:bridge.jsCallInvoker];
+
+    // Necessary to allow NativeModules to lookup TurboModules
+    [bridge setRCTTurboModuleRegistry:_turboModuleManager];
+
+    if (!RCTTurboModuleEagerInitEnabled()) {
+      /**
+       * Instantiating DevMenu has the side-effect of registering
+       * shortcuts for CMD + d, CMD + i,  and CMD + n via RCTDevMenu.
+       * Therefore, when TurboModules are enabled, we must manually create this
+       * NativeModule.
+       */
+       [_turboModuleManager moduleForName:"DevMenu"];
+    }
+  }
+
   return RCTAppSetupDefaultJsExecutorFactory(bridge, _turboModuleManager);
 }
 
@@ -125,7 +154,28 @@ static NSString *const kRNConcurrentRoot = @"concurrentRoot";
 
 - (id<RCTTurboModule>)getModuleInstanceFromClass:(Class)moduleClass
 {
-  return RCTAppSetupDefaultModuleFromClass(moduleClass);
+  // Set up the default RCTImageLoader and RCTNetworking modules.
+  if (moduleClass == RCTImageLoader.class) {
+    return [[moduleClass alloc] initWithRedirectDelegate:nil
+        loadersProvider:^NSArray<id<RCTImageURLLoader>> *(RCTModuleRegistry * moduleRegistry) {
+          return @ [[RCTLocalAssetImageLoader new]];
+        }
+        decodersProvider:^NSArray<id<RCTImageDataDecoder>> *(RCTModuleRegistry * moduleRegistry) {
+          return @ [[RCTGIFImageDecoder new]];
+        }];
+  } else if (moduleClass == RCTNetworking.class) {
+     return [[moduleClass alloc]
+        initWithHandlersProvider:^NSArray<id<RCTURLRequestHandler>> *(
+            RCTModuleRegistry *moduleRegistry) {
+          return @[
+            [RCTHTTPRequestHandler new],
+            [RCTDataRequestHandler new],
+            [RCTFileRequestHandler new],
+          ];
+        }];
+  }
+
+  return [moduleClass new];
 }
 
 #endif
