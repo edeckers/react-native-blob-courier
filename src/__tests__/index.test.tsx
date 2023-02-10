@@ -91,7 +91,7 @@ const getLastMockCallFirstParameter = (m: any) =>
 const generateValue = (type: string) =>
   type in RANDOM_VALUE_GENERATORS ? RANDOM_VALUE_GENERATORS[type]() : uuid();
 
-const createRandomObjectFromDefault = <T,>(o: T): T =>
+const createRandomObjectFromDefault = <T extends {}>(o: T): T =>
   Object.keys(o).reduce(
     (p, c) => ({
       ...p,
