@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		2243D7203083B410CBDB39F6 /* libPods-BlobCourierTests.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 0825DECB7CECC2E39AE01FBD /* libPods-BlobCourierTests.a */; };
 		39BE76F54A8129B9E6AC4DCD /* libPods-BlobCourier.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 93E64DD0869D554D6174C4E4 /* libPods-BlobCourier.a */; };
 		B92C3A1025935C2700630464 /* EmbeddedHttpServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = B92C3A0F25935C2700630464 /* EmbeddedHttpServer.swift */; };
 		B96829D9254EC727002B4B04 /* UploaderDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9409539253E1F5800A58583 /* UploaderDelegate.swift */; };
@@ -37,7 +38,6 @@
 		B9AF759925DF264E00B68816 /* RequestCanceller.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9AF756F25DF203800B68816 /* RequestCanceller.swift */; };
 		B9AF75BF25DF29DF00B68816 /* CancelParameters.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9AF75BD25DF29DF00B68816 /* CancelParameters.swift */; };
 		B9AF75C025DF29DF00B68816 /* CancelParameterFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9AF75BE25DF29DF00B68816 /* CancelParameterFactory.swift */; };
-		F209DAB66F0FF88ADCDDF8AC /* libPods-BlobCourierTests.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 8E1CD508F07776C31C2610E7 /* libPods-BlobCourierTests.a */; };
 		F4FF95D7245B92E800C19C63 /* BlobCourier.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4FF95D6245B92E800C19C63 /* BlobCourier.swift */; };
 /* End PBXBuildFile section */
 
@@ -64,11 +64,13 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		0825DECB7CECC2E39AE01FBD /* libPods-BlobCourierTests.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-BlobCourierTests.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		134814201AA4EA6300B7C361 /* libBlobCourier.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libBlobCourier.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		3A3D01B0FFCB5DE19CF6B7C0 /* Pods-BlobCourierTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BlobCourierTests.release.xcconfig"; path = "Target Support Files/Pods-BlobCourierTests/Pods-BlobCourierTests.release.xcconfig"; sourceTree = "<group>"; };
 		3DD5C5A09015C3DEFFA162A9 /* Pods-BlobCourier.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BlobCourier.debug.xcconfig"; path = "Target Support Files/Pods-BlobCourier/Pods-BlobCourier.debug.xcconfig"; sourceTree = "<group>"; };
-		8E1CD508F07776C31C2610E7 /* libPods-BlobCourierTests.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-BlobCourierTests.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		872276AF7DC6AFD3EF616A24 /* Pods-BlobCourier-BlobCourierTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BlobCourier-BlobCourierTests.debug.xcconfig"; path = "Target Support Files/Pods-BlobCourier-BlobCourierTests/Pods-BlobCourier-BlobCourierTests.debug.xcconfig"; sourceTree = "<group>"; };
 		93E64DD0869D554D6174C4E4 /* libPods-BlobCourier.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-BlobCourier.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		B4FA7E090FDBAFAC9E604446 /* Pods-BlobCourier-BlobCourierTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BlobCourier-BlobCourierTests.release.xcconfig"; path = "Target Support Files/Pods-BlobCourier-BlobCourierTests/Pods-BlobCourier-BlobCourierTests.release.xcconfig"; sourceTree = "<group>"; };
 		B92C3A0F25935C2700630464 /* EmbeddedHttpServer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EmbeddedHttpServer.swift; sourceTree = "<group>"; };
 		B940948F253DFC0800A58583 /* DownloaderDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloaderDelegate.swift; sourceTree = "<group>"; };
 		B9409539253E1F5800A58583 /* UploaderDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UploaderDelegate.swift; sourceTree = "<group>"; };
@@ -111,7 +113,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				B96829EA254EC872002B4B04 /* libBlobCourier.a in Frameworks */,
-				F209DAB66F0FF88ADCDDF8AC /* libPods-BlobCourierTests.a in Frameworks */,
+				2243D7203083B410CBDB39F6 /* libPods-BlobCourierTests.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -125,6 +127,8 @@
 				D44EAB7AD9AB7A05FB6884A9 /* Pods-BlobCourier.release.xcconfig */,
 				CD3E37E6CC9783AD004D442E /* Pods-BlobCourierTests.debug.xcconfig */,
 				3A3D01B0FFCB5DE19CF6B7C0 /* Pods-BlobCourierTests.release.xcconfig */,
+				872276AF7DC6AFD3EF616A24 /* Pods-BlobCourier-BlobCourierTests.debug.xcconfig */,
+				B4FA7E090FDBAFAC9E604446 /* Pods-BlobCourier-BlobCourierTests.release.xcconfig */,
 			);
 			path = Pods;
 			sourceTree = "<group>";
@@ -162,7 +166,7 @@
 			isa = PBXGroup;
 			children = (
 				93E64DD0869D554D6174C4E4 /* libPods-BlobCourier.a */,
-				8E1CD508F07776C31C2610E7 /* libPods-BlobCourierTests.a */,
+				0825DECB7CECC2E39AE01FBD /* libPods-BlobCourierTests.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
