@@ -27,6 +27,7 @@ android {
   compileSdkVersion project.ext.compile_sdk_version
   buildToolsVersion project.ext.build_tools_version
 
+  namespace "io.deckers.blob_courier"
   defaultConfig {
     minSdkVersion project.ext.min_sdk_version
     targetSdkVersion project.ext.target_sdk_version

@@ -9,14 +9,14 @@
     "start": "react-native start"
   },
   "dependencies": {
-    "@babel/runtime": "^7.13.10",
-    "react": "18.0.0",
-    "react-native": "0.69.3",
+    "react": "18.2.0",
+    "react-native": "0.71.2",
     "react-native-progress": "^4.1.2"
   },
   "devDependencies": {
-    "@babel/core": "^7.13.10",
+    "@babel/core": "^7.20.0",
+    "@babel/runtime": "^7.20.0",
     "babel-plugin-module-resolver": "^4.0.0",
-    "metro-react-native-babel-preset": "^0.70.3"
+    "metro-react-native-babel-preset": "0.73.7"
   }
 }
