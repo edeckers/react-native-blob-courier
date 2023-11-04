@@ -15,6 +15,7 @@ import io.deckers.blob_courier.common.DEFAULT_MIME_TYPE
 import io.deckers.blob_courier.common.DEFAULT_PROGRESS_TIMEOUT_MILLISECONDS
 import io.deckers.blob_courier.common.DEFAULT_UPLOAD_METHOD
 import io.deckers.blob_courier.common.Either
+import io.deckers.blob_courier.common.InputStreamRequestBody
 import io.deckers.blob_courier.common.PARAMETER_ABSOLUTE_FILE_PATH
 import io.deckers.blob_courier.common.PARAMETER_FILENAME
 import io.deckers.blob_courier.common.PARAMETER_HEADERS
