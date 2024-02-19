@@ -1,7 +1,7 @@
 PODS:
   - boost (1.76.0)
   - DoubleConversion (1.1.6)
-  - Embassy (4.1.1)
+  - Embassy (4.1.4)
   - EnvoyAmbassador (4.0.5):
     - Embassy (~> 4.0)
   - FBLazyVector (0.69.8)
@@ -413,7 +413,7 @@ CHECKOUT OPTIONS:
 SPEC CHECKSUMS:
   boost: a7c83b31436843459a1961bfd74b96033dc77234
   DoubleConversion: 5189b271737e1565bdce30deb4a08d647e3f5f54
-  Embassy: eb36dc783ea20b792426461bbaff8c3f256e0331
+  Embassy: d752c8de4795d6d7ec0e533cd69b9275917a5211
   EnvoyAmbassador: 21cef10e70d003801c68ba5281948684a4e25486
   FBLazyVector: c7b6997d41fffaaaf4d18c82bc93885df731e2d0
   FBReactNativeSpec: b1217c558a3ae84c2057d9c2ddce88af21379a68
@@ -450,4 +450,4 @@ SPEC CHECKSUMS:
 
 PODFILE CHECKSUM: c212dc842cb832fb012d298caeb911b819006ab0
 
-COCOAPODS: 1.11.2
+COCOAPODS: 1.15.2
