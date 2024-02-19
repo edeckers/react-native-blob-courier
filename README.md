@@ -23,7 +23,7 @@ npm install react-native-blob-courier
 
 - Android >= 24
 - Android Gradle Plugin >= 7.5.1
-- iOS >= 12.4
+- iOS >= 13.0
 - JDK >= 11
 - React Native >= 0.69.x
 
@@ -372,7 +372,7 @@ Optional
 | `multipartName`  | `string`                         | Name for the file multipart               | `"file"`                            |
 | `onProgress`     | `(e: BlobProgressEvent) => void` | Function handling progress updates        | `() => { }`                         |
 | `returnResponse` | `boolean`                        | Return the HTTP response body?            | `false`                             |
-| `signal`         | `AbortSignal`                    | Request cancellation manager              | `null`                              | 
+| `signal`         | `AbortSignal`                    | Request cancellation manager              | `null`                              |
 
 ### `uploadParts(input: BlobMultipartUploadRequest)`
 
