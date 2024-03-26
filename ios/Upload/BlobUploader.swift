@@ -44,8 +44,7 @@ open class BlobUploader: NSObject {
           let payload = part[Constants.parameterPartPayload] as? [String: String] ?? [:]
           let absoluteFilePath = payload[Constants.parameterAbsoluteFilePath]!
 
-          let fileUrl = URL(string: absoluteFilePath)!
-          let filename = payload[Constants.parameterFilename] ?? fileUrl.lastPathComponent
+          let filename = payload[Constants.parameterFilename] ?? (absoluteFilePath as NSString).lastPathComponent
           let mimeType = payload[Constants.parameterMimeType] ?? Constants.defaultMimeType
 
           try data.addFilePart(
@@ -174,7 +173,7 @@ extension Data {
   }
 
   mutating func addFilePart(part: FilePart) throws {
-    let fileUrl = URL(string: part.absoluteFilePath)!
+    let fileUrl = URL(fileURLWithPath: part.absoluteFilePath)
     let fileData = try Data(contentsOf: fileUrl)
 
     let maybeFileAttributes = try? FileManager.default.attributesOfItem(atPath: part.absoluteFilePath)
