@@ -11,6 +11,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.os.Build
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import io.deckers.blob_courier.common.ACTION_CANCEL_REQUEST
 import io.deckers.blob_courier.common.BlobCourierError
@@ -162,10 +163,19 @@ class ManagedDownloader(
   private fun registerDownloadCompletionHandler(downloadReceiver: ManagedDownloadReceiver) {
     lv("Registering ${DownloadManager.ACTION_DOWNLOAD_COMPLETE} receiver")
 
-    context.registerReceiver(
-      downloadReceiver,
-      IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE)
-    )
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+      context.registerReceiver(
+        downloadReceiver,
+        IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE),
+        Context.RECEIVER_EXPORTED
+      )
+    } else {
+      @Suppress("UnspecifiedRegisterReceiverFlag")
+      context.registerReceiver(
+        downloadReceiver,
+        IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE)
+      )
+    }
 
     lv("Registered ${DownloadManager.ACTION_DOWNLOAD_COMPLETE} receiver")
   }
