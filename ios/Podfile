@@ -1,13 +1,13 @@
 require_relative '../node_modules/react-native/scripts/react_native_pods'
 
+react_native_path = '../node_modules/react-native'
+
 target 'BlobCourier' do
   platform :ios, min_ios_version_supported
   target 'BlobCourierTests' do
 
-     config = use_native_modules!
-
      use_react_native!(
-       :path => config[:reactNativePath],
+       :path => react_native_path,
        :app_path => "#{Pod::Config.instance.installation_root}/.."
      )
 
@@ -20,7 +20,7 @@ target 'BlobCourier' do
   post_install do |installer|
     react_native_post_install(
       installer,
-      config[:reactNativePath],
+      react_native_path,
       :mac_catalyst_enabled => false
     )
 
