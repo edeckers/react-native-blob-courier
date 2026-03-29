@@ -9,8 +9,8 @@
     "start": "react-native start"
   },
   "dependencies": {
-    "react": "18.2.0",
-    "react-native": "0.71.2",
+    "react": "^18.3.1",
+    "react-native": "^0.76.0",
     "react-native-progress": "^4.1.2"
   },
   "devDependencies": {

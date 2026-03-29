@@ -19,16 +19,8 @@ plugins {
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 
-if (project.pluginManager.hasPlugin("com.facebook.react")) {
-  // React Native Gradle Plugin is applied by the consumer app
-} else {
-  apply plugin: 'com.facebook.react'
-}
-
-react {
-  jsRootDir = file("../src")
-  libraryName = "BlobCourierSpec"
-  codegenJavaPackageName = "io.deckers.blob_courier"
+def isNewArchitectureEnabled() {
+  return project.hasProperty("newArchEnabled") && project.newArchEnabled == "true"
 }
 
 dependencyLocking {
@@ -79,6 +71,15 @@ android {
     }
   }
 
+  compileOptions {
+    sourceCompatibility JavaVersion.VERSION_17
+    targetCompatibility JavaVersion.VERSION_17
+  }
+
+  buildFeatures {
+    buildConfig true
+  }
+
   buildTypes {
     release {
       minifyEnabled false
@@ -89,13 +90,59 @@ android {
   }
 }
 
+tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+  kotlinOptions {
+    jvmTarget = "17"
+  }
+}
+
 repositories {
   mavenCentral()
   google()
+
+  def defaultDir = null
+
+  if (rootProject.ext.has('reactNativeAndroidRoot')) {
+    defaultDir = rootProject.ext.get('reactNativeAndroidRoot')
+  } else {
+    defaultDir = new File(
+      projectDir,
+      '/../../../node_modules/react-native/android'
+    )
+  }
+
+  if (defaultDir.exists()) {
+    maven {
+      url defaultDir.toString()
+      name 'React Native sources'
+    }
+
+    logger.info(":${project.name}:reactNativeAndroidRoot ${defaultDir.canonicalPath}")
+  } else {
+    def parentDir = rootProject.projectDir
+
+    1.upto(5, {
+      parentDir = parentDir.parentFile
+
+      def androidPrebuiltBinaryDir = new File(
+        parentDir,
+        'node_modules/react-native/android'
+      )
+
+      if (androidPrebuiltBinaryDir.exists()) {
+        maven {
+          url androidPrebuiltBinaryDir.toString()
+          name 'React Native sources'
+        }
+
+        logger.info(":${project.name}:reactNativeAndroidRoot ${androidPrebuiltBinaryDir.canonicalPath}")
+      }
+    })
+  }
 }
 
 dependencies {
-  implementation "com.facebook.react:react-android"
+  implementation "com.facebook.react:react-android:0.76.9"
   implementation "androidx.localbroadcastmanager:localbroadcastmanager:$localbroadcastmanager_version"
   implementation "androidx.multidex:multidex:$multidex_version"
   implementation "com.squareup.okhttp3:okhttp:$okhttp_version"

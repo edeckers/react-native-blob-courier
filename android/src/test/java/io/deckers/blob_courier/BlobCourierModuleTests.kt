@@ -143,7 +143,7 @@ class BlobCourierModuleTests {
   fun all_required_fetch_parameters_provided_resolves_promise() = runBlocking {
     val allRequiredParametersMap = createValidTestFetchParameterMap().toReactMap()
 
-    val ctx = ReactApplicationContext(ApplicationProvider.getApplicationContext())
+    val ctx = TestReactApplicationContext(ApplicationProvider.getApplicationContext())
     val (succeeded, message) =
       runRequestToBoolean({ runFetchBlobSuspend(ctx, allRequiredParametersMap) })
 
@@ -158,7 +158,7 @@ class BlobCourierModuleTests {
     val requestWithNonExistentUrl =
       allRequiredParametersMap.plus(Pair("url", "http://127.0.0.1:12345")).toReactMap()
 
-    val ctx = ReactApplicationContext(ApplicationProvider.getApplicationContext())
+    val ctx = TestReactApplicationContext(ApplicationProvider.getApplicationContext())
 
     val (succeeded, message) =
       runRequestToBoolean({ runFetchBlobSuspend(ctx, requestWithNonExistentUrl) })
@@ -175,7 +175,7 @@ class BlobCourierModuleTests {
         Pair("url", "https://github.com/edeckers/this-does-not-exist")
       ).toReactMap()
 
-    val ctx = ReactApplicationContext(ApplicationProvider.getApplicationContext())
+    val ctx = TestReactApplicationContext(ApplicationProvider.getApplicationContext())
 
     val (succeeded, message) =
       runRequestToBoolean({ runFetchBlobSuspend(ctx, requestWithNonExistentUrl) })
@@ -189,7 +189,7 @@ class BlobCourierModuleTests {
   fun all_required_parameters_provided_resolves_upload_promise() = runBlocking {
     val allRequiredParametersMap = createValidTestFetchParameterMap().toReactMap()
 
-    val ctx = ReactApplicationContext(ApplicationProvider.getApplicationContext())
+    val ctx = TestReactApplicationContext(ApplicationProvider.getApplicationContext())
 
     val (succeeded, message) = runRequestToBoolean({
       val errorOrResult = runFetchBlobSuspend(ctx, allRequiredParametersMap)
@@ -218,7 +218,7 @@ class BlobCourierModuleTests {
   fun using_a_string_payload_resolves_upload_promise() = runBlocking {
     val allRequiredParametersMap = createValidTestFetchParameterMap().toReactMap()
 
-    val ctx = ReactApplicationContext(ApplicationProvider.getApplicationContext())
+    val ctx = TestReactApplicationContext(ApplicationProvider.getApplicationContext())
 
     val (succeeded, message) = runRequestToBoolean({
       val errorOrResult = runFetchBlobSuspend(ctx, allRequiredParametersMap)
@@ -259,7 +259,7 @@ class BlobCourierModuleTests {
   fun non_ok_http_response_resolves_upload_promise() = runBlocking {
     val allRequiredParametersMap = createValidTestFetchParameterMap().toReactMap()
 
-    val ctx = ReactApplicationContext(ApplicationProvider.getApplicationContext())
+    val ctx = TestReactApplicationContext(ApplicationProvider.getApplicationContext())
 
     val (succeeded, message) = runRequestToBoolean({
       val errorOrResult = runFetchBlobSuspend(ctx, allRequiredParametersMap)
@@ -290,7 +290,7 @@ class BlobCourierModuleTests {
   fun unreachable_server_rejects_upload_promise() = runBlocking {
     val allRequiredParametersMap = createValidTestFetchParameterMap().toReactMap()
 
-    val ctx = ReactApplicationContext(ApplicationProvider.getApplicationContext())
+    val ctx = TestReactApplicationContext(ApplicationProvider.getApplicationContext())
 
     val (succeeded, message) = runRequestToBoolean({
       val errorOrResult = runFetchBlobSuspend(ctx, allRequiredParametersMap)
@@ -319,7 +319,7 @@ class BlobCourierModuleTests {
   @Category(Isolated::class)
   @Test
   fun total_number_of_bytes_estimate_is_returned_by_input_stream_request_body() {
-    val ctx = ReactApplicationContext(ApplicationProvider.getApplicationContext())
+    val ctx = TestReactApplicationContext(ApplicationProvider.getApplicationContext())
 
     val fileUri = Uri.parse(SOME_FILE_THAT_IS_ALWAYS_AVAILABLE)
 
@@ -352,7 +352,7 @@ class BlobCourierModuleTests {
   @Category(EndToEnd::class, Regression::class)
   @Test // This is the faster, and less thorough version of the Instrumented test with the same name
   fun uploading_a_file_from_outside_app_data_directory_resolves_promise() = runBlocking {
-    val ctx = ReactApplicationContext(ApplicationProvider.getApplicationContext())
+    val ctx = TestReactApplicationContext(ApplicationProvider.getApplicationContext())
 
     Shadows.shadowOf(ctx.contentResolver)
       .registerInputStream(Uri.parse(SOME_FILE_THAT_IS_ALWAYS_AVAILABLE), "".byteInputStream())
@@ -386,7 +386,7 @@ class BlobCourierModuleTests {
     val requestWithInvalidTargetDirectory =
       allRequiredParametersMap.plus(Pair("android", android)).toReactMap()
 
-    val ctx = ReactApplicationContext(ApplicationProvider.getApplicationContext())
+    val ctx = TestReactApplicationContext(ApplicationProvider.getApplicationContext())
 
     val (succeeded, message) =
       runRequestToBoolean({
@@ -417,7 +417,7 @@ class BlobCourierModuleTests {
     when (errorOrUploaderParameters) {
       is Either.Left -> assertTrue("Invalid uploader parameters", false)
       is Either.Right -> {
-        val ctx = ReactApplicationContext(ApplicationProvider.getApplicationContext())
+        val ctx = TestReactApplicationContext(ApplicationProvider.getApplicationContext())
         val uploaderMultipartBody =
           errorOrUploaderParameters.v.toMultipartBody(ctx.contentResolver)
 
@@ -440,7 +440,7 @@ class BlobCourierModuleTests {
     val allRequiredParametersMap =
       createValidUploadTestParameterMap(irrelevantTaskId, someNonExistentPath)
 
-    val ctx = ReactApplicationContext(ApplicationProvider.getApplicationContext())
+    val ctx = TestReactApplicationContext(ApplicationProvider.getApplicationContext())
 
     val (succeeded, message) = runRequestToBoolean({
       runUploadBlobSuspend(ctx, allRequiredParametersMap.toReactMap())
@@ -510,7 +510,7 @@ class BlobCourierModuleTests {
 
       mockkConstructor(CongestionAvoidingProgressNotifierFactory::class)
 
-      val ctx = ReactApplicationContext(ApplicationProvider.getApplicationContext())
+      val ctx = TestReactApplicationContext(ApplicationProvider.getApplicationContext())
 
       every {
         constructedWith<CongestionAvoidingProgressNotifierFactory>(
@@ -543,7 +543,7 @@ class BlobCourierModuleTests {
       val irrelevantTaskId = UUID.randomUUID().toString()
       val someTimeOutValueThatIsNotDefault = DEFAULT_PROGRESS_TIMEOUT_MILLISECONDS * 2
 
-      val ctx = ReactApplicationContext(ApplicationProvider.getApplicationContext())
+      val ctx = TestReactApplicationContext(ApplicationProvider.getApplicationContext())
 
       Shadows.shadowOf(ctx.contentResolver)
         .registerInputStream(Uri.parse(SOME_FILE_THAT_IS_ALWAYS_AVAILABLE), "".byteInputStream())
@@ -593,7 +593,7 @@ class BlobCourierModuleTests {
       val requestWithInvalidTargetDirectory =
         allRequiredParametersMap.plus(Pair("android", android))
 
-      val ctx = ReactApplicationContext(ApplicationProvider.getApplicationContext())
+      val ctx = TestReactApplicationContext(ApplicationProvider.getApplicationContext())
 
       val (succeeded, message) = runRequestToBoolean({
         runFetchBlobSuspend(ctx, requestWithInvalidTargetDirectory.toReactMap())
@@ -615,7 +615,7 @@ class BlobCourierModuleTests {
   ) = runBlocking {
     val availableParametersAsMap = availableParameters.toMap().toReactMap()
 
-    val ctx = ReactApplicationContext(ApplicationProvider.getApplicationContext())
+    val ctx = TestReactApplicationContext(ApplicationProvider.getApplicationContext())
 
     val (succeeded, message) = runRequest({
       runFetchBlobSuspend(ctx, availableParametersAsMap)
@@ -632,7 +632,7 @@ class BlobCourierModuleTests {
   ) = runBlocking {
     val allFetchParametersMap = createValidTestFetchParameterMap()
 
-    val ctx = ReactApplicationContext(ApplicationProvider.getApplicationContext())
+    val ctx = TestReactApplicationContext(ApplicationProvider.getApplicationContext())
 
     val (succeeded, message) = runRequest({
       val errorOrResult = runFetchBlobSuspend(ctx, allFetchParametersMap.toReactMap())

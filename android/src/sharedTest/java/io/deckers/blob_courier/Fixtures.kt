@@ -202,27 +202,27 @@ object Fixtures {
       right(maybeValue)
     }
 
-    override fun reject(code: String?, message: String?) = left(TestPromiseError(code, message))
+    override fun reject(code: String, message: String?) = left(TestPromiseError(code, message))
 
-    override fun reject(code: String?, throwable: Throwable?) =
-      left(TestPromiseError(throwable?.javaClass?.typeName, throwable?.localizedMessage))
+    override fun reject(code: String, throwable: Throwable?) =
+      left(TestPromiseError(code, throwable?.localizedMessage))
 
-    override fun reject(code: String?, message: String?, throwable: Throwable?) =
+    override fun reject(code: String, message: String?, throwable: Throwable?) =
       left(TestPromiseError(code, message, throwable))
 
-    override fun reject(throwable: Throwable?) =
-      left(TestPromiseError(throwable?.javaClass?.typeName, throwable?.localizedMessage, throwable))
+    override fun reject(throwable: Throwable) =
+      left(TestPromiseError(throwable.javaClass.typeName, throwable.localizedMessage, throwable))
 
-    override fun reject(throwable: Throwable?, userInfo: WritableMap?) =
-      left(TestPromiseError(throwable?.javaClass?.typeName, throwable?.localizedMessage, throwable))
+    override fun reject(throwable: Throwable, userInfo: WritableMap) =
+      left(TestPromiseError(throwable.javaClass.typeName, throwable.localizedMessage, throwable))
 
-    override fun reject(code: String?, userInfo: WritableMap) =
-      left(TestPromiseError(code, code ?: ""))
+    override fun reject(code: String, userInfo: WritableMap) =
+      left(TestPromiseError(code, code))
 
-    override fun reject(code: String?, throwable: Throwable?, userInfo: WritableMap?) =
+    override fun reject(code: String, throwable: Throwable?, userInfo: WritableMap) =
       left(TestPromiseError(code, throwable?.localizedMessage, throwable))
 
-    override fun reject(code: String?, message: String?, userInfo: WritableMap) =
+    override fun reject(code: String, message: String?, userInfo: WritableMap) =
       left(TestPromiseError(code, message))
 
     override fun reject(
@@ -233,7 +233,8 @@ object Fixtures {
     ) =
       left(TestPromiseError(code, message, throwable))
 
-    override fun reject(message: String?) =
-      left(TestPromiseError(null, message ?: ""))
+    @Deprecated("Prefer passing a module-specific error code to JS.")
+    override fun reject(message: String) =
+      left(TestPromiseError(null, message))
   }
 }

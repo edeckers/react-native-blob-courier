@@ -22,12 +22,10 @@ npm install react-native-blob-courier
 ## Requirements
 
 - Android >= 24
-- Android Gradle Plugin >= 7.5.1
+- Android Gradle Plugin >= 8.7
 - iOS >= 13.0
-- JDK >= 11
-- React Native >= 0.69.x
-
-_Note: you may have success with earlier versions of React Native but these are neither tested nor supported._
+- JDK >= 17
+- React Native >= 0.76.x (New Architecture)
 
 ## Usage
 
