@@ -6,9 +6,7 @@
  */
 #import <React/RCTBridgeModule.h>
 
-#ifdef RCT_NEW_ARCH_ENABLED
 #import <BlobCourierSpec/BlobCourierSpec.h>
-#endif
 
 @interface RCT_EXTERN_MODULE(BlobCourier, NSObject)
 

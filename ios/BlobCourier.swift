@@ -4,9 +4,7 @@
 //  LICENSE file in the root directory of this source tree.
 import Foundation
 
-#if canImport(BlobCourierSpec)
 import BlobCourierSpec
-#endif
 
 @objc(BlobCourier)
 open class BlobCourier: NSObject {
