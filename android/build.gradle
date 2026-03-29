@@ -139,7 +139,7 @@ repositories {
 
 dependencies {
   implementation "com.facebook.react:react-android:0.76.9"
-  implementation "androidx.localbroadcastmanager:localbroadcastmanager:$localbroadcastmanager_version"
+
   implementation "androidx.multidex:multidex:$multidex_version"
   implementation "com.squareup.okhttp3:okhttp:$okhttp_version"
   testImplementation "androidx.test:core:$test_core_version"

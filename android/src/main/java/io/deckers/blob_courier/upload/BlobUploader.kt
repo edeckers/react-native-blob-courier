@@ -55,7 +55,7 @@ class BlobUploader(
     val uploadRequestCall = httpClient.newCall(requestBuilder)
 
     try {
-      registerCancellationHandler(context, uploaderParameters.taskId, uploadRequestCall)
+      registerCancellationHandler(uploaderParameters.taskId, uploadRequestCall)
 
       val response = uploadRequestCall.execute()
 

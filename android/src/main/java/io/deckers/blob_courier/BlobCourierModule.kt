@@ -67,7 +67,7 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
           CancellationParameterFactory()
             .fromInput(input)
             .fold(::Failure, ::Success)
-            .map { RequestCanceller(reactContext).cancel(it.taskId) }
+            .map { RequestCanceller().cancel(it.taskId) }
 
         errorOrCancelResult
           .fmap { Success(emptyMap<String, Any>().toReactMap()) }
