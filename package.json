@@ -98,5 +98,13 @@
       "module",
       "typescript"
     ]
+  },
+  "codegenConfig": {
+    "name": "BlobCourierSpec",
+    "type": "modules",
+    "jsSrcsDir": "src",
+    "android": {
+      "javaPackageName": "io.deckers.blob_courier"
+    }
   }
 }

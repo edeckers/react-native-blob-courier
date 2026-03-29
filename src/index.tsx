@@ -4,7 +4,7 @@
  * This source code is licensed under the MPL-2.0 license found in the
  * LICENSE file in the root directory of this source tree.
  */
-import { NativeEventEmitter, NativeModules } from 'react-native';
+import { NativeEventEmitter, NativeModules, Platform } from 'react-native';
 import {
   BLOB_COURIER_PROGRESS_EVENT_NAME,
   BLOB_FETCH_FALLBACK_PARAMETERS,
@@ -16,9 +16,7 @@ import type {
   BlobFetchRequest,
   BlobRequestSettings,
   BlobRequestTask,
-  BlobFetchResponse,
   BlobUploadRequest,
-  BlobUploadResponse,
   AndroidDownloadManagerSettings,
   BlobProgressEvent,
   BlobRequestOnProgress,
@@ -35,8 +33,7 @@ import {
   uuid,
 } from './Utils';
 import { dict } from './Extensions';
-
-type BlobCancelNativeInput = BlobRequestTask;
+import NativeBlobCourier from './NativeBlobCourier';
 
 type BlobFetchNativeInput = BlobFetchInput & BlobRequestTask;
 
@@ -53,17 +50,9 @@ type BlobUploadMultipartNativeInput = BlobMultipartArrayUploadRequest &
   BlobRequestSettings &
   BlobRequestTask;
 
-type BlobCourierType = {
-  cancelRequest(input: BlobCancelNativeInput): Promise<{}>;
-  fetchBlob(input: BlobFetchNativeInput): Promise<BlobFetchResponse>;
-  uploadBlob(
-    input: BlobUploadMultipartNativeInput
-  ): Promise<BlobUploadResponse>;
-};
-
-const { BlobCourier, BlobCourierEventEmitter } = NativeModules;
-
-const EventEmitter = new NativeEventEmitter(BlobCourierEventEmitter);
+const EventEmitter = new NativeEventEmitter(
+  Platform.OS === 'ios' ? NativeModules.BlobCourierEventEmitter : undefined
+);
 
 const createTaskId = () => `rnbc-req-${uuid()}`;
 
@@ -177,7 +166,7 @@ const wrapAbortListener = async <T,>(
       originalSignalOnAbort.call(signal, ev);
     }
 
-    (BlobCourier as BlobCourierType).cancelRequest({ taskId });
+    NativeBlobCourier.cancelRequest({ taskId });
 
     console.debug(`Aborted ${taskId}`);
   };
@@ -206,7 +195,7 @@ const emitterWrappedFetch = <T extends BlobFetchNativeInput>(
 ) =>
   wrapEmitter(
     input.taskId,
-    () => (BlobCourier as BlobCourierType).fetchBlob(sanitizeFetchData(input)),
+    () => NativeBlobCourier.fetchBlob(sanitizeFetchData(input)),
     input.onProgress
   );
 
@@ -228,7 +217,7 @@ const uploadBlobFromParts = <T extends BlobUploadMultipartInputWithTask>(
   try {
     const sanitized = sanitizeMappedMultiparts(input.parts);
 
-    return (BlobCourier as BlobCourierType).uploadBlob(
+    return NativeBlobCourier.uploadBlob(
       sanitizeMultipartUploadData({
         ...input,
         parts: convertMappedMultipartsWithSymbolizedKeysToArray(sanitized),
