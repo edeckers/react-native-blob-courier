@@ -4,8 +4,6 @@
 //  LICENSE file in the root directory of this source tree.
 import Foundation
 
-import BlobCourierSpec
-
 @objc(BlobCourier)
 open class BlobCourier: NSObject {
   @objc static func requiresMainQueueSetup() -> Bool {

@@ -6,8 +6,6 @@
  */
 #import <React/RCTBridgeModule.h>
 
-#import <BlobCourierSpec/BlobCourierSpec.h>
-
 @interface RCT_EXTERN_MODULE(BlobCourier, NSObject)
 
 RCT_EXTERN_METHOD(cancelRequest:(NSDictionary *)input
