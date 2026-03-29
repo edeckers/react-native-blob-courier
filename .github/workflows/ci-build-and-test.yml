@@ -13,24 +13,24 @@ on:
 
 env:
   android-adb-command-timeout-milliseconds: 20_000L
-  android-api-level: 31
+  android-api-level: 34
   android-avd-name: Pixel_3_API_S_1
   android-avd-ram-size: 1024M
   android-promise-timeout-milliseconds: 75_000L
   android-sdk-root: /Users/ely/Library/Android/sdk
-  node-version: 14
+  node-version: 22
 
 jobs:
   build-typescript-linux:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/cache@v2
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v4
         id: node_modules
         with:
           path: node_modules
           key: yarn-${{ hashFiles('**/yarn.lock') }}
-      - uses: actions/setup-node@v2-beta
+      - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.node-version }}
       - run: TARGET=typescript make clean build
@@ -38,13 +38,13 @@ jobs:
   build-typescript-macos:
     runs-on: m1
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/cache@v2
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v4
         id: node_modules
         with:
           path: node_modules
           key: yarn-${{ hashFiles('**/yarn.lock') }}
-      - uses: actions/setup-node@v2-beta
+      - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.node-version }}
       - run: TARGET=typescript make clean build
@@ -55,13 +55,13 @@ jobs:
       - build-typescript-macos
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/cache@v2
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v4
         id: node_modules
         with:
           path: node_modules
           key: yarn-${{ hashFiles('**/yarn.lock') }}
-      - uses: actions/setup-node@v2-beta
+      - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.node-version }}
       - run: TARGET=typescript make lint
@@ -69,17 +69,17 @@ jobs:
     needs: build-typescript-lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/cache@v2
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v4
         id: node_modules
         with:
           path: node_modules
           key: yarn-${{ hashFiles('**/yarn.lock') }}
-      - uses: actions/setup-node@v2-beta
+      - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.node-version }}
       - run: TARGET=typescript make test
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
           name: ts-test-results
           path: output/typescript-test-output.xml
@@ -89,12 +89,13 @@ jobs:
       - build-typescript-macos
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - name: set up JDK 11
-        uses: actions/setup-java@v1
+      - uses: actions/checkout@v4
+      - name: set up JDK 17
+        uses: actions/setup-java@v4
         with:
-          java-version: 11
-      - uses: actions/cache@v2
+          distribution: temurin
+          java-version: 17
+      - uses: actions/cache@v4
         id: node_modules
         with:
           path: node_modules
@@ -104,18 +105,19 @@ jobs:
     needs: run-android-lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - name: set up JDK 11
-        uses: actions/setup-java@v1
+      - uses: actions/checkout@v4
+      - name: set up JDK 17
+        uses: actions/setup-java@v4
         with:
-          java-version: 11
-      - uses: actions/cache@v2
+          distribution: temurin
+          java-version: 17
+      - uses: actions/cache@v4
         id: node_modules
         with:
           path: node_modules
           key: yarn-${{ hashFiles('**/yarn.lock') }}
       - run: TARGET=android:unit make clean test
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
           name: android-unit-test-results
           path: android/build/test-results/**/*.xml
@@ -124,17 +126,18 @@ jobs:
     continue-on-error: true
     runs-on: m1
     steps:
-      - uses: actions/checkout@v2
-      - name: set up JDK 11
-        uses: actions/setup-java@v1
+      - uses: actions/checkout@v4
+      - name: set up JDK 17
+        uses: actions/setup-java@v4
         with:
-          java-version: 11
-      - uses: actions/cache@v2
+          distribution: temurin
+          java-version: 17
+      - uses: actions/cache@v4
         id: node_modules
         with:
           path: node_modules
           key: yarn-${{ hashFiles('**/yarn.lock') }}
-      - uses: reactivecircus/android-emulator-runner@v2.21.0
+      - uses: reactivecircus/android-emulator-runner@v2.34.0
         env:
           ANDROID_SDK_ROOT: ${{ env.android-sdk-root }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -153,12 +156,12 @@ jobs:
             adb logcat | tee android_instrumented_logcat.log | grep 'io.deckers.blob_courier' &
             make clean test
           target: google_apis
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
           name: android-instrumented-test-results
           path: android/build/outputs/androidTest-results/connected/**/*.xml
         if: always()
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
           name: android-instrumented-logcat
           path: android_instrumented_logcat.log
@@ -169,8 +172,8 @@ jobs:
       - build-typescript-macos
     runs-on: m1
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/cache@v2
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v4
         id: node_modules
         with:
           path: node_modules
@@ -180,15 +183,15 @@ jobs:
     needs: run-ios-lint
     runs-on: m1
     steps:
-      - uses: actions/checkout@v2
-      - run: xcrun simctl boot "iPhone 11" || true
-      - uses: actions/cache@v2
+      - uses: actions/checkout@v4
+      - run: xcrun simctl boot "iPhone 16 Pro" || true
+      - uses: actions/cache@v4
         id: node_modules
         with:
           path: node_modules
           key: yarn-${{ hashFiles('**/yarn.lock') }}
       - run: TARGET=ios:gui make clean test
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
           name: ios-test-results
           path: build/reports/**/*.xml
