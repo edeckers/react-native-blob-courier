@@ -1,7 +1,17 @@
-rootProject.name = 'BlobCourierExample'
-apply from: file("../node_modules/@react-native-community/cli-platform-android/native_modules.gradle"); applyNativeModulesSettingsGradle(settings)
-include ':app'
-includeBuild('../node_modules/react-native-gradle-plugin')
+pluginManagement {
+    includeBuild("../node_modules/@react-native/gradle-plugin")
+}
 
-include ':blob_courier'
-project(':blob_courier').projectDir = new File(rootProject.projectDir, '../../android')
+plugins {
+    id("com.facebook.react.settings")
+}
+
+extensions.configure(com.facebook.react.ReactSettingsExtension) { ex ->
+    ex.autolinkLibrariesFromCommand()
+}
+
+includeBuild("../node_modules/@react-native/gradle-plugin")
+
+rootProject.name = 'BlobCourierExample'
+
+include ':app'

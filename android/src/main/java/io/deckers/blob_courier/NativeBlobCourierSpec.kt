@@ -10,9 +10,10 @@ import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReadableMap
+import com.facebook.react.turbomodule.core.interfaces.TurboModule
 
 abstract class NativeBlobCourierSpec(reactContext: ReactApplicationContext) :
-  ReactContextBaseJavaModule(reactContext) {
+  ReactContextBaseJavaModule(reactContext), TurboModule {
 
   abstract fun cancelRequest(input: ReadableMap, promise: Promise)
   abstract fun fetchBlob(input: ReadableMap, promise: Promise)

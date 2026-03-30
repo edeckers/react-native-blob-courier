@@ -19,6 +19,12 @@ plugins {
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 
+try {
+  apply plugin: 'com.facebook.react'
+} catch (Exception ignored) {
+  // Plugin not available in standalone builds (unit tests)
+}
+
 dependencyLocking {
     lockAllConfigurations()
 }
@@ -59,6 +65,16 @@ android {
    }
 
   sourceSets {
+    main {
+      def codegenSpec = "$buildDir/generated/source/codegen/java/io/deckers/blob_courier/NativeBlobCourierSpec.java"
+      if (file(codegenSpec).exists()) {
+        java.srcDirs -= "src/main/java"
+        java {
+          srcDir "src/main/java"
+          exclude "**/NativeBlobCourierSpec.kt"
+        }
+      }
+    }
     androidTest {
       java.srcDirs += "src/sharedTest/java"
     }
