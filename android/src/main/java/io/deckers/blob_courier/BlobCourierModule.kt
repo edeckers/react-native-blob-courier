@@ -8,7 +8,6 @@ package io.deckers.blob_courier
 
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
-import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReactMethod
 import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.module.annotations.ReactModule
@@ -54,12 +53,12 @@ private fun lv(m: String, e: Throwable? = null) = logger.v(m, e)
 
 @ReactModule(name = LIBRARY_NAME)
 class BlobCourierModule(private val reactContext: ReactApplicationContext) :
-  ReactContextBaseJavaModule(reactContext) {
+  NativeBlobCourierSpec(reactContext) {
 
   override fun getName(): String = LIBRARY_NAME
 
   @ReactMethod
-  fun cancelRequest(input: ReadableMap, promise: Promise) {
+  override fun cancelRequest(input: ReadableMap, promise: Promise) {
     li("Calling cancelRequest")
 
     thread {
@@ -68,7 +67,7 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
           CancellationParameterFactory()
             .fromInput(input)
             .fold(::Failure, ::Success)
-            .map { RequestCanceller(reactContext).cancel(it.taskId) }
+            .map { RequestCanceller().cancel(it.taskId) }
 
         errorOrCancelResult
           .fmap { Success(emptyMap<String, Any>().toReactMap()) }
@@ -92,7 +91,7 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
   }
 
   @ReactMethod
-  fun fetchBlob(input: ReadableMap, promise: Promise) {
+  override fun fetchBlob(input: ReadableMap, promise: Promise) {
     li("Calling fetchBlob")
     thread {
       try {
@@ -135,7 +134,7 @@ class BlobCourierModule(private val reactContext: ReactApplicationContext) :
   }
 
   @ReactMethod
-  fun uploadBlob(input: ReadableMap, promise: Promise) {
+  override fun uploadBlob(input: ReadableMap, promise: Promise) {
     li("Calling uploadBlob")
     thread {
       try {

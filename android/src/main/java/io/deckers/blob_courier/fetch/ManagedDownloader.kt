@@ -12,8 +12,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.Build
-import androidx.localbroadcastmanager.content.LocalBroadcastManager
-import io.deckers.blob_courier.common.ACTION_CANCEL_REQUEST
+import io.deckers.blob_courier.cancel.CancellationRegistry
 import io.deckers.blob_courier.common.BlobCourierError
 import io.deckers.blob_courier.common.ERROR_UNEXPECTED_ERROR
 import io.deckers.blob_courier.common.Failure
@@ -144,20 +143,11 @@ class ManagedDownloader(
   }
 
   private fun registerCancellationHandler(taskId: String, downloadId: Long) {
-    lv("Registering $ACTION_CANCEL_REQUEST receiver")
+    lv("Registering cancellation handler for $taskId")
 
-    LocalBroadcastManager.getInstance(context)
-      .registerReceiver(object : BroadcastReceiver() {
-        override fun onReceive(p0: Context?, p1: Intent?) {
-          if (p1?.getStringExtra("taskId") != taskId) {
-            return
-          }
+    CancellationRegistry.register(taskId) { defaultDownloadManager.remove(downloadId) }
 
-          defaultDownloadManager.remove(downloadId)
-        }
-      }, IntentFilter(ACTION_CANCEL_REQUEST))
-
-    lv("Registered $ACTION_CANCEL_REQUEST receiver")
+    lv("Registered cancellation handler for $taskId")
   }
 
   private fun registerDownloadCompletionHandler(downloadReceiver: ManagedDownloadReceiver) {

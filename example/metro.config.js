@@ -1,4 +1,5 @@
 const path = require('path');
+const { getDefaultConfig, mergeConfig } = require('@react-native/metro-config');
 const exclusionList = require('metro-config/src/defaults/exclusionList');
 const escape = require('escape-string-regexp');
 const pak = require('../package.json');
@@ -9,7 +10,9 @@ const modules = Object.keys({
   ...pak.peerDependencies,
 });
 
-module.exports = {
+const defaultConfig = getDefaultConfig(__dirname);
+
+const config = {
   projectRoot: __dirname,
   watchFolders: [root],
 
@@ -23,10 +26,13 @@ module.exports = {
       )
     ),
 
-    extraNodeModules: modules.reduce((acc, name) => {
-      acc[name] = path.join(__dirname, 'node_modules', name);
-      return acc;
-    }, {}),
+    extraNodeModules: {
+      ...modules.reduce((acc, name) => {
+        acc[name] = path.join(__dirname, 'node_modules', name);
+        return acc;
+      }, {}),
+      [pak.name]: root,
+    },
   },
 
   transformer: {
@@ -38,3 +44,5 @@ module.exports = {
     }),
   },
 };
+
+module.exports = mergeConfig(defaultConfig, config);

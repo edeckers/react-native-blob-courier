@@ -19,7 +19,7 @@ fun notifyBridgeOfProgress(
   totalNumberOfBytesRead: Long,
   totalLength: Long
 ) {
-  if (!context.hasActiveCatalystInstance()) {
+  if (!context.hasActiveReactInstance()) {
     return
   }
 

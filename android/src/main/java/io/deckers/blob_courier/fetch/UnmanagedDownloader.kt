@@ -67,7 +67,7 @@ class UnmanagedDownloader(
     val call = httpClientWithInterceptor.newCall(request)
 
     try {
-      registerCancellationHandler(context, downloaderParameters.taskId, call)
+      registerCancellationHandler(downloaderParameters.taskId, call)
 
       val response = call.execute()
 

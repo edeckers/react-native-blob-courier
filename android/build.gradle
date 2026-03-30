@@ -19,6 +19,12 @@ plugins {
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 
+try {
+  apply plugin: 'com.facebook.react'
+} catch (Exception ignored) {
+  // Plugin not available in standalone builds (unit tests)
+}
+
 dependencyLocking {
     lockAllConfigurations()
 }
@@ -59,12 +65,31 @@ android {
    }
 
   sourceSets {
+    main {
+      def codegenSpec = "$buildDir/generated/source/codegen/java/io/deckers/blob_courier/NativeBlobCourierSpec.java"
+      if (file(codegenSpec).exists()) {
+        java.srcDirs -= "src/main/java"
+        java {
+          srcDir "src/main/java"
+          exclude "**/NativeBlobCourierSpec.kt"
+        }
+      }
+    }
     androidTest {
       java.srcDirs += "src/sharedTest/java"
     }
     test {
       java.srcDirs += "src/sharedTest/java"
     }
+  }
+
+  compileOptions {
+    sourceCompatibility JavaVersion.VERSION_17
+    targetCompatibility JavaVersion.VERSION_17
+  }
+
+  buildFeatures {
+    buildConfig true
   }
 
   buildTypes {
@@ -77,13 +102,17 @@ android {
   }
 }
 
+tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+  kotlinOptions {
+    jvmTarget = "17"
+  }
+}
+
 repositories {
   mavenCentral()
   google()
 
-  def found = false
   def defaultDir = null
-  def androidSourcesName = 'React Native sources'
 
   if (rootProject.ext.has('reactNativeAndroidRoot')) {
     defaultDir = rootProject.ext.get('reactNativeAndroidRoot')
@@ -97,22 +126,15 @@ repositories {
   if (defaultDir.exists()) {
     maven {
       url defaultDir.toString()
-      name androidSourcesName
+      name 'React Native sources'
     }
 
     logger.info(":${project.name}:reactNativeAndroidRoot ${defaultDir.canonicalPath}")
-    found = true
   } else {
     def parentDir = rootProject.projectDir
 
     1.upto(5, {
-      if (found) return true
       parentDir = parentDir.parentFile
-
-      def androidSourcesDir = new File(
-        parentDir,
-        'node_modules/react-native'
-      )
 
       def androidPrebuiltBinaryDir = new File(
         parentDir,
@@ -122,35 +144,18 @@ repositories {
       if (androidPrebuiltBinaryDir.exists()) {
         maven {
           url androidPrebuiltBinaryDir.toString()
-          name androidSourcesName
+          name 'React Native sources'
         }
 
         logger.info(":${project.name}:reactNativeAndroidRoot ${androidPrebuiltBinaryDir.canonicalPath}")
-        found = true
-      } else if (androidSourcesDir.exists()) {
-        maven {
-          url androidSourcesDir.toString()
-          name androidSourcesName
-        }
-
-        logger.info(":${project.name}:reactNativeAndroidRoot ${androidSourcesDir.canonicalPath}")
-        found = true
       }
     })
-  }
-
-  if (!found) {
-    throw new GradleException(
-      "${project.name}: unable to locate React Native android sources. " +
-        "Ensure you have you installed React Native as a dependency in your project and try again."
-    )
   }
 }
 
 dependencies {
-  // noinspection GradleDynamicVersion
-  api "com.facebook.react:react-native:+"
-  implementation "androidx.localbroadcastmanager:localbroadcastmanager:$localbroadcastmanager_version"
+  implementation "com.facebook.react:react-android:0.76.9"
+
   implementation "androidx.multidex:multidex:$multidex_version"
   implementation "com.squareup.okhttp3:okhttp:$okhttp_version"
   testImplementation "androidx.test:core:$test_core_version"

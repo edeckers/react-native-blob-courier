@@ -22,12 +22,10 @@ npm install react-native-blob-courier
 ## Requirements
 
 - Android >= 24
-- Android Gradle Plugin >= 7.5.1
+- Android Gradle Plugin >= 8.7
 - iOS >= 13.0
-- JDK >= 11
-- React Native >= 0.69.x
-
-_Note: you may have success with earlier versions of React Native but these are neither tested nor supported._
+- JDK >= 17
+- React Native >= 0.76.x (New Architecture)
 
 ## Usage
 
@@ -78,10 +76,10 @@ const request1 = {
 
 const uploadResult = await BlobCourier.uploadBlob(request1);
 
-console.log(uploadResult):
+console.log(uploadResult);
 // {
 //   "response": {
-//     "code": {
+//     "code": 200,
 //     "data": "<some response>",
 //     "headers": {
 //       "some_header": "some_value",
@@ -111,12 +109,12 @@ const request2 = {
   url: 'https://file.io',
 };
 
-const multipartUploadResult = await BlobCourier.uploadBlob(request1);
+const multipartUploadResult = await BlobCourier.uploadBlob(request2);
 
-console.log(multipartUploadResult):
+console.log(multipartUploadResult);
 // {
 //   "response": {
-//     "code": {
+//     "code": 200,
 //     "data": "<some response>",
 //     "headers": {
 //       "some_header": "some_value",
@@ -485,9 +483,9 @@ You can find an example of how to use the library in the [example](example) dire
 
 ### Permissions
 
-### Android 5.1 and below (API level < 23)
+### Android 7.0 - 9.0 (API level 24-28)
 
-Add the following line to `AndroidManifest.xml`.
+Add the following lines to `AndroidManifest.xml`.
 
 ```diff
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" (...)>
@@ -505,12 +503,12 @@ Add the following line to `AndroidManifest.xml`.
     (...)
 ```
 
-### Android 6.0+ (API level 23+)
+### Android 10+ (API level 29+)
 
-Grant permissions using the [PermissionAndroid API](https://facebook.github.io/react-native/docs/permissionsandroid.html), like so:
+Grant permissions using the [PermissionsAndroid API](https://reactnative.dev/docs/permissionsandroid), like so:
 
 ```tsx
-const function App = () => {
+const App = () => {
 
   // ...
 
@@ -561,17 +559,17 @@ import CameraRoll from '@react-native-community/cameraroll';
 // ...
 
 const request = {
-  filename: 'teh_cage640x360.png',
+  filename: 'photo640x360.jpg',
   method: 'GET',
-  mimeType: 'image/png',
-  url: 'https://www.placecage.com/640/360',
+  mimeType: 'image/jpeg',
+  url: 'https://picsum.photos/640/360',
 };
 
-const cageResult = await BlobCourier.fetchBlob(request)
+const fetchResult = await BlobCourier.fetchBlob(request)
 
-const cageLocalPath = cageResult.data.absoluteFilePath
+const localPath = fetchResult.data.absoluteFilePath
 
-CameraRoll.save(cageLocalPath);
+CameraRoll.save(localPath);
 ```
 
 ## Contributing

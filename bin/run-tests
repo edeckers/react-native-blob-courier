@@ -2,7 +2,7 @@
 
 source `dirname $0`/shared-functions
 
-IOS_DESTINATION=${IOS_DESTINATION:-"platform=iOS Simulator,name=iPhone 11"}
+IOS_DESTINATION=${IOS_DESTINATION:-"platform=iOS Simulator,name=iPhone 16 Pro"}
 
 validate_target_parameter
 

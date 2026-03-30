@@ -11,6 +11,7 @@ import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.JavaOnlyArray
 import com.facebook.react.bridge.JavaOnlyMap
 import com.facebook.react.bridge.ReactApplicationContext
+import io.deckers.blob_courier.TestReactApplicationContext
 import io.deckers.blob_courier.BuildConfig.ADB_COMMAND_TIMEOUT_MILLISECONDS
 import io.deckers.blob_courier.BuildConfig.PROMISE_TIMEOUT_MILLISECONDS
 import io.deckers.blob_courier.Fixtures
@@ -170,7 +171,7 @@ class BlobCourierInstrumentedModuleTests {
 
 
     val ctx = InstrumentationRegistry.getInstrumentation().targetContext
-    val reactContext = ReactApplicationContext(ctx)
+    val reactContext = TestReactApplicationContext(ctx)
 
     val (succeeded, message) = runInstrumentedRequestToBoolean {
       toggleNetworking(true)
@@ -192,7 +193,7 @@ class BlobCourierInstrumentedModuleTests {
     allRequiredParametersMap.putMap("android", androidSettings)
 
     val ctx = InstrumentationRegistry.getInstrumentation().targetContext
-    val reactContext = ReactApplicationContext(ctx)
+    val reactContext = TestReactApplicationContext(ctx)
 
     val (succeeded, message) = runInstrumentedRequestToBoolean {
       toggleNetworking(true)
@@ -221,7 +222,7 @@ class BlobCourierInstrumentedModuleTests {
     allRequiredParametersMap.putMap("android", androidSettings)
 
     val ctx = InstrumentationRegistry.getInstrumentation().targetContext
-    val reactContext = ReactApplicationContext(ctx)
+    val reactContext = TestReactApplicationContext(ctx)
 
     val (succeeded, message) = runInstrumentedRequestToBoolean {
       toggleNetworking(true)
@@ -245,7 +246,7 @@ class BlobCourierInstrumentedModuleTests {
     val allRequiredParametersMap =
       createValidTestFetchParameterMap().plus("url" to Fixtures.LARGE_FILE).toReactMap()
 
-    val ctx = ReactApplicationContext(ApplicationProvider.getApplicationContext())
+    val ctx = TestReactApplicationContext(ApplicationProvider.getApplicationContext())
 
     val errorOrResult =
       TestUtils.runRequest(
@@ -268,7 +269,7 @@ class BlobCourierInstrumentedModuleTests {
     val allRequiredParametersMap =
       createValidUploadTestParameterMap(taskId, file.absolutePath)
 
-    val ctx = ReactApplicationContext(ApplicationProvider.getApplicationContext())
+    val ctx = TestReactApplicationContext(ApplicationProvider.getApplicationContext())
 
     val errorOrResult = TestUtils.runRequest(
       { runCancelUploadBlobSuspend(ctx, allRequiredParametersMap.toReactMap()) },
@@ -285,7 +286,7 @@ class BlobCourierInstrumentedModuleTests {
   fun uploading_a_file_from_outside_app_data_directory_resolves_promise() = runBlocking {
     val someFileThatIsAlwaysAvailable = "file:///system/etc/fonts.xml"
 
-    val ctx = ReactApplicationContext(ApplicationProvider.getApplicationContext())
+    val ctx = TestReactApplicationContext(ApplicationProvider.getApplicationContext())
 
     val uploadParametersMap =
       createValidUploadTestParameterMap(
@@ -309,7 +310,7 @@ class BlobCourierInstrumentedModuleTests {
     val allRequiredParametersMap =
       createValidUploadTestParameterMap(irrelevantTaskId, someNonExistentPath)
 
-    val ctx = ReactApplicationContext(ApplicationProvider.getApplicationContext())
+    val ctx = TestReactApplicationContext(ApplicationProvider.getApplicationContext())
 
     val (succeeded, message) = runInstrumentedRequestToBoolean {
       toggleNetworking(true)
@@ -324,7 +325,7 @@ class BlobCourierInstrumentedModuleTests {
   fun no_network_connection_rejects_promise() = runBlocking {
     val allRequiredParametersMap = createValidTestFetchParameterMap()
 
-    val ctx = ReactApplicationContext(ApplicationProvider.getApplicationContext())
+    val ctx = TestReactApplicationContext(ApplicationProvider.getApplicationContext())
 
     val (succeeded, message) = runInstrumentedRequestToBoolean {
       toggleNetworking(false)
