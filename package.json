@@ -82,15 +82,6 @@
     "react": ">=18.0.0",
     "react-native": ">=0.76.0"
   },
-  "@react-native-community/bob": {
-    "source": "src",
-    "output": "lib",
-    "targets": [
-      "commonjs",
-      "module",
-      "typescript"
-    ]
-  },
   "react-native-builder-bob": {
     "source": "src",
     "output": "lib",
