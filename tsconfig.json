@@ -4,12 +4,15 @@
     "paths": {
       "react-native-blob-courier": ["./src/index"]
     },
+    "rootDir": "src",
+    "ignoreDeprecations": "6.0",
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,
     "esModuleInterop": true,
     "verbatimModuleSyntax": false,
     "forceConsistentCasingInFileNames": true,
     "jsx": "react",
+    "types": ["jest", "react"],
     "lib": ["esnext"],
     "module": "esnext",
     "moduleResolution": "node",
@@ -24,5 +27,5 @@
     "strict": true,
     "target": "esnext"
   },
-  "exclude": ["example"],
+  "exclude": ["example"]
 }

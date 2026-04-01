@@ -58,14 +58,14 @@
     "@semantic-release/github": "^12",
     "@semantic-release/npm": "^13",
     "@semantic-release/release-notes-generator": "^14",
-    "@types/jest": "^26",
+    "@types/jest": "^30",
     "@types/react": "^18",
     "commitlint": "^20",
     "eslint": "^8",
     "eslint-config-prettier": "^9",
     "eslint-plugin-prettier": "^5",
     "husky": "^9",
-    "jest": "^29",
+    "jest": "^30",
     "jest-junit": "^16",
     "lint-staged": "^16",
     "pod-install": "^0.1",
@@ -74,7 +74,7 @@
     "react-native": "^0.76",
     "react-native-builder-bob": "^0.30",
     "semantic-release": "^25",
-    "typescript": "^5"
+    "typescript": "^6"
   },
   "engines": {
     "node": ">=22"

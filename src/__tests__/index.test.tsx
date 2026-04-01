@@ -1033,7 +1033,7 @@ describe('Given a progress updater callback is provided', () => {
       total,
     }))(TEST_EVENT_PAYLOAD);
 
-    expect(p0).toBeCalledTimes(1);
+    expect(p0).toHaveBeenCalledTimes(1);
     expect(p0).toHaveBeenCalledWith(expectedArgument);
 
     await r0;
@@ -1073,7 +1073,7 @@ describe('Given a progress updater callback is provided', () => {
       SUCCESS_TEST_EVENT_PAYLOAD
     );
 
-    expect(p0).toBeCalledTimes(1);
+    expect(p0).toHaveBeenCalledTimes(1);
 
     await r0;
   });
