@@ -29,12 +29,11 @@ export declare interface BlobRequestUrl {
 }
 
 export declare interface BlobBaseRequest
-  extends BlobRequestHeaders,
-    BlobRequestOnProgress,
-    BlobRequestUrl {}
+  extends BlobRequestHeaders, BlobRequestOnProgress, BlobRequestUrl {}
 
 export declare interface BlobFetchRequest
-  extends BlobBaseRequest,
+  extends
+    BlobBaseRequest,
     BlobRequestMimeType,
     BlobRequestMethod,
     AndroidFetchSettings,
@@ -95,7 +94,8 @@ export declare interface BlobMultipartFormDataFile {
 }
 
 export declare interface BlobUploadRequest
-  extends BlobBaseRequest,
+  extends
+    BlobBaseRequest,
     BlobRequestMimeType,
     BlobRequestMethod,
     BlobRequestReturnResponse {
@@ -105,17 +105,13 @@ export declare interface BlobUploadRequest
 }
 
 export declare interface BlobMultipartBaseRequest
-  extends BlobBaseRequest,
-    BlobRequestMethod,
-    BlobRequestReturnResponse {}
+  extends BlobBaseRequest, BlobRequestMethod, BlobRequestReturnResponse {}
 
-export declare interface BlobMultipartArrayUploadRequest
-  extends BlobMultipartBaseRequest {
+export declare interface BlobMultipartArrayUploadRequest extends BlobMultipartBaseRequest {
   readonly parts: BlobNamedMultipartArray;
 }
 
-export declare interface BlobMultipartMapUploadRequest
-  extends BlobMultipartBaseRequest {
+export declare interface BlobMultipartMapUploadRequest extends BlobMultipartBaseRequest {
   readonly parts: { [key: string]: BlobMultipart };
 }
 
