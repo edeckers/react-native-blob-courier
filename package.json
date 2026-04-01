@@ -105,6 +105,7 @@
     "name": "BlobCourierSpec",
     "type": "modules",
     "jsSrcsDir": "src",
+    "includesGeneratedCode": true,
     "android": {
       "javaPackageName": "io.deckers.blob_courier"
     }

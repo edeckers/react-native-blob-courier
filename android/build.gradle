@@ -65,16 +65,6 @@ android {
    }
 
   sourceSets {
-    main {
-      def codegenSpec = "$buildDir/generated/source/codegen/java/io/deckers/blob_courier/NativeBlobCourierSpec.java"
-      if (file(codegenSpec).exists()) {
-        java.srcDirs -= "src/main/java"
-        java {
-          srcDir "src/main/java"
-          exclude "**/NativeBlobCourierSpec.kt"
-        }
-      }
-    }
     androidTest {
       java.srcDirs += "src/sharedTest/java"
     }
