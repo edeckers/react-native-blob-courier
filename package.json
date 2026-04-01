@@ -25,15 +25,15 @@
     "!**/__mocks__"
   ],
   "scripts": {
-    "bootstrap": "yarn example && yarn && yarn pods",
+    "bootstrap": "npm --prefix example install && npm install && npm run pods",
     "compile": "bob build",
-    "example": "yarn --cwd example",
+    "example": "npm --prefix example install",
     "lint": "eslint \"**/*.{js,ts,tsx}\"",
-    "lint:fix": "yarn run lint --fix",
+    "lint:fix": "npm run lint -- --fix",
     "pods": "cd example && pod-install --quiet",
-    "prepare": "npx husky install && yarn compile",
+    "prepare": "npx husky install && npm run compile",
     "prettier": "npx prettier src --check",
-    "prettier:fix": "yarn run prettier --write",
+    "prettier:fix": "npm run prettier -- --write",
     "test": "jest --ci --config .jestrc.json",
     "typescript": "tsc --noEmit"
   },

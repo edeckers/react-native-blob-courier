@@ -33,7 +33,7 @@ run_ios_tests_w_gui() {
 
 run_typescript_tests() {
   jump_to_root_directory
-  yarn test
+  npm test
 }
 
 case ${TARGET} in

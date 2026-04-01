@@ -29,7 +29,7 @@ jobs:
         id: node_modules
         with:
           path: node_modules
-          key: yarn-${{ hashFiles('**/yarn.lock') }}
+          key: npm-${{ hashFiles('**/package-lock.json') }}
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.node-version }}
@@ -43,7 +43,7 @@ jobs:
         id: node_modules
         with:
           path: node_modules
-          key: yarn-${{ hashFiles('**/yarn.lock') }}
+          key: npm-${{ hashFiles('**/package-lock.json') }}
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.node-version }}
@@ -60,7 +60,7 @@ jobs:
         id: node_modules
         with:
           path: node_modules
-          key: yarn-${{ hashFiles('**/yarn.lock') }}
+          key: npm-${{ hashFiles('**/package-lock.json') }}
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.node-version }}
@@ -74,7 +74,7 @@ jobs:
         id: node_modules
         with:
           path: node_modules
-          key: yarn-${{ hashFiles('**/yarn.lock') }}
+          key: npm-${{ hashFiles('**/package-lock.json') }}
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.node-version }}
@@ -99,7 +99,7 @@ jobs:
         id: node_modules
         with:
           path: node_modules
-          key: yarn-${{ hashFiles('**/yarn.lock') }}
+          key: npm-${{ hashFiles('**/package-lock.json') }}
       - run: TARGET=android make clean lint
   run-android-unit-tests:
     needs: run-android-lint
@@ -115,7 +115,7 @@ jobs:
         id: node_modules
         with:
           path: node_modules
-          key: yarn-${{ hashFiles('**/yarn.lock') }}
+          key: npm-${{ hashFiles('**/package-lock.json') }}
       - run: TARGET=android:unit make clean test
       - uses: actions/upload-artifact@v4
         with:
@@ -136,7 +136,7 @@ jobs:
         id: node_modules
         with:
           path: node_modules
-          key: yarn-${{ hashFiles('**/yarn.lock') }}
+          key: npm-${{ hashFiles('**/package-lock.json') }}
       - uses: reactivecircus/android-emulator-runner@v2.34.0
         env:
           ANDROID_SDK_ROOT: ${{ env.android-sdk-root }}
@@ -177,7 +177,7 @@ jobs:
         id: node_modules
         with:
           path: node_modules
-          key: yarn-${{ hashFiles('**/yarn.lock') }}
+          key: npm-${{ hashFiles('**/package-lock.json') }}
       - run: TARGET=ios make lint
   run-ios-tests:
     needs: run-ios-lint
@@ -189,7 +189,7 @@ jobs:
         id: node_modules
         with:
           path: node_modules
-          key: yarn-${{ hashFiles('**/yarn.lock') }}
+          key: npm-${{ hashFiles('**/package-lock.json') }}
       - run: TARGET=ios:gui make clean test
       - uses: actions/upload-artifact@v4
         with:

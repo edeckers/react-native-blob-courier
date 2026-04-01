@@ -8,7 +8,7 @@ validate_target_parameter
 
 build_typescript() {
   jump_to_root_directory
-  yarn
+  npm install
 }
 
 build_android() {

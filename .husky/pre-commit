@@ -1,2 +1,2 @@
-yarn lint
-yarn test
+npm run lint
+npm test

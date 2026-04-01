@@ -19,7 +19,7 @@ jobs:
       - uses: actions/upload-artifact@v2
         with:
           name: npm-package-changes
-          path: yarn.lock
+          path: package-lock.json
   upgrade-pods:
     runs-on: m1
     needs:
@@ -54,7 +54,7 @@ jobs:
         with:
           add-paths: |
             ios/Podfile.lock
-            yarn.lock
+            package-lock.json
           assignees: edeckers
           base: develop
           body: "This PR contains automated dependency upgrades for Cocoapods and TypeScript"

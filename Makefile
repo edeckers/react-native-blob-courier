@@ -26,7 +26,7 @@ release:
 	bin/run-release
 
 run: build
-	cd example && yarn && yarn start
+	cd example && npm install && npm start
 
 require-target:
 ifndef TARGET

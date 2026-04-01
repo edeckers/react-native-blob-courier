@@ -1,3 +1,4 @@
 vendor
 ios/.xcode.env.local
+yarn.lock
 

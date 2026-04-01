@@ -7,14 +7,6 @@ Use this library to efficiently download and upload data in React Native. The li
 
 ## Installation
 
-Install using _yarn_
-
-```sh
-yarn add react-native-blob-courier
-```
-
-Or install using _npm_
-
 ```sh
 npm install react-native-blob-courier
 ```

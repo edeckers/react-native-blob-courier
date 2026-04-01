@@ -6,7 +6,7 @@ validate_target_parameter "android ios typescript"
 
 lint_typescript() {
   jump_to_root_directory
-  yarn lint
+  npm run lint
 }
 
 lint_android() {

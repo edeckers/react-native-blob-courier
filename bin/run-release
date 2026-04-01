@@ -7,7 +7,7 @@ function cd_to_root_directory () {
 function publish_semantic_release () {
   echo "Publishing release"
 
-  publish_result=`yarn semantic-release`
+  publish_result=`npx semantic-release`
   echo "${publish_result}"
   
   no_release_count=`echo "${publish_result}" | grep -cim1 "no new version"`
@@ -22,7 +22,7 @@ function publish_semantic_release () {
 }
 
 function build_dist () {
-  yarn
+  npm install
 }
 
 cd_to_root_directory
