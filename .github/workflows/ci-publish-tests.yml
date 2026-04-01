@@ -16,7 +16,7 @@ jobs:
         run: |
           if [ "$EVENT" == 'workflow_run' ]
           then
-            echo "::set-output name=sha::$(echo ${{github.event.workflow_run.head_sha}})"
+            echo "sha=${{github.event.workflow_run.head_sha}}" >> "$GITHUB_OUTPUT"
           fi
         env:
           EVENT: ${{ github.event_name }}
@@ -37,7 +37,7 @@ jobs:
              unzip -d "$name" "$name.zip"
            done
       - name: Publish TypeScript Test Report
-        uses: EnricoMi/publish-unit-test-result-action@v1.6
+        uses: EnricoMi/publish-unit-test-result-action@v2
         with:
           check_name: "Tests: TypeScript"
           comment_title: TypeScript Test Report
@@ -48,7 +48,7 @@ jobs:
           hide_comments: all but latest
           report_individual_runs: true
       - name: Publish Android Unit Test Report
-        uses: EnricoMi/publish-unit-test-result-action@v1.6
+        uses: EnricoMi/publish-unit-test-result-action@v2
         with:
           check_name: "Tests: Android - Unit"
           comment_title: Android Unit Test Report
@@ -59,7 +59,7 @@ jobs:
           hide_comments: all but latest
           report_individual_runs: true
       - name: Publish Android Instrumented Test Report
-        uses: EnricoMi/publish-unit-test-result-action@v1.6
+        uses: EnricoMi/publish-unit-test-result-action@v2
         with:
           check_name: "Tests: Android - Instrumented"
           comment_title: Android Instrumented Test Report
@@ -70,7 +70,7 @@ jobs:
           hide_comments: all but latest
           report_individual_runs: true
       - name: Publish iOS Test Report
-        uses: EnricoMi/publish-unit-test-result-action@v1.6
+        uses: EnricoMi/publish-unit-test-result-action@v2
         with:
           check_name: "Tests: iOS"
           comment_title: iOS Test Report

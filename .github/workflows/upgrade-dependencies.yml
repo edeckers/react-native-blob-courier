@@ -11,12 +11,12 @@ jobs:
   upgrade-npm-packages:
     runs-on: ubuntu-latest
     steps: 
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2-beta
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.node-version }}
       - run: TARGET=typescript make clean upgrade-dependencies
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
           name: npm-package-changes
           path: package-lock.json
@@ -25,14 +25,14 @@ jobs:
     needs:
       - upgrade-npm-packages
     steps: 
-      - uses: actions/setup-node@v2-beta
+      - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.node-version }}
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v4
         with:
           name: npm-package-changes
       - run: TARGET=ios make clean upgrade-dependencies
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
           name: pod-changes
           path: ios/Podfile.lock
@@ -42,15 +42,15 @@ jobs:
     runs-on: ubuntu-latest
     steps: 
       - name: Checkout repo
-        uses: actions/checkout@v2
-      - uses: actions/download-artifact@v2
+        uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
         with:
           name: npm-package-changes
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v4
         with:
           name: pod-changes
           path: ios
-      - uses: peter-evans/create-pull-request@v3
+      - uses: peter-evans/create-pull-request@v7
         with:
           add-paths: |
             ios/Podfile.lock
