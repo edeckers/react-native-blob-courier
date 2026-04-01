@@ -75,6 +75,9 @@
     "semantic-release": "^19.0.2",
     "typescript": "^5.0.0"
   },
+  "engines": {
+    "node": ">=22"
+  },
   "peerDependencies": {
     "react": ">=18.0.0",
     "react-native": ">=0.76.0"
